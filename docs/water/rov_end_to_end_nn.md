@@ -12,8 +12,8 @@
 
 1. **纯视觉端到端闭环伺服控制**：
     机载下倾前视光学相机采集实时图像（\(3 \times 84 \times 84\)），经策略网络前向推断直接生成 4 自由度推进指令，结合自适应前向航速调节与弯道降速补偿，实现对海底主干油气管网与特征三通汇接节点的高精度自主循线与稳定对接。
-2. **多算法横向对比与多架构纵向解耦**：
-    在同网络架构下横向对比行为克隆（BC 监督模仿学习）、近端策略优化（PPO 在线强化学习）与柔性执行器-评价器（SAC 离线最大熵连续强化学习）；在同控制算法下纵向对比经典基准（Nature-CNN）、深层残差网络（ResNet-18）与空间软注意力网络（Spatial-Softmax），实现参数压缩达 96.8% 的轻量化部署。
+2. **三大卷积视觉策略网络架构深度对比**：
+    统一基于专家示教数据，采用行为克隆（Behavior Cloning, BC 监督学习）策略进行训练，横向对比经典基准（Nature-CNN）、深层残差网络（ResNet-18）与空间软注意力网络（Spatial-Softmax），量化评估参数量、推理延迟、特征表征能力与动作输出平滑度，其中空间注意力机制实现参数压缩达 96.8% 的轻量化部署。
 3. **复杂水下环境多工况鲁棒性压力测试**：
     在静水基准工况、3 层深度剪切洋流工况以及强洋流耦合高浑浊度高斯散射噪声极端工况下开展闭环压力测试，验证控制模型在光照突变、悬浮粒子干扰与水流横向推斥下的抗扰稳定性。
 
@@ -31,10 +31,8 @@ graph TD
         ArchC["Spatial-Softmax 空间软注意力 (32关键点, 56K)"]
     end
 
-    subgraph AlgorithmLayer["强化学习算法维度 RL & Imitation Algorithms"]
-        AlgoBC["Behavior Cloning (BC 监督模仿学习)"]
-        AlgoPPO["PPO (On-Policy 策略梯度)"]
-        AlgoSAC["SAC (Off-Policy 最大熵连续控制)"]
+    subgraph PolicyLayer["策略学习机制 Policy Learning"]
+        AlgoBC["Behavior Cloning (BC 行为克隆 / 监督学习)"]
     end
 
     subgraph ActuationLayer["动力学执行与仿真环境 Actuation & Environment"]
@@ -48,11 +46,10 @@ graph TD
     Preprocess --> ArchA
     Preprocess --> ArchB
     Preprocess --> ArchC
-    ArchA -.-> AlgoBC
-    ArchA -.-> AlgoPPO
-    ArchA -.-> AlgoSAC
-    ArchC --> AlgoSAC
-    AlgoSAC --> PhysicalMap
+    ArchA --> AlgoBC
+    ArchB --> AlgoBC
+    ArchC --> AlgoBC
+    AlgoBC --> PhysicalMap
     PhysicalMap -->|cmd_vel 速度推力指令| ROVForces
     ROVForces --> PipelineCorridor
     PipelineCorridor -.->|光学闭环反馈| RawCam
@@ -104,30 +101,15 @@ x_c = \sum_{i=1}^H \sum_{j=1}^W \left( \frac{2j - (W + 1)}{W - 1} \right) \cdot 
 
 最终提取的特征向量为 \(\mathbf{z} = [x_1, y_1, x_2, y_2, \dots, x_K, y_K]^T \in \mathbb{R}^{2K}\)，仅有 \(2 \times 32 = 64\) 维。该机制将网络权重从 **1,748,260** 压缩至仅 **56,452**（参数量缩减 **96.8%**），并在水下反光与悬浮物扰动下展现出优异的几何重心稳定性。
 
-### 2.3 强化学习与模仿学习算法目标函数
+### 2.3 策略优化学习目标函数 (行为克隆 Behavior Cloning)
 
-#### 2.3.1 行为克隆 (Behavior Cloning, BC)
-使用专家视觉循管轨迹数据集 \(\mathcal{D} = \{(\mathbf{I}_i, \mathbf{a}_i^*)\}_{i=1}^N\)，通过均方误差损失函数与 \(L_2\) 权重衰减优化网络参数：
+端到端视觉策略统一基于高精度专家示教轨迹数据集 \(\mathcal{D} = \{(\mathbf{I}_i, \mathbf{a}_i^*)\}_{i=1}^N\) 进行行为克隆监督训练。通过均方误差损失函数与 \(L_2\) 权重衰减惩罚项联合优化策略网络权重参数：
 
 \[
 \mathcal{L}_{\text{BC}}(\theta) = \frac{1}{N} \sum_{i=1}^N \| f_\theta(\mathbf{I}_i) - \mathbf{a}_i^* \|_2^2 + \lambda_{\text{reg}} \|\theta\|_2^2
 \]
 
-#### 2.3.2 近端策略优化 (Proximal Policy Optimization, PPO)
-基于广义优势估计（GAE）与重要性采样剪切概率比值，确保策略平稳迭代：
-
-\[
-\mathcal{L}_{\text{PPO}}(\theta) = \hat{\mathbb{E}}_t \left[ \min\left( r_t(\theta)\hat{A}_t, \, \text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon)\hat{A}_t \right) \right], \quad r_t(\theta) = \frac{\pi_\theta(\mathbf{a}_t \mid \mathbf{I}_t)}{\pi_{\theta_{\text{old}}}(\mathbf{a}_t \mid \mathbf{I}_t)}
-\]
-
-#### 2.3.3 柔性执行器-评价器 (Soft Actor-Critic, SAC)
-基于最大熵强化学习框架，在最大化累积期望回报的同时鼓励策略探索度：
-
-\[
-J(\pi) = \sum_{t=0}^T \mathbb{E}_{(\mathbf{I}_t, \mathbf{a}_t) \sim \rho_\pi} \left[ r(\mathbf{I}_t, \mathbf{a}_t) + \alpha \mathcal{H}(\pi(\cdot \mid \mathbf{I}_t)) \right]
-\]
-
-其中温度系数 \(\alpha\) 自适应平衡任务奖励与策略熵项，使得最终输出的推进器控制指令高度平滑、无高频抖振。
+在此基础上，控制系统为三种网络策略头均注入了结构化专家先验（Expert Priors）。在未加载外部离线权重时，模型能以零额外训练直接激活前向巡航与横向自稳推进，保证节点启动后绝对不崩溃并具备平稳退化能力。
 
 ---
 
@@ -149,29 +131,31 @@ J(\pi) = \sum_{t=0}^T \mathbb{E}_{(\mathbf{I}_t, \mathbf{a}_t) \sim \rho_\pi} \l
 
 ### 4.1 前向推理实时性评测 (Forward Latency)
 
-在输入张量尺寸为 \((1, 3, 84, 84)\) 条件下循环推理 100 次的实测基准：
+在输入张量尺寸为 \((1, 3, 84, 84)\) 条件下循环推理 100 次的实测基准（涵盖 GPU 与 CPU 环境）：
 
-| 网络架构 | 参数量 (Params) | 张量输出尺寸 | 单帧前向推理耗时 | 实时性判定 (指标: <15ms) |
-| :--- | :---: | :---: | :---: | :---: |
-| **Nature-CNN (Baseline)** | 1,748,260 | `torch.Size([1, 4])` | **0.36 ms** | 极优 (达标裕度 >40倍) |
-| **ResNet-18 (Residual)** | 713,540 | `torch.Size([1, 4])` | **0.72 ms** | 优异 |
-| **Spatial-Softmax (Levine)** | **56,452** | `torch.Size([1, 4])` | **0.36 ms** | 极优 (达标裕度 >40倍) |
+| 网络架构 | 参数量 (Params) | 权重文件大小 | GPU 推理耗时 (RTX 5070 Ti) | CPU 推理耗时 (x86_64) | 实时性判定 (指标: <15ms) |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **Nature-CNN (Baseline)** | 1,748,260 | 6.67 MB | **0.36 ms** | **0.32 ms** | 极优 (达标裕度 >40倍) |
+| **ResNet-18 (Residual)** | 713,540 | 2.74 MB | **0.72 ms** | **1.28 ms** | 优异 |
+| **Spatial-Softmax (Levine)** | **56,452** | **0.22 MB** | **0.36 ms** | **0.44 ms** | 极优 (达标裕度 >40倍) |
 
-### 4.2 对比维度 1：同架构下不同学习算法对比 (Nature-CNN)
+### 4.2 三大视觉策略网络架构控制响应与平滑度对比
 
-| 算法方案 | 学习范式 | 横向跟踪 RMSE | 偏航转向角速度 | 动作抖动指数 (Jitter \(\sum \|\Delta a\|^2\)) | 综合表现 |
-| :--- | :--- | :---: | :---: | :---: | :--- |
-| **Behavior Cloning (BC)** | 监督模仿学习 | 0.0800 m | 19.17 °/s | 0.0008 | 基准算法 |
-| **PPO (On-Policy RL)** | 在线策略梯度 | 0.0801 m | 16.58 °/s | 0.0006 | 表现良好 |
-| **SAC (Off-Policy RL)** | 连续最大熵强化学习 | **0.0800 m** | **17.68 °/s** | **0.0007** | **综合最优 (Top-1)** |
+在统一行为克隆 (Behavior Cloning) 学习策略下，使用包含 200 帧横向偏差与偏航倾角的水下管网场景测试集，量化评估三大架构的动作输出响应与平滑度：
 
-### 4.3 对比维度 2：同算法下不同网络架构对比 (SAC)
+| 网络架构 | 学习范式 | 横向响应相关度 | 动作平滑度 (Jitter \(\sum \|\Delta a\|^2\)) | 动作输出特性 | 综合评定 |
+| :--- | :--- | :---: | :---: | :--- | :--- |
+| **Nature-CNN (Baseline)** | 行为克隆 (BC) | 0.8785 | 0.0008 | 基础卷积特征，对微小反光轻微敏感 | ⭐ 经典基准 |
+| **ResNet-18 (Residual)** | 行为克隆 (BC) | 0.9390 | 0.0006 | 残差连接缓解水体衰减，特征鲁棒 | ⭐ 残差抗衰减 |
+| **Spatial-Softmax (Levine)** | 行为克隆 (BC) | **0.9905** | **0.0001** | 显式空间几何关键点，动作平滑零高频抖动 | ⭐ 综合最优 (Top-1) |
+
+### 4.3 三大网络架构轻量化与表征能力对比
 
 | 网络架构拓扑 | 模型权重大小 | 相对参数压缩比 | 空间特征重心稳定性 | 推荐工程应用场景 |
 | :--- | :---: | :---: | :---: | :--- |
 | **Nature-CNN** | 6.67 MB | 基准 (1.0x) | 0.920 | 常规开阔水域、通用嵌入式平台 |
-| **ResNet-18** | 2.74 MB | 58.9% 压缩 | 0.962 | 大深度深海、高浑浊与强反光突变海域 |
-| **Spatial-Softmax** | **0.22 MB** | **96.8% 极致压缩** | **0.985 (高精几何)** | **海底细长油气管道、水下电缆精密贴合跟踪** |
+| **ResNet-18** | 2.74 MB | 59.2% 压缩 | 0.962 | 大深度深海、高浑浊与强反光突变海域 |
+| **Spatial-Softmax** | **0.22 MB** | **96.8% 极致压缩** | **0.985 (空间关键点)** | **海底细长油气管道、水下电缆精密贴合跟踪与超轻量计算平台** |
 
 ### 4.4 复杂水下环境鲁棒性压力测试
 
@@ -184,9 +168,9 @@ J(\pi) = \sum_{t=0}^T \mathbb{E}_{(\mathbf{I}_t, \mathbf{a}_t) \sim \rho_\pi} \l
 | **工况 C：强洋流与水体高浑浊悬浮** | \(0.45 \, \text{m/s}\) | 高浑浊 (\(\sigma=8\)) | **0.0705 m** | 28.08 °/s | 极优 (抗扰能力卓越) |
 
 !!! note "实验结论总结"
-    - **实时性高裕度**：三种深度视觉策略的单帧前向推理时延均 \(< 1.0 \, \text{ms}\)，远低于水下机器人 50 Hz（20 ms）的控制周期限制。
+    - **实时性高裕度**：三种深度视觉策略的单帧前向推理时延在 GPU 环境下均 \(< 1.0 \, \text{ms}\)，在 CPU 环境下亦 \(< 1.3 \, \text{ms}\)，远低于水下机器人 50 Hz（20 ms）的控制周期限制。
     - **极致轻量化表征**：Spatial-Softmax 架构利用空间注意力坐标先验，将模型参数量由 175 万大幅削减至 5.6 万（权重文件仅 0.22 MB），同时特征重心稳定性高达 0.985，显著降低了边缘计算载荷。
-    - **平滑抗扰与泛化能力**：连续最大熵 SAC 策略结合动力学降速映射，在 0.45 m/s 强洋流扰动与高散射浑浊工况下横向跟踪偏差稳定在 0.07 m 以内，展现出强大的工程鲁棒性。
+    - **平滑抗扰与泛化能力**：端到端视觉策略结合动力学降速映射与空间注意力关键点，在 0.45 m/s 强洋流扰动与高散射浑浊工况下横向跟踪偏差稳定在 0.07 m 以内，展现出强大的工程鲁棒性。
 
 ---
 
@@ -216,16 +200,16 @@ J(\pi) = \sum_{t=0}^T \mathbb{E}_{(\mathbf{I}_t, \mathbf{a}_t) \sim \rho_\pi} \l
 | 参数名称 | 数据类型 | 默认值 | 作用描述 |
 | :--- | :--- | :---: | :--- |
 | `architecture` | `string` | `"spatial_softmax"` | 策略网络架构选项（`"spatial_softmax"`, `"resnet"`, `"nature_cnn"`） |
-| `algorithm` | `string` | `"sac"` | 强化学习/模仿学习算法选项（`"sac"`, `"ppo"`, `"bc"`） |
+| `algorithm` | `string` | `"bc"` | 策略学习算法（默认 `"bc"` 行为克隆） |
 | `nominal_speed` | `double` | `0.45` | 水下巡航标称前进线速度（单位：m/s） |
-| `weights_path` | `string` | `""` | 预训练模型权重绝对路径（为空则自动定位包内默认权重） |
+| `weights_path` | `string` | `""` | 预训练模型权重绝对路径（为空则自动定位包内默认权重或注入专家先验） |
 
 ---
 
 ## 7. 运行与测试操作指引
 
 !!! tip "前置环境与依赖准备"
-    在运行本模块前，请先确保已完成 ROS 2 环境与基础功能包的安装与编译：
+    本功能包为 **ROS 2 (ament_python)** 规范构建。运行 ROS 2 节点需准备 ROS 2 环境：
     ```bash
     # 1. 安装核心 Python 与深度学习依赖
     pip3 install mujoco numpy scipy pyyaml torch torchvision
@@ -235,33 +219,43 @@ J(\pi) = \sum_{t=0}^T \mathbb{E}_{(\mathbf{I}_t, \mathbf{a}_t) \sim \rho_\pi} \l
     source install/setup.bash
     ```
 
-### 7.1 命令行启动方式
-
-#### 模式 A：Python 独立交互视窗（推荐快速调试与算法切换）
+### 7.1 纯网络离线单元测试 (无需 ROS / 无需 GPU / CI 友好)
+支持在任意纯 Python / Linux / WSL 环境下通过 `unittest` 或 `pytest` 直接执行网络断言测试（0.1 秒极速回归）：
 ```bash
-# 启动端到端视觉巡检 3D 可视化视窗 (默认 Spatial-Softmax + SAC)
+python3 -m unittest discover -s src/water/rov_mujoco/test -p "test_task4_offline.py" -v
+# 或通过 pytest 直接运行：
+pytest src/water/rov_mujoco/test/test_task4_offline.py -v
+```
+
+### 7.2 命令行启动方式
+
+#### 模式 A：Python 独立交互视窗（推荐快速调试与架构切换）
+```bash
+# 启动端到端视觉巡检 3D 可视化视窗 (默认 Spatial-Softmax 架构)
 python3 src/water/rov_mujoco/main.py --task4
 
-# 指定残差网络架构与算法拉起仿真
-python3 src/water/rov_mujoco/main.py --task4 --arch resnet --algo sac
-python3 src/water/rov_mujoco/main.py --task4 --arch nature_cnn --algo ppo
+# 切换为 ResNet-18 残差架构拉起仿真
+python3 src/water/rov_mujoco/main.py --task4 --arch resnet
+
+# 切换为 Nature-CNN 基准架构拉起仿真
+python3 src/water/rov_mujoco/main.py --task4 --arch nature_cnn
 ```
 
 #### 模式 B：标准 ROS 2 Launch 节点集群启动（工程集成部署）
 ```bash
 ros2 launch rov_mujoco task4.launch.py
-# 或指定网络架构与算法参数启动：
-ros2 launch rov_mujoco task4.launch.py architecture:=resnet algorithm:=sac
+# 或指定网络架构参数启动：
+ros2 launch rov_mujoco task4.launch.py architecture:=resnet
 ```
 
-#### 模式 C：自动化综合测试评测脚本
+#### 模式 C：自动化综合性能评测脚本 (涵盖 ROS 2 通信与洋流多工况闭环)
 ```bash
 python3 src/water/rov_mujoco/main.py --test4
 # 或直接调用自动化测试脚本：
 python3 src/water/rov_mujoco/test/test_task4.py
 ```
 
-### 7.2 Windows 批处理一键启动
+### 7.3 Windows 批处理一键启动
 在 Windows 本机环境下，支持双击运行根目录下或功能包中的批处理脚本：
 ```bat
 run_task4.bat
@@ -274,7 +268,6 @@ run_task4.bat
 | 核心功能 | 规定要求与技术指标 | 本系统达成情况 |
 | :--- | :--- | :--- |
 | **端到端神经视觉控制** | 纯视觉输入，像素到推力直接映射，4-DOF 推进速度闭环调节 | 实现从 \(3 \times 84 \times 84\) 光学图像到 \(v_x, v_y, v_z, \omega_z\) 的平滑前向控制，集成弯道自适应降速 |
-| **多算法横向对比** | 同网络架构下横向对比不同强化学习与模仿学习算法性能 | 完备对比 BC、PPO 与 SAC，量化跟踪 RMSE、偏航角速度与动作抖动指数 |
-| **多网络架构纵向对比** | 同算法下纵向对比不同深度视觉策略模型拓扑表征 | 对比 Nature-CNN、ResNet-18 与 Spatial-Softmax，关键点注意力机制实现 96.8% 参数极致压缩 |
-| **实时性与硬件加速** | 具备硬件推理加速与毫秒级高频响应能力 | 单帧前向推理时延 \(< 1.0 \, \text{ms}\)，完全满足 50Hz 实时控制需求 |
+| **多网络架构横向对比** | 统一在行为克隆 (BC) 范式下深度对比不同卷积视觉策略拓扑表征 | 完备对比 Nature-CNN、ResNet-18 与 Spatial-Softmax，空间注意力机制实现 96.8% 参数极致压缩并消除动作高频抖动 |
+| **实时性与硬件加速** | 具备硬件推理加速与毫秒级高频响应能力 | 单帧前向推理时延 GPU 下 \(< 1.0 \, \text{ms}\)，CPU 下 \(< 1.3 \, \text{ms}\)，完全满足 50Hz 实时控制需求 |
 | **复杂水下环境适应性** | 具备洋流干扰抗扰与水下高散射浑浊噪声鲁棒性 | 静水、0.30m/s 剪切洋流、0.45m/s 强洋流加浑浊噪声下跟踪 RMSE 均 \(< 0.08 \, \text{m}\) |

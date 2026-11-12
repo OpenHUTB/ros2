@@ -938,8 +938,8 @@ def main():
     parser.add_argument("--task4", action="store_true", help="拉起任务 4: 3D 可视化视窗下的端到端水下视觉伺服巡航控制")
     parser.add_argument("--launch4", action="store_true", help="调用 ros2 launch 启动任务 4")
     parser.add_argument("--test4", action="store_true", help="运行任务 4 自动化视觉策略与多模型对比评测")
-    parser.add_argument("--arch", type=str, default="nature_cnn", help="任务 4 网络架构 (nature_cnn/resnet/spatial_softmax)")
-    parser.add_argument("--algo", type=str, default="sac", help="任务 4 学习算法 (sac/ppo/bc)")
+    parser.add_argument("--arch", type=str, default="spatial_softmax", help="任务 4 网络架构 (spatial_softmax/resnet/nature_cnn)")
+    parser.add_argument("--algo", type=str, default="bc", help="任务 4 策略算法 (默认 bc 行为克隆)")
     args = parser.parse_args()
 
     if args.task4:

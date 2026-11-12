@@ -43,8 +43,8 @@ def generate_launch_description():
         ),
         DeclareLaunchArgument(
             'algorithm',
-            default_value='sac',
-            description='策略强化学习/学习算法 (sac, ppo, bc)'
+            default_value='bc',
+            description='策略学习算法 (默认 bc 行为克隆，兼容 sac, ppo)'
         ),
         DeclareLaunchArgument(
             'nominal_speed',

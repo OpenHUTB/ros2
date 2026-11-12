@@ -37,7 +37,7 @@ class EndToEndVisionControlNode(Node):
 
         # 声明可配置 ROS 2 参数
         self.declare_parameter('architecture', 'spatial_softmax')  # nature_cnn / resnet / spatial_softmax
-        self.declare_parameter('algorithm', 'sac')                 # sac / ppo / bc
+        self.declare_parameter('algorithm', 'bc')                 # bc / sac / ppo
         self.declare_parameter('nominal_speed', 0.45)
         self.declare_parameter('weights_path', '')
 
@@ -47,10 +47,13 @@ class EndToEndVisionControlNode(Node):
         weights_path = self.get_parameter('weights_path').value
 
         if not weights_path:
-            # 自动定位默认权重文件
+            # 自动定位默认权重文件（优先标准架构命名，兼容历史别名）
             candidate_paths = [
+                os.path.join(os.getcwd(), "models", f"task4_{self.arch}.pt"),
                 os.path.join(os.getcwd(), "models", f"task4_{self.arch}_{self.algo}.pt"),
+                os.path.join(os.path.dirname(__file__), "..", "..", "models", f"task4_{self.arch}.pt"),
                 os.path.join(os.path.dirname(__file__), "..", "..", "models", f"task4_{self.arch}_{self.algo}.pt"),
+                os.path.join(os.path.dirname(__file__), "models", f"task4_{self.arch}.pt"),
                 os.path.join(os.path.dirname(__file__), "models", f"task4_{self.arch}_{self.algo}.pt"),
             ]
             try:

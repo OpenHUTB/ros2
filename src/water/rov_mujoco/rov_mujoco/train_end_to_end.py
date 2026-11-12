@@ -1,18 +1,19 @@
 """
-水下机器人端到端视觉模型训练与对比评测套件 (End-to-End Visuomotor Training & Evaluation)
-========================================================================================
-端到端视觉控制策略模型训练与对比评测模块。
-功能：
-  1. 自动化管网视觉轨迹数据采集（Expert Demonstrator Dataset）
-  2. 行为克隆 (BC)、PPO 与 SAC 强化学习算法对比训练
-  3. Nature-CNN、ResNet-18 与 Spatial-Softmax 架构性能基准对比
-  4. 自动化导出轻量化预训练权重至 models/ 目录
+水下机器人端到端视觉模型训练套件 (End-to-End Visuomotor Training Suite)
+========================================================================
+端到端视觉控制策略模型训练模块：
+统一基于专家示教数据，采用行为克隆 (Behavior Cloning / 监督回归) 策略，
+对比评测三种不同卷积视觉策略网络架构：
+  1. Nature-CNN (经典基准轻量网络)
+  2. ResNet-18 (深层残差网络)
+  3. Spatial-Softmax (空间软注意力关键点网络)
 """
 
 import os
 import sys
 import time
 import math
+import argparse
 from typing import Dict, List, Tuple
 import numpy as np
 import torch
@@ -161,18 +162,73 @@ def train_behavior_cloning(
     return model, final_loss
 
 
-def train_and_export_all_task4_models(output_dir: str = "models") -> Dict[str, str]:
+def train_architecture(
+    arch_name: str,
+    train_dataset: VisuomotorDataset,
+    output_dir: str = "models",
+    epochs: int = 15,
+    batch_size: int = 32,
+    lr: float = 1e-3,
+    device: str = "cuda" if torch.cuda.is_available() else "cpu"
+) -> Tuple[str, float]:
+    """训练指定架构的行为克隆策略并保存权重"""
+    os.makedirs(output_dir, exist_ok=True)
+    if arch_name == "resnet":
+        model = ResNetVisuomotorPolicy()
+        out_filename = "task4_resnet.pt"
+    elif arch_name == "spatial_softmax":
+        model = SpatialSoftmaxVisuomotorPolicy()
+        out_filename = "task4_spatial_softmax.pt"
+    else:
+        model = NatureCNNVisuomotorPolicy()
+        out_filename = "task4_nature_cnn.pt"
+
+    print(f"  ▶ 正在训练 {arch_name} 架构 (行为克隆 BC, {epochs} epochs, device: {device})...")
+    model, final_loss = train_behavior_cloning(
+        model, train_dataset, epochs=epochs, batch_size=batch_size, lr=lr, device=device
+    )
+
+    weight_path = os.path.join(output_dir, out_filename)
+    torch.save(model.state_dict(), weight_path)
+    print(f"  ✅ {arch_name} 训练完成，Loss: {final_loss:.6f}，权重已保存至: {weight_path}")
+
+    # 保持向后兼容命名别名，确保历史 launch / 测试脚本可正常索引
+    alias_names = []
+    if arch_name == "nature_cnn":
+        alias_names = ["task4_nature_cnn_bc.pt", "task4_nature_cnn_sac.pt", "task4_nature_cnn_ppo.pt"]
+    elif arch_name == "resnet":
+        alias_names = ["task4_resnet_sac.pt"]
+    elif arch_name == "spatial_softmax":
+        alias_names = ["task4_spatial_softmax_sac.pt"]
+
+    for alias in alias_names:
+        alias_path = os.path.join(output_dir, alias)
+        torch.save(model.state_dict(), alias_path)
+
+    return weight_path, final_loss
+
+
+def train_and_export_all_task4_models(
+    arch: str = "all",
+    output_dir: str = "models",
+    epochs: int = 15,
+    batch_size: int = 32,
+    lr: float = 1e-3
+) -> Dict[str, str]:
     """
-    一键训练并保存三大架构与不同算法模型权重
-    返回已保存权重文件路径映射字典
+    训练并保存端到端视觉策略网络模型权重。
+    统一基于专家示教数据，采用行为克隆 (BC) 监督回归策略，
+    对比三种视觉策略架构（Nature-CNN、ResNet-18、Spatial-Softmax）。
     """
     os.makedirs(output_dir, exist_ok=True)
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+
     real_data_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "models", "real_scene_dataset.npz")
     if not os.path.exists(real_data_path):
         real_data_path = os.path.join(output_dir, "real_scene_dataset.npz")
 
     if os.path.exists(real_data_path):
-        print(f"  ▶ 检测到真实水下管网渲染数据集: {real_data_path}，应用严格双向镜像与光照增广...")
+        print(f"  ▶ 检测到水下管网渲染数据集: {real_data_path}，应用双向镜像与光照增广...")
         data = np.load(real_data_path)
         raw_imgs = data["images"]
         raw_acts = data["actions"]
@@ -196,55 +252,53 @@ def train_and_export_all_task4_models(output_dir: str = "models") -> Dict[str, s
         actions = np.array(aug_acts, dtype=np.float32)
         n_train = int(len(images) * 0.85)
         train_dataset = VisuomotorDataset(images[:n_train], actions[:n_train])
-        test_dataset = VisuomotorDataset(images[n_train:], actions[n_train:])
     else:
+        print("  ▶ 未检测到离线数据集，生成合成水下管网示教数据 (1600 样本)...")
         images, actions = generate_synthetic_underwater_dataset(num_samples=1600)
         train_dataset = VisuomotorDataset(images[:1300], actions[:1300])
-        test_dataset = VisuomotorDataset(images[1300:], actions[1300:])
 
+    targets = ["nature_cnn", "resnet", "spatial_softmax"] if arch == "all" else [arch]
     saved_weights = {}
 
-    # 1. 架构 1: Nature-CNN (分别导出 BC, PPO, SAC 对应权重)
-    print("  ▶ 训练 Nature-CNN 策略网络 (BC 模仿基准)...")
-    m_nature_bc = NatureCNNVisuomotorPolicy()
-    m_nature_bc, loss_bc = train_behavior_cloning(m_nature_bc, train_dataset, epochs=12, device=device)
-    p_nature_bc = os.path.join(output_dir, "task4_nature_cnn_bc.pt")
-    torch.save(m_nature_bc.state_dict(), p_nature_bc)
-    saved_weights["nature_cnn_bc"] = p_nature_bc
+    for target_arch in targets:
+        p, _ = train_architecture(
+            arch_name=target_arch,
+            train_dataset=train_dataset,
+            output_dir=output_dir,
+            epochs=epochs,
+            batch_size=batch_size,
+            lr=lr,
+            device=device
+        )
+        saved_weights[target_arch] = p
 
-    print("  ▶ 训练 Nature-CNN (SAC 最大熵强化学习策略)...")
-    m_nature_sac = NatureCNNVisuomotorPolicy()
-    m_nature_sac, loss_sac = train_behavior_cloning(m_nature_sac, train_dataset, epochs=15, device=device)
-    p_nature_sac = os.path.join(output_dir, "task4_nature_cnn_sac.pt")
-    torch.save(m_nature_sac.state_dict(), p_nature_sac)
-    saved_weights["nature_cnn_sac"] = p_nature_sac
-
-    print("  ▶ 训练 Nature-CNN (PPO 近端策略优化网络)...")
-    m_nature_ppo = NatureCNNVisuomotorPolicy()
-    m_nature_ppo, loss_ppo = train_behavior_cloning(m_nature_ppo, train_dataset, epochs=15, device=device)
-    p_nature_ppo = os.path.join(output_dir, "task4_nature_cnn_ppo.pt")
-    torch.save(m_nature_ppo.state_dict(), p_nature_ppo)
-    saved_weights["nature_cnn_ppo"] = p_nature_ppo
-
-    # 2. 架构 2: ResNet-18 残差视觉网络
-    print("  ▶ 训练 ResNet-18 Residual Visuomotor 策略网络...")
-    m_resnet = ResNetVisuomotorPolicy()
-    m_resnet, loss_res = train_behavior_cloning(m_resnet, train_dataset, epochs=15, device=device)
-    p_resnet = os.path.join(output_dir, "task4_resnet_sac.pt")
-    torch.save(m_resnet.state_dict(), p_resnet)
-    saved_weights["resnet_sac"] = p_resnet
-
-    # 3. 架构 3: Spatial-Softmax 空间软注意力网络
-    print("  ▶ 训练 Spatial-Softmax Visuomotor 策略网络...")
-    m_spatial = SpatialSoftmaxVisuomotorPolicy()
-    m_spatial, loss_sp = train_behavior_cloning(m_spatial, train_dataset, epochs=15, device=device)
-    p_spatial = os.path.join(output_dir, "task4_spatial_softmax_sac.pt")
-    torch.save(m_spatial.state_dict(), p_spatial)
-    saved_weights["spatial_softmax_sac"] = p_spatial
-
-    print(f"✅ 全部 5 套预训练端到端策略权重成功导出至: {output_dir}/")
+    print(f"✅ 策略权重成功导出至: {output_dir}/")
     return saved_weights
 
 
+def main():
+    parser = argparse.ArgumentParser(description="水下机器人端到端视觉策略网络训练工具 (基于行为克隆)")
+    parser.add_argument(
+        "--arch",
+        type=str,
+        default="all",
+        choices=["all", "nature_cnn", "resnet", "spatial_softmax"],
+        help="待训练的网络架构（默认 all，训练全部三种架构）"
+    )
+    parser.add_argument("--epochs", type=int, default=15, help="训练轮数 (默认 15)")
+    parser.add_argument("--batch-size", type=int, default=32, help="批大小 (默认 32)")
+    parser.add_argument("--lr", type=float, default=1e-3, help="学习率 (默认 1e-3)")
+    parser.add_argument("--output-dir", type=str, default="models", help="权重输出目录 (默认 models)")
+    args = parser.parse_args()
+
+    train_and_export_all_task4_models(
+        arch=args.arch,
+        output_dir=args.output_dir,
+        epochs=args.epochs,
+        batch_size=args.batch_size,
+        lr=args.lr
+    )
+
+
 if __name__ == "__main__":
-    train_and_export_all_task4_models(output_dir="models")
+    main()
