@@ -1,0 +1,27 @@
+# braking_distance_check 参数默认值
+#
+# 改这里等于改模块默认行为；roslaunch 传参可以逐项覆盖。
+
+# ---- 工况 ----
+scene:
+  speed_kmh: 50.0            # 当前车速
+  available_distance: 40.0   # 前方可用距离（到前车/障碍物的距离）
+  gap: 32.0                  # 当前跟车间距
+
+# ---- 车辆 ----
+vehicle:
+  reaction_time: 1.00        # 驾驶员反应时间（含抬脚换踏板）
+  speed_limit_kmh: 60.0      # 该路段限速
+
+# ---- 路面 ----
+road:
+  friction: 0.70             # 附着系数：干沥青 0.7~0.9，湿 0.4，雪 0.2，冰 0.1
+  slope_deg: 0.0             # 坡度，正为上坡（帮着刹车），负为下坡
+
+# ---- 发布 ----
+rate:
+  publish_hz: 1.0
+
+topic:
+  report: '/braking/report'
+  bars: '/braking/bars'

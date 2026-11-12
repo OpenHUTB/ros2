@@ -1,0 +1,12 @@
+uav_bc_bench:
+  ros__parameters:
+    dataset_dir: ~/.ros/uav_depth_track_nn/data
+    output_dir: ~/.ros/uav_bc_bench
+    epochs: 30
+    seeds: 3
+    batch_size: 32
+    structures: 'mlp,cnn,cnn_wide'
+    augment: true
+    image_size: 64
+    # 大于 0 时现场生成等量合成样本，不需要真实数据集（默认 0 = 用 dataset_dir 里的数据）
+    synthetic: 0

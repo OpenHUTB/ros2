@@ -1,0 +1,20 @@
+# 双侧墙通道居中 PD 巡航参数（被 launch 与两个节点共同读取）
+/**:
+  ros__parameters:
+    # 仿真节点
+    rate: 20.0
+    start_x: 0.3
+    start_y: 0.55
+    start_yaw: -0.18
+
+    # 控制器 PD 与限幅
+    kp: 1.2
+    kd: 0.6
+    v_max: 0.4
+    v_floor: 0.08
+    w_max: 1.2
+
+    # 前方受阻 / 恢复阈值（m）
+    forward_safety: 0.6
+    forward_recover: 0.9
+    scan_timeout: 0.5

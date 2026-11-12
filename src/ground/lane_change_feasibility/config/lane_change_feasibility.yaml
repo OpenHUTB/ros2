@@ -1,0 +1,25 @@
+# lane_change_feasibility 参数默认值
+# 改参数不需要改代码：launch 里的同名 <arg> 会覆盖这里的值。
+lane:
+  width: 3.50                # 车道中心到中心 (m)，也就是横向位移
+  max_lateral_accel: 1.50    # 横向加速度上限 (m/s^2)
+  duration_limit: 5.00       # 换道时长上限 (s)
+  direction: 1               # 1 = 向左，-1 = 向右
+safety:
+  ttc_min: 3.00              # 后方最小碰撞时间 (s)
+  front_margin: 5.00         # 前向安全余量 (m)
+  rear_margin: 5.00          # 后向安全余量 (m)
+traffic:
+  ego_speed_kmh: 80.0        # 自车速度
+  front_speed_kmh: 60.0      # 目标车道前车速度
+  front_gap: 40.0           # 前车间距 (m)
+  rear_speed_kmh: 90.0       # 目标车道后车速度
+  rear_gap: 30.0            # 后车间距 (m)
+sim:
+  step: 0.02                 # 轨迹采样步长 (s)
+rate:
+  publish_hz: 10.0           # 发完报告后的保活频率 (Hz)
+
+tf:
+  enabled: true          # 是否广播 TF
+  rate_hz: 10.0          # TF 广播频率 Hz

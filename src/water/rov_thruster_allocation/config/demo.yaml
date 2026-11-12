@@ -1,0 +1,7 @@
+thruster_sim:
+  ros__parameters:
+    scale: 1.0
+    samples: 40
+thruster_allocator:
+  ros__parameters:
+    weight: 0.000001

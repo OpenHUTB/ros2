@@ -1,0 +1,7 @@
+visual_steering_node:
+  ros__parameters:
+    checkpoint: ""
+    image_topic: "/front_rgb/image_raw"
+    command_topic: "/cmd_vel"
+    steering_rate: 0.65
+    image_timeout_s: 0.5
