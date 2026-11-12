@@ -1,3 +1,6 @@
+#!/bin/bash
+# 扫描「真实坡度 × 深度噪声」，每组写一个 CSV，最后汇总出图。
+# 用法: bash run_eval.sh [输出目录]
 set -e
 
 OUT_DIR="${1:-results}"
