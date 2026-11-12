@@ -26,7 +26,8 @@ if _SCRIPT_DIR not in sys.path:
     sys.path.insert(0, _SCRIPT_DIR)
 
 from lidar_features import (  # noqa: E402
-    FOV_DEG, MAX_RANGE, extract_scan, scan_angle_max, sector_distances,
+    FOV_DEG, MAX_RANGE, compensate_scan_points, extract_scan, scan_angle_max,
+    sector_distances, yaw_from_quaternion,
 )
 
 _client_dir = os.environ.get('AIRSIM_PYTHON_CLIENT')
@@ -59,20 +60,26 @@ class LidarScanNode(object):
         data = self.client.getLidarData(lidar_name=self.lidar,
                                         vehicle_name=self.vehicle)
         arr = np.array(data.point_cloud, dtype=np.float32)
-        return arr.reshape(-1, 3) if arr.size else np.zeros((0, 3), np.float32)
+        points = arr.reshape(-1, 3) if arr.size else np.zeros((0, 3), np.float32)
+        state = self.client.getMultirotorState(vehicle_name=self.vehicle)
+        pose = state.kinematics_estimated
+        position = pose.position
+        return points, (position.x_val, position.y_val,
+                        yaw_from_quaternion(pose.orientation))
 
     def run(self):
         rate = rospy.Rate(self.rate_hz)
         while not rospy.is_shutdown():
             try:
-                points = self._read_points()
+                points, current_pose = self._read_points()
                 now = rospy.Time.now().to_sec()
 
                 if points.shape[0]:
-                    self.buffer.append((now, points))
+                    self.buffer.append((now, points, current_pose))
                 while self.buffer and now - self.buffer[0][0] > self.accum_sec:
                     self.buffer.popleft()
-                accum = (np.vstack([p for _, p in self.buffer])
+                accum = (np.vstack([compensate_scan_points(p, pose, current_pose)
+                                    for _, p, pose in self.buffer])
                          if self.buffer else points)
 
                 ranges = extract_scan(accum, bins=self.bins, max_range=MAX_RANGE)

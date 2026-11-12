@@ -101,7 +101,11 @@ def build_state(points, cur_ned, goal_ned, yaw_ned, vel_ned, last_action=0):
 
 
 def extract_scan(points, bins=180, fov_deg=FOV_DEG, max_range=MAX_RANGE):
-    """点云 -> LaserScan 距离数组，无命中的角度填 max_range。"""
+    """点云 -> LaserScan 距离数组，无命中的角度填 max_range。
+
+    输出顺序遵循 ROS LaserScan 约定：ranges[0] 对应 angle_min（-90°，右侧），
+    最后一个元素对应 angle_max（+89°，左侧）。
+    """
     ranges = np.full(bins, max_range, dtype=np.float32)
     if points is None:
         return ranges
@@ -111,7 +115,9 @@ def extract_scan(points, bins=180, fov_deg=FOV_DEG, max_range=MAX_RANGE):
 
     x, y = pts[:, 0], pts[:, 1]
     r = np.hypot(x, y)
-    ang = np.degrees(np.arctan2(y, x))
+    # AirSim 传感器系是 NED（x 前、y 右），atan2 的正角在右侧；
+    # ROS LaserScan 的正角按 REP 103 向左。取负后 ranges[0] 才是 -90°（右）。
+    ang = -np.degrees(np.arctan2(y, x))
     half = fov_deg / 2.0
     keep = (r > 0.15) & (r < max_range) & (np.abs(ang) <= half)
     if not np.any(keep):
@@ -124,6 +130,36 @@ def extract_scan(points, bins=180, fov_deg=FOV_DEG, max_range=MAX_RANGE):
         if hit.size:
             ranges[i] = float(hit.min())
     return ranges
+
+
+def compensate_scan_points(points, sample_pose, current_pose):
+    """Move an older sensor-local sweep into the current sensor frame.
+
+    Poses are (north_m, east_m, yaw_ned_rad). The configured lidar has zero
+    horizontal offset from the vehicle, so vehicle and sensor XY coincide.
+    """
+    pts = np.asarray(points, dtype=np.float32).reshape(-1, 3).copy()
+    if not len(pts):
+        return pts
+    sx, sy, sa = sample_pose
+    cx, cy, ca = current_pose
+    c, s = math.cos(sa), math.sin(sa)
+    world_x = sx + c * pts[:, 0] - s * pts[:, 1]
+    world_y = sy + s * pts[:, 0] + c * pts[:, 1]
+    dx, dy = world_x - cx, world_y - cy
+    c, s = math.cos(ca), math.sin(ca)
+    pts[:, 0] = c * dx + s * dy
+    pts[:, 1] = -s * dx + c * dy
+    return pts
+
+
+def advance_waypoint(index, position, waypoints, tolerance_m):
+    """Advance to the next NED waypoint only after reaching the current one."""
+    if index >= len(waypoints) - 1:
+        return index
+    x, y = position
+    gx, gy = waypoints[index]
+    return index + 1 if math.hypot(gx - x, gy - y) <= tolerance_m else index
 
 
 def scan_angle_max(angle_min, angle_increment, bins):
