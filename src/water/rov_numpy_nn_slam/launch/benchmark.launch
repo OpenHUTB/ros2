@@ -1,0 +1,33 @@
+<launch>
+  <!-- RVNN headless benchmark: sim + metrics, no viewer, auto shutdown -->
+  <arg name="scene"     default="pool"/>
+  <arg name="seed"      default="20261110"/>
+  <arg name="noise"     default="true"/>
+  <arg name="duration"  default="90.0"/>
+  <arg name="mode"      default="BENCHMARK"/>
+  <arg name="goal_x"    default=""/>
+  <arg name="goal_y"    default=""/>
+  <arg name="goal_depth" default=""/>
+  <arg name="timeout"   default="90.0"/>
+
+  <node pkg="rov_numpy_nn_slam" type="sim_node.py" name="sim_node" output="screen">
+    <env name="RVNN_ROOT" value="$(find rov_numpy_nn_slam)"/>
+    <param name="scene"    value="$(arg scene)"/>
+    <param name="seed"     value="$(arg seed)"/>
+    <param name="noise"    value="$(arg noise)"/>
+    <param name="duration" value="$(arg duration)"/>
+    <param name="mode"     value="$(arg mode)"/>
+  </node>
+
+  <node pkg="rov_numpy_nn_slam" type="metrics_node.py" name="metrics_node"
+        output="screen" required="true">
+    <env name="RVNN_ROOT" value="$(find rov_numpy_nn_slam)"/>
+    <param name="scene"      value="$(arg scene)"/>
+    <param name="mode"       value="benchmark"/>
+    <param name="goal_x"     value="$(arg goal_x)"/>
+    <param name="goal_y"     value="$(arg goal_y)"/>
+    <param name="goal_depth" value="$(arg goal_depth)"/>
+    <param name="timeout"    value="$(arg timeout)"/>
+    <param name="shutdown"   value="true"/>
+  </node>
+</launch>

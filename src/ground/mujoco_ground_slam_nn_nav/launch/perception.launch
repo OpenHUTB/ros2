@@ -1,0 +1,14 @@
+<launch>
+  <!-- Lidar perception demo: raw scan vs neural filtered scan. -->
+  <arg name="scene" default="warehouse"/>
+  <arg name="viewer" default="true"/>
+
+  <node pkg="mujoco_ground_slam_nn_nav" type="sim_node.py" name="gvnn_sim" output="screen">
+    <param name="scene" value="$(arg scene)"/>
+  </node>
+  <node pkg="mujoco_ground_slam_nn_nav" type="perception_node.py" name="gvnn_perception" output="screen"/>
+  <node if="$(arg viewer)" pkg="mujoco_ground_slam_nn_nav" type="viewer_node.py" name="gvnn_viewer" output="screen">
+    <param name="scene" value="$(arg scene)"/>
+    <param name="teleop" value="true"/>
+  </node>
+</launch>

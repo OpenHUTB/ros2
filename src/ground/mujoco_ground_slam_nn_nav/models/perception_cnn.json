@@ -1,0 +1,32 @@
+{
+  "type": "cnn",
+  "spec": [
+    {
+      "type": "conv",
+      "cin": 1,
+      "cout": 8,
+      "k": 7,
+      "s": 1,
+      "p": 3,
+      "act": "relu"
+    },
+    {
+      "type": "conv",
+      "cin": 8,
+      "cout": 8,
+      "k": 5,
+      "s": 1,
+      "p": 2,
+      "act": "relu"
+    },
+    {
+      "type": "conv",
+      "cin": 8,
+      "cout": 1,
+      "k": 3,
+      "s": 1,
+      "p": 1,
+      "act": "linear"
+    }
+  ]
+}

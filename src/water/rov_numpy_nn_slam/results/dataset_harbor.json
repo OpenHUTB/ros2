@@ -1,0 +1,39 @@
+{
+  "action_counts": {
+    "0": 404,
+    "1": 11,
+    "2": 0,
+    "3": 0,
+    "4": 0,
+    "5": 0,
+    "6": 0,
+    "7": 31
+  },
+  "clean_scan_shape": [
+    446,
+    64
+  ],
+  "cmd_shape": [
+    446,
+    4
+  ],
+  "collisions": 0,
+  "episode_success_rate": 1.0,
+  "episodes": 3,
+  "image_shape": [
+    446,
+    48,
+    64,
+    3
+  ],
+  "random_start": true,
+  "sample_hz": 10.0,
+  "samples": 446,
+  "scan_shape": [
+    446,
+    64
+  ],
+  "scene": "harbor",
+  "seconds_wall": 15.41,
+  "seed": 20261110
+}

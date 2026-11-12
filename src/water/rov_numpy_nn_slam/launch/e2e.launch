@@ -1,0 +1,50 @@
+<launch>
+  <!-- RVNN end-to-end camera->CNN driving: sim + e2e + metrics + viewer -->
+  <arg name="scene"          default="pool"/>
+  <arg name="seed"           default="20261110"/>
+  <arg name="noise"          default="true"/>
+  <arg name="display"        default=":0"/>
+  <arg name="viewer"         default="true"/>
+  <arg name="duration"       default="0.0"/>
+  <arg name="mode"           default="E2E"/>
+  <arg name="model"          default="$(find rov_numpy_nn_slam)/models/e2e_cnn.npz"/>
+  <arg name="timeout"        default="120.0"/>
+  <arg name="auto_snapshot"  default=""/>
+  <arg name="render_width"   default="820"/>
+
+  <node pkg="rov_numpy_nn_slam" type="sim_node.py" name="sim_node" output="screen">
+    <env name="RVNN_ROOT" value="$(find rov_numpy_nn_slam)"/>
+    <param name="scene"    value="$(arg scene)"/>
+    <param name="seed"     value="$(arg seed)"/>
+    <param name="noise"    value="$(arg noise)"/>
+    <param name="duration" value="$(arg duration)"/>
+    <param name="mode"     value="$(arg mode)"/>
+  </node>
+
+  <node pkg="rov_numpy_nn_slam" type="e2e_node.py" name="e2e_node" output="screen">
+    <env name="RVNN_ROOT" value="$(find rov_numpy_nn_slam)"/>
+    <param name="model"   value="$(arg model)"/>
+    <param name="rate"    value="10.0"/>
+    <param name="safety"  value="true"/>
+  </node>
+
+  <node pkg="rov_numpy_nn_slam" type="metrics_node.py" name="metrics_node" output="screen">
+    <env name="RVNN_ROOT" value="$(find rov_numpy_nn_slam)"/>
+    <param name="scene"    value="$(arg scene)"/>
+    <param name="mode"     value="e2e"/>
+    <param name="timeout"  value="$(arg timeout)"/>
+    <param name="shutdown" value="false"/>
+  </node>
+
+  <node if="$(arg viewer)" pkg="rov_numpy_nn_slam" type="viewer_node.py"
+        name="viewer_node" output="screen">
+    <env name="DISPLAY"    value="$(arg display)"/>
+    <env name="XAUTHORITY" value="/home/lxy/.Xauthority"/>
+    <env name="RVNN_ROOT"  value="$(find rov_numpy_nn_slam)"/>
+    <param name="scene"         value="$(arg scene)"/>
+    <param name="teleop"        value="false"/>
+    <param name="display"       value="$(arg display)"/>
+    <param name="auto_snapshot" value="$(arg auto_snapshot)"/>
+    <param name="render_width" value="$(arg render_width)"/>
+  </node>
+</launch>

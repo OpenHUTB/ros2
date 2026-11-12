@@ -2,7 +2,7 @@
 """
 水下机器人仿真与键盘控制主入口
 =============================
-课程要求：入口为 main. 开头，能够直接运行整个模块。
+规范要求：入口为 main. 开头，能够直接运行整个模块。
 支持两种启动模式：
   1. 纯 Python 独立模式（无需额外终端，自带键盘输入与仿真循环，实时打印 ROV 状态）
   2. ROS2 launch 模式（通过 --launch 参数拉起 main.launch.py）
@@ -949,8 +949,8 @@ def main():
     parser.add_argument("--task4", action="store_true", help="拉起任务 4: 3D 可视化视窗下的端到端水下视觉伺服巡航控制")
     parser.add_argument("--launch4", action="store_true", help="调用 ros2 launch 启动任务 4")
     parser.add_argument("--test4", action="store_true", help="运行任务 4 自动化视觉策略与多模型对比评测")
-    parser.add_argument("--arch", type=str, default="nature_cnn", help="任务 4 网络架构 (nature_cnn/resnet/spatial_softmax)")
-    parser.add_argument("--algo", type=str, default="sac", help="任务 4 学习算法 (sac/ppo/bc)")
+    parser.add_argument("--arch", type=str, default="spatial_softmax", help="任务 4 网络架构 (spatial_softmax/resnet/nature_cnn)")
+    parser.add_argument("--algo", type=str, default="bc", help="任务 4 策略算法 (默认 bc 行为克隆)")
     args = parser.parse_args()
 
     if args.task4:

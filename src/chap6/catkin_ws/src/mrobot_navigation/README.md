@@ -11,9 +11,15 @@ mrobot_navigation/
 │   └── gmapping_demo.launch     # 包含 gmapping.launch，并启动 rviz
 ├── rviz/
 │   └── gmapping.rviz            # Fixed Frame=map，显示 Map(/map)、LaserScan(/scan)、RobotModel、TF
-└── maps/
-    ├── map.pgm                  # 建出的占据栅格地图（图像）
-    └── map.yaml                 # 地图配置（分辨率、原点、阈值）
+├── maps/
+│   ├── gmapping_map.pgm         # 随包提供的一次建图结果（512×544，0.05 m/pix）
+│   ├── gmapping_map.yaml        # 上面这张地图的配置
+│   └── map.yaml                 # 自己建图时 map_saver 生成的配置模板
+├── scripts/
+│   ├── random_navigation.py     # move_base 随机目标点自动导航（需 ROS）
+│   └── map_planner.py           # 离线地图检查 + 全局路径规划（不依赖 ROS）
+└── test/
+    └── test_map_planner.py      # map_planner 的 33 个单元测试
 ```
 
 ## 运行（需配合 mrobot_gazebo 与 mrobot_teleop）
@@ -34,7 +40,45 @@ cd <要保存的目录>
 rosrun map_server map_saver
 ```
 
-生成 `map.pgm` 与 `map.yaml`。本包 `maps/` 下的地图即为一次实际建图结果（576×544，0.05 m/pix）。
+生成 `map.pgm` 与 `map.yaml`。本包 `maps/gmapping_map.pgm` 即为一次实际建图结果（512×544，0.05 m/pix）。
+
+## 离线检查地图与规划路径（不需要 ROS）
+
+`map_planner.py` 把「地图体检 + 全局路径规划」搬到离线：读完 `map_saver` 生成的
+`.pgm` + `.yaml`，统计自由/占用/未知比例与连通性，按机器人半径做障碍膨胀，
+再用 A* 规划路径并做视线法平滑，最后输出一张叠加图。只用 Python 标准库，
+Windows / macOS / Ubuntu 都能直接跑，不必启动 Gazebo 和 move_base。
+
+```bash
+cd src/chap6/catkin_ws/src/mrobot_navigation
+
+# 只体检
+python3 scripts/map_planner.py --map maps/gmapping_map.yaml --stats
+
+# 规划一条全局路径（坐标与 rviz 的 2D Nav Goal 一致，单位米）
+python3 scripts/map_planner.py --map maps/gmapping_map.yaml \
+    --start 1.15 5.46 --goal 9.77 5.17 --radius 0.18 --out plan.png
+```
+
+输出示例（本章地图）：
+
+```text
+自由 / 占用 / 未知 : 11.5% / 1.2% / 87.4%
+最大连通自由区    : 97.7%（占自由空间）
+可通行面积        : 7.1%（半径 0.18 m 膨胀后，膨胀前 11.5%）
+A* 路径长度       : 10.59 m
+平滑后点数 / 长度  : 6 / 9.96 m
+直线距离          : 8.62 m（绕行系数 1.15）
+```
+
+测试：
+
+```bash
+cd src/chap6/catkin_ws/src/mrobot_navigation
+python3 -m unittest discover -s test
+```
+
+应显示 `Ran 33 tests ... OK`。
 
 ## 建图建议
 

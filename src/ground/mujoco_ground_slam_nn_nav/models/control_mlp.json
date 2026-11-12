@@ -1,0 +1,11 @@
+{
+  "type": "mlp",
+  "sizes": [
+    5,
+    64,
+    64,
+    2
+  ],
+  "activation": "relu",
+  "out_activation": "tanh"
+}
