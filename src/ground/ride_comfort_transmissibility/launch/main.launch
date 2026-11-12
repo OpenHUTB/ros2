@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<!-- ride_comfort_transmissibility：乘坐舒适性传递率核算（不依赖 CARLA） -->
+<launch>
+
+  <rosparam command="load" file="$(find ride_comfort_transmissibility)/config/ride_comfort_transmissibility.yaml"/>
+
+  <!-- 悬架 -->
+  <arg name="fn_hz" default="1.2" doc="悬架固有频率 Hz"/>
+  <arg name="damping" default="0.25" doc="阻尼比，必须在 (0, 0.7071) 开区间"/>
+
+  <!-- 路面激励 -->
+  <arg name="input_accel" default="0.5" doc="路面输入加速度 RMS m/s^2"/>
+  <arg name="freq_hz" default="6.0" doc="关心的路面激励频率 Hz"/>
+
+  <!-- 断言阈值 -->
+  <arg name="pos_tolerance" default="0.02" doc="峰位容差（频率比）"/>
+  <arg name="peak_tolerance" default="0.05" doc="峰值相对容差"/>
+  <arg name="high_freq_limit" default="0.1" doc="r=10 时传递率上限"/>
+  <arg name="linear_tolerance" default="0.02" doc="输入加倍的线性容差"/>
+
+  <!-- 扫描区间 -->
+  <arg name="scan_low" default="0.05" doc="扫描下限（频率比）"/>
+  <arg name="scan_high" default="4.0" doc="扫描上限"/>
+  <arg name="scan_steps" default="400" doc="扫描步数"/>
+
+  <!-- 保活 -->
+  <arg name="publish_hz" default="1.0" doc="保活重发频率 Hz"/>
+
+  <!-- 落到同名参数（arg 名不能带斜杠） -->
+  <param name="/suspension/fn_hz" value="$(arg fn_hz)" type="double"/>
+  <param name="/suspension/damping" value="$(arg damping)" type="double"/>
+  <param name="/road/input_accel" value="$(arg input_accel)" type="double"/>
+  <param name="/road/freq_hz" value="$(arg freq_hz)" type="double"/>
+  <param name="/check/pos_tolerance" value="$(arg pos_tolerance)" type="double"/>
+  <param name="/check/peak_tolerance" value="$(arg peak_tolerance)" type="double"/>
+  <param name="/check/high_freq_limit" value="$(arg high_freq_limit)" type="double"/>
+  <param name="/check/linear_tolerance" value="$(arg linear_tolerance)" type="double"/>
+  <param name="/scan/low" value="$(arg scan_low)" type="double"/>
+  <param name="/scan/high" value="$(arg scan_high)" type="double"/>
+  <param name="/scan/steps" value="$(arg scan_steps)" type="int"/>
+  <param name="/rate/publish_hz" value="$(arg publish_hz)" type="double"/>
+
+  <node pkg="ride_comfort_transmissibility" type="main.py"
+        name="ride_comfort_transmissibility" output="screen"/>
+
+</launch>
