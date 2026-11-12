@@ -1,6 +1,6 @@
 import pytest
 
-from mujoco_motor_thermal_guard.guard import MotorTemperatureGuard
+from mujoco_motor_thermal_guard.guard import MotorTemperatureGuard, update_guard_sample
 
 
 def test_guard_predicts_rising_temperature_and_applies_hysteresis():
@@ -21,3 +21,18 @@ def test_guard_rejects_invalid_time_order_and_thresholds():
     guard.update(2, 25)
     with pytest.raises(ValueError, match="increase"):
         guard.update(2, 26)
+
+
+def test_invalid_temperature_sample_is_discarded_without_mutating_guard():
+    guard = MotorTemperatureGuard()
+    first, error = update_guard_sample(guard, 2.0, 25.0)
+    assert first is not None
+    assert error is None
+
+    discarded, error = update_guard_sample(guard, 1.0, 80.0)
+    assert discarded is None
+    assert error is not None and "increase" in error
+    decision, error = update_guard_sample(guard, 3.0, 27.0)
+    assert decision is not None
+    assert decision.predicted_temperature_c == pytest.approx(37.0)
+    assert error is None

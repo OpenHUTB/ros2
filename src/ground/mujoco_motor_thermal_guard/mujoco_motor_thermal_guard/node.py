@@ -8,7 +8,7 @@ from rclpy.node import Node
 from sensor_msgs.msg import Temperature
 from std_msgs.msg import Float32
 
-from mujoco_motor_thermal_guard.guard import MotorTemperatureGuard
+from mujoco_motor_thermal_guard.guard import MotorTemperatureGuard, update_guard_sample
 
 
 class MotorThermalGuardNode(Node):
@@ -42,7 +42,10 @@ class MotorThermalGuardNode(Node):
         sample_time = stamp.sec + stamp.nanosec * 1e-9
         if sample_time <= 0:
             sample_time = self.get_clock().now().nanoseconds * 1e-9
-        decision = self.guard.update(sample_time, float(message.temperature))
+        decision, error = update_guard_sample(self.guard, sample_time, float(message.temperature))
+        if decision is None:
+            self.get_logger().warning(f"Discarding invalid temperature sample: {error}")
+            return
         self.speed_scale = decision.speed_scale
         self.last_temperature_received_s = self.get_clock().now().nanoseconds * 1e-9
         prediction_message = Float32()

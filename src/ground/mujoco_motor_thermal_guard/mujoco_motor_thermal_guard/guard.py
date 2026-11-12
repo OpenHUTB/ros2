@@ -43,3 +43,12 @@ class MotorTemperatureGuard:
         if self.active:
             scale = max(0.25, min(1.0, 1.0 - 0.03 * (predicted - self.release_c)))
         return GuardDecision(predicted, scale, self.active)
+
+
+def update_guard_sample(
+    guard: MotorTemperatureGuard, time_s: float, temperature_c: float
+) -> tuple[GuardDecision | None, str | None]:
+    try:
+        return guard.update(time_s, temperature_c), None
+    except ValueError as error:
+        return None, str(error)
