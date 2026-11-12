@@ -4,34 +4,82 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 import cv2
 
+from image_recorder.capture import make_capture_path, normalize_topic
+
+
 class ImageRecorder(Node):
+    """订阅相机话题，按回车保存当前帧。
+
+    参数：
+        image_topic  订阅的图像话题，默认 Carla 前视相机
+        output_dir   保存目录，默认当前目录
+        image_format 保存格式（jpg/jpeg/png），默认 jpg
+        show_window  是否弹窗显示（无图形界面的环境设为 False）
+    """
+
     def __init__(self):
         super().__init__('image_recorder_node')
+        self.image_topic = normalize_topic(
+            self.declare_parameter('image_topic',
+                                   '/carla/ego_vehicle/camera/rgb/front/image')
+            .value)
+        self.output_dir = self.declare_parameter('output_dir', '.').value
+        self.image_format = str(
+            self.declare_parameter('image_format', 'jpg').value)
+        self.show_window = bool(
+            self.declare_parameter('show_window', True).value)
+
         self.subscription = self.create_subscription(
             Image,
-            '/carla/ego_vehicle/camera/rgb/front/image', 
+            self.image_topic,
             self.listener_callback,
             10)
         self.bridge = CvBridge()
-        self.get_logger().info('Node started, waiting for images...')
+        self._save_index = 0
+        self.get_logger().info(
+            f'Node started, topic={self.image_topic}, output_dir={self.output_dir}, '
+            f'show_window={self.show_window}')
 
     def listener_callback(self, msg):
         try:
             cv_image = self.bridge.imgmsg_to_cv2(msg, "bgr8")
-            cv2.imshow("Image Recorder", cv_image)
-            key = cv2.waitKey(1)
+            if self.show_window:
+                cv2.imshow("Image Recorder", cv_image)
+                key = cv2.waitKey(1)
+            else:
+                # 无窗口时无法按键，改为每帧都保存，便于录制数据集
+                key = 13
             if key == 13:
-                cv2.imwrite('capture.jpg', cv_image)
-                self.get_logger().info('Saved as capture.jpg')
+                path = make_capture_path(self.output_dir,
+                                         extension=self.image_format,
+                                         index=self._save_index)
+                self._save_index += 1
+                cv2.imwrite(str(path), cv_image)
+                self.get_logger().info(f'Saved as {path}')
         except Exception as e:
             self.get_logger().error(f'Error: {e}')
+
+    def destroy_node(self):
+        if self.show_window:
+            try:
+                cv2.destroyAllWindows()
+            except Exception:
+                pass
+        super().destroy_node()
+
 
 def main(args=None):
     rclpy.init(args=args)
     image_recorder = ImageRecorder()
-    rclpy.spin(image_recorder)
-    image_recorder.destroy_node()
-    rclpy.shutdown()
+    try:
+        rclpy.spin(image_recorder)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        image_recorder.destroy_node()
+        if rclpy.ok():
+            rclpy.shutdown()
+
 
 if __name__ == '__main__':
     main()
