@@ -38,18 +38,28 @@ Humble，为高度估计、定高控制和气压计噪声分析提供数据源�
 
 ### 2.1 数据转发与单位
 
-本模块是单位透明转发器，不执行额外标定或重新计算：
+AirSim 的压力和气压高度按 Pa、m 原样转发；QNH 在 AirSim 1.8.1 中按
+hPa 返回，而本模块对外统一发布 Pa。因此转换关系为
 
 $$
-h_{\mathrm{ROS}}=h_{\mathrm{AirSim}},\qquad
-p_{\mathrm{ROS}}=p_{\mathrm{AirSim}},\qquad
-q_{\mathrm{ROS}}=q_{\mathrm{AirSim}}.
+h_{\mathrm{ROS}}\,[\mathrm{m}]
+=h_{\mathrm{AirSim}}\,[\mathrm{m}],
+\qquad
+p_{\mathrm{ROS}}\,[\mathrm{Pa}]
+=p_{\mathrm{AirSim}}\,[\mathrm{Pa}],
+$$
+
+$$
+q_{\mathrm{ROS}}\,[\mathrm{Pa}]
+=100\,q_{\mathrm{AirSim}}\,[\mathrm{hPa}].
 $$
 
 ROS `FluidPressure.fluid_pressure` 的约定单位是 Pa；高度和 QNH 的
-`Float64` 分别是本节接口表声明的 m 和 Pa。模块没有隐式比例参数，因此使用
-实际场景前必须确认 AirSim 返回值与上述单位一致。若后续发现场景单位不同，
-应显式增加并验证尺度参数，不能在调用方静默猜测。
+`Float64` 分别是本节接口表声明的 m 和 Pa。例如 AirSim 默认 QNH
+`1013.25 hPa` 会发布为 `101325 Pa`。转换在
+`airsim_ros2_barometer/barometer.py` 中统一完成，调用方不需要再次乘 100。
+AirSim 1.8.1 的 hPa 约定见
+[`BarometerSimpleParams.hpp`](https://github.com/microsoft/AirSim/blob/v1.8.1/AirLib/include/sensors/barometer/BarometerSimpleParams.hpp)。
 
 ### 2.2 样本合法性
 
@@ -138,8 +148,8 @@ client 是否存在？──否──▶ 后台线程执行限时连接
 | 位置 | 内容 |
 | --- | --- |
 | `barometer.py:10-16` | 不可变数据类 `BarometerSample` |
-| `barometer.py:19-34` | 校验高度、压力、QNH，并返回规范化样本 |
-| `barometer.py:24-29` | 有限性、正压力和正 QNH 检查 |
+| `barometer.py:13-37` | 定义样本模型，校验高度、压力、QNH，并把 QNH 从 hPa 转为 Pa |
+| `barometer.py:27-32` | 有限性、正压力和正 QNH 检查 |
 
 ### 4.2 `airsim_ros2_barometer/main.py`
 
@@ -149,8 +159,8 @@ client 是否存在？──否──▶ 后台线程执行限时连接
 | `main.py:94-121` | 连接状态、单线程 RPC executor、三个发布者和定时器 |
 | `main.py:123-174` | 非阻塞连接调度、RPC 超时、`confirmConnection()` 与重连 |
 | `main.py:180-231` | timer 调度、Future 消费、连续失败和断线处理 |
-| `main.py:233-260` | 三个 ROS 消息的字段映射和发布 |
-| `main.py:263-275` | `main()`、构造失败清理和幂等 shutdown |
+| `main.py:233-261` | 三个 ROS 消息的字段映射和发布 |
+| `main.py:264-276` | `main()`、构造失败清理和幂等 shutdown |
 
 `client_factory` 用于测试注入：不启动 AirSim 时也能覆盖阻塞连接、阻塞读取、
 失败重连和消息发布。生产环境动态导入 `airsim`，缺失时给出 requirements 路径。
@@ -234,7 +244,7 @@ colcon test-result --verbose
 
 ## 8. 范围与限制
 
-- 只转发 AirSim 气压计数据，不执行温度补偿、偏置标定或滤波；
+- 除 QNH 的 hPa→Pa 单位转换外只转发 AirSim 数据，不执行温度补偿、偏置标定或滤波；
 - 不使用气压公式重新计算高度，不替代飞控 EKF 或高度融合模块；
 - `pressure_variance` 是配置值，不是从仿真样本估计的实测噪声；
 - QNH 来自仿真场景配置，不能假设与真实气象基准一致；

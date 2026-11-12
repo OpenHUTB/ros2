@@ -240,7 +240,8 @@ class AirSimBarometerBridge(Node):
                 f"{normalized.altitude:.3f}, "
                 f"pressure={type(sample.pressure).__name__}:"
                 f"{normalized.pressure:.3f}, "
-                f"qnh={type(sample.qnh).__name__}:{normalized.qnh:.3f}"
+                f"qnh={type(sample.qnh).__name__}:"
+                f"{normalized.qnh_pa:.3f} Pa"
             )
         stamp = self.get_clock().now().to_msg()
 
@@ -256,7 +257,7 @@ class AirSimBarometerBridge(Node):
         self._altitude_publisher.publish(altitude)
 
         qnh = Float64()
-        qnh.data = normalized.qnh
+        qnh.data = normalized.qnh_pa
         self._qnh_publisher.publish(qnh)
 
 

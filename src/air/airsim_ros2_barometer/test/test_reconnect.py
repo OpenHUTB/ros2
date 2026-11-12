@@ -15,7 +15,7 @@ def _sample():
     return SimpleNamespace(
         altitude=12.5,
         pressure=101250.0,
-        qnh=101325.0,
+        qnh=1013.25,
     )
 
 
@@ -243,7 +243,7 @@ def test_publish_sample_maps_all_messages() -> None:
         sample = SimpleNamespace(
             altitude="12.5",
             pressure="101250.0",
-            qnh="101325.0",
+            qnh="1013.25",
         )
 
         with mock.patch.object(node.get_logger(), "info") as log_info:

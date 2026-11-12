@@ -9,17 +9,17 @@ import pytest
 from airsim_ros2_barometer.barometer import parse_barometer_sample
 
 
-def test_parse_valid_sample() -> None:
+def test_parse_valid_sample_converts_qnh_hpa_to_pa() -> None:
     sample = parse_barometer_sample(
         SimpleNamespace(
             altitude=12.5,
             pressure=101250.0,
-            qnh=101325.0,
+            qnh=1013.25,
         )
     )
     assert sample.altitude == pytest.approx(12.5)
     assert sample.pressure == pytest.approx(101250.0)
-    assert sample.qnh == pytest.approx(101325.0)
+    assert sample.qnh_pa == pytest.approx(101325.0)
 
 
 @pytest.mark.parametrize("pressure", [0.0, -1.0, float("nan")])

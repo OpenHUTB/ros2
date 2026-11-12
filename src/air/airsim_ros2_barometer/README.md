@@ -29,6 +29,9 @@ ROS 2 Humble 的 AirSim 气压计桥接。模块将 AirSim `getBarometerData` �
 `FluidPressure.variance` 默认取 `1.0 Pa²`，可通过
 `pressure_variance` 参数调整。
 
+AirSim 1.8.1 的 QNH 原始单位为 hPa，模块在发布前乘以 `100` 转为 Pa。
+例如场景默认值 `1013.25 hPa` 会发布为 `101325 Pa`。
+
 AirSim 的连接和读取 RPC 在同一个后台工作线程执行，`rpc_timeout` 默认
 `1.0` 秒，不会阻塞 ROS 定时器；`reconnect_period` 默认 `2.0` 秒。
 
@@ -83,7 +86,7 @@ workflow 会在 Humble 容器中构建并测试本包。
 
 ## 范围与限制
 
-- 只转发 AirSim 气压计数据，不执行海拔解算、温度补偿或 Kalman 融合；
+- 除 QNH 的 hPa→Pa 转换外只转发 AirSim 数据，不执行海拔解算、温度补偿或 Kalman 融合；
 - 不保证 QNH 与真实气象基准一致，使用前应检查场景配置；
 - 不替代 IMU/高度融合、气压计故障检测或飞控内部 EKF；
 - 真实压力、高度、QNH、噪声和频率仍需在 AirSim/OpenHUTB 场景中验证。
