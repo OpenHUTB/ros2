@@ -28,7 +28,16 @@ AirSim 场景里自行探索，以“接近目标、朝向对齐、避开障碍�
 
 AirSim 与 ROS 的通信走 msgpack-rpc（默认 41451 端口）。WSL2 下需要把
 `airsim_ip` 设为 Windows 主机在 WSL 网段里的地址（`/proc/net/route` 的网关）。
-AirSim 的 `settings.json` 放在 `Blocks.exe` 同目录，传感器配置见 `config/settings.json`。
+启动 Blocks 时显式指定本模块的 `config/settings.json`，确保仿真器创建
+`Drone_1`（而不是默认的 `PhysXCar`）。在 Windows PowerShell 中，例如：
+
+```powershell
+& "C:\path\to\Blocks.exe" '-settings=C:\path\to\uav_lidar_dqn_navigation\config\settings.json'
+```
+
+将两个路径替换成实际绝对路径。若路径包含空格，可把配置文件复制到无空格路径后再指定。
+AirSim 不会因为项目目录里有 `settings.json` 就自动读取它；启动后可通过
+`airsim.MultirotorClient().listVehicles()` 确认列表中有 `Drone_1`。
 
 ## 编译
 
@@ -167,7 +176,9 @@ rosrun uav_lidar_dqn_navigation train_dqn_e2e.py --episodes 120
 rosrun uav_lidar_dqn_navigation main.py --mode e2e_train --episodes 120
 ```
 
-权重保存为 `models/dqn_e2e.pt`。
+权重保存为 `models/dqn_e2e.pt`。本仓库没有与该权重对应的逐回合训练日志；
+2026-11-12 的两轮 110 秒部署复测均未到达目标，因此当前权重仅用于验证图像到
+控制指令的闭环，不能据此宣称目标到达成功率。实测轨迹见模块文档第 6.2 节。
 
 ## 话题与服务
 
@@ -226,7 +237,7 @@ launch/main.launch           统一启动入口（teleop / scan / dqn / slam / e
 | 键盘遥控 | 2 m/s 前进位移 / 高度波动 | 13.4 m / ±0.1 m |
 | 雷达 + DQN | 末 50 / 末 20 回合成功率 | 94% / 100% |
 | DQN 导航部署 | 距目标误差 | 0.83 m（目标 (15, 10)） |
-| 端到端 DQN | 末 20 回合成功率 / 部署误差 | 65% / 2.46 m |
+| 端到端 DQN | RGB、动作与速度指令 | 链路已实测；到达率待复测 |
 | 建图（2026-11-12 实机复测） | 地图尺寸 / 占用格 | 2208×2272 / 5472；0.05 m/格，连续墙体可见 |
 | 建图航点（同次运行） | 第二目标 / 运行中位置 | (16,20) / (16.49,19.62)，误差约 0.62 m |
 

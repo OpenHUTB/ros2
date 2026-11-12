@@ -33,6 +33,11 @@ class CameraNode(object):
 
         self.client = airsim.MultirotorClient(ip=self.ip, timeout_value=10)
         self.client.confirmConnection()
+        vehicles = self.client.listVehicles()
+        if self.vehicle not in vehicles:
+            raise RuntimeError(
+                'AirSim 中没有机体 %s（当前车辆: %s）。请用 -settings 指向本模块 '
+                'config/settings.json 启动 Blocks。' % (self.vehicle, vehicles))
 
         self.rgb_pub = rospy.Publisher('/drone/image_raw', Image, queue_size=2)
         self.depth_pub = rospy.Publisher('/drone/depth', Image, queue_size=2)
