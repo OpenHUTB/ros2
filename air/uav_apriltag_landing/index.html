@@ -1078,10 +1078,14 @@
 <li><code>dt-apriltags</code>(可选): <code>pip install dt-apriltags</code></li>
 </ul>
 <h2 id="_4">运行</h2>
-<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>src/air/uav_apriltag_landing
-python3<span class="w"> </span>main.py
+<div class="highlight"><pre><span></span><code><span class="c1"># 先在工作空间根目录（含 src/ 的那一层）编译并加载环境</span>
+<span class="nb">cd</span><span class="w"> </span>~/ros2_ws
+colcon<span class="w"> </span>build<span class="w"> </span>--packages-select<span class="w"> </span>uav_apriltag_landing
+<span class="nb">source</span><span class="w"> </span>install/setup.bash
+
+ros2<span class="w"> </span>run<span class="w"> </span>uav_apriltag_landing<span class="w"> </span>apriltag_landing_node
 <span class="c1"># 或</span>
-ros2<span class="w"> </span>launch<span class="w"> </span>launch/uav_apriltag_landing.launch.py
+ros2<span class="w"> </span>launch<span class="w"> </span>uav_apriltag_landing<span class="w"> </span>uav_apriltag_landing.launch.py
 </code></pre></div>
 <h2 id="_5">话题</h2>
 <ul>
