@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>mujoco_nn_latency_robustness</name>
+  <version>0.1.0</version>
+  <description>
+    MuJoCo 上神经网络跟踪策略的执行延迟与控制频率鲁棒性实验：同一份权重下扫描 0～1000 ms
+    执行延迟与 10/20/50 Hz 控制频率，对比「无补偿 / 匀速外推 / 模型前向(Smith 预测)」三种处理。
+  </description>
+  <maintainer email="nikedordo@gmail.com">nikedordo-debug</maintainer>
+  <license>MIT</license>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-matplotlib</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

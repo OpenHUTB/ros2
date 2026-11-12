@@ -1,0 +1,11 @@
+latency_nav_node:
+  ros__parameters:
+    # 赛道：circle（半径 3 m）/ kidney（肾形）/ peanut（花生形）
+    shape: kidney
+    # 执行延迟：指令算出来后要等这么久才落到车上（毫秒）
+    delay_ms: 600.0
+    # 延迟补偿：none（不补）/ extrap（匀速外推）/ model（模型前向，Smith 预测）
+    comp: model
+    # 控制频率（Hz）
+    rate_hz: 20.0
+    seed: 0
