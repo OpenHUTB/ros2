@@ -1,0 +1,15 @@
+{
+  "scene": "sparse",
+  "mode": "full",
+  "success": true,
+  "collision": false,
+  "steps": 435,
+  "duration_s": 43.5,
+  "path_length_m": 51.91,
+  "min_clearance_m": 1.294,
+  "replans": 44,
+  "plan_ms": 112.03,
+  "infer_ms": 2.39,
+  "wall_s": 36.53,
+  "gif": "/home/user/ca/neural_ca_drone/runs/20261109_201535_full/full_sparse.gif"
+}

@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>uav_moving_target_follow</name>
+  <version>0.1.0</version>
+  <description>
+    UAV standoff following of a moving ground target with analytic
+    reference generation and MuJoCo closed loop.
+    移动地面目标的后方等距跟随：目标折线路径解析位置/速度，无人机
+    在目标速度反方向 standoff 米、固定高度生成参考点，截获阶段按
+    未来参考点做固定点迭代求最早追上时刻；最后用 uav_mujoco_sim
+    闭环真飞，统计截获时间、跟随误差与转角瞬态，并给出"目标正上方"
+    朴素基线的同口径对比。
+  </description>
+  <maintainer email="327592576+KKK555-MAX@users.noreply.github.com">蒋宇鑫</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>uav_mujoco_sim</exec_depend>
+
+  <test_depend>ament_pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

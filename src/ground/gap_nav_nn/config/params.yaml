@@ -1,0 +1,11 @@
+# 节点私有参数：launch 用 <rosparam> 加载到 /gap_nav_node 命名空间，
+# 节点用 rospy.get_param("~xxx") 读取，未提供时用代码默认值。
+#
+# 注：隔墙开口的几何（位置与宽度）现在由 models/gap_world.xml 的墙段
+# 自动推导（GapSim.gaps），不再在这里重复维护，避免两处真值不一致。
+mode: nn            # nn | expert | manual
+rate: 20.0          # 控制频率 (Hz)
+seed: 0             # 起点/目标/初速的随机种子
+min_passable: 0.95  # 开口宽度下限 (m)：车宽 0.6 + 余量
+v_max: 0.80         # 纯跟踪最大线速度 (m/s)
+lookahead: 1.1      # 纯跟踪前视距离 (m)

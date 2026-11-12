@@ -1,0 +1,6 @@
+START pid=325 source=/work/src/chap1/turtle_waypoint_patrol/main.py sha256=ca4ebe41a970f0c912ab034f089e94721ce3e3f963468de14617707286a836b2
+EXIT cleanup_begin monotonic=1823.402746
+EXIT trace_closed monotonic=1823.404851
+EXIT handles_released monotonic=1823.510315
+EXIT ros_shutdown_begin monotonic=1823.510363
+EXIT ros_shutdown_done monotonic=1824.111688
