@@ -99,6 +99,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 ROS 2 Action 斐波那契数列计算示例：[chap2/fibonacci_action](./chap2/fibonacci_action.md)
 
 ## 2. 人形机器人 <span id='humanoid'></span>
+* [人形机器人离线语音指令控制：端到端关键词识别（KWS）](./humanoid/humanoid_kws_command.md)
 * [具身人形物理仿真与平衡行走控制](./humanoid/embodied_humanoid_control.md) —— MuJoCo 双足人形：键盘遥控、激光/深度感知、参数化步态与根节点平衡控制
 * [关节 Stribeck 摩擦辨识与前馈补偿](./humanoid/joint_friction_identification.md) —— 恒速扫掠 + 网格/最小二乘辨识 Stribeck 四参数（库仑 −1.7%、静摩擦 −1.0%），前馈补偿把正弦跟踪 RMS 从 0.00703 降到 0.00310 rad（改善 55.9%）
 
@@ -162,6 +163,7 @@ ROS 2 Action 斐波那契数列计算示例：[chap2/fibonacci_action](./chap2/f
 
 ## 4. 地面载具  <span id='ground_vehicle'></span>
 
+* [RRT 快速随机扩展树路径规划](./ground/rrt_path_planning.md) —— 矩形障碍空间下的 RRT 采样规划：随机树扩展、目标偏置、Liang-Barsky 碰撞检测与路径回溯，pygame 2D 可视化
 * [小海龟多航点巡航与暂停恢复](./chapter/chap1/turtle_waypoint_patrol/index.md)
 * [离线测试接入 GitHub Actions](./ground/offline_checks.md) —— 6 个零依赖离线测试接入 CI，分别通过 208 / 270 / 242 / 41 / 271 / 204 项
 * [编码器量化误差与速度估计滤波对比](./ground/encoder_quantization_velocity.md) —— 1 kHz 差分把量化误差放大千倍；1024/4096/16384 CPR 下原始差分 1.371→0.404→0.133 rad/s，α-β 与卡尔曼把误差压到 0.198/0.047
@@ -372,6 +374,8 @@ ROS 2 Action 斐波那契数列计算示例：[chap2/fibonacci_action](./chap2/f
 * [城市道路地面载具：二维自行车动力学、激光 SLAM 与纯 NumPy 神经网络导航](./ground/road_numpy_nn_slam.md)
 
 
+* [无人机空间围栏与速度门控](./air/uav_box_geofence_guard/index.md)
+
 * [Town10 立面自主巡航与图像采集](./air/town10_facade_cruise_capture/index.md)
 
 * [AirSim 无人机弓字形区域勘测](./air/drone_lawnmower_survey.md) —— 按区域尺寸、航线间距、高度和速度生成往返覆盖航线，支持无仿真器安全预览与参数边界测试
@@ -454,6 +458,7 @@ ROS 2 Action 斐波那契数列计算示例：[chap2/fibonacci_action](./chap2/f
 * [AirSim ROS 2 Humble 最小桥接](./air/airsim_ros2_bringup.md)
 * [AirSim ROS 2 Humble GNSS 桥接](./air/airsim_ros2_gnss.md)
 * [AirSim ROS 2 Humble 磁力计桥接](./air/airsim_ros2_magnetometer.md)
+* [AirSim ROS 2 Humble 气压计桥接](./air/airsim_ros2_barometer.md)
 * [无人机 LiDAR 地面/障碍分割](./air/uav_lidar_ground_filter.md)
 * [无人机屋顶降落](./air/rooftop_landing.md) —— 用机载 LiDAR 检测屋顶平面，取轮廓的最大内切圆圆心作为降落点，自主飞抵其上方后垂直降落
 * [无人机屋顶降落（学习型落点选择）](./air/rooftop_landing_nn.md) —— 用点云高度图 + 小 CNN 直接回归屋顶落点；凹形屋顶（U/L/天井）与稀疏点云下比凸包最大内切圆更稳，附三组消融对比
@@ -630,6 +635,7 @@ ROS 2 Action 斐波那契数列计算示例：[chap2/fibonacci_action](./chap2/f
 ### 控制
 
 * [水域载具示例（手柄 / 航点 / 深度航向指令）](./water/holoocean_examples.md) —— 多代理手柄控制、相机 HUD 与配置文件结构
+* [USV 会遇局面判定与 COLREGs 避让](./water/usv_colregs_avoidance.md)
 
 * [水下机器人物理仿真与 6-DOF 键盘运动控制](./water/rov_physical_simulation.md)
 
@@ -690,3 +696,4 @@ ___
 
 ## 参考文献
 * [MuJoCo 失落公园无人机端到端视觉转向](./air/mujoco_abandoned_park_uav_visual_steering.md)
+* [四旋翼无人机物理仿真、激光 SLAM 与禁飞区规避](./air/uav_numpy_nn_slam.md) —— 城市/峡谷/机场三场景、72 波束激光 SLAM、A* 绕禁飞区、纯 NumPy 神经网络与端到端 CNN
