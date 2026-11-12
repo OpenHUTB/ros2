@@ -24,6 +24,8 @@ setup(
             "roundabout_e2e = carla_nn_roundabout_entry.main:main",
             "roundabout_simulator = carla_nn_roundabout_entry.ros_simulator:main",
             "roundabout_navigation = carla_nn_roundabout_entry.ros_navigation:main",
+            "roundabout_sim = carla_nn_roundabout_entry.roundabout_sim:main",
+            "roundabout_policy = carla_nn_roundabout_entry.train_policy:main",
         ],
     },
 )
