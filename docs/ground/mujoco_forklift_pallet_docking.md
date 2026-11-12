@@ -21,12 +21,16 @@ flowchart LR
 
 ### Ubuntu 22.04 与 ROS 2 Humble
 
+本教程的权重、动力学评估和容器依赖对应 **MuJoCo 3.12.0**。请按 `requirements.txt` 安装该版本；其他版本的物理与渲染行为不同，不直接复用本教程的量化结果。
+
 ```bash
 cd ~/ros2_ws
 colcon build --packages-select mujoco_forklift_pallet_docking
 source install/setup.bash
 ros2 launch mujoco_forklift_pallet_docking main.launch.py
 ```
+
+安装后的命令行入口为 `ros2 run mujoco_forklift_pallet_docking forklift_pallet_docking --mode evaluate`，原 `main` 入口继续兼容。
 
 直接运行单一场景或多起点评估：
 

@@ -8,5 +8,8 @@ setup(name=NAME, version="0.1.0", packages=find_packages(),
                   ("share/" + NAME, ["package.xml"]),
                   ("share/" + NAME + "/launch", glob("launch/*.py"))],
       install_requires=["setuptools", "numpy", "mujoco", "Pillow"],
-      entry_points={"console_scripts": ["main.py = warehouse_braking.main:main",
-                                         "sensor_node = warehouse_braking.ros_node:main"]})
+      entry_points={"console_scripts": ["warehouse_main = warehouse_braking.main:main",
+                                         "sensor_node = warehouse_braking.ros_node:main",
+                                         "learned_controller = warehouse_braking.learned_node:main",
+                                         "train_model = warehouse_braking.train_model:main",
+                                         "evaluate_model = warehouse_braking.evaluate_model:main"]})

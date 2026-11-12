@@ -15,8 +15,9 @@ setup(
         ("share/" + package_name + "/launch", glob("launch/*.launch.py")),
     ],
     install_requires=["setuptools", "numpy>=1.23", "mujoco==3.12.0", "Pillow>=9.0"],
+    tests_require=["pytest"],
     zip_safe=False,
     description="相机引导叉车托盘对准与低速插入仿真",
     license="Apache-2.0",
-    entry_points={"console_scripts": ["main = main:main"]},
+    entry_points={"console_scripts": ["forklift_pallet_docking = main:main", "main = main:main"]},
 )

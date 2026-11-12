@@ -1,0 +1,4 @@
+# 只依赖 numpy；ROS 2 本体用 apt 安装，不写进这里
+numpy>=1.20.0
+# 画图（可选，仅 tools/make_figures.py 需要）
+matplotlib>=3.5.0
