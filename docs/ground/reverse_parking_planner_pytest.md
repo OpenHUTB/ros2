@@ -19,13 +19,14 @@ PR #1170 在测试文件里增加了 `test_offline_regression()` 作为 pytest �
 
 ## 运行方式
 
+以下命令均在仓库根目录执行（即包含 `tests/` 目录的目录）。
+
 ```bash
 # pytest
 python3 -m pytest tests/test_reverse_parking_planner_local.py -q
 
 # 直接运行脚本
 python3 tests/test_reverse_parking_planner_local.py
-```
 
 ## 修复前后
 
