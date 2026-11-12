@@ -72,6 +72,8 @@ bash run_eval.sh
 | `ransac_threshold` | 0.02 | RANSAC 内点阈值（米） |
 | `out_dir` | results | CSV 输出目录 |
 | `seed` | 0 | 随机种子 |
+| `publish_count` | 20 | `slope_estimate` 连续发布次数，0 表示不发布 |
+| `publish_rate` | 10.0 | 连续发布频率（Hz） |
 
 ## 文件说明
 
