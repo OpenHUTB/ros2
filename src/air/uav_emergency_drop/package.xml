@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>uav_emergency_drop</name>
+  <version>0.1.0</version>
+  <description>
+    UAV emergency supply drop point selection and release timing with
+    analytic ballistics and MuJoCo closed loop.
+    应急物资投送点选择与投放时机决策：受灾区域 6~10 个需求点按
+    紧迫度×需求加权，载量 12 份约束下贪心 + 交换改进选点并输出多架次
+    序列；投放采用高度 h、速度 v 平抛弹道解析解（前抛 v·t_fall、风偏
+    w·t_fall×0.8、散布 σ=0.15h），沿直飞航段解析求解提前量对应的位置
+    区间，进入区间即发投放指令，段长不足时提示降速或绕行；最后用
+    uav_mujoco_sim 闭环真飞 3 个投放点各投一次并统计落点偏差。
+  </description>
+  <maintainer email="327592576+KKK555-MAX@users.noreply.github.com">蒋宇鑫</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>uav_mujoco_sim</exec_depend>
+
+  <test_depend>ament_pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

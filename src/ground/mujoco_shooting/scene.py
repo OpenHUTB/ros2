@@ -83,51 +83,51 @@ XML = """
       <geom name="cy5" type="box" pos="0 0 0.45" size="0.016 0.13 0.010" rgba="0 0 0 0" contype="0" conaffinity="0"/>
     </body>
     <body name="ball0" pos="10 10 0.05">
-      <freejoint name="bj0"/>
+      <joint name="bj0" type="free" damping="0" armature="0"/>
       <geom type="sphere" size="0.06" rgba="0.95 0.75 0.10 1" mass="0.1"/>
     </body>
     <body name="ball1" pos="10 10.2 0.05">
-      <freejoint name="bj1"/>
+      <joint name="bj1" type="free" damping="0" armature="0"/>
       <geom type="sphere" size="0.06" rgba="0.95 0.75 0.10 1" mass="0.1"/>
     </body>
     <body name="ball2" pos="10 10.4 0.05">
-      <freejoint name="bj2"/>
+      <joint name="bj2" type="free" damping="0" armature="0"/>
       <geom type="sphere" size="0.06" rgba="0.95 0.75 0.10 1" mass="0.1"/>
     </body>
     <body name="ball3" pos="10 10.6 0.05">
-      <freejoint name="bj3"/>
+      <joint name="bj3" type="free" damping="0" armature="0"/>
       <geom type="sphere" size="0.06" rgba="0.95 0.75 0.10 1" mass="0.1"/>
     </body>
     <body name="ball4" pos="10 10.8 0.05">
-      <freejoint name="bj4"/>
+      <joint name="bj4" type="free" damping="0" armature="0"/>
       <geom type="sphere" size="0.06" rgba="0.95 0.75 0.10 1" mass="0.1"/>
     </body>
     <body name="ball5" pos="10 11.0 0.05">
-      <freejoint name="bj5"/>
+      <joint name="bj5" type="free" damping="0" armature="0"/>
       <geom type="sphere" size="0.06" rgba="0.95 0.75 0.10 1" mass="0.1"/>
     </body>
     <body name="ball6" pos="10 11.2 0.05">
-      <freejoint name="bj6"/>
+      <joint name="bj6" type="free" damping="0" armature="0"/>
       <geom type="sphere" size="0.06" rgba="0.95 0.75 0.10 1" mass="0.1"/>
     </body>
     <body name="ball7" pos="10 11.4 0.05">
-      <freejoint name="bj7"/>
+      <joint name="bj7" type="free" damping="0" armature="0"/>
       <geom type="sphere" size="0.06" rgba="0.95 0.75 0.10 1" mass="0.1"/>
     </body>
     <body name="ball8" pos="10 11.6 0.05">
-      <freejoint name="bj8"/>
+      <joint name="bj8" type="free" damping="0" armature="0"/>
       <geom type="sphere" size="0.06" rgba="0.95 0.75 0.10 1" mass="0.1"/>
     </body>
     <body name="ball9" pos="10 11.8 0.05">
-      <freejoint name="bj9"/>
+      <joint name="bj9" type="free" damping="0" armature="0"/>
       <geom type="sphere" size="0.06" rgba="0.95 0.75 0.10 1" mass="0.1"/>
     </body>
     <body name="ball10" pos="10 12.0 0.05">
-      <freejoint name="bj10"/>
+      <joint name="bj10" type="free" damping="0" armature="0"/>
       <geom type="sphere" size="0.06" rgba="0.95 0.75 0.10 1" mass="0.1"/>
     </body>
     <body name="ball11" pos="10 12.2 0.05">
-      <freejoint name="bj11"/>
+      <joint name="bj11" type="free" damping="0" armature="0"/>
       <geom type="sphere" size="0.06" rgba="0.95 0.75 0.10 1" mass="0.1"/>
     </body>
   </worldbody>

@@ -24,7 +24,7 @@
 
 | 类别 | 工具/组件 | 版本/说明 | 用途 |
 |------|-----------|-----------|------|
-| 物理引擎 | `mujoco` | 3.2.3（用 `python -c "import mujoco; print(mujoco.__version__)"` 核对） | 肌肉骨骼建模、肌腱、仿真 |
+| 物理引擎 | `mujoco` | 3.17.0（`pip install mujoco` 安装日志 `Successfully installed ... mujoco-3.17.0 ...`，另可用 `python -c "import mujoco; print(mujoco.__version__)"` 核对） | 肌肉骨骼建模、肌腱、仿真 |
 | 数值计算 | `numpy` | ≥1.20 | 矩阵运算、激励序列 |
 | 绘图 | `matplotlib` | ≥3.x | 绘制角度/激活度/肌力曲线 |
 | 解释器 | `python` | Python 3.x | 运行仿真脚本 |

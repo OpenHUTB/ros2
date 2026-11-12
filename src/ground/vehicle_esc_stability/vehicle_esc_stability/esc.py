@@ -12,7 +12,7 @@
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from .dynamics import RoadSpec
 from .params import ControlInput, EscConfig, G, VehicleSpec, VehicleState
@@ -42,6 +42,7 @@ class Esc:
         self.spec = spec or VehicleSpec()
         self._prev_error = 0.0
         self._integral = 0.0
+        self._intensity = 0.0
         self._active_time = 0.0
         self._peak = 0.0
         self._activations = 0
@@ -91,9 +92,11 @@ class Esc:
             control.esc_intensity = 0.0
             return control
 
-        # 侧偏角超限时折算成等效横摆误差：β>0 表示车尾向左甩，需要负力矩
+        # 侧偏角超限时折算成等效横摆误差。β>0 表示速度矢量偏在车头左侧（车头相对
+        # 前进方向偏右），要减小 β 得把车头往左带，也就是需要正的横摆力矩；本模型里
+        # 正的 demand 恰好压左轮、产生正力矩，所以这里取同号。
         excess = max(0.0, abs(sideslip) - cfg.sideslip_soft)
-        beta_term = -math.copysign(cfg.sideslip_gain * excess, sideslip) if excess > 0.0 else 0.0
+        beta_term = math.copysign(cfg.sideslip_gain * excess, sideslip) if excess > 0.0 else 0.0
 
         previous_error = self._prev_error
         error_rate = (error - previous_error) / dt if dt > 0 else 0.0
@@ -109,6 +112,7 @@ class Esc:
                 and abs(self._integral) < 0.02 and abs(split) < 0.02)
         if idle:
             self._integral *= 0.9
+            self._intensity *= 0.5
             status.intensity = 0.0
             self._last = status
             control.wheel_brake = base
@@ -121,7 +125,16 @@ class Esc:
         demand = cfg.yaw_gain * error + cfg.yaw_integral_gain * self._integral
         demand += cfg.yaw_rate_gain * error_rate + beta_term
         demand -= split
-        intensity = min(1.0, abs(demand))
+
+        # 一阶低通：误差每 20 ms 更新一次，不带滤波时强度会在 0.02～1.00 之间跳变，
+        # 表现为左右轮交替加压、车身一顿一顿。滤波只作用在幅值上，方向仍取 demand 的符号。
+        raw = min(1.0, abs(demand))
+        if cfg.intensity_tau > 0.0:
+            alpha = dt / (cfg.intensity_tau + dt)
+            self._intensity += (raw - self._intensity) * alpha
+        else:
+            self._intensity = raw
+        intensity = self._intensity
 
         # 方向盘反向（期望横摆角速度变号）时清掉积分，避免把上一段的偏差带过来
         if error * previous_error < 0.0 and abs(error) > 0.20:

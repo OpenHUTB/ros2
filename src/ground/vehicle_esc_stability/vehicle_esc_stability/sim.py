@@ -19,6 +19,13 @@ CONTROL_DT = 0.02
 SAMPLE_DT = 0.05
 """记录一帧的间隔，s（20 Hz），用于画图与动画。"""
 
+STOP_SPEED = 0.5
+"""判定停车的速度阈值，m/s。用合速度 sqrt(u²+v²) 而不是纵向分量 u：
+
+甩尾横滑时 u 会先过零而车身仍在以几十 km/h 侧滑，按 u 判会把这辆"还在动"的车
+记成已停车，量出来的"制动距离"比真实值小一半以上。
+"""
+
 DEG = 180.0 / math.pi
 
 
@@ -141,6 +148,7 @@ def run(
     yaw_error_n = 0
     spin = False
     stop_distance = 0.0
+    stop_time = 0.0
     stopped = False
 
     steps = int(round(scenario.duration / DT))
@@ -181,8 +189,9 @@ def run(
         yaw_error_n += 1
         if beta > 20.0 or abs(state.r) > 1.6:
             spin = True
-        if not stopped and state.u < 0.5 and scenario.brake(t) > 0.1:
+        if not stopped and state.speed < STOP_SPEED and scenario.brake(t) > 0.1:
             stop_distance = state.x
+            stop_time = t
             stopped = True
 
         if t + 1e-9 >= next_sample:
@@ -214,6 +223,8 @@ def run(
         "final_speed_kph": state.speed * 3.6,
         "distance_m": state.x,
         "stop_distance_m": stop_distance,
+        "stop_time_s": stop_time,
+        "stopped": 1.0 if stopped else 0.0,
         "spin": 1.0 if spin else 0.0,
         "esc_active_s": stats["active_time"],
         "esc_peak": stats["peak_intensity"],

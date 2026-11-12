@@ -14,4 +14,5 @@
   <export>
     <build_type>ament_python</build_type>
   </export>
+  <test_depend>python3-pytest</test_depend>
 </package>

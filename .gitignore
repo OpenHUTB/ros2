@@ -79,6 +79,11 @@ trajectories/*.json
 src/air/drl_drone_path_planning/models/evaluations.npz
 src/air/drl_drone_path_planning/models/train_summary.json
 
+# uav_fault_emergency_landing：两个网络权重合计约 41 KB，必须入库，
+# 否则 neural 模式一启动就 FileNotFoundError；数据集（约 300 KB）不入库，用 --gen-data 现场生成
+!src/air/uav_fault_emergency_landing/results/*.pt
+!src/air/uav_fault_emergency_landing/results/*.json
+
 # 训练日志与轨迹中间数据（由 train.py / eval.py / plot_results.py 重新生成）
 *.log
 **/models/traj_*.csv

@@ -1,0 +1,38 @@
+{
+  "scenes": {
+    "pool": {
+      "path_found": true,
+      "waypoints": 4,
+      "length_m": 14.574,
+      "straight_line_m": 13.322,
+      "detour_ratio": 1.094,
+      "min_clearance_m": 0.501,
+      "plan_ms": 80.97
+    },
+    "harbor": {
+      "path_found": true,
+      "waypoints": 3,
+      "length_m": 18.574,
+      "straight_line_m": 18.305,
+      "detour_ratio": 1.015,
+      "min_clearance_m": 0.61,
+      "plan_ms": 58.76
+    },
+    "cave": {
+      "path_found": true,
+      "waypoints": 13,
+      "length_m": 17.919,
+      "straight_line_m": 14.8,
+      "detour_ratio": 1.211,
+      "min_clearance_m": 0.451,
+      "plan_ms": 72.17
+    }
+  },
+  "dwa_pool": {
+    "done": true,
+    "final_distance_m": 0.435,
+    "collisions": 0,
+    "seconds": 25.0
+  },
+  "generated": "2026-11-10T12:57:30"
+}
