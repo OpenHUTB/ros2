@@ -150,7 +150,9 @@ graph TD
 | `scripts/train.py` | 采集专家示范（含两帧雷达）并训练 |
 | `scripts/evaluate.py` | 专家 vs 神经网络闭环评测 |
 | `scripts/main.py` | 可视化与 GIF 导出 |
+| `scripts/consts.py` | 场地/目标常量（不依赖 mujoco，供测试使用） |
 | `scripts/make_figures.py` | 生成文档配图 |
+| `test/test_dyn_avoid.py` | 8 项 smoke test（不需要 MuJoCo） |
 | `nodes/dyn_avoid_node.py` | ROS Noetic 节点 |
 | `launch/main.launch` | 启动文件 |
 

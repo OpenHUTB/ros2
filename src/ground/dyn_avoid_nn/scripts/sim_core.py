@@ -13,10 +13,11 @@ import os
 import numpy as np
 import mujoco
 
-MODEL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "models", "dyn_world.xml")
+# 场地/目标常量放在 consts.py（不依赖 mujoco），便于 oracle 与单元测试在
+# 没有仿真器的环境下导入。
+from consts import HALF_X, HALF_Y, GOAL, GOAL_R, START  # noqa: E402
 
-HALF_X = 8.0
-HALF_Y = 6.0
+MODEL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "models", "dyn_world.xml")
 
 N_BEAMS = 91
 FOV = np.deg2rad(360.0)
@@ -26,9 +27,6 @@ MAX_RANGE = 10.0
 
 MAX_THRUST = 45.0
 HULL_R = 0.45
-GOAL = (6.8, 5.0)
-GOAL_R = 0.7
-START = (-7.0, -5.0, 0.6)
 
 DT = 0.05          # 一个控制步对应的仿真时间 (0.01 × 5 子步)
 

@@ -1,4 +1,4 @@
-﻿# dyn_avoid_nn
+# dyn_avoid_nn
 
 MuJoCo 动态障碍物避让：激光雷达帧间差分 + 神经网络时机决策，ROS Noetic 封装。
 
@@ -37,6 +37,16 @@ python3 make_figures.py
 python3 main.py --mode expert --save-gif dyn.gif --every 5
 python3 main.py --mode nn
 ```
+
+## 测试
+
+```bash
+cd ~/dyn_ws/src/dyn_avoid_nn
+python3 -m unittest discover -s test -v      # 8 项，不需要 MuJoCo
+```
+
+`test/test_dyn_avoid.py` 覆盖网络前向/保存加载、路径生成与专家的让行行为；
+场地常量已抽到 `scripts/consts.py`，因此这组测试在没有 mujoco 的机器上也能跑。
 
 ## ROS
 

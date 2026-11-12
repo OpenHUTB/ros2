@@ -9,7 +9,7 @@ import heapq
 
 import numpy as np
 
-from sim_core import HALF_X, HALF_Y, GOAL, START
+from consts import HALF_X, HALF_Y, GOAL, START
 
 RES = 0.5
 NX = int(2 * HALF_X / RES)

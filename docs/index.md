@@ -107,6 +107,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [MNIST 手写数字视觉感知与机器人运动控制](./ground/mnist_digit_control.md) —— CNN 识别手写数字为运动指令，防抖确认后控制 turtlesim 平移/旋转
 * [生成对象](./ground/carla_spawn_objects.md)
 * [地面载具物理仿真与键盘运动控制](./ground/carla_keyboard_control.md)
+* [动态障碍物避让：激光雷达帧间差分与神经网络时机决策](./ground/dyn_avoid_nn.md) —— 两个往复扫动的障碍，专家用前向仿真决定过线时机，行为克隆 MLP 仅凭两帧雷达推断运动，20 回合成功率 90% / 75%
 * [CARLA+YOLOv8 目标检测感知与减速避障](./ground/carla_yolo_avoidance.md)
 * [阿克曼控制](./ground/ackermann_control.md)
 * [传感器感知与给定轨迹跟踪（神经网络版）](./ground/carla_perception_control.md)
@@ -179,7 +180,6 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 ## 5. 空域载具 <span id='air_vehicle'></span>
 * [无人机制动旧入口](./ground/mujoco_drone_distance_stop.md)
 
-* [动态障碍物避让：激光雷达帧间差分与神经网络时机决策](./ground/dyn_avoid_nn.md) —— 两个往复扫动的障碍，专家用前向仿真决定过线时机，行为克隆 MLP 仅凭两帧雷达推断运动，20 回合成功率 90% / 75%
 
 * [Town10 立面自主巡航与图像采集](./air/town10_facade_cruise_capture/index.md)
 
