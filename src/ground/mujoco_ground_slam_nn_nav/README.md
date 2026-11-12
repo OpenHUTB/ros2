@@ -126,7 +126,8 @@ python3 main.py --test          # 使用 .venv/bin/python 运行
 .venv/bin/python tools/train_planner.py
 .venv/bin/python tools/train_e2e.py --epochs 30
 .venv/bin/python tools/evaluate.py --modes classical,neural,e2e --seeds 1
-.venv/bin/python tests/run_all.py
+.venv/bin/python tests/run_all.py       # 15/15（unittest 自发现）
+.venv/bin/python -m pytest tests        # 同一批 unittest.TestCase，pytest 可直接收集（需先 pip install pytest）
 ```
 
 模型与指标分别在 `models/`、`results/`。

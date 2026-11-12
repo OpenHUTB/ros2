@@ -11,9 +11,12 @@
 | `mujoco_car_avoidance` | MuJoCo | 射线感知 + 规则分级减速 |
 | `mujoco_car_nn_avoidance` | MuJoCo | 射线 + MLP 端到端避障 |
 | `carla_mapping_navigation` | CARLA | 激光建图 + 神经网络规划 |
+| `rov_mujoco_slam_nn_nav` | MuJoCo | 水下 ROV 的 SLAM + 神经网络导航；本模块是地面差速车，场景/运动学/网络输入不同 |
 | **本模块** | **MuJoCo** | **在线 SLAM + A* + 纯跟踪 + 四个网络 + ROS Noetic 全链** |
 
 本模块不是单一避障演示：它同时验证了“建图 → 重规划 → 跟踪 → 神经感知/控制/端到端”的完整链路，并给出三场景闭环指标与失败分析。
+
+与 `rov_mujoco_slam_nn_nav` 的区别：两者都使用 MuJoCo + SLAM + 神经网络，但该模块是水下 ROV（三维浮力、声呐、6-DOF 控制），本模块是地面差速车（二维轮式运动学、360° 激光 + BEV 相机、ROS Noetic 全链）；场景、传感器配置、控制维度和网络输入输出均不同，代码没有复用。
 
 ## 项目结构概览
 
@@ -206,5 +209,6 @@ Viewer 需要窗口焦点；mission 成功/超时后会发布 `enable=false`；�
 源码：`src/ground/mujoco_ground_slam_nn_nav/`。许可证 MIT。测试：
 
 ```bash
-.venv/bin/python tests/run_all.py   # 15/15
+.venv/bin/python tests/run_all.py       # 15/15（unittest 自发现）
+.venv/bin/python -m pytest tests        # 同一批 unittest.TestCase，pytest 可直接收集（需先 pip install pytest）
 ```
