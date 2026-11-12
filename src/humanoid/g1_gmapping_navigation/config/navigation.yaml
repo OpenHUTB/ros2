@@ -1,0 +1,57 @@
+controller_frequency: 5.0
+planner_frequency: 1.0
+controller_patience: 15.0
+planner_patience: 10.0
+recovery_behavior_enabled: false
+base_local_planner: base_local_planner/TrajectoryPlannerROS
+TrajectoryPlannerROS:
+  max_vel_x: 0.3
+  min_vel_x: 0.05
+  max_vel_theta: 0.35
+  min_vel_theta: -0.35
+  min_in_place_vel_theta: 0.15
+  acc_lim_x: 0.3
+  acc_lim_y: 0.0
+  acc_lim_theta: 0.4
+  holonomic_robot: false
+  # Patrol goals constrain position; no final heading is prescribed.
+  yaw_goal_tolerance: 3.14159
+  xy_goal_tolerance: 0.5
+  latch_xy_goal_tolerance: true
+  sim_time: 2.0
+  vx_samples: 8
+  vtheta_samples: 16
+  meter_scoring: true
+  pdist_scale: 0.8
+  gdist_scale: 0.6
+  occdist_scale: 0.05
+global_costmap:
+  global_frame: map
+  robot_base_frame: base_link
+  update_frequency: 3.0
+  publish_frequency: 1.0
+  transform_tolerance: 1.0
+  robot_radius: 0.3
+  plugins:
+    - {name: static_layer, type: 'costmap_2d::StaticLayer'}
+    - {name: inflation_layer, type: 'costmap_2d::InflationLayer'}
+  static_layer: {subscribe_to_updates: true}
+  inflation_layer: {inflation_radius: 0.6, cost_scaling_factor: 3.0}
+local_costmap:
+  global_frame: odom
+  robot_base_frame: base_link
+  rolling_window: true
+  width: 5.0
+  height: 5.0
+  resolution: 0.05
+  update_frequency: 5.0
+  publish_frequency: 1.0
+  transform_tolerance: 1.0
+  robot_radius: 0.3
+  plugins:
+    - {name: obstacle_layer, type: 'costmap_2d::ObstacleLayer'}
+    - {name: inflation_layer, type: 'costmap_2d::InflationLayer'}
+  obstacle_layer:
+    observation_sources: laser
+    laser: {sensor_frame: laser, data_type: LaserScan, topic: /scan, marking: true, clearing: true, obstacle_range: 7.5, raytrace_range: 8.0}
+  inflation_layer: {inflation_radius: 0.6, cost_scaling_factor: 3.0}

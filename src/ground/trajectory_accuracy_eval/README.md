@@ -150,12 +150,16 @@ src/ground/trajectory_accuracy_eval/
 ```bash
 python3 test/test_traj_eval.py        # 自洽测试（41 项）
 python3 test/test_known_answer.py     # 已知答案对拍（7 项）
-python3 -m pytest test/ -q            # 或一次跑完（15 passed）
+python3 -m pytest test/ -q            # 或一次跑完（16 passed）
 ```
 
 > **Windows 用户**：默认控制台是 GBK，无法编码 `∘`/`⁻¹` 等符号。
 > 两个脚本启动时已把输出流的 `errors` 设为 `replace`，并对这些符号做 ASCII 等价替换
 > （`∘`→`o`、`⁻¹`→`^-1`），因此不会因 `UnicodeEncodeError` 中断；GBK 与 UTF-8 下结果一致。
+
+> **pytest 失败传播**：修复前 `check()` 失败只累加 `FAIL`，而 pytest 不调用脚本入口
+> `main()`，因此内部检查失败仍会显示为通过；现在 pytest 下会直接抛出
+> `AssertionError`，直接运行脚本时仍保留汇总全部检查后统一退出的行为。
 
 自洽测试只保证"实现与自己一致"，查不出"公式整体写错但内部自洽"的问题，
 因此 `test_known_answer.py` 用**解析解**与**暴力搜索**两种独立答案源对拍：

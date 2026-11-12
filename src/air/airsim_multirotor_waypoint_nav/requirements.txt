@@ -1,0 +1,7 @@
+numpy
+matplotlib
+PyYAML
+# AirSim 官方/配套 Python 客户端依赖（版本敏感）：
+msgpack-rpc-python
+msgpack<1.0        # msgpack>=1 去掉了 encoding 参数，msgpackrpc 0.4.1 会 TypeError
+tornado<5         # tornado>=5 去掉了 tornado.platform.auto / 旧 IOLoop API

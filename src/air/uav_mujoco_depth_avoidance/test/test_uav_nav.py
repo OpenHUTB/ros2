@@ -1,5 +1,6 @@
 """离线单元测试：不需要 ROS，只需要 mujoco + numpy（约 5 秒跑完）。"""
 
+import importlib.util
 import sys
 from pathlib import Path
 
@@ -8,6 +9,19 @@ import pytest
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PACKAGE_ROOT))
+
+
+def _load_entry_module():
+    """按文件路径加载本模块的 main.py。
+
+    不能直接 `import main`：`src/air` 下还有多个 main.py，整套跑 pytest 时
+    sys.modules['main'] 可能已经指向别的模块，这里就会拿到错误的入口。
+    """
+    spec = importlib.util.spec_from_file_location(
+        "uav_depth_avoidance_main", PACKAGE_ROOT / "main.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 from uav_nav.data import to_net_input
 from uav_nav.env import D_MAX, DepthUavEnv, yaw_of
@@ -332,7 +346,7 @@ def test_training_restores_caller_environment(env):
 
 def test_build_policy_keeps_env_untouched(env, tmp_path):
     """--teleop / ROS 节点用的 build_policy() 也不能把 env 留在数据集采样的状态。"""
-    import main as entry
+    entry = _load_entry_module()
 
     from uav_nav.net import DepthCNN
 

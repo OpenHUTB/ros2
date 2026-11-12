@@ -1,0 +1,28 @@
+<launch>
+  <arg name="sim_python"/>
+  <arg name="sim_entry"/>
+  <arg name="assets"/>
+  <arg name="seed" default="7"/>
+  <arg name="real_time_factor" default="1.0"/>
+  <param name="use_sim_time" value="true"/>
+  <node pkg="g1_gmapping_navigation" type="ros_bridge.py" name="humanoid_sim_bridge" output="screen" required="true">
+    <param name="sim_python" value="$(arg sim_python)"/>
+    <param name="sim_entry" value="$(arg sim_entry)"/>
+    <param name="assets" value="$(arg assets)"/>
+    <param name="seed" value="$(arg seed)"/>
+    <param name="real_time_factor" value="$(arg real_time_factor)"/>
+  </node>
+  <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" output="screen">
+    <param name="base_frame" value="base_link"/><param name="odom_frame" value="odom"/>
+    <param name="map_frame" value="map"/><param name="map_update_interval" value="1.0"/>
+    <param name="tf_delay" value="0.5"/><param name="transform_publish_period" value="0.2"/>
+    <param name="maxUrange" value="7.8"/><param name="maxRange" value="8.0"/>
+    <param name="delta" value="0.05"/><param name="particles" value="20"/>
+    <param name="linearUpdate" value="0.1"/><param name="angularUpdate" value="0.1"/>
+    <param name="xmin" value="-3"/><param name="ymin" value="-3"/>
+    <param name="xmax" value="12"/><param name="ymax" value="3"/>
+  </node>
+  <node pkg="move_base" type="move_base" name="move_base" output="screen">
+    <rosparam command="load" file="$(find g1_gmapping_navigation)/config/navigation.yaml"/>
+  </node>
+</launch>

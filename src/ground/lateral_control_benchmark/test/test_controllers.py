@@ -52,6 +52,10 @@ def check(cond: bool, msg: str) -> None:
     else:
         FAIL += 1
         print(f"  [FAIL] {msg}")
+        # pytest 只看异常，原先只累加 FAIL 会让失败的检查也显示为通过；
+        # 独立运行时不设置该环境变量，仍保留原来的计数与最终汇总行为。
+        if "PYTEST_CURRENT_TEST" in os.environ:
+            raise AssertionError(msg)
 
 
 def close(actual: float, expected: float, tol: float, msg: str) -> None:

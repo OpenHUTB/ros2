@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>vehicle_wading_check</name>
+  <version>0.1.0</version>
+  <description>
+    地面车辆涉水深度与浮力裕度核算。根据整车质量、车身尺寸、进气口/排气口/
+    车门下沿高度、排水体积占比、湿态附着系数和水阻，核算允许涉水深度、
+    允许涉水车速、浮力占比与牵引力余量，并给出 SAFE / CAUTION / FLOODED /
+    FLOATING 四态判定。
+  </description>
+  <maintainer email="jiangdong000@users.noreply.github.com">jiangdong000</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>python3-matplotlib</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

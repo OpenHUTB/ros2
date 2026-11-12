@@ -16,6 +16,7 @@ setup(
     maintainer_email='3523828193@qq.com', 
     description='ROS 2 Carla image recorder package',
     license='MIT',
+    tests_require=['pytest'],
     entry_points={
         'console_scripts': [
             'main = image_recorder.main:main', 

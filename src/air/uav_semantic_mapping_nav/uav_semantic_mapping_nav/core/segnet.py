@@ -159,13 +159,18 @@ class SegNet:
         onehot[np.arange(n)[:, None, None], t,
                np.arange(h)[None, :, None], np.arange(w)[None, None, :]] = 1.0
         mask = keep[:, None, :, :].astype(float)
-        if weight is not None:
+        # 权重乘在损失上，不能乘进 log：-log(w*p) = -log(w) - log(p) 会多出
+        # 一个与参数无关的常数偏移，反而把梯度退化成无权重的交叉熵。
+        if weight is None:
+            w_pix = np.ones_like(p[:, :1])
+        else:
             wgt = np.asarray(weight, float).reshape(1, c, 1, 1)
-            onehot = onehot * wgt
+            w_pix = (onehot * wgt).sum(axis=1, keepdims=True)
         loss = float(-np.sum(np.log(np.maximum(
-            (p * onehot).sum(axis=1, keepdims=True), 1e-12)) * mask) / n_keep)
+            (p * onehot).sum(axis=1, keepdims=True), 1e-12)) * w_pix * mask)
+            / n_keep)
 
-        d = (p * onehot.sum(axis=1, keepdims=True) - onehot) * mask / n_keep
+        d = (p - onehot) * w_pix * mask / n_keep
         self.backward(d)
         return loss, d
 
