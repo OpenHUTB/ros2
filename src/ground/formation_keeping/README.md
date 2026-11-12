@@ -48,6 +48,27 @@ python main.py
 
 Windows 用 main.bat，Linux 和 macOS 用 main.sh。
 
+只跑固定帧数并做无头渲染，用于生成文档截图：
+
+```bash
+cd src/ground/formation_keeping
+python main.py --frames 340
+```
+
+指定 --frames 时使用 SDL dummy 驱动，不打开窗口，跑完指定帧数即退出。
+
+## 长时运行
+
+主循环本身不设退出条件，轨迹与误差记录按窗口截断：领航者轨迹与两个跟随者轨迹用 deque 限长 3000 点，队形误差保留最近 3000 条。60 FPS 下窗口约 50 秒，内存占用与每帧绘制开销不随运行时长增长。
+
+## launch 入口
+
+launch/main.launch.py 用 ExecuteProcess 启动 console_script，本包不创建 rclpy 节点，因此不会被注入 Node 的 --ros-args 参数，该 launch 只作为仓库约定的占位入口。
+
+## 构建与依赖声明
+
+package.xml 声明 ament_python 构建类型，并用 exec_depend 声明 python3 与 python3-pygame，走 rosdep 安装时会一并装 pygame。setup.py 补齐 maintainer、maintainer_email、description 与 license 元数据，colcon build 时不再报元数据缺失警告。
+
 ## 测试
 
 ```bash
