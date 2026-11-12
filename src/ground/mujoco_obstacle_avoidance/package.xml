@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>mujoco_obstacle_avoidance</name>
+  <version>0.0.1</version>
+  <description>MuJoCo 差速小车避障仿真：前向射线测距提前发现障碍，经左转绕行、横向离开、回正的状态机绕开路径上的圆柱障碍后到达目标点。</description>
+  <maintainer email="jyhuang916@users.noreply.github.com">jyhuang916</maintainer>
+  <license>Apache-2.0</license>
+  <url type="repository">https://github.com/OpenHUTB/ros2/tree/master/src/ground/mujoco_obstacle_avoidance</url>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <!-- 运行期依赖：numpy 走 apt 包名供 rosdep 解析；mujoco 不在 apt 仓库，仍按 requirements.txt 用 pip 安装 -->
+  <exec_depend>ament_index_python</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <!-- Pillow 仅 test/record_demo_gif.py 导出 GIF 时使用；运行 main.py 不依赖，保留声明是为了包内录帧脚本可直接跑 -->
+  <exec_depend>python3-pil</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
