@@ -171,7 +171,8 @@ def main():
 
 def test_light_logic():
     """pytest 入口：离线灯光逻辑自检必须返回 0。"""
-    assert main() == 0
+    code = main()
+    assert code == 0, '失败项：%s' % FAILED
 
 
 if __name__ == '__main__':
