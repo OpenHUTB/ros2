@@ -1,0 +1,19 @@
+services:
+  holoocean-ros-rt:
+    image: frostlab/holoocean:2.0-runtime-ubuntu22.04-cuda12.4-ros
+    build: 
+      context: ../..
+      dockerfile: docker/runtime/Dockerfile
+    container_name: holoocean-ros
+    user: ue4
+    runtime: nvidia
+    environment:
+      - DISPLAY=$DISPLAY
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - ../../config:/home/ue4/config  # Mount the config directory
+      - /dev/shm:/dev/shm  # Use /dev/shm for ROS2 inter-device communication
+    network_mode: host  # Connect to host network for ROS interfaces outside of the container
+    command: ["tail", "-f", "/dev/null"]  # Keep the container running

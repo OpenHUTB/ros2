@@ -1,0 +1,88 @@
+# OverFOMO 完整仿真流程的依赖（AirSim + 语义分割 + 正射影像）。
+#
+# 这套依赖对应 Python 3.6 / 3.7：TensorFlow 1.15 最高只支持到 3.7，
+# 且 numpy 被钉在 1.19.5，在 Python 3.8+ 上装不上。
+#
+# 只想跑 AP-CPP 的规划器、演示和测试，不需要这个文件，
+# 请改用只依赖 NumPy / Matplotlib 的 requirements-core.txt。
+#
+# GDAL 不在 PyPI 上以源码分发。请按自己的 Python 版本下载对应的预编译
+# wheel（例如 https://www.lfd.uci.edu/~gohlke/pythonlibs/#gdal ），
+# 再执行 `python -m pip install 下载的whl文件`；Anaconda 用户直接用
+# `conda install -c conda-forge gdal` 即可。
+# 这里不写 wheel 的绝对路径，否则换一台机器必然安装失败。
+
+absl-py==0.15.0
+airsim==1.5.0
+astor==0.8.1
+astunparse==1.6.3
+cached-property==1.5.2
+cachetools==4.2.4
+certifi==2022.6.15.1
+charset-normalizer==2.0.12
+clang==5.0
+colorama==0.4.5
+cycler==0.11.0
+dataclasses==0.8
+decorator==4.4.2
+efficientnet==1.0.0
+flatbuffers==1.12
+gast==0.2.2
+geographiclib==1.52
+geopy==2.2.0
+google-auth==1.35.0
+google-auth-oauthlib==0.4.6
+google-pasta==0.2.0
+grpcio==1.48.1
+h5py==3.1.0
+idna==3.3
+image-classifiers==1.0.0
+imageio==2.15.0
+importlib-metadata==4.8.3
+joblib==1.1.0
+Keras==2.3.1
+Keras-Applications==1.0.8
+Keras-Preprocessing==1.1.2
+kiwisolver==1.3.1
+Markdown==3.3.7
+matplotlib==3.3.4
+msgpack-python==0.5.6
+msgpack-rpc-python==0.4.1
+networkx==2.5.1
+numpy==1.19.5
+oauthlib==3.2.1
+opencv-contrib-python==4.6.0.66
+opencv-python==4.5.4.60
+opt-einsum==3.3.0
+Pillow==8.4.0
+protobuf==3.19.4
+pyasn1==0.4.8
+pyasn1-modules==0.2.8
+pyparsing==3.0.9
+python-dateutil==2.8.2
+PyWavelets==1.1.1
+PyYAML==6.0
+requests==2.27.1
+requests-oauthlib==1.3.1
+rsa==4.9
+scikit-image==0.17.2
+scikit-learn==0.24.2
+scipy==1.5.4
+segmentation-models==1.0.1
+six==1.15.0
+tensorboard==1.15.0
+tensorboard-data-server==0.6.1
+tensorboard-plugin-wit==1.8.1
+tensorflow==1.15.0
+tensorflow-estimator==1.15.1
+tensorflow-gpu==1.15.0
+termcolor==1.1.0
+threadpoolctl==3.1.0
+tifffile==2020.9.3
+tornado==4.5.3
+tqdm==4.62.3
+typing-extensions==3.7.4.3
+urllib3==1.26.12
+Werkzeug==2.0.3
+wrapt==1.12.1
+zipp==3.6.0

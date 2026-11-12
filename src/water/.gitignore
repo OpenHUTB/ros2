@@ -1,0 +1,22 @@
+
+# Ignore ROS 2 workspace build artifacts
+build/
+install/
+log/
+
+# Git keep and chaches for docker pip installs
+docker/dev/build_cache/egg-info/*
+!docker/dev/build_cache/egg-info/.gitkeep
+docker/dev/build_cache/build/*
+!docker/dev/build_cache/build/.gitkeep
+!docker/dev/build_cache/build/
+
+docker/runtime/tmp/*
+
+!*.xml
+!*.json
+*.tar
+*.zip
+
+# Temp folder for docker build
+docker/tmp

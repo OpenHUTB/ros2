@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>openhutb_yolo_mlp_control</name>
+  <version>0.1.0</version>
+  <description>OpenHUTB AirSim ROS 2 bridge, YOLO perception, and MLP trajectory control.</description>
+
+  <maintainer email="maintainer@example.com">OpenHUTB contributor</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>vision_msgs</exec_depend>
+  <exec_depend>ament_index_python</exec_depend>
+  <exec_depend>ros2launch</exec_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

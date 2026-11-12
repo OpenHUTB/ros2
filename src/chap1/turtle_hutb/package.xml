@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>turtle_hutb</name>
+  <version>0.0.1</version>
+
+  <description>
+    ROS Noetic turtlesim demo for drawing OpenHUTB automatically.
+  </description>
+
+  <maintainer email="2330268756@qq.com">huangna</maintainer>
+
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>rospy</depend>
+  <depend>geometry_msgs</depend>
+  <depend>turtlesim</depend>
+  <depend>std_srvs</depend>
+
+  <export>
+  </export>
+</package>

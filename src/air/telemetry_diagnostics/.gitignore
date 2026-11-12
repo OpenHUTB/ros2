@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+data/
+build/
+install/
+log/
+!artifacts/review_oct08_validation.json

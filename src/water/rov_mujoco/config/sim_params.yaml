@@ -1,0 +1,8 @@
+# 仿真参数配置
+sim_rate: 500.0           # 物理仿真频率 (Hz)
+publish_rate: 50.0        # ROS2 话题发布频率 (Hz)
+use_ocean_current: true   # 是否启用洋流模型
+
+# 键盘控制参数
+linear_scale: 1.0         # 线速度比例
+angular_scale: 1.0        # 角速度比例

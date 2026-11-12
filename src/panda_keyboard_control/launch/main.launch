@@ -1,0 +1,10 @@
+<launch>
+  <param name="robot_description" command="$(find xacro)/xacro $(find franka_description)/robots/panda/panda.urdf.xacro" />
+  
+  <include file="$(find panda_moveit_config)/launch/move_group.launch">
+    <arg name="load_robot_description" value="false" />
+  </include>
+  
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find panda_moveit_config)/launch/moveit.rviz" required="true" />
+  <node name="panda_keyboard_control" pkg="panda_keyboard_control" type="panda_keyboard_control.py" output="screen" launch-prefix="xterm -e" />
+</launch>

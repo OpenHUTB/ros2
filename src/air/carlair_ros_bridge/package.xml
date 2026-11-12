@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>carlair_ros_bridge</name>
+  <version>0.1.0</version>
+  <description>
+    CarlaAir(OpenHUTB) / AirSim 无人机与 ROS Noetic 之间的桥接层：
+    发布位姿/图像/点云，接收速度与目标点指令，统一完成 NED→ENU 坐标换算。
+  </description>
+  <maintainer email="uav@example.com">uav</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>rospy</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>nav_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>tf2_ros</build_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+
+  <export/>
+</package>
