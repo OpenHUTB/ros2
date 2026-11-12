@@ -1,0 +1,29 @@
+<mujoco model="forklift_pallet_docking">
+  <compiler angle="radian" autolimits="true"/>
+  <option timestep="0.01" integrator="implicitfast" gravity="0 0 -9.81"/>
+  <default>
+    <joint damping="2.0" armature="0.01" limited="false"/>
+    <geom friction="1.0 0.1 0.1" condim="3"/>
+  </default>
+  <worldbody>
+    <light pos="0 0 5" dir="0 0 -1" diffuse="0.8 0.8 0.8"/>
+    <geom name="road" type="box" pos="0 0 -0.06" size="8 1.2 0.05" rgba="0.20 0.22 0.25 1"/>
+    <geom name="pallet_deck" type="box" pos="1.48 0 0.22" size="0.42 0.72 0.035" rgba="0.72 0.48 0.22 1" contype="0" conaffinity="0"/>
+    <geom name="pallet_front_left" type="box" pos="1.5 0.43 0.12" size="0.035 0.28 0.12" rgba="0.83 0.61 0.31 1" contype="0" conaffinity="0"/>
+    <geom name="pallet_front_right" type="box" pos="1.5 -0.43 0.12" size="0.035 0.28 0.12" rgba="0.83 0.61 0.31 1" contype="0" conaffinity="0"/>
+    <geom name="pallet_back_left" type="box" pos="1.9 0.43 0.12" size="0.035 0.28 0.12" rgba="0.72 0.48 0.22 1" contype="0" conaffinity="0"/>
+    <geom name="pallet_back_right" type="box" pos="1.9 -0.43 0.12" size="0.035 0.28 0.12" rgba="0.72 0.48 0.22 1" contype="0" conaffinity="0"/>
+    <geom name="left_edge" type="box" pos="0 1.22 -0.01" size="8 0.025 0.02" rgba="0.95 0.72 0.16 1" contype="0" conaffinity="0"/>
+    <geom name="right_edge" type="box" pos="0 -1.22 -0.01" size="8 0.025 0.02" rgba="0.95 0.72 0.16 1" contype="0" conaffinity="0"/>
+    <body name="car" pos="-4 0 0.16">
+      <joint name="longitudinal" type="slide" axis="1 0 0" range="-7 1.5" limited="true" damping="2"/>
+      <geom name="chassis" type="box" size="0.28 0.17 0.09" rgba="0.08 0.48 0.42 1" mass="3"/>
+      <geom name="fork_left" type="box" pos="0.48 0.085 -0.10" size="0.31 0.025 0.018" rgba="0.78 0.80 0.82 1" mass="0.12"/>
+      <geom name="fork_right" type="box" pos="0.48 -0.085 -0.10" size="0.31 0.025 0.018" rgba="0.78 0.80 0.82 1" mass="0.12"/>
+      <camera name="front_camera" pos="0.22 0 0.22" xyaxes="0 -1 0 0.34 0 0.94" fovy="72"/>
+    </body>
+  </worldbody>
+  <actuator>
+    <motor name="drive" joint="longitudinal" gear="1" ctrllimited="true" ctrlrange="-12 12"/>
+  </actuator>
+</mujoco>

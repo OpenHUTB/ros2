@@ -3,11 +3,22 @@ from collections import deque
 import numpy as np
 from .data import WINDOW,PHASES
 from .simulation import angles,FOOT_Z
-from .learning import load,predict
+from .learning import load,predict,interval
+
+# 风险分级阈值来自训练集峰值载荷的 P75/P90；也可以显式传入覆盖。
+def risk_level(high,elevated=None,high_limit=None):
+    """按区间上界给出保守风险等级：low / elevated / high。"""
+    if high_limit is not None and high>high_limit:return 'high'
+    if elevated is not None and high>elevated:return 'elevated'
+    return 'low'
+
 
 class Estimator:
-    def __init__(self,model):
-        self.net,self.meta=load(model);self.reset()
+    def __init__(self,model,risk_thresholds=None):
+        self.net,self.meta=load(model)
+        # 默认用训练集分位数；显式传入 {elevated, high} 可覆盖（例如按机体结构设定）
+        self.risk_thresholds=risk_thresholds or self.meta.get('risk_thresholds') or {}
+        self.reset()
     def reset(self):
         self.buffer=deque(maxlen=WINDOW);self.last_time=None;self.last_velocity=None
         self.last_height=None;self.impact_issued=False
@@ -29,5 +40,11 @@ class Estimator:
             prob,impact=predict(self.net,self.meta,np.array(self.buffer)[None])
             index=int(prob[0].argmax());result.update(reason='ok',phase=PHASES[index],phase_index=index,confidence=float(prob[0,index]))
             if crossing and not self.impact_issued:
-                result['predicted_peak_load_factor']=float(impact[0]);self.impact_issued=True
+                point=float(impact[0]);low,high=interval(self.meta,point)
+                result['predicted_peak_load_factor']=point
+                result['predicted_peak_load_factor_low']=float(low)
+                result['predicted_peak_load_factor_high']=float(high)
+                result['risk_level']=risk_level(high,self.risk_thresholds.get('elevated'),
+                                                self.risk_thresholds.get('high'))
+                self.impact_issued=True
         return result

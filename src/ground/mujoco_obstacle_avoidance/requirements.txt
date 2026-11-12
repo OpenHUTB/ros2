@@ -1,0 +1,13 @@
+# pip 依赖（MuJoCo 不在 apt 仓库里，独立运行与 ROS 运行共用这一份）
+# 安装：pip install -r requirements.txt
+# 实测环境：Ubuntu（无头）Python 3.12.11，mujoco 3.17.0（属 >=3.2,<4.1 区间），numpy 1.26.4。
+# mujoco 用版本区间 >=3.2,<4.1 而非钉死单一版本：3.2 起提供 cp39 wheel，
+# 可兼容 ROS Noetic 系统 Python 3.9；4.0.0 已在本机验证闭环与测试通过，上限放到
+# 4.1 以纳入该版本，同时挡住尚未回归的 4.1+。4.0.0 要求 Python >=3.11，Noetic py3.9
+# 上 pip 会自动回退到区间内带 cp39 wheel 的 3.x。本作业只用到基础 mj_step、四元数解算、
+# mj_ray 射线测距与差速逆解等稳定 API，区间内向后兼容较宽。
+# Pillow 仅 test/record_demo_gif.py 离屏录帧导出 GIF 时需要，独立运行 main.py 不依赖；
+# 不钉版本，避免 pip 强制升级覆盖 Noetic 系统自带的 Pillow。
+mujoco>=3.2,<4.1
+numpy>=1.21,<3.0
+pillow

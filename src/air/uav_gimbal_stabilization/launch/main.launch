@@ -1,0 +1,10 @@
+<launch>
+  <arg name="duration" default="12.0"/>
+  <arg name="rate" default="50.0"/>
+  <arg name="csv" default="$(env HOME)/.ros/uav_gimbal_stabilization/sim_metrics.csv"/>
+  <arg name="plot" default="$(env HOME)/.ros/uav_gimbal_stabilization/response.png"/>
+
+  <node pkg="uav_gimbal_stabilization" type="main.py"
+        name="uav_gimbal_stabilization" output="screen"
+        args="--ros --duration $(arg duration) --rate $(arg rate) --csv $(arg csv) --plot $(arg plot)"/>
+</launch>

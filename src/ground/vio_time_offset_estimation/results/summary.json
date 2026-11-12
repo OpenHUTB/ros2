@@ -1,0 +1,38 @@
+{
+  "module": "vio_time_offset_estimation",
+  "version": "0.1.0",
+  "generated_utc": "2026-11-10T17:27:41+00:00",
+  "environment": {
+    "python": "3.12.14",
+    "numpy": "2.3.5",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "config": {
+    "rate_hz": 200.0,
+    "duration_s": 8.0,
+    "offset_s": 0.025,
+    "visual_gain": 0.95,
+    "gyro_bias": 0.02,
+    "gyro_noise": 0.01,
+    "visual_noise": 0.05,
+    "seed": 0
+  },
+  "trials": 200,
+  "offset_error_ms": {
+    "mean": 0.5882089160776409,
+    "bias": 0.5882089160776409,
+    "rmse": 0.8906960754073627,
+    "p95_abs": 1.4761777477765332,
+    "max_abs": 1.6985343418204484
+  },
+  "residual": {
+    "before_rms": 0.19110667019234598,
+    "after_rms": 0.09068272358380923,
+    "oracle_rms": 0.09068272358380923,
+    "improvement_pct": 52.54863501491683
+  },
+  "quality": {
+    "peak_correlation_mean": 0.9991094286146359,
+    "peak_z_mean": 1.0391088476404946
+  }
+}
