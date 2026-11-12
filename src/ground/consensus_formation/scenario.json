@@ -1,0 +1,22 @@
+{
+  "module": "consensus_formation",
+  "name": "多机器人 Consensus 编队控制",
+  "description": "6 台差动轮移动机器人通过分布式一致性算法达成全局编队（六边形/直线/菱形）",
+  "environment": {
+    "os": "Windows 11",
+    "python": "3.10+",
+    "dependencies": ["numpy"]
+  },
+  "parameters": {
+    "n_robots": 6,
+    "shapes": ["hexagon", "line", "diamond"],
+    "duration_sec": 40.0,
+    "dt_sec": 0.05,
+    "Kp_consensus": 1.5,
+    "Kd_heading": 0.3,
+    "communication_range_m": 3.0,
+    "safety_radius_m": 0.5,
+    "max_linear_speed": 0.6,
+    "max_angular_speed": 1.5
+  }
+}
