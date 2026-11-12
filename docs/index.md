@@ -155,6 +155,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [机械臂手眼标定仿真](./humanoid/hand_eye_calibration.md) 
 * [人形上下台阶步态仿真：ZMP 预瞄控制与台阶参数扫描](./humanoid/humanoid_stair_zmp_preview.md)
 * [MuJoCo单足弹跳机器人简单仿真：SLIP 模型与 Raibert 弹跳控制](./humanoid/mujoco_hopper_slip_control.md)
+* [人形足迹下的局部避障算法对比：MPPI 与斥力法的窄通道宽度扫描](./humanoid/humanoid_passage_width_sweep.md)
 * [给定黑箱关节轨迹，反推肌肉参数](./musculoskeletal/msk_muscle_ident.md)
 
 ## 4. 地面载具  <span id='ground_vehicle'></span>
