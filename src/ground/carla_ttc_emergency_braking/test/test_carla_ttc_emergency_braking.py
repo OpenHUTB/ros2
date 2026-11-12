@@ -128,3 +128,23 @@ def test_should_brake_basic():
 def test_config_has_sensor_timeout():
     cfg = _cfg()["control"]
     assert float(cfg["sensor_timeout_s"]) > 0
+
+
+def test_ttc_exactly_at_threshold_brakes():
+    """TTC 恰好等于阈值（<=）应触发制动。"""
+    brake, ttc, _ = decide_brake(16.0, 10.0, 1.0, 1.6)
+    assert ttc == pytest.approx(1.6)
+    assert brake is True
+
+
+def test_distance_exactly_min_brake_distance_brakes():
+    """距离恰好等于 min_brake_distance（<=）应触发制动。"""
+    brake, _ttc, _ = decide_brake(22.0, 30.0, 22.0, 1.6)
+    assert brake is True
+
+
+def test_low_speed_has_no_ttc():
+    """speed <= 0.3 m/s 时不计算 TTC（返回 -1），且距离够远则不动。"""
+    brake, ttc = should_brake(50.0, 0.3, 22.0, 1.6)
+    assert ttc == -1.0
+    assert brake is False

@@ -50,10 +50,10 @@ python main.py                 :: 或 main.bat / bash main.sh
 ```text
 [aeb] 已连接 127.0.0.1:2000 | 服务端版本 3ea2130ed | 地图 Carla/Maps/Town10HD_Opt
 [aeb] 自动选择直路段：spawn[75]（方向偏差 0.0°）
-[aeb] 前车 vehicle.audi.tt 位于前方 110.5 m
+[aeb] 前车 vehicle.audi.tt 位于前方 56.0 m
 [aeb] 开始实验：巡航油门 0.75，TTC 阈值 1.60s
-[aeb] >>> 触发制动 t=4.31s dist=22.0m speed=48.6km/h ttc=1.63s
-[aeb] >>> 停稳 t=5.93s 距前车 7.3 m（地面真值 7.3 m）
+[aeb] >>> 触发制动 t=4.57s 激光雷达 dist=21.3m speed=48.1km/h ttc=1.60s source=lidar
+[aeb] >>> 停稳 t=6.00s 激光雷达测距 3.1 m（真值 4.5 m；传感器失效帧 0）
 [aeb] 结论：PASS（制动成功，未发生碰撞）
 ```
 
@@ -109,7 +109,7 @@ carla_ttc_emergency_braking/
 打印明确提示并以退出码 2 结束，而不是产生 core dump。
 在 Linux 上要真正跑通，需要用 OpenHUTB 源码自行编译 libcarla（`make PythonAPI`，cp38/cp310 均可）。
 
-## 10. 验收判据（写进配置，不硬编码）
+## 11. 验收判据（写进配置，不硬编码）
 
 `config/params.yaml` 的 `evaluation:` 段：
 - `min_stop_distance: 2.0`（米）——停稳后距前车小于该值视为追尾；
@@ -141,4 +141,14 @@ carla_ttc_emergency_braking/
 - `激光雷达测距`：到前车**最近表面**的距离（决策口径）；
 - `真值距离`：**中心距**，比前者大约半个车长，只用于评估。
 
-实测（2026-11-11）：制动 t=4.17 s，停稳 t=6.56 s，激光雷达测距 4.68 m（真值中心距 6.74 m），未碰撞 → PASS。
+实测（2026-11-12，最终代码）：制动 t=4.57 s，停稳 t=6.00 s，激光雷达最后一次有效测距 3.07 m（真值中心距 4.51 m），未碰撞 → PASS。
+
+## 13. 感知盲区与控频说明
+
+- **近距盲区**：`front_vehicle_distance(min_x=3.0)` 只统计车体前方 3 m 以外的车辆实例点，
+  3 m 以内视为盲区（本实验停车距离 4~7 m，不影响判据；若用于更低速/更近距离场景需调小 `min_x`，
+  并注意自车车顶回波会混入）。传感器在 1 s 内没有任何更新时才按「失效」处理并制动，
+  「前方暂时没有目标」属于正常工况、不制动。
+- **控频方式**：主循环用 `time.sleep(0.05)` 控制约 20 Hz 的决策频率，而不是 CARLA 的固定步长模式
+  （`world.tick()` / synchronous mode）。因此 `run_log.csv` 的 `t` 是墙钟时间，负载抖动时会与仿真时间
+  有毫秒级偏差；实验里以「停稳 + 距离」为判据，不受该偏差影响，但做精确时序分析时应改用同步模式。

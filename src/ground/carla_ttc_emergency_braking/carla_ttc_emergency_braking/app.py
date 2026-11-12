@@ -502,6 +502,8 @@ def run(cfg):
     final_from_lidar = False
     brake_latched = False
     truth_at_stop = None
+    last_lidar_dist = None
+    lidar_hits = 0
 
     print("[aeb] 开始实验：巡航油门 %.2f，TTC 阈值 %.2fs，初始距离 %.1f m"
           % (ctrl_cfg["cruise_throttle"], ctrl_cfg["ttc_threshold"], lead_gap))
@@ -543,6 +545,9 @@ def run(cfg):
         if sensor_lost:
             sensor_faults += 1
         dist = lidar_dist
+        if dist is not None:
+            last_lidar_dist = dist
+            lidar_hits += 1
 
         if braking:
             ego.apply_control(carla.VehicleControl(
@@ -580,11 +585,11 @@ def run(cfg):
                 stopped_at = t
                 phase = "stopped"
                 frame_state["phase"] = "stopped"
-                final_distance = dist if dist is not None else gt_distance
-                final_from_lidar = dist is not None
+                final_distance = last_lidar_dist if last_lidar_dist is not None else gt_distance
+                final_from_lidar = last_lidar_dist is not None
                 truth_at_stop = gt_distance
                 print("[aeb] >>> 停稳 t=%.2fs 激光雷达测距 %s（真值 %.1f m；传感器失效帧 %d）"
-                      % (t, ("%.1f m" % dist) if dist is not None else "无目标",
+                      % (t, ("%.1f m" % final_distance) if final_from_lidar else "无目标",
                          gt_distance, sensor_faults))
                 time.sleep(1.2)  # 留一帧停稳画面
                 break
@@ -616,16 +621,20 @@ def run(cfg):
         fh.write("AEB 实验摘要\n")
         fh.write("地图: %s\n" % carla_map.name)
         fh.write("决策依据: 激光雷达观测（真值仅用于评估对账）\n")
-        fh.write("初始距离: %.1f m\n" % lead_gap)
+        fh.write("初始距离(首帧真值): %.1f m（配置 lead_gap=%.1f m，实际按路段取整）\n"
+                 % (float(rows[0]["truth_distance_m"]), float(demo["lead_gap"])))
         fh.write("制动触发时刻: %.2f s\n" % meta["brake_time"])
         fh.write("制动后停稳时刻: %.2f s\n" % (stopped_at if stopped_at else -1))
-        fh.write("停稳时激光雷达测距（到前车最近表面）: %s\n"
+        fh.write("激光雷达有效检出帧: %d / %d（语义实例点数 >= 4 才成目标；远距稀疏会漏检，"
+                 "决策按锁存与最后一次有效测量处理）\n" % (lidar_hits, len(rows)))
+        fh.write("停稳时激光雷达测距（最后一次有效测量，到前车最近表面）: %s\n"
                  % (("%.2f m" % meta["final_distance"]) if meta.get("final_from_lidar") else "无有效目标（回退真值 %.2f m）"
                     % meta["final_distance"]))
         fh.write("停稳时真值距离（中心距，仅评估）: %.2f m\n" % meta.get("truth_at_stop", -1.0))
         fh.write("全程最近距离(真值): %.2f m\n" % meta["min_distance"])
-        fh.write("传感器失效帧数: %d（失效安全策略：连续 %d 帧无有效观测即制动）\n"
-                 % (sensor_faults, int(ctrl_cfg.get("sensor_timeout_frames", 20))))
+        fh.write("传感器失效帧数: %d（失效安全策略：点云流超过 %.1f s 未更新即判故障并制动；"
+                 "「走廊内暂时无目标」不算故障）\n"
+                 % (sensor_faults, float(ctrl_cfg.get("sensor_timeout_s", 1.0))))
         fh.write("关键帧: %s\n" % ", ".join(saved_frames))
 
     camera.stop(); lidar.stop()
