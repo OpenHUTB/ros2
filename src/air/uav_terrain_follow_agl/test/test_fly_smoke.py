@@ -11,9 +11,12 @@ from uav_terrain_follow_agl.core.cases import Case, get_case
 from uav_terrain_follow_agl.core.dem import IDEAL_DEM
 from uav_terrain_follow_agl.core.flyer import KinematicPlant, fly, fly_all, speed_profile
 
-mujoco = pytest.importorskip("mujoco", reason="需要 mujoco 才能跑闭环")
-pytest.importorskip("uav_mujoco_sim.core.quadrotor", reason="需要同仓库 uav_mujoco_sim")
-from uav_mujoco_sim.core.quadrotor import Quadrotor  # noqa: E402
+
+def _require_mujoco():
+    """只给真正需要 MuJoCo 的用例加跳过标记：导入失败整份文件会被跳过，
+    连纯运动学的用例都跑不了（离线 CI 里那些用例本来是可以跑的）。"""
+    pytest.importorskip("mujoco", reason="需要 mujoco 才能跑闭环")
+    pytest.importorskip("uav_mujoco_sim.core.quadrotor", reason="需要同仓库 uav_mujoco_sim")
 
 
 def _short_case(**kwargs) -> Case:
@@ -57,6 +60,7 @@ def test_kinematic_flight_completes():
 # MuJoCo 闭环
 # --------------------------------------------------------------------------- #
 def test_mujoco_flight_records_truth_and_commands():
+    _require_mujoco()
     case = _short_case(length_m=60.0)
     f = fly(case, "reactive_agl", plant="mujoco")
     assert len(f.samples) > 100
@@ -66,6 +70,7 @@ def test_mujoco_flight_records_truth_and_commands():
 
 
 def test_three_strategies_rank_as_expected():
+    _require_mujoco()
     """同一段山脊：定高撞地 < 纯反馈 < DEM 前馈。"""
     case = _short_case()
     gaps = {name: fly(case, name, plant="mujoco").metrics()["min_clearance_m"]
@@ -85,6 +90,7 @@ def test_stop_on_intrusion_terminates_early():
 
 
 def test_kinematic_and_mujoco_agree_within_a_metre():
+    _require_mujoco()
     case = _short_case()
     a = fly(case, "dem_preview", plant="kinematic").metrics()
     b = fly(case, "dem_preview", plant="mujoco").metrics()
@@ -110,7 +116,10 @@ def test_unknown_plant_raises():
 
 
 def test_base_model_really_has_no_ground_contact():
+    _require_mujoco()
     """底座模型机身 geom 关掉了碰撞——所以地形只以解析场进入评估。"""
+    from uav_mujoco_sim.core.quadrotor import Quadrotor
+
     quad = Quadrotor(dt=0.01)
     m = quad.model
     for i in range(m.ngeom):

@@ -20,7 +20,7 @@ MuJoCo 四旋翼闭环上按真值口径评估最小离地间隙。
 python main.py                                   # MuJoCo 闭环主表
 python main.py --sweep --dem-levels --ablation --json   # 全部实验组
 python main.py --no-sim                          # 不装 mujoco 也能跑
-python -m pytest test -q                         # 101 项测试
+python -m pytest test -q                         # 101 项测试（需 mujoco + 同仓库 uav_mujoco_sim）
 python tools/make_figures.py                     # 文档配图
 ```
 

@@ -169,6 +169,19 @@ def run_ablation(plant: str) -> Dict[str, List[Dict]]:
 
 
 def main(argv=None):
+    """命令入口：把「缺 MuJoCo 后端」这类可预期的 RuntimeError 变成一句人话。
+
+    直接用 `python main.py` 而仓库里没有 `src/air/uav_mujoco_sim` 时，
+    以前会先抛一整屏 traceback 才看到提示；现在只打印提示并返回 1。
+    """
+    try:
+        return _main(argv)
+    except RuntimeError as exc:
+        print(f"运行失败：{exc}", file=sys.stderr)
+        return 1
+
+
+def _main(argv=None):
     parser = argparse.ArgumentParser(
         description="低空地形跟随：恒定离地高度保持策略对比（MuJoCo 闭环）")
     parser.add_argument("--case", action="append", choices=[c.name for c in CASES],
