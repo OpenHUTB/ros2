@@ -96,6 +96,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [双足步态生成与 ZMP 稳定性](./humanoid/bipedal_gait_zmp.md)
 * [基于三次样条插值的双足多步态平滑切换](./humanoid/biped_cubic_spline_gait_switch.md)
 * [人形机器人键盘运动控制](./humanoid/humanoid_keyboard_control.md)
+* [关节轨迹重定时：约束饱和下的最快时间缩放](./humanoid/joint_traj_retime.md) —— 自然三次样条 + 速度/加速度约束下的最大常数缩放，14 项测试
 * [人形机器人平衡控制与外力抗扰恢复](./humanoid/humanoid_push_recovery.md)
 * [人形机器人 PPO 神经网络平衡控制](./humanoid/humanoid_ppo_locomotion.md)
 * [人形机器人 2D 激光雷达 CNN 感知与避障](./humanoid/humanoid_lidar_nn_perception.md)
