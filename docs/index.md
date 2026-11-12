@@ -125,7 +125,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [人形机器人离线语音指令控制](./humanoid/humanoid_voice_command.md)
 * [人形机器人跑步牛顿第二定律理论计算与演示](./humanoid/humanoid_newton_running.md)
 * [人形机器人全身柔顺控制](./humanoid/humanoid_g1_compliance.md)
-
+* [人形机器人膝关节阻抗参数整定](./humanoid/humanoid_knee_impedance.md)
 
 ## 3. 肌肉骨骼人 <span id='musculoskeletal'></span>
 
