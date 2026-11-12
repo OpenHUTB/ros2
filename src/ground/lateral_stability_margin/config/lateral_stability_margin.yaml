@@ -1,0 +1,20 @@
+# lateral_stability_margin 的默认参数
+# 由 launch/main.launch 用 <rosparam command="load" file="$(find lateral_stability_margin)/config/lateral_stability_margin.yaml"/> 载入
+
+vehicle:
+  mass: 1500.0            # 整车质量 kg
+  wheelbase: 2.7          # 轴距 m
+  cg_to_front: 1.2        # 质心到前轴距离 m（到后轴 = 2.7 − 1.2 = 1.5）
+
+tire:
+  front_cornering: 80000.0   # 前轴侧偏刚度 N/rad
+  rear_cornering: 95000.0    # 后轴侧偏刚度 N/rad
+
+scene:
+  radius: 50.0            # 转弯半径 m
+  speed_kmh: 40.0         # 稳态圆周车速 km/h
+
+check:
+  understeer_min: 0.0          # 不足转向梯度下限 rad/(m/s²)（0 = 不允许过多转向）
+  ackermann_speed_kmh: 2.0     # 校验阿克曼角用的低速 km/h
+  ackermann_tolerance: 0.02    # 低速转向角与 L/R 的相对偏差上限

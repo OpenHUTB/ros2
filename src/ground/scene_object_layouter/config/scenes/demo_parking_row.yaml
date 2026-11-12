@@ -1,0 +1,36 @@
+# 演示场景：两排停车位 + 三个立柱
+#
+# 坐标约定：场地左下角是 (0, 0)，x 向右、y 向上，单位米。
+# 每个物体组的 (origin_x, origin_y) 是「第一行第一列物体的中心点」。
+
+name: demo_parking_row
+
+field:
+  width: 24.0
+  length: 18.0
+
+min_gap: 0.5            # 任意两个物体之间至少留 0.5 m
+
+objects:
+  # 两排，每排 6 个车位：宽 2.5 m、深 5.3 m，横向间隙 0.3 m，两排之间空 6 m 当车道
+  - kind: slot
+    width: 2.5
+    length: 5.3
+    rows: 2
+    cols: 6
+    gap_x: 0.6
+    gap_y: 6.0
+    origin_x: 3.0
+    origin_y: 3.0
+    blueprint: static.prop.parkingline
+
+  # 三个立柱，横向间隔 4 m，放在两排车位之间偏上的位置
+  - kind: pillar
+    width: 1.0
+    length: 1.0
+    rows: 1
+    cols: 3
+    gap_x: 4.0
+    origin_x: 6.0
+    origin_y: 8.65
+    blueprint: static.prop.pillar

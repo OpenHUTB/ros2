@@ -1,0 +1,22 @@
+<launch>
+  <!--
+    mujoco_arm_ik.launch —— 二连杆机械臂 IK 画圆演示（ROS Noetic）
+    运行前请确保：
+      1) 已安装 Python 依赖：pip3 install mujoco pillow numpy（或按 requirements.txt 安装）
+         无显卡环境（虚拟机）另需:  sudo apt install -y libosmesa6-dev
+      2) 已编译本包:  catkin_make && source devel/setup.bash
+    可选参数：
+      gl        : MuJoCo 渲染后端，默认 osmesa（无显卡 / 虚拟机）；有显卡可传 glfw
+      model_path: MuJoCo XML 路径，默认包内 arm_2link.xml
+  -->
+  <arg name="gl" default="osmesa"/>
+  <arg name="model_path" default="$(find mujoco_arm_ik)/arm_2link.xml"/>
+
+  <node name="mujoco_arm_ik" pkg="mujoco_arm_ik" type="main.py"
+        output="screen" respawn="false">
+    <!-- 脚本安装在 devel/lib/mujoco_arm_ik/，模型在 share/mujoco_arm_ik/，
+         因此通过环境变量把模型绝对路径传给脚本 -->
+    <env name="MUJOCO_GL" value="$(arg gl)"/>
+    <env name="MUJOCO_ARM_IK_MODEL" value="$(arg model_path)"/>
+  </node>
+</launch>

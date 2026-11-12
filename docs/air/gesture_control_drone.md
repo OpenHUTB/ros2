@@ -273,6 +273,52 @@ random              1.000      0.972       36
 > 注意：`gesture_dataset.py merge` 默认会打乱顺序，合并后的数据集就不再有采集时间
 > 信息，`--split time` 会退化成随机划分（训练脚本会打印提示）。
 
+切换到训练出来的模型（可选）：
+
+```bash
+roslaunch gesture_control_drone main.launch classifier:=mlp
+```
+
+* `classifier: rules`（默认）—— 几何规则，`gesture_detection.py` 里的启发式；
+* `classifier: mlp` —— 用 `gesture_train.py` 训出的模型做**每帧分类**，输入仍是
+  同一份 21 个关键点，输出仍是同一套手势 token。
+
+> `classifier` 在 `main.launch` 里用 `<param>` 覆盖 yaml，**请用 launch 参数传**
+> （改 `config/gesture_control.yaml` 里的 `classifier` 不会生效）。
+
+| 参数（yaml） | 默认 | 说明 |
+|---|---|---|
+| `mlp/model_path` | `""`（自动找） | 留空则依次找 `<包>/models/`、`install/share/<包>/models/`；也可写相对包目录或绝对路径 |
+| `mlp/threshold` | `0.6` | 低于这个置信度按"没识别出"处理 |
+
+**为什么有阈值**：起飞/降落是不可逆动作，模型拿不准时宁可漏报（`NONE`）。
+
+**找不到模型 / 模型损坏会怎样**：节点照常启动，打一条 warning 并**回退到规则法**
+（0 字节、被截断的 npz、缺权重字段、依赖缺失都算）。
+
+**类别顺序校验**：模型里存了 `classes`，词表改过（顺序或名字变了）就拒绝加载 ——
+否则输出会静默错标，这种错误最难查。
+
+### ⚠ 自带演示模型的边界（很重要）
+
+仓库里的 `models/gesture_mlp.npz` 是**只用 121 个真实样本训出来的演示模型**，
+它的用途是"跑通链路"，**不是可以直接飞的模型**：
+
+1. **7 类里只有 3 类学过**（PALM_OPEN 63 / FIST 55 / POINT 3）。VICTORY /
+   THUMB_DOWN / THUMB_UP / OK 四类的输出概率恒为 0 —— 也就是说接上这枚模型时，
+   **这 4 个手势永远识别不出来**，其中 **OK = 紧急停止**。紧急停止请走键盘/话题：
+
+   ```bash
+   rostopic pub -1 /gesture_command std_msgs/String "data: 'estop'"
+   ```
+
+2. 用合成手型做交叉验证时它有高置信度错判（`FIST -> POINT` 0.92、
+   `OK -> PALM_OPEN` 0.99）—— 说明**泛化没被验证过**。合成手不等于 MediaPipe 的
+   真实输出，但足以说明这枚模型不该直接上真机。
+
+**实机请自己采集训练**：先用 `record_gesture_session.py` 采够每类几十个样本
+（尤其把 OK 这类安全相关手势采足），再 `gesture_train.py` 重新训练。
+
 ## 8. 常见问题
 
 | 现象 | 原因与处理 |
