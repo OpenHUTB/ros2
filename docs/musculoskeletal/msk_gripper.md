@@ -174,7 +174,7 @@ python3 main.py check
 python3 main.py bench --out out       # 复现 G1–G8 全部数字
 python3 main.py gif --out gif         # 复现本页动图
 python3 tools/plot_metrics.py out/metrics.json out
-python3 -m unittest discover -s tests # 18 项
+python3 -m unittest discover -s tests # 基础依赖 24 项；安装 requirements-slam 后含 SLAM 共 27 项
 ```
 
 ## 4 已知限制
@@ -342,7 +342,7 @@ docker run --rm -v "${PWD}/results:/results" lyzzzz0921-msk-gripper:humble
 
 ### 10.2 模型、键盘、网络和动图入口
 
-模块具有 `main.py`、`main.sh`、`main.bat` 统一入口；ROS 2 launch 参数 `mode` 选择 `check`、`run`、`bench`、`manual`、`neural` 或 `gif`。
+模块具有 `main.py`、`main.sh`、`main.bat` 统一入口；ROS 2 launch 参数 `mode` 选择 `check`、`run`、`bench`、`manual`、`neural`、`gif` 或 `slam`。
 
 ```bash
 source /opt/ros/humble/setup.bash
