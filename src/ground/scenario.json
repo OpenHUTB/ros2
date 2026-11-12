@@ -1,0 +1,7 @@
+{
+  "n_agvs": 6,
+  "map_width": 20,
+  "map_height": 15,
+  "max_steps": 300,
+  "cell_size_m": 1.0
+}
