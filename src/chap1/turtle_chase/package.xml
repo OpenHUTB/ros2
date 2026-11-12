@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>turtle_chase</name>
+  <version>1.0.0</version>
+  <description>双海龟追逐实验: 逃亡者纯跟踪圆周逃跑, 追逐者P控制追赶并跟随</description>
+  <maintainer email="student@example.com">student</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>rospy</depend>
+  <depend>std_srvs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>turtlesim</depend>
+</package>
