@@ -17,7 +17,7 @@ def main():
         serve(args.assets, args.seed)
         return
     script = Path(__file__).resolve().parent / 'scripts/run_navigation.sh'
-    subprocess.run(['bash', str(script), args.sim_python, args.assets], check=True)
+    subprocess.run(['bash', str(script), args.sim_python, args.assets, str(args.seed)], check=True)
 
 
 if __name__ == '__main__':

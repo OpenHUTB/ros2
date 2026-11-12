@@ -14,15 +14,26 @@ python3 main.py --sim-python /path/to/simulation/python --assets /path/to/unitre
 
 需要 ROS Noetic、gmapping、move_base。等待 /map 后，在 RViz 选择 map 坐标系，用 2D Nav Goal 向 /move_base_simple/goal 发送目标。Windows 仿真环境与 WSL 组合时使用启动脚本转换路径。
 
-## ROS launch
+## ROS 1 Noetic 启动
 
-在 ROS Noetic 源码空间运行，将路径替换为实际值。
+本模块的 ROS 接口使用 ROS 1 Noetic（catkin、rospy）。在 Noetic 源码空间运行，将路径替换为实际值。
 
 ```bash
 source /opt/ros/noetic/setup.bash
 export ROS_PACKAGE_PATH="$PWD:${ROS_PACKAGE_PATH:-}"
 roslaunch g1_gmapping_navigation main.launch sim_python:=/path/to/python sim_entry:=/path/to/main.py assets:=/path/to/unitree_rl_gym
 ```
+
+## 无仿真环境的场景 XML 测试
+
+安装 NumPy 后在模块目录运行：
+
+```bash
+python tests/test_scene_xml_local.py
+```
+
+测试使用临时 G1 XML，覆盖有无 compiler 节点、场景几何和相机命名。
+图像使用 front_camera 光学坐标系，TF 每帧发布其相对 base_link 的姿态。
 
 ## 大模型使用声明
 

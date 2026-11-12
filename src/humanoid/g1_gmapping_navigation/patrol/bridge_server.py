@@ -3,7 +3,7 @@ import json
 import sys
 import base64
 
-from .scene import IndoorSimulator
+from .simulator import IndoorSimulator
 
 
 def serve(assets, seed=0):
@@ -22,9 +22,11 @@ def serve(assets, seed=0):
                 if sim.fallen:
                     break
             rgb=sim.image()
+            camera_position, camera_rotation = sim.camera_transform()
             result = dict(time=float(sim.data.time), odom=sim.odom.tolist(),
-                scan=sim.scan(), velocity=[float(sim.data.qvel[0]),float(sim.data.qvel[1])],
-                angular_velocity=float((sim.odom[2]-previous_yaw)/(sim.data.time-previous_time)),
+                scan=sim.scan(), velocity=sim.data.qvel[:2].tolist(),
+                angular_velocity=float((sim.odom[2] - previous_yaw) / (sim.data.time - previous_time)),
+                camera_position=camera_position, camera_rotation=camera_rotation,
                 fallen=bool(sim.fallen), joints=sim.data.qpos[7:].tolist(),
                 joint_names=[sim.model.joint(i).name for i in range(1,sim.model.njnt)],
                 image=base64.b64encode(rgb.tobytes()).decode('ascii'),

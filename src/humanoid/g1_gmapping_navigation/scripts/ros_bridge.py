@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 """ROS Noetic bridge. Simulation uses an isolated interpreter over stdio.
 
-The bridge only consumes integrated noisy odometry, never ground-truth position.
+The odometry pose integrates simulated velocity and gyro measurements.
 On WSL, an explicit Windows Python executable can run the MuJoCo process.
 """
 import json
 import math
-import os
 import subprocess
 import time
 import base64
@@ -61,7 +60,7 @@ def main():
             odom.header.stamp,odom.header.frame_id,odom.child_frame_id = stamp,'odom','base_link'
             odom.pose.pose.position.x,odom.pose.pose.position.y = x,y
             odom.pose.pose.orientation.x,odom.pose.pose.orientation.y,odom.pose.pose.orientation.z,odom.pose.pose.orientation.w = quaternion
-            # Velocity from successive integrated odometry is in the body frame.
+            # Rotate MuJoCo world-frame linear velocity into the base_link frame.
             vx,vy = state['velocity']
             odom.twist.twist.linear.x = math.cos(yaw)*vx+math.sin(yaw)*vy
             odom.twist.twist.linear.y = -math.sin(yaw)*vx+math.cos(yaw)*vy
@@ -79,6 +78,9 @@ def main():
             joints.header.stamp=stamp
             joints.name=state['joint_names']; joints.position=state['joints']
             joint_pub.publish(joints)
+            camera_quaternion = tf.transformations.quaternion_from_matrix(state['camera_rotation'])
+            broadcaster.sendTransform(state['camera_position'], camera_quaternion,
+                                      stamp, 'front_camera', 'base_link')
             image=Image()
             image.header.stamp=stamp; image.header.frame_id='front_camera'
             image.height,image.width=state['image_shape'][:2]

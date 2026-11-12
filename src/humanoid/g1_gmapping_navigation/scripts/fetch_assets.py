@@ -15,7 +15,9 @@ def main():
     target = args.destination.resolve()
     if target.exists():
         raise SystemExit('Destination exists; use a new directory or validate the existing revision manually.')
-    subprocess.run(['git','clone','--filter=blob:none','--no-checkout',URL,str(target)],check=True)
+    subprocess.run(['git', 'init', str(target)],check=True)
+    subprocess.run(['git', '-C', str(target), 'remote', 'add', 'origin', URL], check=True)
+    subprocess.run(['git', '-C', str(target), 'fetch', '--depth', '1', 'origin', REVISION], check=True)
     subprocess.run(['git','-C',str(target),'sparse-checkout','set','deploy','resources/robots/g1_description'],check=True)
     subprocess.run(['git','-C',str(target),'checkout','--detach',REVISION],check=True)
     print(target)
