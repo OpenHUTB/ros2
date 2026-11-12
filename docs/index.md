@@ -405,6 +405,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [无人机导航强化学习对比实验（PPO/SAC/TD3）](./air/uav_rl_benchmark.md)
 
 * [神经残差动力学与学习式轨迹跟踪](./air/uav_neural_residual_control.md)
+* [低空地形跟随：恒定离地高度保持与 DEM 前馈](./air/uav_terrain_follow_agl.md) —— 要求全程保持固定离地高度（AGL 15 m），对比定高、纯雷达反馈与 DEM 前馈三种策略，MuJoCo 闭环验证
 * [基于 DQN 的无人机导航避障](./air/uav_dqn_nav.md) —— 与 PPO 同环境同观测，仅替换为 DQN 离散动作算法，用于端到端模型/算法对比
 * [城市动态交通下的无人机避障（PPO + DAgger）](./air/uav_traffic_nav.md) —— 用 CARLA 车流做动态障碍；规则专家示范 + 行为克隆 + DAgger，跨路成功率 48%±3.6%，高于贪心（39%）与速度障碍法（19%）
 * [无人机ppo模块研究](./air/uav_experiments.md) —— 把键盘控制、PPO 导航、算法对比、航线巡航、动态交通五个实验合并到一页；各实验独立页面仍然保留
