@@ -1,0 +1,80 @@
+name: Bezier 曲线模块测试
+
+# 本模块的算法层只用标准库 math，不依赖 ROS；可视化层依赖 pygame，
+# 这里用 SDL_VIDEODRIVER=dummy 在无显示设备的 runner 上跑离屏录制，
+# 既验证 CLI 入口也验证 gif 产物（含 B 样条末端收敛这条回归）。
+
+on:
+  push:
+    paths:
+      - 'src/ground/bezier_trajectory/**'
+      - 'docs/ground/bezier_trajectory.md'
+      - '.github/workflows/bezier_trajectory_tests.yml'
+  pull_request:
+    paths:
+      - 'src/ground/bezier_trajectory/**'
+      - 'docs/ground/bezier_trajectory.md'
+      - '.github/workflows/bezier_trajectory_tests.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: 单元测试 + 离屏录制冒烟
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: src/ground/bezier_trajectory
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pygame pillow pyyaml pytest
+
+      - name: Run unit tests (pytest)
+        run: python -m pytest test -v
+
+      - name: Run unit tests without pytest
+        run: python test/test_bezier.py
+
+      - name: Byte-compile module
+        run: python -m compileall -q bezier_trajectory launch main.py
+
+      - name: Offscreen record (SDL dummy)
+        env:
+          SDL_VIDEODRIVER: dummy
+        run: |
+          python main.py --mode record --output "${RUNNER_TEMP}/bezier_demo.gif"
+          test -s "${RUNNER_TEMP}/bezier_demo.gif"
+
+      - name: Assert gif size and B-spline endpoint
+        run: |
+          python - <<'PY'
+          import os
+          import sys
+
+          sys.path.insert(0, ".")
+          from bezier_trajectory.bezier import sample_bspline
+
+          gif = os.path.join(os.environ["RUNNER_TEMP"], "bezier_demo.gif")
+          size = os.path.getsize(gif)
+          assert size < 5 * 1024 * 1024, "gif 超过 5 MB: %d" % size
+
+          ctrl = [(120, 480), (300, 180), (600, 180), (780, 480)]
+          last = sample_bspline(ctrl, degree=3, n=200)[-1]
+          assert abs(last[0] - ctrl[-1][0]) < 1e-6, last
+          assert abs(last[1] - ctrl[-1][1]) < 1e-6, last
+          print("gif bytes:", size, "| bspline end:", last)
+          PY
