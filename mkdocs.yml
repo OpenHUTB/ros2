@@ -549,6 +549,7 @@ nav:
     - 水下 ROV 海底管道往返巡检（视觉感知 + EKF-SLAM + 端到端）: './water/rov_pipeline_follow.md'
     - 水面无人艇：激光雷达建图与神经网络局部规划: './water/usv_mujoco_nn.md'
     - USV 弗劳德缩比换算与拖曳功率估算: './water/usv_froude_scaling.md'
+    - 水面无人艇 COLREG 会遇避碰: './water/usv_colreg_avoidance.md'
     - 声呐数据滤波初步验证: './water/rov_sonar_filter.md'
     - 水下机器人 MuJoCo 仿真、声呐 SLAM 与纯 NumPy 神经网络导航: './water/rov_numpy_nn_slam.md'
     - ROV 水下机器人 MuJoCo 建图导航与神经网络控制: './water/rov_mujoco_slam_nn_nav/README.md'

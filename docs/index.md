@@ -592,6 +592,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [浑浊水体视觉增强与目标追踪（ROS 2，合成视频演示）](./water/water_vision_enhancement.md) —— 通道增益校正、白平衡、CLAHE 与暗通道去散射增强，KCF/CSRT/MOSSE 目标追踪，附合成浑浊水体演示节点
 
 * [水面无人艇：激光雷达建图与神经网络局部规划](./water/usv_mujoco_nn.md) —— MuJoCo 三自由度船体，射线激光雷达 + log-odds 占据栅格建图，MLP 输出局部目标点实现自主避障，封装为 ROS Noetic 节点
+* [水面无人艇 COLREG 会遇避碰](./water/usv_colreg_avoidance.md) —— 按避碰规则判断对遇/交叉/追越局面，让路船自动右转避让
 
 * [USV 弗劳德缩比换算与拖曳功率估算](./water/usv_froude_scaling.md) —— 弗劳德相似定模型速度、λ³ 定阻力、λ^3.5 定功率；默认 10 m 船 10 倍缩尺，模型 2.5 N 换算实船总阻力 1925 N、轴功率 17.5 kW
 
