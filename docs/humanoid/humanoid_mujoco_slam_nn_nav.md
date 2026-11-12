@@ -31,12 +31,12 @@ Adam），通过 ROS Noetic 话题封装，`roslaunch` 一键启动。
 | Ubuntu | 20.04 LTS | 虚拟机或原生均可 |
 | ROS | Noetic | 仅 rospy 节点，无自定义消息 |
 | Python | 3.8 | 系统自带 |
-| MuJoCo | 3.1 – 3.2 | `pip3 install --user "mujoco>=3.1,<3.3"` |
+| MuJoCo | 3.x | `pip3 install --user "mujoco>=3.1"`（Python 3.8 会装 3.2.x；3.12 需 Python≥3.10） |
 | numpy / pillow | - | `pip3 install --user numpy pillow` |
 
 ```bash
 # 全部依赖装在用户目录，不需要 sudo，也不改系统 Python
-pip3 install --user "mujoco>=3.1,<3.3" numpy pillow
+pip3 install --user "mujoco>=3.1" numpy pillow
 
 mkdir -p ~/humanoid_ws/src && cd ~/humanoid_ws/src
 # 将 humanoid_mujoco_slam_nn_nav 目录拷贝到此处
@@ -211,8 +211,11 @@ flowchart LR
 cd ~/humanoid_ws/src/humanoid_mujoco_slam_nn_nav
 python3 main.py --mode test          # IK / 建图 / 规划 / 网络，4/4 通过
 python3 main.py --mode eval          # 三场景 × 三策略 -> results/benchmark.json
-python3 main.py --mode train         # 重新训练四个网络（可选）
+python3 main.py --mode train         # 重新训练四个网络（可选，见下方数据说明）
 ```
+
+> 训练前先运行 `python3 tools/collect_data.py` 生成 `data/dataset.npz`（约 3.7 MB，数据不入库）；
+> 仓库已附带训练好的 `models/*.npz`，直接运行 `test`/`eval` 无需重新训练。
 
 ### 6.2 ROS 键盘遥控（任务 1）
 
@@ -268,9 +271,12 @@ PYTHONPATH=. python3 tools/evaluate.py   # 三场景 × 三策略
 
 | 策略 | warehouse | obstacle_field | corridor |
 | --- | --- | --- | --- |
-| 经典栈（A\* + 纯跟踪） | ✅ 64.4 s / 0.333 m / ATE 0.040 | ✅ 52.5 s / 0.346 m / 0.026 | ✅ 48.4 s / 0.348 m / 0.035 |
+| 经典栈（A\* + 纯跟踪） | ✅ 64.4 s / 0.333 m / ATE 0.040 / 碰撞 5 | ✅ 52.5 s / 0.346 m / 0.026 / 碰撞 0 | ✅ 48.4 s / 0.348 m / 0.035 / 碰撞 0 |
 | 神经规划 + 控制 | ❌ 跌倒 | ❌ 超时 | ❌ 跌倒 |
-| 端到端 CNN | ✅ 64.4 s / 0.332 m | ❌ 超时 | ❌ 跌倒 |
+| 端到端 CNN | ✅ 64.4 s / 0.332 m / 碰撞 5 | ❌ 超时 | ❌ 跌倒 |
+
+> `success` 判据只要求终点 ≤0.35 m，不要求零碰撞；warehouse 的经典栈和端到端各发生 5 次碰撞。
+> 若按“零碰撞到达”口径，经典栈为 2/3、端到端为 0/3。逐条数据见本包 `results/benchmark.json`。
 
 ### 7.2 离线指标
 
@@ -288,7 +294,7 @@ PYTHONPATH=. python3 tools/evaluate.py   # 三场景 × 三策略
 | 站立 5 s 骨盆漂移 | < 3 mm |
 | 连续行走 | 60 s / 5.2 m 无跌倒 |
 | SLAM ATE（三场景） | 0.026 – 0.040 m |
-| 建图覆盖率 | 0.62 – 0.71 |
+| 建图覆盖率（warehouse / obstacle_field / corridor） | 0.457 / 0.486 / 0.248 |
 
 ### 7.4 失败分析
 

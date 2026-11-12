@@ -33,7 +33,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from humanoid_mujoco_slam_nn_nav.gait import GaitParams, Walker          # noqa: E402
 from humanoid_mujoco_slam_nn_nav.model import ACTUATED_JOINTS            # noqa: E402
-from humanoid_mujoco_slam_nn_nav.sensors import DepthCamera, IMU, Lidar, Odometry  # noqa: E402
+from humanoid_mujoco_slam_nn_nav.sensors import DepthCamera, IMU, Lidar, Odometry as Odom  # noqa: E402
 from humanoid_mujoco_slam_nn_nav.sim import HumanoidSim                  # noqa: E402
 
 
@@ -48,7 +48,7 @@ class SimNode:
         self.lidar = Lidar(self.sim.model, n_beams=int(rospy.get_param("~lidar_beams", 180)))
         self.depth = DepthCamera(self.sim.model, 32, 24)
         self.imu = IMU()
-        self.odom = Odometry()
+        self.odom = Odom()
         sx, sy, syaw = self.sim.layout.start
         self.odom.reset(sx, sy, syaw)
         self.walker = Walker(self._gait_params(), sx, sy, syaw)

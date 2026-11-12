@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """人形机器人模块统一入口。
 
     python3 main.py --mode test            # 单元测试（不需要 ROS）
