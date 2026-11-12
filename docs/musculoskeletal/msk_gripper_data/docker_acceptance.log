@@ -1,0 +1,45 @@
+..................                                                       [100%]
+18 passed in 22.38s
+[INFO] [launch]: All log files can be found below /root/.ros/log/2026-11-09-18-18-42-640440-1d202c838a88-24
+[INFO] [launch]: Default logging verbosity is set to INFO
+[INFO] [python3-1]: process started with pid [25]
+[python3-1] W/S 增减肌肉激活，R/F 升降，空格松开，Q 退出。
+[python3-1] {"key": "w", "time_s": 0.10000000000000007, "activation": 0.05, "height_target_m": 0.0, "contact_points": 0, "grip_force_n": 0.0}
+[python3-1] {"key": "w", "time_s": 0.20000000000000015, "activation": 0.1, "height_target_m": 0.0, "contact_points": 0, "grip_force_n": 0.0}
+[python3-1] {"key": "w", "time_s": 0.3000000000000002, "activation": 0.15000000000000002, "height_target_m": 0.0, "contact_points": 0, "grip_force_n": 0.0}
+[python3-1] {"key": "w", "time_s": 0.4000000000000003, "activation": 0.2, "height_target_m": 0.0, "contact_points": 0, "grip_force_n": 0.0}
+[python3-1] {"key": "w", "time_s": 0.5000000000000003, "activation": 0.25, "height_target_m": 0.0, "contact_points": 0, "grip_force_n": 0.0}
+[python3-1] {"key": "w", "time_s": 0.5999999999999893, "activation": 0.3, "height_target_m": 0.0, "contact_points": 0, "grip_force_n": 0.0}
+[python3-1] {"key": "w", "time_s": 0.6999999999999783, "activation": 0.35, "height_target_m": 0.0, "contact_points": 0, "grip_force_n": 0.0}
+[python3-1] {"key": "w", "time_s": 0.7999999999999673, "activation": 0.39999999999999997, "height_target_m": 0.0, "contact_points": 8, "grip_force_n": 0.5225179765421312}
+[python3-1] {"key": "w", "time_s": 0.8999999999999563, "activation": 0.44999999999999996, "height_target_m": 0.0, "contact_points": 8, "grip_force_n": 1.4508130370476715}
+[python3-1] {"key": "w", "time_s": 0.9999999999999453, "activation": 0.49999999999999994, "height_target_m": 0.0, "contact_points": 8, "grip_force_n": 2.562356506621659}
+[python3-1] {"key": "r", "time_s": 1.0999999999999344, "activation": 0.49999999999999994, "height_target_m": 0.01, "contact_points": 8, "grip_force_n": 2.6231876405479135}
+[python3-1] {"key": "r", "time_s": 1.1999999999999234, "activation": 0.49999999999999994, "height_target_m": 0.02, "contact_points": 8, "grip_force_n": 2.6302151061231682}
+[python3-1] {"key": "r", "time_s": 1.2999999999999123, "activation": 0.49999999999999994, "height_target_m": 0.03, "contact_points": 8, "grip_force_n": 2.6309974320584617}
+[python3-1] {"key": "r", "time_s": 1.3999999999999013, "activation": 0.49999999999999994, "height_target_m": 0.04, "contact_points": 8, "grip_force_n": 2.631084660168087}
+[INFO] [python3-1]: process has finished cleanly [pid 25]
+[INFO] [launch]: All log files can be found below /root/.ros/log/2026-11-09-18-18-43-168222-1d202c838a88-27
+[INFO] [launch]: Default logging verbosity is set to INFO
+[INFO] [python3-1]: process started with pid [28]
+[python3-1] 指标已写入 /results/classical/metrics.json
+[python3-1]   G1 激活 0.05 -> 夹持力 0.00 N
+[python3-1]   G1 激活 0.10 -> 夹持力 0.00 N
+[python3-1]   G1 激活 0.20 -> 夹持力 0.00 N
+[python3-1]   G1 激活 0.40 -> 夹持力 0.50 N
+[python3-1]   G1 激活 0.80 -> 夹持力 9.86 N
+[python3-1]   G2 能夹住的激活阈值 ≈ 0.40
+[python3-1]   G4 松开后 0.16 s 掉落
+[python3-1]   G5 目标 2 N -> 稳态 2.00 N，上升 0.58 s，末激活 0.47
+[python3-1]   G5 目标 4 N -> 稳态 4.00 N，上升 0.45 s，末激活 0.55
+[python3-1]   G5 目标 8 N -> 稳态 8.00 N，上升 0.39 s，末激活 0.71
+[python3-1]   G6 无反射 0.0 mm / 有反射 86.0 mm，加力 6 步 (+0.06 激活)
+[python3-1]   G7 10 g -> 最小激活 0.38
+[python3-1]   G7 30 g -> 最小激活 0.38
+[python3-1]   G7 60 g -> 最小激活 0.4
+[python3-1]   G8 手臂-夹爪抬升 87.6 mm
+[INFO] [python3-1]: process has finished cleanly [pid 28]
+[INFO] [launch]: All log files can be found below /root/.ros/log/2026-11-09-18-18-56-844371-1d202c838a88-1
+[INFO] [launch]: Default logging verbosity is set to INFO
+[INFO] [python3-1]: process started with pid [30]
+[INFO] [python3-1]: process has finished cleanly [pid 30]
