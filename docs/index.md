@@ -623,6 +623,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 ### 其他（环境、接口与容器）
 
 * [水域载具 ROS2 接口](./water/HoloOcean.md)
+* [无人艇自主靠泊：激光雷达与神经网络末段对准](./water/usv_docking_nn.md) —— 凹入式泊位，射线激光雷达 + 纯跟踪末段对准专家，行为克隆 MLP 复现，20 回合成功率 100%，末态横向误差 0.23 m
 
 * [HoloOcean Windows 本机环境搭建](./water/HoloOcean-Windows-Setup.md) —— 在 Windows 上用 Conda 安装 Python 客户端、下载场景包并跑通第一个仿真
 
