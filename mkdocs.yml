@@ -539,7 +539,7 @@ nav:
     - 倾转旋翼过渡走廊与倾转角调度: './air/uav_tiltrotor_transition_corridor/index.md'
     - AirSim 无人机 IMU 姿态估计（MLP）: './air/uav_airsim_attitude_estimator.md'
     - 四旋翼无人机 MuJoCo 建图导航与神经网络控制: './air/aerial_mujoco_slam_nn_nav/README.md'
-  - 四旋翼无人机物理仿真、激光 SLAM 与禁飞区规避: './air/uav_numpy_nn_slam.md'
+    - 四旋翼无人机物理仿真、激光 SLAM 与禁飞区规避: './air/uav_numpy_nn_slam.md'
 - 水域载具:
     - 水域载具 ROS2 接口: './water/HoloOcean.md'
     - 无人艇自主靠泊：激光雷达与神经网络末段对准: './water/usv_docking_nn.md'
