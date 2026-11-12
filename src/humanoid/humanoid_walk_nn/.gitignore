@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.python/
+
+# ROS / catkin
+build/
+devel/
+logs/
+*.bag
+catkin_ws/
+
+# results that are heavy or machine-specific
+results/*.npz
+docs/assets/*.tmp
+# model weights are tracked: models/*.npz (~1.3 MB) is committed so a clean
+# clone can reproduce results/benchmark.json without retraining first.
+
+# editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# recordings made locally (keep the published ones)
+media/*.log
+# per-frame ROS run logs (regenerate with main.sh slam_nav / benchmark)
+results/ros_*_slam_nav.json
+results/dataset_*.json
+results/ros_*.png

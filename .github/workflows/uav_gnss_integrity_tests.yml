@@ -1,0 +1,50 @@
+name: UAV GNSS integrity tests
+
+# 给 src/air/uav_gnss_integrity_monitor 补 PR 级回归保护。
+# 判据层只用标准库；节点闭环测试用进程内 rclpy 兼容层，同样不需要 ROS。
+# 真实 colcon build / ros2 launch 仍需在 Ubuntu + ROS 2 环境单独验证，见 README。
+on:
+  push:
+    paths:
+      - 'src/air/uav_gnss_integrity_monitor/**'
+      - '.github/workflows/uav_gnss_integrity_tests.yml'
+  pull_request:
+    paths:
+      - 'src/air/uav_gnss_integrity_monitor/**'
+      - '.github/workflows/uav_gnss_integrity_tests.yml'
+
+jobs:
+  test:
+    name: pytest (Python ${{ matrix.python }})
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python:
+          - '3.8'
+          - '3.10'
+          - '3.12'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install pytest
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install pytest
+
+      - name: Run offline replay
+        working-directory: src/air/uav_gnss_integrity_monitor
+        run: python3 main.py
+
+      - name: Run unit tests
+        working-directory: src/air/uav_gnss_integrity_monitor
+        env:
+          PYTEST_DISABLE_PLUGIN_AUTOLOAD: '1'
+        run: |
+          python3 -m pytest test_gnss_integrity_monitor.py -v
+          python3 -m pytest test_gnss_integrity_node_loop.py -v

@@ -1,0 +1,32 @@
+<mujoco model="muscle_arm">
+  <option timestep="0.002"/>
+  <compiler angle="radian"/>
+
+  <worldbody>
+    <light diffuse="0.8 0.8 0.8" pos="0 -1 2" dir="0 1 -1"/>
+    <geom name="ground" type="plane" size="1.5 1.5 0.1" rgba="0.9 0.9 0.9 1"/>
+    <body name="shoulder" pos="0 0 0">
+      <joint name="sh_pitch" type="hinge" axis="0 1 0" pos="0 0 0" range="-3.0 3.0"/>
+      <geom name="upperarm" type="capsule" fromto="0 0 0 0.40 0 0" size="0.05" mass="2.0"/>
+      <body name="elbow" pos="0.40 0 0">
+        <joint name="el_pitch" type="hinge" axis="0 1 0" pos="0 0 0" range="-3.0 3.0"/>
+        <geom name="forearm" type="capsule" fromto="0 0 0 0.35 0 0" size="0.04" mass="1.2"/>
+        <geom name="hand" type="sphere" pos="0.35 0 0" size="0.06" mass="0.4"/>
+      </body>
+    </body>
+  </worldbody>
+
+  <tendon>
+    <fixed name="t_sh_flex"><joint joint="sh_pitch" coef="-1"/></fixed>
+    <fixed name="t_sh_ext" ><joint joint="sh_pitch" coef="1"/></fixed>
+    <fixed name="t_el_flex"><joint joint="el_pitch" coef="-1"/></fixed>
+    <fixed name="t_el_ext" ><joint joint="el_pitch" coef="1"/></fixed>
+  </tendon>
+
+  <actuator>
+    <muscle name="sh_flex" tendon="t_sh_flex" force="1500" lengthrange="0.05 1.2"/>
+    <muscle name="sh_ext"  tendon="t_sh_ext"  force="1500" lengthrange="0.05 1.2"/>
+    <muscle name="el_flex" tendon="t_el_flex" force="500" lengthrange="0.05 1.2"/>
+    <muscle name="el_ext"  tendon="t_el_ext"  force="500" lengthrange="0.05 1.2"/>
+  </actuator>
+</mujoco>

@@ -40,6 +40,14 @@ python3 main.py --mode run --start-x -4 --speed 2
 python3 main.py --mode evaluate
 ```
 
+键盘手动控制在交互式终端中运行：
+
+```bash
+python3 main.py --mode manual --start-x -4
+```
+
+按 `W` 前进、`S` 制动、空格滑行、`Q` 退出；终端持续显示位置和速度。模型提供纵向驱动，不含转向控制。自动化或非 TTY 环境可传入 `--manual-keys 'wws q'`，按序列逐步执行同一控制映射。
+
 ## 算法
 
 前视相机灰度帧缩放为 $16\times16$ 像素向量 $\mathbf{x}$。两层感知机计算连续驱动与制动输出：

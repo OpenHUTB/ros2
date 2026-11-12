@@ -1,11 +1,13 @@
 """ESC 模块的离线测试：轮胎力、载荷转移、控制律与四个工况的闭环结果。"""
+from __future__ import annotations
+
 import math
 import struct
 
 import pytest
 
 from vehicle_esc_stability import render, scenarios, scene, sim
-from vehicle_esc_stability.dynamics import RoadSpec, _load_transfer, wheel_forces
+from vehicle_esc_stability.dynamics import RoadSpec, _load_transfer, rk4_step, wheel_forces
 from vehicle_esc_stability.driver import PurePursuitDriver, ReferencePath
 from vehicle_esc_stability.esc import Esc
 from vehicle_esc_stability.params import (
@@ -188,6 +190,65 @@ def test_侧偏角超限时四轮一起补制动():
     assert all(value > 0.0 for value in out.wheel_brake)
 
 
+def _only_sideslip_config(enabled: bool) -> EscConfig:
+    """只留侧偏角项，把横摆误差、积分、微分、附着差前馈都关掉，隔离出这一项的作用。"""
+    return EscConfig(
+        enabled=enabled,
+        yaw_gain=0.0,
+        yaw_integral_gain=0.0,
+        yaw_rate_gain=0.0,
+        split_mu_feedforward=0.0,
+        speed_brake_gain=0.0,
+    )
+
+
+def _drop_lateral(state: VehicleState, enabled: bool) -> tuple[float, float]:
+    """无转向、无制动，让车自己衰减侧偏角，返回 0.5 s 后的 (|β|, r)。"""
+    spec, tire = VehicleSpec(), TireSpec()
+    road = RoadSpec(0.9, 0.9)
+    esc = Esc(_only_sideslip_config(enabled), spec)
+    ax = ay = 0.0
+    for _ in range(int(0.5 / sim.DT)):
+        control = ControlInput(steer=0.0, driver_brake=0.0, wheel_brake=[0.0] * 4)
+        control = esc.step(state, control, road, sim.CONTROL_DT)
+        state, bundle = rk4_step(state, control, spec, tire, road, sim.DT, ax, ay)
+        ax, ay = bundle.ax, bundle.ay
+    return abs(state.sideslip), state.r
+
+
+def test_侧偏角为正时压左轮把车头往左带():
+    """β>0 表示速度矢量偏在车头左侧，要减小 β 得给正（左转）力矩。
+
+    第一版这里取了负号（认为「车尾向左甩要用负力矩」），结果这一项和横摆误差项
+    互相抵消：同一初始条件下 β 从 5.7° 只衰减到 1.16°，关掉 ESC 反而能到 0.48°。
+    """
+    esc = Esc(_only_sideslip_config(True), VehicleSpec())
+    state = VehicleState(u=20.0, v=3.0, r=0.0)  # β 约 8.5 deg，超过 5.7 deg 软阈值
+    control = ControlInput(steer=0.0, driver_brake=0.0, wheel_brake=[0.0] * 4)
+    out = esc.step(state, control, RoadSpec(0.9, 0.9), 0.02)
+    assert esc.status.direction == 1
+    assert out.wheel_brake[0] > out.wheel_brake[1]
+    assert out.wheel_brake[2] > out.wheel_brake[3]
+
+
+def test_侧偏角为负时压右轮():
+    esc = Esc(_only_sideslip_config(True), VehicleSpec())
+    state = VehicleState(u=20.0, v=-3.0, r=0.0)
+    control = ControlInput(steer=0.0, driver_brake=0.0, wheel_brake=[0.0] * 4)
+    out = esc.step(state, control, RoadSpec(0.9, 0.9), 0.02)
+    assert esc.status.direction == -1
+    assert out.wheel_brake[1] > out.wheel_brake[0]
+
+
+def test_开_esc_后侧偏角衰减不得慢于关_esc():
+    """方向性单测：只留侧偏角项时，介入后的 β 必须比不介入掉得更快。"""
+    off_beta, off_r = _drop_lateral(VehicleState(u=20.0, v=3.0), False)
+    on_beta, on_r = _drop_lateral(VehicleState(u=20.0, v=3.0), True)
+    assert on_beta < off_beta
+    # 车辆自稳定会产生负的横摆角速度（回弹），介入后这个回弹应被明显削弱
+    assert on_r > off_r
+
+
 def test_驾驶员全力制动时只减压不加压():
     """低附着侧再加压只会让它先锁死，μ-split 工况靠释放高附着侧。"""
     esc = Esc(EscConfig(), VehicleSpec())
@@ -198,6 +259,22 @@ def test_驾驶员全力制动时只减压不加压():
     right = out.wheel_brake[1]
     assert left < right
     assert right == pytest.approx(0.85)
+
+
+def test_强度一阶低通会削弱突变():
+    """`intensity_tau` 默认关，这里只验证它打开后确实把第一拍削弱了。"""
+    state = VehicleState(u=20.0, r=0.0)
+    road = RoadSpec(0.9, 0.9)
+
+    def first_step(config):
+        # step() 会原地改写 control 并返回它，所以每次都得给一个新的
+        control = ControlInput(steer=4.0 * DEG, driver_brake=0.0, wheel_brake=[0.0] * 4)
+        return Esc(config, VehicleSpec()).step(state, control, road, 0.02)
+
+    plain = first_step(EscConfig())
+    filtered = first_step(EscConfig(intensity_tau=0.05))
+    assert plain.esc_intensity == pytest.approx(1.0)
+    assert 0.0 < filtered.esc_intensity < plain.esc_intensity * 0.5
 
 
 def test_介入时长与峰值会被统计():
@@ -297,10 +374,49 @@ def test_对开路面无_esc_会被拽偏甩尾(split_mu):
 
 
 def test_对开路面_esc_的制动距离变长(split_mu):
-    """select-low 的代价：车不甩了，但制动力被低附着侧拖住。"""
+    """select-low 的代价：车不甩了，但制动力被低附着侧拖住。
+
+    注意两侧的停车姿态不同：没 ESC 那次是横滑过去、被侧向阻力拽停的（57.6 m），
+    有 ESC 那次是直线停住（169.5 m）。所以这里的倍数只能说明「保住方向要付多少
+    纵向距离」，不能当成纯制动力差异。
+    """
     off, on = split_mu
-    assert on.metrics['stop_distance_m'] > off.metrics['stop_distance_m'] * 3.0
+    assert off.metrics['stopped'] == 1.0
+    assert on.metrics['stopped'] == 1.0
+    assert on.metrics['stop_distance_m'] > off.metrics['stop_distance_m'] * 2.5
     assert on.metrics['final_speed_kph'] == pytest.approx(0.0, abs=1.0)
+
+
+def test_停车判定用合速度而不是纵向分量(split_mu):
+    """甩尾横滑时 u 会先过零而车身还在几十 km/h 侧滑。
+
+    早先用 `state.u < 0.5` 判定，把 36.6 m 记成「制动距离」，而那一刻车其实还在
+    61 km/h 横滑、最终停在 57.6 m。这条测试守住口径。
+    """
+    off, _ = split_mu
+    assert off.metrics['stop_distance_m'] > 50.0
+    assert off.metrics['stop_time_s'] > 4.0
+    assert off.metrics['spin'] == 1.0
+
+
+def test_死区减少左右轮交替加压():
+    """0.02 rad/s 的死区：方向翻转次数明显减少，侧偏角几乎不变。"""
+    scenario = scenarios.lane_change()
+
+    def flips(result):
+        count, previous = 0, 0
+        for frame in result.frames:
+            direction = frame.esc.direction
+            if direction and previous and direction != previous:
+                count += 1
+            if direction:
+                previous = direction
+        return count
+
+    noisy = sim.run(scenario, esc_config=EscConfig(yaw_rate_deadband=0.0))
+    smooth = sim.run(scenario, esc_config=EscConfig())
+    assert flips(smooth) < flips(noisy)
+    assert smooth.metrics['max_beta_deg'] < noisy.metrics['max_beta_deg'] + 0.2
 
 
 def test_湿滑路面_esc_把车拉回来(wet_lane_change):

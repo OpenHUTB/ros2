@@ -1,0 +1,24 @@
+# 节点参数默认值。
+#
+# 顶层键用通配符 /**，与底座 uav_mujoco_sim 的 config/sim.yaml 一致：
+# ROS2 是按"节点名"匹配参数的，写具体节点名一旦改名就整份失效；
+# launch 里显式传参时这些值会被覆盖（launch 的优先级更高）。
+/**:
+  ros__parameters:
+    # ---- 仿真 ----
+    scene: "urban_block"      # 起飞点选在最高障碍物上方，垂直迫降会撞上去
+    seed: 0
+    dt: 0.01
+    substeps: 4
+    # ---- 注入的故障 ----
+    fault: "degradation"      # degradation / stuck / loss
+    rotor: 2
+    severity: 0.5             # degradation 时=推力保留比例；loss 时忽略
+    # ---- 迫降策略 ----
+    mode: "neural"            # vertical 垂直 / expert 规则评分+专家律 / neural 神经评分+神经制导
+    duration: 40.0
+    publish_rate: 20.0
+    enable_tf: false
+    # ---- 权重（相对路径按 cwd → 包目录 → install share 依次查找）----
+    score_checkpoint: "results/score.pt"
+    guidance_checkpoint: "results/guidance.pt"

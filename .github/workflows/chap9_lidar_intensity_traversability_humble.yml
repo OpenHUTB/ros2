@@ -1,0 +1,54 @@
+name: chap9 lidar_intensity_traversability humble
+
+on:
+  push:
+    paths:
+      - 'src/chap9/lidar_intensity_traversability/**'
+      - '.github/workflows/chap9_lidar_intensity_traversability_humble.yml'
+  pull_request:
+    paths:
+      - 'src/chap9/lidar_intensity_traversability/**'
+      - '.github/workflows/chap9_lidar_intensity_traversability_humble.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  humble:
+    name: ROS 2 Humble build + headless smoke run
+    runs-on: ubuntu-22.04
+    container:
+      image: ros:humble-ros-base
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install build tools
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends python3-colcon-common-extensions python3-pytest
+
+      - name: colcon build
+        shell: bash
+        run: |
+          source /opt/ros/humble/setup.bash
+          mkdir -p /tmp/ws/src
+          cp -r src/chap9/lidar_intensity_traversability /tmp/ws/src/
+          cd /tmp/ws
+          colcon build --packages-select lidar_intensity_traversability
+
+      - name: headless ros2 launch
+        shell: bash
+        run: |
+          source /opt/ros/humble/setup.bash
+          source /tmp/ws/install/setup.bash
+          timeout 25 ros2 launch lidar_intensity_traversability main.launch.py > /tmp/run.log 2>&1 || true
+          tail -30 /tmp/run.log
+          grep -q 'intensity traversability ready' /tmp/run.log
+          grep -q 'action=' /tmp/run.log
+
+      - name: unittest
+        shell: bash
+        run: |
+          source /opt/ros/humble/setup.bash
+          PYTHONPATH=src/chap9/lidar_intensity_traversability python3 -m pytest src/chap9/lidar_intensity_traversability/test -q

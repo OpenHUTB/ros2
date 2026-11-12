@@ -1,0 +1,28 @@
+{
+  "architecture": [
+    44,
+    192,
+    192,
+    2
+  ],
+  "augment_samples": 12000,
+  "batch": 96,
+  "epochs": 110,
+  "expert": "reactive_lane_following",
+  "input": "18 lidar sectors (min+mean) + goal polar + speed + light = 44",
+  "input_dim": 44,
+  "lr": 0.002,
+  "model": "control_mlp",
+  "normalised_rmse": 0.23271,
+  "output": "(throttle, steer) normalised to [-1, 1]",
+  "seconds": 355.81,
+  "steer_mae": 0.0636,
+  "task": "behaviour cloning of the reactive road policy (throttle, steer)",
+  "throttle_mae": 0.237,
+  "train_samples": 16430,
+  "val_episodes": [
+    0,
+    1
+  ],
+  "val_samples": 1800
+}

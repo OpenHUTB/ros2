@@ -1,0 +1,45 @@
+# AEB 模块可调参数
+# 说明：所有参数都可以被命令行覆盖（main.py 参数同名，launch 里通过 args 透传）
+
+simulator:
+  host: "127.0.0.1"        # Windows 宿主机 VMnet8 地址；在虚拟机里运行改成 192.168.29.1
+  port: 2000               # CARLA RPC 端口
+  map: "Town10HD_Opt"      # 目标地图；为空表示沿用服务端当前地图
+  timeout: 30.0            # RPC 超时（秒）
+  cache_dir: ""            # 地图必需文件缓存目录；空表示 <模块目录>/.hutb_cache
+
+scene:
+  ego_blueprint: "vehicle.byd.seal"   # 主车（比亚迪海豹）
+  lead_blueprint: "vehicle.audi.tt"   # 前车（静止障碍车）
+  spawn_index: -1                     # -1 = 自动挑选最直路段；>=0 指定出生点序号
+  lead_gap: 55.0                      # 前车与主车的初始纵向距离（米）
+
+sensor:
+  camera_width: 800
+  camera_height: 450
+  camera_fov: 90
+  lidar_channels: 64
+  lidar_range: 60.0
+  lidar_points_per_second: 1200000
+  lidar_rotation_frequency: 20.0
+  target_half_width: 2.2   # 前车横向门限（米）：车辆实例质心到本车中线的偏移，和真值对账口径一致
+  vehicle_tags: [14]       # 语义激光雷达里车辆的 ObjectTag；本环境 probe 实测 14=Car，15/16/18 分别是桥/轨道/红绿灯
+
+control:
+  cruise_throttle: 0.75     # 巡航油门
+  target_speed: 13.9        # 巡航目标速度（m/s，约 50 km/h）
+  ttc_threshold: 1.6        # 触发制动的 TTC 阈值（秒）
+  min_brake_distance: 22.0  # 距离小于此值直接制动（米）
+  brake_command: 1.0        # 制动踏板开度
+  stop_speed: 0.4           # 认为已停稳的速度阈值（m/s）
+  sensor_timeout_s: 1.0     # 点云流超过这么久没更新就判定传感器故障（失效安全：制动）；"没看到目标"不算故障
+  max_duration: 30.0        # 最长仿真时长（秒）
+
+output:
+  save_dir: "docs"
+  save_frames: true
+  frame_interval: 1.0       # 关键帧最短间隔（秒）
+
+evaluation:
+  min_stop_distance: 2.0    # 停稳后距前车的最小距离（米），低于它视为追尾
+  require_brake: true       # 是否要求实验过程中真的触发了制动

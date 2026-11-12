@@ -20,6 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            # 仓库约定：模块入口为 main.*
+            'main = humanoid_zmp_walk_planner.main:main',
             'humanoid_zmp_walk_planner = humanoid_zmp_walk_planner.main:main',
         ],
     },
