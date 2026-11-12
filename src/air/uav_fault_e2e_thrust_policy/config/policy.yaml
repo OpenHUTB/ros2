@@ -1,0 +1,28 @@
+# uav_fault_e2e_thrust_policy 的默认参数。
+#
+# 顶层键用 "/**"（通配所有节点），与底座 uav_mujoco_sim/config/sim.yaml 一致：
+# ROS2 只按节点名精确匹配参数文件里的键，写成具体节点名（例如节点重命名后就对不上）
+# 会整份静默失效。这里的键与 ros_node.DEFAULT_PARAMETERS 必须一一对应，
+# launch 只覆盖最常用的几个；三处默认值由 test/test_entry.py 比对。
+/**:
+  ros__parameters:
+    # 仿真
+    scene: "corridor"
+    seed: 0
+    dt: 0.01
+    substeps: 4
+
+    # 故障设置：healthy / degradation / stuck / loss / dual_loss / progressive
+    # 默认给 degradation（本模块就是为故障场景做的）；想看基线就传 fault:=healthy
+    fault: "degradation"
+    rotor: 2
+    onset: 2.5
+    severity: 0.5
+
+    # 策略：neural 用训练好的网络，expert 用几何控制器 + 已知健康度分配（用于对照/兜底）
+    mode: "neural"
+    checkpoint: "results/policy_cnn.pt"
+
+    # 运行
+    duration: 30.0
+    publish_rate: 20.0

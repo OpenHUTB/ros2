@@ -1,0 +1,9 @@
+# DAgger 数据集（约 6 MB）不入库：`python main.py --gen-data` 约 1 分钟可重生成。
+# 训练好的权重必须入库（见根 .gitignore 的例外规则），否则 --eval/--demo/ros2 launch
+# 一启动就是 FileNotFoundError。
+*.npz
+*.tmp.gif
+
+# DAgger 每轮的预热权重与 --demo 生成的曲线图都是中间产物，不入库。
+_warmup.*
+policy_summary.png
