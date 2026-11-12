@@ -475,17 +475,27 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#_1">文件结构</a>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#2">2. 运行</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#_2">运行环境</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_3">参数说明</a>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#3">3. 离线复现</a>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#4">4. 结果</a>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#_4">运行效果</a>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#5">5. 与规划器的关系</a>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#6">6. 局限</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#7">7. 大模型声明</a>
+<li class="toctree-l2"><a class="reference internal" href="#_5">大模型使用声明</a>
 </li>
 </ul>
 </li>
@@ -950,7 +960,39 @@
 </ul>
 <p>输出时 $\ell &gt; 0.2$ 记为占据（100），$\ell &lt; -0.2$ 记为自由（0），
 其余为未知（-1）。</p>
+<h2 id="_1">文件结构</h2>
+<div class="highlight"><pre><span></span><code>src/ground/ros2_occupancy_mapping/
+├── ros2_occupancy_mapping/  # mapping.py / sim.py / main_mapping.py
+├── config/mapping_params.yaml
+├── launch/main_launch.py
+├── results/benchmark.json
+├── test/                    # 5 项单元测试
+└── README.md
+</code></pre></div>
 <h2 id="2">2. 运行</h2>
+<h3 id="_2">运行环境</h3>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>版本</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ROS 2</td>
+<td>Ubuntu 20.04.6 + Foxy 0.9.2</td>
+</tr>
+<tr>
+<td>Python</td>
+<td>3.8.10</td>
+</tr>
+<tr>
+<td>离线基准</td>
+<td>Windows 11 + Python 3.12 + NumPy 2.x</td>
+</tr>
+</tbody>
+</table>
 <div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/hutb_ws
 colcon<span class="w"> </span>build<span class="w"> </span>--packages-select<span class="w"> </span>ros2_occupancy_mapping
 <span class="nb">source</span><span class="w"> </span>install/setup.bash
@@ -984,6 +1026,43 @@ ros2<span class="w"> </span>launch<span class="w"> </span>ros2_occupancy_mapping
 </table>
 <p>参数在 <code>config/mapping_params.yaml</code>：<code>resolution</code>、<code>x_min/x_max/y_min/y_max</code>、
 <code>frame_id</code>。</p>
+<h2 id="_3">参数说明</h2>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>含义</th>
+<th>默认</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>scan_topic</code> / <code>odom_topic</code> / <code>map_topic</code></td>
+<td>输入/输出话题</td>
+<td><code>/scan</code> / <code>/odom</code> / <code>/map</code></td>
+</tr>
+<tr>
+<td><code>frame_id</code></td>
+<td>地图坐标系</td>
+<td><code>odom</code></td>
+</tr>
+<tr>
+<td><code>resolution</code></td>
+<td>栅格分辨率</td>
+<td>0.05 m</td>
+</tr>
+<tr>
+<td><code>x_min</code> / <code>x_max</code></td>
+<td>x 范围</td>
+<td>-10.0 / 10.0</td>
+</tr>
+<tr>
+<td><code>y_min</code> / <code>y_max</code></td>
+<td>y 范围</td>
+<td>-10.0 / 10.0</td>
+</tr>
+</tbody>
+</table>
 <h2 id="3">3. 离线复现</h2>
 <div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>src/ground/ros2_occupancy_mapping
 python3<span class="w"> </span>-m<span class="w"> </span>unittest<span class="w"> </span>discover<span class="w"> </span>-s<span class="w"> </span><span class="nb">test</span><span class="w"> </span>-v<span class="w">   </span><span class="c1"># 5 项</span>
@@ -1029,13 +1108,16 @@ python3<span class="w"> </span>-m<span class="w"> </span>ros2_occupancy_mapping.
 <blockquote>
 <p>不同 NumPy/平台会有约 ±0.02 的 IoU 和 ±3% 的格数差异；在 Ubuntu 22.04 + NumPy 1.24 上复现为 0.722 / 0.959 / 0.745 / 1229，结论不变。</p>
 </blockquote>
-<p><img alt="占据栅格地图" src="../../img/ground/ros2_occupancy_mapping/occupancy_map.png"/></p>
 <p>precision 0.953 说明“标成占据的格子几乎都是真障碍”；recall 0.725 的损失主要来自：</p>
 <ul>
 <li>部分墙面只被斜视扫到，端点落在墙内；</li>
 <li>0.05 m 栅格对圆边的离散化；</li>
 <li>机器人路径是半径 3 m 的圆，四个角落覆盖较少。</li>
 </ul>
+<h2 id="_4">运行效果</h2>
+<p>12 m × 8 m 房间、三个圆柱，60 帧建图后覆盖率 0.82、占据 IoU <strong>0.70</strong>、
+precision <strong>0.953</strong>、recall 0.725：</p>
+<p><img alt="占据栅格地图" src="../../img/ground/ros2_occupancy_mapping/occupancy_map.png"/></p>
 <h2 id="5">5. 与规划器的关系</h2>
 <ul>
 <li>发布标准 <code>nav_msgs/OccupancyGrid</code>，默认 <code>frame_id=odom</code>；本模块不发布
@@ -1051,7 +1133,7 @@ python3<span class="w"> </span>-m<span class="w"> </span>ros2_occupancy_mapping.
 <li>只输出占据/自由/未知，没有语义或可通行性分析；</li>
 <li>固定 20 m × 20 m 栅格，大场景需分块或稀疏存储。</li>
 </ul>
-<h2 id="7">7. 大模型声明</h2>
+<h2 id="_5">大模型使用声明</h2>
 <p>代码与文档在编写过程中使用了 AI 大模型辅助。作者已实际运行 5 项单元测试和
 60 帧离线建图，并对提交内容的正确性与完整性负全部责任。</p></div>
 </div>

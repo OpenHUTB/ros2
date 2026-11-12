@@ -401,15 +401,21 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#2">2. 系统组成</a>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#_1">文件结构</a>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#3">3. 运行</a>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#_2">参数说明</a>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#4">4. 结果</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_3">运行效果</a>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#5">5. 与二维仿真的差异</a>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#6">6. 局限</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#7">7. 大模型声明</a>
+<li class="toctree-l2"><a class="reference internal" href="#_4">大模型使用声明</a>
 </li>
 </ul>
 </li>
@@ -988,6 +994,15 @@ TurtleBot3 burger 差速底盘
 <li><code>ros2_dwa_gazebo/verify_nav.py</code>：订阅 <code>/odom</code>、<code>/scan</code>、<code>/cmd_vel</code>，
   检查位移、最小激光距离和非零指令。</li>
 </ul>
+<h2 id="_1">文件结构</h2>
+<div class="highlight"><pre><span></span><code>src/ground/ros2_dwa_gazebo/
+├── ros2_dwa_gazebo/verify_nav.py  # 位移/激光/指令验证
+├── config/gazebo_params.yaml      # burger 低速参数
+├── launch/main_launch.py          # Gazebo world + DWA 节点
+├── worlds/                        # TurtleBot3 世界
+├── test/
+└── README.md
+</code></pre></div>
 <h2 id="3">3. 运行</h2>
 <div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/hutb_ws
 colcon<span class="w"> </span>build<span class="w"> </span>--packages-select<span class="w"> </span>ros2_dwa_avoidance<span class="w"> </span>ros2_dwa_gazebo
@@ -1008,6 +1023,53 @@ ros2<span class="w"> </span>run<span class="w"> </span>ros2_dwa_gazebo<span clas
 </ul>
 <p><code>timeout</code> 和 <code>elapsed_s</code> 用 <code>/odom</code> 的仿真时间，RTF &lt; 1 时不会误报超时；
 无 odom 时节点初始化即开始墙钟兜底。</p>
+<h2 id="_2">参数说明</h2>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>含义</th>
+<th>默认</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>use_sim_time</code></td>
+<td>使用 Gazebo 仿真时间</td>
+<td>true</td>
+</tr>
+<tr>
+<td><code>goal_x</code> / <code>goal_y</code></td>
+<td>目标点</td>
+<td>2.5 / 0.0</td>
+</tr>
+<tr>
+<td><code>max_v</code> / <code>max_w</code></td>
+<td>burger 速度上限</td>
+<td>0.22 m/s / 1.0 rad/s</td>
+</tr>
+<tr>
+<td><code>max_acc_v</code> / <code>max_acc_w</code></td>
+<td>加速度上限</td>
+<td>0.8 m/s² / 2.0 rad/s²</td>
+</tr>
+<tr>
+<td><code>robot_radius</code> / <code>safety_margin</code></td>
+<td>burger 半径/安全裕度</td>
+<td>0.12 m / 0.04 m</td>
+</tr>
+<tr>
+<td><code>goal_tolerance</code></td>
+<td>到点容差</td>
+<td>0.20 m</td>
+</tr>
+<tr>
+<td><code>map_half_size</code></td>
+<td>局部栅格半边长</td>
+<td>6.0 m</td>
+</tr>
+</tbody>
+</table>
 <h2 id="4">4. 结果</h2>
 <p>在 Ubuntu 20.04 + ROS 2 Foxy + Gazebo 11 的 headless <code>gzserver</code> 中实跑：</p>
 <div class="highlight"><pre><span></span><code>RESULT {"success": true, "displacement_m": 4.008, "min_scan_m": 0.132,
@@ -1047,10 +1109,13 @@ ros2<span class="w"> </span>run<span class="w"> </span>ros2_dwa_gazebo<span clas
 </tr>
 </tbody>
 </table>
-<p><img alt="TurtleBot3 + A*+DWA 在 Gazebo 中的轨迹" src="../../img/ground/ros2_dwa_gazebo/gazebo_trajectory.png"/></p>
 <p>两次运行的墙钟时间差异较大，因为 headless Gazebo 的实时因子会波动；上表的
 <code>elapsed_s</code> 是<strong>仿真时间</strong>。多次运行的 min_scan 在 0.128–0.189 m，低于配置的
 <code>robot_radius+safety_margin=0.16 m</code>，说明安全余量不能保证。</p>
+<h2 id="_3">运行效果</h2>
+<p>headless Gazebo 中起点 <code>(-2.0, 0.0)</code> → 目标 <code>(2.5, 0.0)</code>，实际位移 4.008 m、
+仿真时间 21.08 s、最小激光距离 0.132 m，日志为 <code>stop: goal reached</code>：</p>
+<p><img alt="TurtleBot3 + A*+DWA 在 Gazebo 中的轨迹" src="../../img/ground/ros2_dwa_gazebo/gazebo_trajectory.png"/></p>
 <h2 id="5">5. 与二维仿真的差异</h2>
 <ul>
 <li><strong>物理</strong>：Gazebo 有轮地接触、打滑和车体碰撞，burger 最高速度取 0.22 m/s；
@@ -1070,7 +1135,7 @@ ros2<span class="w"> </span>run<span class="w"> </span>ros2_dwa_gazebo<span clas
 <li>三维物理参数（摩擦、轮滑）未辨识，速度取得保守；</li>
 <li>依赖 #1077，合并顺序在 #1077 之后。</li>
 </ul>
-<h2 id="7">7. 大模型声明</h2>
+<h2 id="_4">大模型使用声明</h2>
 <p>代码与文档在编写过程中使用了 AI 大模型辅助。作者已在 Ubuntu 20.04 + ROS 2 Foxy +
 Gazebo 11 中实际运行本模块，并对提交内容的正确性与完整性负全部责任。</p></div>
 </div>

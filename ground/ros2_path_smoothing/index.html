@@ -475,17 +475,27 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#_1">文件结构</a>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#2">2. 运行</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#_2">运行环境</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_3">参数说明</a>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#3">3. 离线复现</a>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#4">4. 结果</a>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#_4">运行效果</a>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#5">5. 与控制器/规划器的关系</a>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#6">6. 局限</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#7">7. 大模型声明</a>
+<li class="toctree-l2"><a class="reference internal" href="#_5">大模型使用声明</a>
 </li>
 </ul>
 </li>
@@ -969,7 +979,39 @@ d=\sqrt{\max(|p_x-c_x|-\Delta/2,0)^2+\max(|p_y-c_y|-\Delta/2,0)^2}
 <h3 id="14">1.4 回退</h3>
 <p>没有候选满足间隙时，返回仍通过 <code>path_free()</code> 的简化/原始路径并置
 <code>safe=False</code>；节点收到 <code>safe=False</code> 时不发布平滑结果，原样转发输入。</p>
+<h2 id="_1">文件结构</h2>
+<div class="highlight"><pre><span></span><code>src/ground/ros2_path_smoothing/
+├── ros2_path_smoothing/  # planner.py / sim.py / main_smooth.py
+├── config/smoothing_params.yaml
+├── launch/main_launch.py
+├── results/benchmark.json
+├── test/                 # 7 项单元测试
+└── README.md
+</code></pre></div>
 <h2 id="2">2. 运行</h2>
+<h3 id="_2">运行环境</h3>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>版本</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ROS 2</td>
+<td>Ubuntu 20.04.6 + Foxy 0.9.2</td>
+</tr>
+<tr>
+<td>Python</td>
+<td>3.8.10</td>
+</tr>
+<tr>
+<td>离线基准</td>
+<td>Windows 11 + Python 3.12 + NumPy 2.x</td>
+</tr>
+</tbody>
+</table>
 <div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/hutb_ws
 colcon<span class="w"> </span>build<span class="w"> </span>--packages-select<span class="w"> </span>ros2_path_smoothing
 <span class="nb">source</span><span class="w"> </span>install/setup.bash
@@ -1003,6 +1045,33 @@ ros2<span class="w"> </span>launch<span class="w"> </span>ros2_path_smoothing<sp
 </table>
 <p>节点先等 <code>/map</code>；没有地图时原样转发输入并告警。参数在
 <code>config/smoothing_params.yaml</code>：<code>map_topic</code>、<code>min_clearance</code>。</p>
+<h2 id="_3">参数说明</h2>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>含义</th>
+<th>默认</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>input_topic</code> / <code>output_topic</code></td>
+<td>输入/输出路径话题</td>
+<td><code>/plan</code> / <code>/plan_smoothed</code></td>
+</tr>
+<tr>
+<td><code>map_topic</code></td>
+<td>碰撞/间隙检查用地图</td>
+<td><code>/map</code></td>
+</tr>
+<tr>
+<td><code>min_clearance</code></td>
+<td>最小安全间隙</td>
+<td>0.10 m</td>
+</tr>
+</tbody>
+</table>
 <h2 id="3">3. 离线复现</h2>
 <div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>src/ground/ros2_path_smoothing
 python3<span class="w"> </span>-m<span class="w"> </span>unittest<span class="w"> </span>discover<span class="w"> </span>-s<span class="w"> </span><span class="nb">test</span><span class="w"> </span>-v<span class="w">   </span><span class="c1"># 7 项</span>
@@ -1057,12 +1126,15 @@ python3<span class="w"> </span>-m<span class="w"> </span>ros2_path_smoothing.sim
 </table>
 <p>doorway 的起终点连线正好穿过门洞，简化后就是直线；corridor/clutter 的简化
 直线段也是低曲率候选，最终按“满足间隙 + 最小曲率”选中。</p>
-<p><img alt="A* 与平滑路径对比" src="../../img/ground/ros2_path_smoothing/path_compare.png"/></p>
 <blockquote>
 <p>指标在 Windows 11 + Python 3.12 + NumPy 2.x 上离线复现；ROS 包在
 Ubuntu 20.04 + Foxy 下构建。<code>results/benchmark.json</code> 的 <code>environment</code>
 记录的是离线环境，不是 ROS 构建环境。</p>
 </blockquote>
+<h2 id="_4">运行效果</h2>
+<p>corridor 最大曲率 5.685 → <strong>0.016 1/m</strong>、间隙 0.15 m；clutter 5.685 → <strong>0.014 1/m</strong>、
+间隙 0.45 m；doorway 直线通过、曲率 0：</p>
+<p><img alt="A* 与平滑路径对比" src="../../img/ground/ros2_path_smoothing/path_compare.png"/></p>
 <h2 id="5">5. 与控制器/规划器的关系</h2>
 <ul>
 <li>输入任意 <code>nav_msgs/Path</code>，可接 #1077 的 A* 或 Nav2；</li>
@@ -1077,7 +1149,7 @@ Ubuntu 20.04 + Foxy 下构建。<code>results/benchmark.json</code> 的 <code>en
 <li>Catmull-Rom 在急弯处会切角，靠逐段检查和精确间隙兜底；</li>
 <li>2D 路径，不处理高度/坡度。</li>
 </ul>
-<h2 id="7">7. 大模型声明</h2>
+<h2 id="_5">大模型使用声明</h2>
 <p>代码与文档在编写过程中使用了 AI 大模型辅助。作者已实际运行 7 项单元测试和
 3 张离线地图，并在 Ubuntu 20.04 + Foxy 下完成 <code>colcon build</code>；对提交内容的
 正确性与完整性负全部责任。</p></div>

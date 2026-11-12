@@ -341,17 +341,27 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#_1">文件结构</a>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#2">2. 运行</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#_2">运行环境</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_3">参数说明</a>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#3">3. 离线复现</a>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#4">4. 结果</a>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#_4">运行效果</a>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#5">5. 与规划器的关系</a>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#6">6. 局限</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#7">7. 大模型声明</a>
+<li class="toctree-l2"><a class="reference internal" href="#_5">大模型使用声明</a>
 </li>
 </ul>
 </li>
@@ -969,7 +979,39 @@ t=\frac{-b-\sqrt{b^2-4ac}}{2a}
 <p>若 $p\cdot v \ge 0$（远离）或判别式为负，返回 $\infty$。</p>
 <h3 id="14">1.4 迟滞告警</h3>
 <p><code>TTC &lt; 2.5 s</code> 触发，<code>TTC &gt; 3.5 s</code> 解除，避免阈值附近来回抖动。</p>
+<h2 id="_1">文件结构</h2>
+<div class="highlight"><pre><span></span><code>src/ground/ros2_dynamic_obstacle_ttc/
+├── ros2_dynamic_obstacle_ttc/  # ttc_core.py / sim.py / main_ttc.py
+├── config/ttc_params.yaml
+├── launch/main_launch.py
+├── results/benchmark.json
+├── test/                       # 11 项单元测试
+└── README.md
+</code></pre></div>
 <h2 id="2">2. 运行</h2>
+<h3 id="_2">运行环境</h3>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>版本</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ROS 2</td>
+<td>Ubuntu 20.04.6 + Foxy 0.9.2</td>
+</tr>
+<tr>
+<td>Python</td>
+<td>3.8.10</td>
+</tr>
+<tr>
+<td>离线基准</td>
+<td>Windows 11 + Python 3.12 + NumPy 2.x</td>
+</tr>
+</tbody>
+</table>
 <div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/hutb_ws
 colcon<span class="w"> </span>build<span class="w"> </span>--packages-select<span class="w"> </span>ros2_dynamic_obstacle_ttc
 <span class="nb">source</span><span class="w"> </span>install/setup.bash
@@ -1003,6 +1045,43 @@ ros2<span class="w"> </span>launch<span class="w"> </span>ros2_dynamic_obstacle_
 </table>
 <p>参数在 <code>config/ttc_params.yaml</code>：<code>on_ttc</code>、<code>off_ttc</code>、<code>robot_radius</code>、
 <code>safety_margin</code>、<code>max_range</code>。</p>
+<h2 id="_3">参数说明</h2>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>含义</th>
+<th>默认</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>scan_topic</code> / <code>warning_topic</code> / <code>marker_topic</code></td>
+<td>输入/告警/可视化话题</td>
+<td><code>/scan</code> / <code>/collision_warning</code> / <code>/moving_obstacles</code></td>
+</tr>
+<tr>
+<td><code>max_range</code></td>
+<td>激光有效量程</td>
+<td>6.0 m</td>
+</tr>
+<tr>
+<td><code>max_ttc</code></td>
+<td>TTC 上限</td>
+<td>10.0 s</td>
+</tr>
+<tr>
+<td><code>on_ttc</code> / <code>off_ttc</code></td>
+<td>告警迟滞阈值</td>
+<td>2.5 s / 3.5 s</td>
+</tr>
+<tr>
+<td><code>robot_radius</code> / <code>safety_margin</code></td>
+<td>自车半径/安全裕度</td>
+<td>0.25 m / 0.10 m</td>
+</tr>
+</tbody>
+</table>
 <h2 id="3">3. 离线复现</h2>
 <div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>src/ground/ros2_dynamic_obstacle_ttc
 python3<span class="w"> </span>-m<span class="w"> </span>unittest<span class="w"> </span>discover<span class="w"> </span>-s<span class="w"> </span><span class="nb">test</span><span class="w"> </span>-v<span class="w">     </span><span class="c1"># 11 项</span>
@@ -1068,12 +1147,15 @@ python3<span class="w"> </span>-m<span class="w"> </span>ros2_dynamic_obstacle_t
 <li>2 个无威胁场景（平行通过、远离）<strong>0 误报</strong>；</li>
 <li>parallel 场景的 TTC 为 <code>null</code>：多帧最小二乘速度拟合后横向速度接近 0，不再出现 3.97 s 的数值伪值。</li>
 </ul>
-<p><img alt="TTC 与告警状态" src="../../img/ground/ros2_dynamic_obstacle_ttc/ttc_timeline.png"/></p>
 <p>节点实跑日志（headless 环境，用合成 <code>/scan</code> 让障碍从 5 m 处正面接近；
 2.49 s 时触发 WARN，障碍通过后恢复 clear）：</p>
-<p><img alt="节点运行日志" src="../../img/ground/ros2_dynamic_obstacle_ttc/node_run.png"/></p>
 <p>图中红色竖带是告警区间：head_on 的 TTC 在约 2.7 s 跌破 2.5 s 后保持告警，
 parallel 的 TTC 始终高于阈值。</p>
+<h2 id="_4">运行效果</h2>
+<p>5 个场景中 3 个真实威胁在碰撞前 <strong>2.6–2.8 s</strong> 告警，2 个无威胁场景 0 误报；
+节点实跑日志中 2.49 s 触发 WARN、障碍通过后恢复 clear：</p>
+<p><img alt="TTC 与告警状态" src="../../img/ground/ros2_dynamic_obstacle_ttc/ttc_timeline.png"/></p>
+<p><img alt="节点运行日志" src="../../img/ground/ros2_dynamic_obstacle_ttc/node_run.png"/></p>
 <h2 id="5">5. 与规划器的关系</h2>
 <ul>
 <li>本模块只输出“有没有威胁、威胁在哪”，不产生速度指令；</li>
@@ -1089,7 +1171,7 @@ parallel 的 TTC 始终高于阈值。</p>
 <li>稀疏点云会把一个障碍拆成多个簇，跟踪门限需按雷达分辨率调；</li>
 <li>只在合成数据上验证，尚未接真实雷达。</li>
 </ul>
-<h2 id="7">7. 大模型声明</h2>
+<h2 id="_5">大模型使用声明</h2>
 <p>代码与文档在编写过程中使用了 AI 大模型辅助。作者已实际运行 11 项单元测试、
 5 个离线场景，并对提交内容的正确性与完整性负全部责任。</p></div>
 </div>
