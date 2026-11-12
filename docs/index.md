@@ -279,6 +279,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 * [基于 PPO 的无人机导航避障](./air/uav_ppo_nav.md)
 * [无人机定高日志误差与抗扰恢复时间评估](./air/uav_hover_log_eval.md)
+* [uav_ppo_nav 部署节点本地测试](./air/uav_ppo_nav_node_test.md) —— 装桩后 pytest 可收集，修复前 7 errors（fixture 'N' not found），修复后 1 passed，直接运行 31 项通过
 
 * [基于深度强化学习的无人机最优路径查找（PPO/SAC）](./air/drl_drone_path_planning.md) —— 把 DRL-drones 的 PyBullet 环境重构为 ROS 包：28 维观测 + 4 维机体系速度指令，训练用 Stable-Baselines3、部署用纯 NumPy，并与几何基线同场对比
 
