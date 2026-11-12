@@ -401,6 +401,7 @@ nav:
     - 城市动态交通下的无人机避障（PPO + DAgger）: './air/uav_traffic_nav.md'
     - 无人机ppo模块研究: './air/uav_experiments.md'
     - 无人机终端键盘遥控器: './air/drone_teleop.md'
+    - 应急物资投送点选择与投放时机决策: './air/uav_emergency_drop.md'
     - 基于 ROS 消息解耦的无人机键盘遥控: './air/drone_ros_teleop.md'
     - AirSim无人机键盘遥控与机载云台控制模块: './airsim_drone_gimbal_teleop/README.md'
     - 预设航线飞行模拟器: './air/flight_path_simulator.md'

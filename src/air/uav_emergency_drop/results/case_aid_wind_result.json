@@ -1,0 +1,312 @@
+{
+  "case": "case_aid_wind",
+  "outcome": "ok",
+  "algorithm": {
+    "demand_points": [
+      {
+        "pid": "W1",
+        "x": 140.0,
+        "y": 40.0,
+        "demand": 3,
+        "urgency": 5,
+        "weight": 15.0
+      },
+      {
+        "pid": "W2",
+        "x": 240.0,
+        "y": 120.0,
+        "demand": 4,
+        "urgency": 4,
+        "weight": 16.0
+      },
+      {
+        "pid": "W3",
+        "x": 340.0,
+        "y": 60.0,
+        "demand": 3,
+        "urgency": 5,
+        "weight": 15.0
+      },
+      {
+        "pid": "W4",
+        "x": 200.0,
+        "y": 220.0,
+        "demand": 2,
+        "urgency": 4,
+        "weight": 8.0
+      },
+      {
+        "pid": "W5",
+        "x": 360.0,
+        "y": 180.0,
+        "demand": 3,
+        "urgency": 3,
+        "weight": 9.0
+      },
+      {
+        "pid": "W6",
+        "x": 80.0,
+        "y": 180.0,
+        "demand": 2,
+        "urgency": 3,
+        "weight": 6.0
+      }
+    ],
+    "selected": [
+      "W1",
+      "W2",
+      "W4",
+      "W3",
+      "W6",
+      "W5"
+    ],
+    "skipped": [],
+    "covered_weight": 69.0,
+    "total_weight": 69.0,
+    "units_served": 17,
+    "missions": [
+      {
+        "sortie": 1,
+        "pids": [
+          "W1",
+          "W2",
+          "W4",
+          "W3"
+        ],
+        "load": 12,
+        "distance_m": 939.2,
+        "flight_s": 117.4,
+        "depart_s": 0.0
+      },
+      {
+        "sortie": 2,
+        "pids": [
+          "W6",
+          "W5"
+        ],
+        "load": 5,
+        "distance_m": 879.5,
+        "flight_s": 109.9,
+        "depart_s": 177.4
+      }
+    ],
+    "ballistics_table": [
+      {
+        "h_m": 20,
+        "speed_mps": 6,
+        "t_fall_s": 2.019,
+        "lead_m": 12.12,
+        "sigma_m": 3.0
+      },
+      {
+        "h_m": 20,
+        "speed_mps": 8,
+        "t_fall_s": 2.019,
+        "lead_m": 16.15,
+        "sigma_m": 3.0
+      },
+      {
+        "h_m": 20,
+        "speed_mps": 10,
+        "t_fall_s": 2.019,
+        "lead_m": 20.19,
+        "sigma_m": 3.0
+      },
+      {
+        "h_m": 30,
+        "speed_mps": 6,
+        "t_fall_s": 2.473,
+        "lead_m": 14.84,
+        "sigma_m": 4.5
+      },
+      {
+        "h_m": 30,
+        "speed_mps": 8,
+        "t_fall_s": 2.473,
+        "lead_m": 19.78,
+        "sigma_m": 4.5
+      },
+      {
+        "h_m": 30,
+        "speed_mps": 10,
+        "t_fall_s": 2.473,
+        "lead_m": 24.73,
+        "sigma_m": 4.5
+      },
+      {
+        "h_m": 50,
+        "speed_mps": 6,
+        "t_fall_s": 3.193,
+        "lead_m": 19.16,
+        "sigma_m": 7.5
+      },
+      {
+        "h_m": 50,
+        "speed_mps": 8,
+        "t_fall_s": 3.193,
+        "lead_m": 25.54,
+        "sigma_m": 7.5
+      },
+      {
+        "h_m": 50,
+        "speed_mps": 10,
+        "t_fall_s": 3.193,
+        "lead_m": 31.93,
+        "sigma_m": 7.5
+      }
+    ],
+    "release_plan": {
+      "h_m": 20.0,
+      "speed_mps": 6.0,
+      "wind_mps": [
+        8.0,
+        0.0
+      ],
+      "t_fall_s": 2.019,
+      "lead_m": 12.12,
+      "drift_m": [
+        12.92,
+        0.0
+      ],
+      "sigma_m": 3.0
+    },
+    "leg_checks": [
+      {
+        "leg": "(0,0)->(127,40)",
+        "feasible": true,
+        "s_enter_m": 115.11,
+        "s_exit_m": 127.11,
+        "s_ideal_m": 121.11,
+        "lead_m": 12.12,
+        "cross_error_m": 0.0,
+        "advice": ""
+      },
+      {
+        "leg": "(127,40)->(227,120)",
+        "feasible": true,
+        "s_enter_m": 109.95,
+        "s_exit_m": 121.95,
+        "s_ideal_m": 115.95,
+        "lead_m": 12.12,
+        "cross_error_m": 0.0,
+        "advice": ""
+      },
+      {
+        "leg": "(227,120)->(327,60)",
+        "feasible": true,
+        "s_enter_m": 98.5,
+        "s_exit_m": 110.5,
+        "s_ideal_m": 104.5,
+        "lead_m": 12.12,
+        "cross_error_m": 0.0,
+        "advice": ""
+      }
+    ]
+  },
+  "closed_loop": {
+    "simulated": true,
+    "route_m": [
+      [
+        0.0,
+        0.0
+      ],
+      [
+        127.1,
+        40.0
+      ],
+      [
+        227.1,
+        120.0
+      ],
+      [
+        327.1,
+        60.0
+      ]
+    ],
+    "releases": [
+      {
+        "target_m": [
+          140.0,
+          40.0
+        ],
+        "overfly_waypoint_m": [
+          127.08,
+          40.0
+        ],
+        "release_pos_m": [
+          115.55,
+          36.37
+        ],
+        "release_alt_m": 20.0,
+        "release_vel_mps": [
+          5.72,
+          1.8
+        ],
+        "predicted_impact_m": [
+          140.0,
+          40.01
+        ],
+        "error_m": 0.01,
+        "t_release_s": 28.16
+      },
+      {
+        "target_m": [
+          240.0,
+          120.0
+        ],
+        "overfly_waypoint_m": [
+          227.08,
+          120.0
+        ],
+        "release_pos_m": [
+          217.65,
+          112.46
+        ],
+        "release_alt_m": 20.0,
+        "release_vel_mps": [
+          4.69,
+          3.75
+        ],
+        "predicted_impact_m": [
+          240.0,
+          120.02
+        ],
+        "error_m": 0.02,
+        "t_release_s": 49.45
+      },
+      {
+        "target_m": [
+          340.0,
+          60.0
+        ],
+        "overfly_waypoint_m": [
+          327.08,
+          60.0
+        ],
+        "release_pos_m": [
+          316.73,
+          66.21
+        ],
+        "release_alt_m": 20.0,
+        "release_vel_mps": [
+          5.14,
+          -3.09
+        ],
+        "predicted_impact_m": [
+          340.01,
+          59.98
+        ],
+        "error_m": 0.02,
+        "t_release_s": 68.31
+      }
+    ],
+    "impact_error_mean_m": 0.01,
+    "impact_error_max_m": 0.02,
+    "max_track_error_m": 6.15,
+    "max_track_error_settled_m": 4.17,
+    "max_track_error_release_m": 0.06,
+    "final_hover_error_m": 0.0,
+    "sim_duration_s": 76.3,
+    "wall_time_s": 1.5
+  }
+}

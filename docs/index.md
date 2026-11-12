@@ -448,6 +448,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [无人机ppo模块研究](./air/uav_experiments.md) —— 把键盘控制、PPO 导航、算法对比、航线巡航、动态交通五个实验合并到一页；各实验独立页面仍然保留
 
 * [无人机终端键盘遥控器](./air/drone_teleop.md)
+* [应急物资投送点选择与投放时机决策](./air/uav_emergency_drop.md) —— 平抛弹道解析解定提前量，加权贪心选点分架次，MuJoCo 真飞落点偏差 0.1 m
 
 * [AirSim无人机键盘遥控与机载云台控制模块](./airsim_drone_gimbal_teleop/README.md)
 
