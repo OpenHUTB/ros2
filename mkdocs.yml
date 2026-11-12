@@ -605,6 +605,10 @@ nav:
 - 经典控制:
     - 倒立摆平衡小车 (cart-pole, LQR): './classical_control/cartpole_balance.md'
     - 滑模控制（SMC）：二阶系统的鲁棒轨迹跟踪: './classical_control/sliding_mode_control.md'
+- 反应式导航与覆盖:
+    - 人工势场（APF）：梯度下降式避障与局部极小逃逸: './reactive_navigation/potential_field_avoidance.md'
+    - Bug2 导航：不建图的完备导航与确定性不可达判据: './reactive_navigation/bug2_navigation.md'
+    - 牛耕式全覆盖：扫遍整个房间的最简方案: './reactive_navigation/boustrophedon_coverage.md'
 
 
 # - mdx_math 用于行内公式显示
