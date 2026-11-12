@@ -34,7 +34,12 @@ def main(argv=None):
     parser.add_argument("--scenario", choices=["static", "crossing", "narrow"], default="static")
     parser.add_argument("--speed", type=float, default=1.2)
     parser.add_argument("--duration", type=float, default=8.0)
-    parser.add_argument("--output", type=Path, default=Path("results"))
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=None,
+        help="输出目录；采集默认使用 --dataset 指定目录 / Output directory; collection defaults to --dataset",
+    )
     parser.add_argument("--render", action="store_true", help="保存仿真动画 / Save simulation animation")
     parser.add_argument("--collect", action="store_true", help="采集监督数据 / Collect supervised data")
     parser.add_argument("--episodes", type=int, default=30)
@@ -46,6 +51,8 @@ def main(argv=None):
     parser.add_argument("--model", type=Path, default=Path("model"))
     parser.add_argument("--benchmark", action="store_true", help="运行三场景对照 / Run scenario benchmark")
     args = parser.parse_args(argv)
+    if args.output is None:
+        args.output = args.dataset if args.collect else Path("results")
     standalone_task = args.benchmark or args.train or args.evaluate or args.collect
     if not standalone_task and not (0 < args.speed <= 3 and 0 < args.duration <= 120):
         parser.error("速度须在 (0,3]，时长须在 (0,120]。 / Invalid speed or duration.")
