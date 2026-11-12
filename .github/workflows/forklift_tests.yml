@@ -1,0 +1,59 @@
+name: Forklift docking and navigation tests
+
+on:
+  pull_request:
+    paths:
+      - 'src/ground/mujoco_forklift_pallet_docking/**'
+      - 'src/ground/forklift_slam_nav/**'
+      - '.github/workflows/forklift_tests.yml'
+  push:
+    branches: [master]
+    paths:
+      - 'src/ground/mujoco_forklift_pallet_docking/**'
+      - 'src/ground/forklift_slam_nav/**'
+      - '.github/workflows/forklift_tests.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  forklift-tests:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            src/ground/mujoco_forklift_pallet_docking
+            src/ground/forklift_slam_nav
+      - name: Build docking image
+        run: docker build -t mujoco-forklift-pallet-docking:latest src/ground/mujoco_forklift_pallet_docking
+      - name: Run docking regression tests and verify installed entry points
+        run: |
+          docker run --rm mujoco-forklift-pallet-docking:latest bash -lc '
+            set -eo pipefail
+            source /opt/ros/humble/setup.bash
+            source /ros_ws/install/setup.bash
+            colcon test --merge-install --return-code-on-test-failure --packages-select mujoco_forklift_pallet_docking
+            colcon test-result --verbose | tee /tmp/docking-results
+            grep -q "Summary: 8 tests, 0 errors, 0 failures, 0 skipped" /tmp/docking-results
+            ros2 run mujoco_forklift_pallet_docking forklift_pallet_docking --help
+            ros2 run mujoco_forklift_pallet_docking main --help
+            ros2 launch mujoco_forklift_pallet_docking main.launch.py --show-args
+          '
+      - name: Build navigation image
+        run: docker build -f src/ground/forklift_slam_nav/Dockerfile -t forklift-slam-nav:humble .
+      - name: Run navigation tests and verify installed module and launch files
+        run: |
+          docker run --rm forklift-slam-nav:humble bash -lc '
+            set -eo pipefail
+            source /opt/ros/humble/setup.bash
+            source /ws/install/setup.bash
+            colcon test --merge-install --return-code-on-test-failure --packages-select forklift_slam_nav
+            colcon test-result --verbose | tee /tmp/navigation-results
+            grep -q "Summary: 4 tests, 0 errors, 0 failures, 0 skipped" /tmp/navigation-results
+            python3 -c "from forklift_slam_nav.main import main; assert callable(main)"
+            ros2 launch forklift_slam_nav main.launch.py --show-args
+            ros2 launch forklift_slam_nav bringup.launch.py --show-args
+          '
