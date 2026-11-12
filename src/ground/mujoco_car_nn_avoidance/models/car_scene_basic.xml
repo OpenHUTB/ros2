@@ -1,0 +1,74 @@
+<mujoco model="car_nn_scene_basic">
+  <!--
+    地面两轮差速小车 + 正前方单个障碍（基础场景）。
+    稳定驱动采用实际调通的方案：
+      - implicitfast 积分器（速度项隐式积分，2ms 步长下稳定）
+      - <velocity> 速度执行器（ctrl=目标轮角速度，MuJoCo 内部伺服，kv=10，forcerange ±8）
+      - 车身 4kg、质心前移 pos=0.04；前支撑轮着地与两驱动轮构成静定三点支撑，
+        驱动轮承担约 80% 重量；后支撑轮抬离约 6mm，仅作防后仰保护、静止不承重
+      - 自车几何体放 geom group 2（射线屏蔽组）；障碍物放 group 0（射线可见）；
+        地面放 group 1（屏蔽，防车身俯仰造成假目标）
+      - 出生时轮胎 2mm 穿透（car pos z=0.048，轮半径 0.05），接触从第 0 步起稳定存在
+    障碍物全部为 MuJoCo 内置 box，无外部网格资产，克隆即跑。
+  -->
+
+  <compiler angle="radian" autolimits="true"/>
+  <option timestep="0.002" gravity="0 0 -9.81" integrator="implicitfast" iterations="60"/>
+
+  <visual>
+    <headlight diffuse="0.6 0.6 0.6" ambient="0.3 0.3 0.3" specular="0 0 0"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+    <global azimuth="-130" elevation="-20"/>
+  </visual>
+
+  <default>
+    <geom friction="1.0 0.005 0.0001" solref="0.02 1" solimp="0.9 0.95 0.001"/>
+    <joint damping="0.05" armature="0.005"/>
+    <default class="ego">
+      <geom group="2"/>
+    </default>
+  </default>
+
+  <worldbody>
+    <!-- 地面：group 1（射线屏蔽，防俯仰假目标） -->
+    <geom name="floor" type="plane" size="0 0 0.05" rgba="0.30 0.32 0.34 1" group="1"/>
+
+    <!-- 俯视相机：gif 录制用，车在画面内从左向右绕行通过障碍（MuJoCo 相机默认朝 -z 垂直俯视） -->
+    <camera name="top" pos="3 0 8" fovy="60"/>
+
+    <!-- 障碍物：group 0（射线可见）。基础场景：正前方单障碍 -->
+    <body name="obs1" pos="3.2 0 0.30">
+      <geom name="obs1_geom" type="box" size="0.30 0.30 0.30" rgba="0.80 0.28 0.18 1" group="0"/>
+    </body>
+
+    <!-- 自车：两驱动轮 + 前支撑轮构成静定三点支撑；后支撑轮抬离地约 6mm，仅防后仰、静止不承重 -->
+    <body name="chassis" pos="0 0 0.048">
+      <freejoint name="chassis_root"/>
+      <geom name="chassis_body" class="ego" type="box" pos="0.04 0 0.04"
+            size="0.22 0.12 0.035" rgba="0.20 0.45 0.85 1" mass="4.0"/>
+      <!-- 前支撑轮：着地，与两驱动轮构成静定三点支撑 -->
+      <geom name="caster" class="ego" type="sphere" pos="0.16 0 -0.02" size="0.03"
+            friction="0.005 0.005 0.0001" mass="0.05" rgba="0.30 0.30 0.30 1"/>
+      <!-- 后支撑轮：底面离地约 6mm，仅防后仰保护，静止时不承重，避免静不定四点支撑 -->
+      <geom name="caster_rear" class="ego" type="sphere" pos="-0.16 0 -0.012" size="0.03"
+            friction="0.005 0.005 0.0001" mass="0.05" rgba="0.30 0.30 0.30 1"/>
+      <site name="lidar" pos="0.22 0 0.06" size="0.012" rgba="1 1 0 1" group="3"/>
+
+      <body name="wheel_l" pos="0 0.125 0">
+        <joint name="wheel_l_joint" type="hinge" axis="0 1 0"/>
+        <geom name="wheel_l_geom" class="ego" type="cylinder" friction="1.2 0.01 0.0001"
+              size="0.05 0.025" euler="1.5707963 0 0" mass="0.25" rgba="0.08 0.08 0.08 1"/>
+      </body>
+      <body name="wheel_r" pos="0 -0.125 0">
+        <joint name="wheel_r_joint" type="hinge" axis="0 1 0"/>
+        <geom name="wheel_r_geom" class="ego" type="cylinder" friction="1.2 0.01 0.0001"
+              size="0.05 0.025" euler="1.5707963 0 0" mass="0.25" rgba="0.08 0.08 0.08 1"/>
+      </body>
+    </body>
+  </worldbody>
+
+  <actuator>
+    <velocity name="drive_l" joint="wheel_l_joint" kv="10" ctrlrange="-60 60" forcerange="-8 8"/>
+    <velocity name="drive_r" joint="wheel_r_joint" kv="10" ctrlrange="-60 60" forcerange="-8 8"/>
+  </actuator>
+</mujoco>

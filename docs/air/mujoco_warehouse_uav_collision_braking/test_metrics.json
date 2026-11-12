@@ -1,0 +1,13 @@
+{
+  "test_samples": 2008,
+  "risk_accuracy": 0.7699203187250996,
+  "speed_mae_mps": 0.8196163723695328,
+  "confusion_matrix": [
+    [915, 71, 4],
+    [220, 162, 86],
+    [41, 40, 469]
+  ],
+  "class_order": ["clear", "caution", "brake"],
+  "seed": 42,
+  "epochs": 80
+}

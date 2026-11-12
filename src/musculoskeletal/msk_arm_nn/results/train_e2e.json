@@ -1,0 +1,44 @@
+{
+  "activation_mae": 0.1702,
+  "architecture": {
+    "conv1_stride": 2,
+    "conv_channels": [
+      8,
+      16
+    ],
+    "fc": 64,
+    "in_ch": 1,
+    "in_h": 32,
+    "in_w": 32,
+    "out_dim": 4
+  },
+  "batch": 32,
+  "epochs": 22,
+  "lr": 0.0005,
+  "mean_baseline_activation_mae": 0.1792,
+  "model": "e2e_cnn",
+  "muscles": [
+    "shoulder_flexor",
+    "shoulder_extensor",
+    "elbow_flexor",
+    "elbow_extensor"
+  ],
+  "normalised_rmse": 0.27321,
+  "per_muscle_mae": [
+    0.2108,
+    0.1122,
+    0.1521,
+    0.2057
+  ],
+  "seconds": 31.86,
+  "task": "depth image (32x32) -> 4 muscle activations",
+  "train_samples": 496,
+  "val_episodes": [
+    1,
+    1000,
+    1005,
+    2000
+  ],
+  "val_samples": 101,
+  "weight_decay": 0.0005
+}

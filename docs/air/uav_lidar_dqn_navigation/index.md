@@ -1,0 +1,222 @@
+# 基于深度强化学习的无人机雷达建图与端到端飞行控制
+
+本模块在 AirSim + ROS Noetic 上实现四类无人机能力：键盘遥控、激光雷达感知与
+DQN 导航、SLAM 建图与导航同步、图像端到端 DQN 控制。
+
+与监督学习路线不同，本模块的控制器由**深度强化学习**训练得到：智能体在仿真场景中
+自行探索，以“接近目标、朝向对齐、避开障碍”为奖励信号优化策略，不需要人工标注
+专家轨迹。
+
+本页说明模块总体设计、键盘遥控（PR #892）、雷达感知（PR #893）、DQN 策略训练
+（PR #918）、DQN 在线部署与 gmapping 建图（PR #922）；图像端到端控制按依赖顺序
+在后续 PR 中补充。
+
+## 1 运行环境
+
+| 项目 | 版本 |
+| --- | --- |
+| 仿真器 | AirSim 1.8.1（Blocks 预编译场景，Windows） |
+| 操作系统 | Ubuntu 20.04（WSL2） |
+| ROS | Noetic |
+| Python | 3.8 |
+| 依赖 | numpy、msgpack-rpc-python |
+
+AirSim 与 ROS 之间通过 msgpack-rpc（默认 41451 端口）通信。WSL2 下需要把
+`airsim_ip` 设为 Windows 主机在 WSL 网段里的地址，即 `/proc/net/route` 中的网关地址。
+
+编译与运行：
+
+```bash
+cd ~/catkin_ws
+cp -r <模块目录> src/
+catkin_make
+source devel/setup.bash
+
+# 任务 1：键盘遥控
+roslaunch uav_lidar_dqn_navigation main.launch mode:=teleop
+```
+
+## 2 系统架构
+
+```mermaid
+flowchart LR
+    A[AirSim Blocks] -- msgpack-rpc --> B[drone_bridge]
+    B -- /drone/odom, /drone/state --> C[teleop_keyboard]
+    C -- /drone/cmd_vel --> B
+    A -- lidar_1 点云 --> D[lidar_scan_node]
+    D -- /drone/lidar/sectors --> E[dqn_nav_node]
+    D -- /drone/lidar/scan --> F[gmapping]
+    E -- /drone/cmd_vel --> B
+    F -- map->odom TF --> B
+```
+
+桥接节点是模块唯一的 AirSim 客户端：它把 ROS 的机体系速度指令翻译成 AirSim 的
+`moveByVelocityZAsync` 调用，并把位姿、速度与原始状态发布回 ROS。控制节点只依赖
+ROS 话题，因此可以脱离 AirSim 单独调试。
+
+### 2.1 坐标系
+
+AirSim 使用 NED（北-东-地），ROS 使用 ENU（东-北-天）。桥接节点在发布里程计时
+做如下换算：
+
+$$
+x_{\text{ENU}} = y_{\text{NED}}, \qquad
+y_{\text{ENU}} = x_{\text{NED}}, \qquad
+z_{\text{ENU}} = -z_{\text{NED}}
+$$
+
+速度指令从机体系旋到世界系，偏航角速度还需反号：ROS 逆时针为正，AirSim 顺时针为正。
+
+## 3 键盘遥控
+
+`teleop_keyboard.py` 在终端读取单键输入，维护速度档位与里程统计，并把
+`geometry_msgs/Twist` 发到 `/drone/cmd_vel`。
+
+| 按键 | 功能 |
+| --- | --- |
+| W / S | 前进 / 后退 |
+| A / D | 左偏航 / 右偏航 |
+| Q / E | 上升 / 下降 |
+| 1 / 2 / 3 | 低速 / 中速 / 高速档 |
+| T / L | 起飞 / 降落 |
+
+起飞与降落调用桥接节点提供的 `/drone/takeoff`、`/drone/land` 服务；高度由
+`moveByVelocityZAsync` 保持，避免松键后掉高。
+
+## 4 雷达感知
+
+AirSim 的 `lidar_1` 水平视场 ±90°、16 线、量程 40 m。原始点云无法直接作为
+控制输入，也不可能直接扔给 SLAM —— 旋转式雷达单帧只覆盖一小段水平角。因此
+`lidar_features.py` 提供两种压缩方式：
+
+- **24 扇区特征**：把 ±90° 等分 24 份，每份取最近命中距离并除以量程，
+  得到 1 表示通畅、趋近 0 表示贴脸的归一化向量。位移与旋转不变性由机体系
+  表达保证，DQN 用它做局部避障。
+- **180° 扫描**：`extract_scan()` 把累积 1 秒的点云按角度装进 180 个 bin，
+  无命中的角度填 `max_range`，生成标准 `sensor_msgs/LaserScan` 供建图使用。
+
+扫描的角度参数按采样点计算：`angle_min = -90°`、`angle_increment = 1°`，
+最后一个采样点为 `angle_min + (bins - 1) * angle_increment = +89°`，
+即 180 个点覆盖 `[-90°, +89°]`，而不是 `[-90°, +90°]`。
+
+`scan.launch` 同时发布 `odom->base_link`（桥接节点，`publish_tf:=true`）和
+`base_link->laser`（静态 TF，雷达位于机体中心下方 0.5 m），因此单独检出本
+PR 即可在 RViz 中查看扫描；`map->odom` 要等 #922 的 gmapping 提供。
+
+```bash
+roslaunch uav_lidar_dqn_navigation main.launch mode:=scan
+rosrun rviz rviz   # Fixed Frame 选 odom，添加 LaserScan 订阅 /drone/lidar/scan
+```
+
+## 5 DQN 策略训练
+
+状态 `s` 为 32 维：24 个扇区距离、目标相对量（水平距离、方位角正余弦、高度差，
+共 4 维）、机体系速度 3 维、上一步动作 1 维。动作为 6 个离散速度指令
+（悬停、直行、左前、右前、原地左转、原地右转），由 `dqn_network.py` 统一定义。
+
+网络采用 Dueling 结构：两层 128 维全连接后分成状态价值 `V(s)` 与优势
+`A(s,a)`，输出
+
+$$
+Q(s,a) = V(s) + A(s,a) - \frac{1}{|A|}\sum_{a'} A(s,a')
+$$
+
+训练用 Double DQN 目标抑制过估计：
+
+$$
+y = r + \gamma \, Q_{\theta^-}\!\left(s', \arg\max_{a'} Q_\theta(s', a')\right)
+$$
+
+经验回放缓冲区打散样本相关性，目标网络 `θ⁻` 定期从在线网络软/硬更新，
+损失为 Huber 形式，探索用 ε-greedy 并随回合衰减。
+
+奖励由距离进度、朝向对齐、时间惩罚、近障惩罚四部分组成：1.2 m 内障碍按距离
+线性扣分，0.5 m 内按事故终止（-20），碰撞 -30，到达目标 +60。
+训练入口：
+
+```bash
+roslaunch uav_lidar_dqn_navigation train.launch episodes:=200
+rosrun uav_lidar_dqn_navigation train_dqn_nav.py --episodes 200
+```
+
+权重与日志写入 `models/`：`dqn_nav.pt`（当前最佳，部署默认加载）、
+`dqn_nav_best.pt`（同一份最佳权重）、`dqn_nav_last.pt`（最后一回合）、
+`train_nav_log.csv`（每回合累计奖励、步数、成功/碰撞/近失标记）。
+
+## 6 DQN 导航部署
+
+`dqn_nav_node.py` 每 10 Hz 读一次 `/drone/lidar/sectors` 与 `/drone/odom`，
+按训练时的同一套特征拼出 32 维状态，取 Q 值最大的动作下发 `/drone/cmd_vel`。
+权重默认从包内 `models/dqn_nav.pt` 加载，可用 `~model_path` 覆盖。
+
+安全层（`safety_shield.py`）：DQN 学的是“朝目标飞”，障碍进入训练分布外的
+近距范围时 Q 值区分度会变小。部署时先用 24 扇区距离屏蔽会撞的动作——
+正前方 1.0 m 内有障碍时禁用直行/左前/右前，单侧 0.9 m 内有障碍时禁用该侧
+斜向动作，再在剩余动作里取 Q 最大。近障时向空旷一侧转向，前方通畅后
+短暂前进；0.35 m 兜底只检查前向扇区。整条近障行为仍需 AirSim 实机验证。
+
+速度按 `speed_scale` 缩放，建图时用 0.5 兼顾扫描重叠。
+
+```bash
+# 纯导航，目标点 (15, 10)
+roslaunch uav_lidar_dqn_navigation main.launch mode:=dqn
+
+# 临时改目标点
+roslaunch uav_lidar_dqn_navigation dqn.launch goal_x:=10 goal_y:=15
+```
+
+目标点也可以通过 `/drone/goal`（`geometry_msgs/PointStamped`，NED）随时修改，
+`dqn.launch` 里的 `goal_publisher` 只是演示用的定时发布。
+
+## 7 gmapping 建图
+
+`scan.launch` 提供 `odom->base_link->laser`，gmapping 在此基础上发布
+`map->odom`，形成 `map->odom->base_link->laser` 完整 TF 链。
+
+| 参数 | 值 | 说明 |
+| --- | --- | --- |
+| `maxUrange` | 39 m | 略大于雷达有效量程，否则 30~40 m 回波被丢弃 |
+| `maxRange` | 40 m | 与 `lidar_features.MAX_RANGE` 保持一致 |
+| `particles` | 50 | 稀疏雷达下比默认 30 稳定 |
+| `linearUpdate` / `angularUpdate` | 0.2 m / 0.1 rad | 位姿增量触发更新 |
+| `delta` | 0.05 m | 与 2026-11-12 实测地图的 YAML 一致 |
+
+选择 gmapping 而不是 hector_slam 的原因：hector 不做里程计融合、依赖扫描匹配
+初值，在 180° 稀疏雷达 + 快速偏航下实测会跟丢，地图呈扇形；gmapping 用里程计
+做运动先验、粒子滤波修正。2026-11-12 在 Blocks + WSL ROS Noetic 下重新运行，
+从 `/map` 保存的地图为 2208×2272、0.05 m/格、5472 个占用格，
+预览中可见连续墙体。旧地图的 1503 个占用格与此前文档中的 5751
+都不是本次运行结果。
+
+`waypoint_goal_node.py` 先发布 (0,20)，达到 1.5 m 容差后切换到
+(16,20)。同次运行日志记录了航点切换；第二航点附近的运行中状态为
+(16.49,19.62)，水平误差约 0.62 m：
+
+```bash
+roslaunch uav_lidar_dqn_navigation main.launch mode:=slam
+rosrun map_server map_saver -f ~/uav_map   # 或订阅 /map 自行保存
+```
+
+![本次重新运行的 gmapping 地图，连续墙体可见](../../img/air/uav_lidar_dqn_navigation/uav_map_verified.png)
+
+## 8 话题与服务
+
+| 名称 | 类型 | 说明 |
+| --- | --- | --- |
+| `/drone/cmd_vel` | geometry_msgs/Twist | 机体系速度指令 |
+| `/drone/odom` | nav_msgs/Odometry | ENU 位姿与速度 |
+| `/drone/state` | std_msgs/Float32MultiArray | NED 原始状态 |
+| `/drone/lidar/scan` | sensor_msgs/LaserScan | 180° 累积扫描 |
+| `/drone/lidar/sectors` | std_msgs/Float32MultiArray | 24 维扇区距离 |
+| `/drone/takeoff` | std_srvs/Trigger | 起飞 |
+| `/drone/land` | std_srvs/Trigger | 降落 |
+
+## 9 后续 PR
+
+| PR | 内容 |
+| --- | --- |
+| #932 | 图像端到端 DQN 与演示动图 |
+
+## 大模型使用声明
+
+本模块在开发过程中使用大模型辅助编写代码与文档，提交者对全部内容负责。

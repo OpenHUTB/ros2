@@ -33,7 +33,7 @@ class CruiseNode(Node):
                 f"找不到 MLP 权重 {wpath}。\n"
                 "请先在包目录执行： python3 main.py train"
             )
-        ckpt = torch.load(wpath, map_location="cpu")
+        ckpt = torch.load(wpath, map_location="cpu", weights_only=False)
         self.net = CruiseMLP()
         self.net.load_state_dict(ckpt["model"])
         self.net.eval()
