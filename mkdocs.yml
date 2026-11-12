@@ -460,6 +460,7 @@ nav:
     - 多无人机空域监测（多边形禁飞区与机间冲突）: './air/multi_uav_airspace_monitor.md'
     - 无人机动态电子围栏预测预警: './air/uav_dynamic_geofence_guard.md'
     - AllocNet 四旋翼避障规划与键盘遥操作: './air/allocnet_teleop.md'
+    - 低空起降场进离场排队与容量评估: './air/uav_vertiport_queue.md'
     - 语义分割建图与语义路径规划: './air/uav_semantic_mapping_nav.md'
     - 状态识别与轨迹绘制: './air/drone_trajectory_logger.md'
     - 无人机机载相机视觉目标跟踪: './air/uav_camera_tracking.md'
@@ -468,6 +469,7 @@ nav:
     - 无人机视觉端到端控制（CNN 行为克隆）: './air/uav_vision_nn.md'
     - 基于 ROS 2 的禁飞区（电子围栏）动态检测与安全预警系统: './air/geofence.md'
     - 无人机深度相机轨迹跟踪（CNN 行为克隆）: './air/uav_depth_track_nn.md'
+    - PX4+ROS2+OpenCV 视觉目标追踪: 'air/px4_ros2_opencv_tracking/index.md'
     - 基于神经网络的无人机感知—规划—控制避障:
         - 首页: 'air/neural_ca_drone_submission/docs/index.md'
         - 任务与方案: 'air/neural_ca_drone_submission/docs/overview.md'
@@ -534,7 +536,7 @@ nav:
     - 水面无人艇：激光雷达建图与神经网络局部规划: './water/usv_mujoco_nn.md'
     - USV 弗劳德缩比换算与拖曳功率估算: './water/usv_froude_scaling.md'
     - 声呐数据滤波初步验证: './water/rov_sonar_filter.md'
-  - 水下机器人 MuJoCo 仿真、声呐 SLAM 与纯 NumPy 神经网络导航: './water/rov_numpy_nn_slam.md'
+    - 水下机器人 MuJoCo 仿真、声呐 SLAM 与纯 NumPy 神经网络导航: './water/rov_numpy_nn_slam.md'
     - ROV 水下机器人 MuJoCo 建图导航与神经网络控制: './water/rov_mujoco_slam_nn_nav/README.md'
     - DAVE 水下机器人仿真环境搭建与 REXROV/Oberon7 机械臂作业演示: './water/dave_underwater_sim.md'
 
