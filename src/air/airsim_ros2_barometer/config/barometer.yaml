@@ -10,5 +10,5 @@
     frame_id: base_link
     publish_rate: 20.0
     reconnect_period: 2.0
-    connection_timeout: 1.0
+    rpc_timeout: 1.0
     pressure_variance: 1.0

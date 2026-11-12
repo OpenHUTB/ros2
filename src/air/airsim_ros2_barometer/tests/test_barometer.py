@@ -44,8 +44,11 @@ def test_invalid_altitude_is_rejected(altitude: float) -> None:
         parse_barometer_sample(sample)
 
 
-@pytest.mark.parametrize("qnh", [0.0, -1.0])
-def test_non_positive_qnh_is_rejected(qnh: float) -> None:
+@pytest.mark.parametrize(
+    "qnh",
+    [0.0, -1.0, float("nan"), float("inf"), float("-inf")],
+)
+def test_invalid_qnh_is_rejected(qnh: float) -> None:
     sample = SimpleNamespace(
         altitude=1.0,
         pressure=101325.0,

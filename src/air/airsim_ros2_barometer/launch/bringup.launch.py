@@ -25,7 +25,7 @@ def generate_launch_description() -> LaunchDescription:
     qnh_topic = LaunchConfiguration("qnh_topic")
     frame_id = LaunchConfiguration("frame_id")
     publish_rate = LaunchConfiguration("publish_rate")
-    connection_timeout = LaunchConfiguration("connection_timeout")
+    rpc_timeout = LaunchConfiguration("rpc_timeout")
     use_sim_time = LaunchConfiguration("use_sim_time")
 
     return LaunchDescription(
@@ -49,7 +49,7 @@ def generate_launch_description() -> LaunchDescription:
             DeclareLaunchArgument("frame_id", default_value="base_link"),
             DeclareLaunchArgument("publish_rate", default_value="20.0"),
             DeclareLaunchArgument(
-                "connection_timeout",
+                "rpc_timeout",
                 default_value="1.0",
             ),
             DeclareLaunchArgument("use_sim_time", default_value="false"),
@@ -79,8 +79,8 @@ def generate_launch_description() -> LaunchDescription:
                             publish_rate,
                             value_type=float,
                         ),
-                        "connection_timeout": ParameterValue(
-                            connection_timeout,
+                        "rpc_timeout": ParameterValue(
+                            rpc_timeout,
                             value_type=float,
                         ),
                         "use_sim_time": use_sim_time,

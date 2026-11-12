@@ -58,8 +58,8 @@ class AirSimBarometerBridge(Node):
         self.reconnect_period = float(
             self.declare_parameter("reconnect_period", 2.0).value
         )
-        self.connection_timeout = float(
-            self.declare_parameter("connection_timeout", 1.0).value
+        self.rpc_timeout = float(
+            self.declare_parameter("rpc_timeout", 1.0).value
         )
         self.pressure_variance = float(
             self.declare_parameter("pressure_variance", 1.0).value
@@ -68,7 +68,7 @@ class AirSimBarometerBridge(Node):
         for name, value in (
             ("publish_rate", self.publish_rate),
             ("reconnect_period", self.reconnect_period),
-            ("connection_timeout", self.connection_timeout),
+            ("rpc_timeout", self.rpc_timeout),
             ("pressure_variance", self.pressure_variance),
         ):
             if not math.isfinite(value):
@@ -77,8 +77,8 @@ class AirSimBarometerBridge(Node):
             raise ValueError("publish_rate must be positive")
         if self.reconnect_period <= 0.0:
             raise ValueError("reconnect_period must be positive")
-        if self.connection_timeout <= 0.0:
-            raise ValueError("connection_timeout must be positive")
+        if self.rpc_timeout <= 0.0:
+            raise ValueError("rpc_timeout must be positive")
         if self.pressure_variance < 0.0:
             raise ValueError("pressure_variance must be non-negative")
 
@@ -86,11 +86,13 @@ class AirSimBarometerBridge(Node):
         self._next_connect_time = 0.0
         self._read_failures = 0
         self._sample_logged = False
-        self._connection_executor = ThreadPoolExecutor(
+        self._shutting_down = False
+        self._rpc_executor = ThreadPoolExecutor(
             max_workers=1,
-            thread_name_prefix="airsim-baro-connect",
+            thread_name_prefix="airsim-baro-rpc",
         )
         self._connection_future: Future | None = None
+        self._read_future: Future | None = None
         self._pressure_publisher = self.create_publisher(
             FluidPressure,
             self.pressure_topic,
@@ -119,12 +121,15 @@ class AirSimBarometerBridge(Node):
         if self._connection_future is not None:
             if not self._connection_future.done():
                 return False
+            connection_future = self._connection_future
+            self._connection_future = None
             try:
-                client = self._connection_future.result()
+                client = connection_future.result()
             except ImportError:
                 self.get_logger().error(
                     "AirSim Python client is not installed; run "
-                    "python3 -m pip install -r requirements.txt"
+                    "python3 -m pip install -r requirements.txt",
+                    throttle_duration_sec=5.0,
                 )
                 return False
             except Exception as exc:
@@ -133,8 +138,6 @@ class AirSimBarometerBridge(Node):
                     throttle_duration_sec=5.0,
                 )
                 return False
-            finally:
-                self._connection_future = None
             self._client = client
             self._read_failures = 0
             self.get_logger().info("Connected to AirSim")
@@ -142,7 +145,7 @@ class AirSimBarometerBridge(Node):
         if now < self._next_connect_time:
             return False
         self._next_connect_time = now + self.reconnect_period
-        self._connection_future = self._connection_executor.submit(
+        self._connection_future = self._rpc_executor.submit(
             self._connect_once
         )
         return False
@@ -157,25 +160,50 @@ class AirSimBarometerBridge(Node):
             client = airsim.MultirotorClient(
                 ip=self.host,
                 port=self.port,
-                timeout_value=self.connection_timeout,
+                timeout_value=self.rpc_timeout,
             )
         client.confirmConnection()
         return client
 
     def destroy_node(self) -> None:
-        self._connection_executor.shutdown(wait=False, cancel_futures=True)
+        self._shutting_down = True
+        self._rpc_executor.shutdown(wait=False, cancel_futures=True)
         super().destroy_node()
 
     def _on_timer(self) -> None:
+        if self._shutting_down:
+            return
         if not self._ensure_connected():
             return
         if self._client is None:
             return
+        self._complete_read()
+        if self._client is None:
+            return
+        self._schedule_read()
+
+    def _schedule_read(self) -> None:
+        """Schedule one AirSim read without blocking the ROS executor."""
+        if self._client is None or self._read_future is not None:
+            return
+        self._read_future = self._rpc_executor.submit(
+            self._read_once,
+            self._client,
+        )
+
+    def _read_once(self, client):
+        return client.getBarometerData(
+            barometer_name=self.barometer_name,
+            vehicle_name=self.vehicle_name,
+        )
+
+    def _complete_read(self) -> None:
+        read_future = self._read_future
+        if read_future is None or not read_future.done():
+            return
+        self._read_future = None
         try:
-            sample = self._client.getBarometerData(
-                barometer_name=self.barometer_name,
-                vehicle_name=self.vehicle_name,
-            )
+            sample = read_future.result()
             self._publish_sample(sample)
             self._read_failures = 0
         except Exception as exc:
@@ -199,7 +227,7 @@ class AirSimBarometerBridge(Node):
         normalized = parse_barometer_sample(sample)
         if not self._sample_logged:
             self._sample_logged = True
-            self.get_logger().debug(
+            self.get_logger().info(
                 "First barometer sample: "
                 f"altitude={type(sample.altitude).__name__}:"
                 f"{normalized.altitude:.3f}, "

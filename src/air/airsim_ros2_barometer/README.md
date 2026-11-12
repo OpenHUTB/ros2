@@ -11,8 +11,8 @@ ROS 2 Humble 的 AirSim 气压计桥接。模块将 AirSim `getBarometerData` �
   `sensor_msgs/msg/FluidPressure`；
 - 发布 `/uav/barometer/altitude`，类型为 `std_msgs/msg/Float64`，单位为米；
 - 发布 `/uav/barometer/qnh`，类型为 `std_msgs/msg/Float64`，单位为 Pa；
-- 检查压力和高度是否为有限有效值；
-- 支持车辆、气压计名称、话题、坐标系、频率、压力和高度噪声参数；
+- 检查压力、高度和 QNH 是否为有限有效值；
+- 支持车辆、气压计名称、话题、坐标系、频率和压力方差参数；
 - AirSim 断连后停止发布旧数据并定期重连；
 - 提供统一的 `main` 入口和 ROS 2 launch。
 
@@ -29,8 +29,8 @@ ROS 2 Humble 的 AirSim 气压计桥接。模块将 AirSim `getBarometerData` �
 `FluidPressure.variance` 默认取 `1.0 Pa²`，可通过
 `pressure_variance` 参数调整。
 
-AirSim 连接在独立线程执行，`connection_timeout` 默认 `1.0` 秒，不会阻塞
-ROS 定时器；`reconnect_period` 默认 `2.0` 秒。
+AirSim 的连接和读取 RPC 在同一个后台工作线程执行，`rpc_timeout` 默认
+`1.0` 秒，不会阻塞 ROS 定时器；`reconnect_period` 默认 `2.0` 秒。
 
 ## 构建
 
@@ -63,8 +63,9 @@ ros2 topic echo /uav/barometer/altitude --once
 ros2 topic hz /uav/barometer/pressure
 ```
 
-默认坐标系为 `base_link`，`publish_rate` 为 `20.0` Hz。AirSim 场景未发布
-`/clock` 时保持 `use_sim_time=false`。
+默认坐标系为 `base_link`，`publish_rate` 为 `20.0` Hz，表示最大调度和发布
+频率；AirSim RPC 变慢时实际频率会下降。AirSim 场景未发布 `/clock` 时保持
+`use_sim_time=false`。
 
 ## 测试
 
@@ -73,9 +74,10 @@ python3 -m pytest src/air/airsim_ros2_barometer/tests -q
 colcon test --packages-select airsim_ros2_barometer
 ```
 
-测试覆盖有效样本、非法压力/高度/QNH 和启动检查。启动测试会执行 launch，
-确认 AirSim 不在线时节点保持运行，并能发现三个气压计话题。连接测试覆盖
-1–4 次读取失败、第 5 次断开和后台重连恢复。
+测试覆盖有效样本、非法压力/高度/QNH、消息字段映射、AirSim 客户端缺失提示
+和启动检查。启动测试会执行 launch，确认 AirSim 不在线时节点保持运行，并能
+发现三个气压计话题。连接测试覆盖 1–4 次读取失败、第 5 次断开、后台重连
+恢复，以及连接和读取阻塞时 ROS 定时器不被占用。
 
 ## 范围与限制
 

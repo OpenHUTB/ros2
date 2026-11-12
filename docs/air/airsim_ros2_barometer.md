@@ -21,7 +21,7 @@
 
 - 高度不是有限值；
 - 压力不是有限正数；
-- QNH 不是有限非负数。
+- QNH 不是有限正数。
 
 连续读取失败 5 次后，节点停止发布旧数据并重新连接 AirSim。
 
@@ -55,8 +55,11 @@ ros2 topic echo /uav/barometer/qnh --once
 ros2 topic hz /uav/barometer/pressure
 ```
 
-AirSim 连接在独立线程执行，`connection_timeout` 默认 `1.0` 秒；
-`reconnect_period` 默认 `2.0` 秒。连接阻塞时 ROS 定时器仍可执行。
+AirSim 的连接和读取 RPC 在同一个后台工作线程执行，`rpc_timeout` 默认
+`1.0` 秒；ROS 定时器只负责调度读取和发布已经完成的样本，因此 RPC 阻塞时
+executor 不会停摆。`publish_rate` 表示最大调度和发布频率；当单次 RPC 超过
+定时器周期时，实际频率会下降，但不会在同一线程中堆积 AirSim 调用。
+`reconnect_period` 默认 `2.0` 秒。
 
 重要参数：
 
@@ -69,8 +72,8 @@ AirSim 连接在独立线程执行，`connection_timeout` 默认 `1.0` 秒；
 | `pressure_topic` | `/uav/barometer/pressure` | 压力话题 |
 | `altitude_topic` | `/uav/barometer/altitude` | 气压高度话题 |
 | `qnh_topic` | `/uav/barometer/qnh` | QNH 话题 |
-| `publish_rate` | `20.0` | 读取和发布频率 |
-| `connection_timeout` | `1.0` | AirSim RPC 连接超时 |
+| `publish_rate` | `20.0` | 读取调度的最大频率；实际受 RPC 延迟限制 |
+| `rpc_timeout` | `1.0` | AirSim 连接和单次读取 RPC 超时 |
 | `reconnect_period` | `2.0` | 失败后的重连间隔 |
 | `pressure_variance` | `1.0` | 压力方差 Pa² |
 
@@ -82,9 +85,10 @@ colcon test --packages-select airsim_ros2_barometer
 colcon test-result --verbose
 ```
 
-测试覆盖有效样本、非法压力/高度/QNH 和启动检查。启动测试执行
-`bringup.launch.py`，在 AirSim 不在线时检查节点保持运行，并发现三个气压计
-话题。连接测试覆盖 1–4 次读取失败、第 5 次断开以及后台重连恢复。
+测试覆盖有效样本、非法压力/高度/QNH、三条消息的字段映射、AirSim 客户端
+缺失提示和启动检查。启动测试执行 `bringup.launch.py`，在 AirSim 不在线时
+检查节点保持运行，并发现三个气压计话题。连接测试覆盖 1–4 次读取失败、
+第 5 次断开、后台重连恢复，以及连接和读取阻塞时 ROS 定时器不被占用。
 
 ## 6. 范围与限制
 
