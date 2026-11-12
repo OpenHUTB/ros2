@@ -2,7 +2,9 @@
 
 import pytest
 import rclpy
+from rclpy.exceptions import InvalidParameterTypeException
 from rclpy.parameter import Parameter
+from rclpy.qos import DurabilityPolicy
 from std_msgs.msg import Bool
 from std_srvs.srv import Trigger
 
@@ -10,6 +12,7 @@ from estop_latch.estop_latch_node import (
     EstopLatch,
     evaluate_release,
     input_stale,
+    main,
 )
 
 
@@ -146,6 +149,83 @@ def test_reset_clears_latch(latch):
     assert latch.status_pub.last().data == 'clear'
 
 
+def test_reset_when_already_clear_returns_notice(latch):
+    latch.estop_callback(Bool(data=False))
+    _reset(latch)
+
+    response = _reset(latch)
+
+    assert response.success is False
+    assert '未闩锁' in response.message
+
+
+def test_stale_link_blocks_reset():
+    rclpy.init()
+    try:
+        node = EstopLatch(parameter_overrides=[
+            Parameter(name='start_latched', value=False),
+            Parameter(name='input_timeout', value=1.0),
+        ])
+        node.estop_pub = _RecordingPublisher()
+        node.status_pub = _RecordingPublisher()
+        node.estop_callback(Bool(data=False))
+        node.last_input_time = node._now_seconds() - 5.0
+        node.on_timer()
+        assert node.status_pub.last().data == 'latched: input_timeout'
+
+        response = _reset(node)
+
+        assert response.success is False
+        assert '输入链路' in response.message
+        node.destroy_node()
+    finally:
+        rclpy.shutdown()
+
+
+def test_reset_succeeds_after_new_message():
+    """链路恢复（收到新消息）后可以正常复位。"""
+    rclpy.init()
+    try:
+        node = EstopLatch(parameter_overrides=[
+            Parameter(name='start_latched', value=False),
+            Parameter(name='input_timeout', value=1.0),
+            Parameter(name='release_hold_time', value=0.0),
+        ])
+        node.estop_pub = _RecordingPublisher()
+        node.status_pub = _RecordingPublisher()
+        node.estop_callback(Bool(data=False))
+        node.last_input_time = node._now_seconds() - 5.0
+        node.on_timer()
+        assert _reset(node).success is False
+
+        node.estop_callback(Bool(data=False))
+        response = _reset(node)
+
+        assert response.success is True
+        node.destroy_node()
+    finally:
+        rclpy.shutdown()
+
+
+def test_estop_publisher_keeps_last_value():
+    rclpy.init()
+    try:
+        node = EstopLatch()
+        assert (node.estop_pub.qos_profile.durability
+                == DurabilityPolicy.TRANSIENT_LOCAL)
+        node.destroy_node()
+    finally:
+        rclpy.shutdown()
+
+
+def test_main_exits_cleanly_on_bad_bool_param():
+    """参数类型错误应以退出码 1 结束，而不是带 traceback 崩溃。"""
+    with pytest.raises(SystemExit) as info:
+        main(['--ros-args', '-p', 'auto_release:=abc'])
+
+    assert info.value.code == 1
+
+
 def test_estop_input_relatches_after_reset(latch):
     latch.estop_callback(Bool(data=False))
     _reset(latch)
@@ -250,7 +330,7 @@ def test_integer_hold_time_is_accepted():
     try:
         try:
             node = EstopLatch()
-        except Exception:
+        except InvalidParameterTypeException:
             pytest.skip('当前发行版的参数声明不支持整数覆盖 double')
         assert node.release_hold_time == pytest.approx(2.0)
         node.destroy_node()
