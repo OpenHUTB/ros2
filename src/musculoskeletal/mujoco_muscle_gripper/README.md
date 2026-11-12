@@ -50,6 +50,9 @@ docker run --rm --entrypoint bash muscle-gripper:humble -c 'source /opt/ros/humb
 python3 main.py gif --out gif         # 两段动图（抓住 / 打滑）
 python3 main.py manual               # 终端键盘控制
 python3 main.py manual --keys wwwwwwwwwwrrrrq # 重放相同按键并输出真实接触力
+python3 main.py neural --out out/neural # 采样、训练、独立测试和闭环评估
+python3 tools/plot_metrics.py out/metrics.json out
+python3 -m unittest discover -s tests # 24 项测试
 python3 tools/plot_metrics.py out/metrics.json out
 python3 -m unittest discover -s tests # 21 项测试
 ```
@@ -201,6 +204,7 @@ mujoco_muscle_gripper/
 │   ├── neural.py     # 神经网络采样、训练与闭环评价
 │   ├── slam_navigation.py # 移动底座建图、神经规划与控制
 │   └── cli.py
+├── tests/            # 24 项测试
 ├── Dockerfile        # Humble 固定运行环境
 ├── tests/            # 27 项测试（建图导航依赖见 requirements-slam.txt）
 ├── tests/            # 21 项测试

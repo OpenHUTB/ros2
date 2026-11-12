@@ -1,0 +1,60 @@
+<launch>
+  <!-- 任务 3：gmapping 建图 + DQN 导航同步 -->
+  <arg name="airsim_ip" default="172.25.176.1"/>
+  <arg name="vehicle_name" default="Drone_1"/>
+  <arg name="altitude" default="4.0"/>
+  <arg name="goal_x" default="0.0"/>
+  <arg name="goal_y" default="20.0"/>
+
+  <!-- 桥接、180° 累积扫描与 odom->base_link->laser TF；
+       建图时打开 publish_tf，gmapping 才能把 map->odom 接上 -->
+  <include file="$(find uav_lidar_dqn_navigation)/launch/scan.launch">
+    <arg name="airsim_ip" value="$(arg airsim_ip)"/>
+    <arg name="vehicle_name" value="$(arg vehicle_name)"/>
+    <arg name="auto_takeoff" value="true"/>
+    <arg name="takeoff_height" value="$(arg altitude)"/>
+    <arg name="publish_tf" value="true"/>
+    <arg name="scan_bins" value="180"/>
+    <arg name="scan_frame" value="laser"/>
+    <arg name="rate" value="10.0"/>
+    <arg name="accumulate_sec" value="1.0"/>
+  </include>
+
+  <!-- gmapping：180° 稀疏雷达下粒子滤波比 hector 的扫描匹配稳定
+       （hector 在本场景实测会跟丢、地图呈扇形，见模块文档的实验对比） -->
+  <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" output="screen">
+    <param name="base_frame" value="base_link"/>
+    <param name="odom_frame" value="odom"/>
+    <param name="map_frame" value="map"/>
+    <param name="delta" value="0.05"/>
+    <param name="xmin" value="-50.0"/>
+    <param name="ymin" value="-50.0"/>
+    <param name="xmax" value="50.0"/>
+    <param name="ymax" value="50.0"/>
+    <param name="maxUrange" value="39.0"/>
+    <param name="maxRange" value="40.0"/>
+    <param name="particles" value="50"/>
+    <param name="linearUpdate" value="0.2"/>
+    <param name="angularUpdate" value="0.1"/>
+    <param name="temporalUpdate" value="1.0"/>
+    <param name="minimumScore" value="50"/>
+    <remap from="scan" to="/drone/lidar/scan"/>
+  </node>
+
+  <!-- 建图同时跑 DQN 导航策略 -->
+  <node name="dqn_nav" pkg="uav_lidar_dqn_navigation" type="dqn_nav_node.py" output="screen">
+    <param name="goal_x" value="$(arg goal_x)"/>
+    <param name="goal_y" value="$(arg goal_y)"/>
+    <param name="goal_z" value="-$(arg altitude)"/>
+    <param name="verbose" value="true"/>
+    <!-- 建图时降低 DQN 速度，保证粒子滤波有足够重叠的扫描 -->
+    <param name="speed_scale" value="0.5"/>
+  </node>
+
+  <!-- First leg goes north of the wall; the second leg runs east along it. -->
+  <node name="waypoint_goal" pkg="uav_lidar_dqn_navigation"
+        type="waypoint_goal_node.py" output="screen">
+    <param name="altitude" value="$(arg altitude)"/>
+    <rosparam param="waypoints">[[0.0, 20.0], [16.0, 20.0]]</rosparam>
+  </node>
+</launch>
