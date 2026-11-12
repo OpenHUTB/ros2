@@ -837,6 +837,8 @@
 <ul>
 <li class="toctree-l3"><a class="reference internal" href="#nees">关于 NEES</a>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="#71-dvl">7.1 鲁棒 DVL 更新（简单跳变门限）</a>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#8">8. 与已有模块的关系</a>
@@ -1176,6 +1178,99 @@ python3<span class="w"> </span>src/water/rov_mujoco/test/test_ekf.py<span class=
 3 自由度下理想均值为 3，95% 上界 7.815。<strong>调参前 NEES 均值 34.8（只有 12.4% 落在界内），
 说明滤波器过度自信；把过程噪声与量测噪声调到与真实噪声匹配后为 4.19 / 98.4%</strong>。
 这一项比 RMSE 更能说明滤波器是否"可信"。</p>
+<h3 id="71-dvl">7.1 鲁棒 DVL 更新（简单跳变门限）</h3>
+<p>真实 DVL 偶尔会输出"野值"（水声干扰、底跟踪跳变），一次异常速度量测就可能把滤波器带偏。
+本模块提供一个<strong>物理合理性门限</strong>，在更新前检查：</p>
+<ul>
+<li>相邻两次可接受 DVL 量测的速度差 <code>||v_k - v_{k-1}|| &gt; max_dvl_jump</code> → 跳过本次更新；</li>
+<li>量测速度模长 <code>||v_k|| &gt; max_dvl_speed</code> → 跳过本次更新；</li>
+<li>两个门限默认都是 <code>0</code>（关闭），不改变原有行为；被拒绝的次数会累加，并在 ROS 节点里打印告警。</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>默认</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>max_dvl_jump</code></td>
+<td>0.0</td>
+<td>相邻量测跳变门限 (m/s)；0 = 关闭</td>
+</tr>
+<tr>
+<td><code>max_dvl_speed</code></td>
+<td>0.0</td>
+<td>速度模长门限 (m/s)；0 = 关闭</td>
+</tr>
+<tr>
+<td><code>dvl_outlier_ratio</code></td>
+<td>0.0</td>
+<td>仿真注入野值的概率；0 = 关闭</td>
+</tr>
+<tr>
+<td><code>dvl_outlier_scale</code></td>
+<td>2.0</td>
+<td>注入野值的基础幅值 (m/s)</td>
+</tr>
+</tbody>
+</table>
+<p>复现（注入 3% 野值，开启 1.5 m/s 跳变门限）：</p>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>test/test_ekf.py<span class="w"> </span>--duration<span class="w"> </span><span class="m">60</span><span class="w"> </span>--dvl-outlier-ratio<span class="w"> </span><span class="m">0</span>.03<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--dvl-outlier-scale<span class="w"> </span><span class="m">5</span>.0<span class="w"> </span>--max-dvl-jump<span class="w"> </span><span class="m">1</span>.5<span class="w"> </span>--max-dvl-speed<span class="w"> </span><span class="m">1</span>.5<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--out<span class="w"> </span>/tmp/ekf_gate.json
+</code></pre></div>
+<p>也可以直接一键启动仿真并开启门限：</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>rov_mujoco<span class="w"> </span>ekf_nav.launch.py<span class="w"> </span>max_dvl_jump:<span class="o">=</span><span class="m">1</span>.5<span class="w"> </span>max_dvl_speed:<span class="o">=</span><span class="m">1</span>.5
+</code></pre></div>
+<p>实测（60 s，洋流 + 10% 丢包；野值按 3% 概率注入、基础幅值 5 m/s）：</p>
+<table>
+<thead>
+<tr>
+<th>配置</th>
+<th>EKF RMSE</th>
+<th>最大误差</th>
+<th>漂移率</th>
+<th>NEES</th>
+<th>95% 界内</th>
+<th>拒绝次数</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>干净基线（无野值）</td>
+<td>0.0725 m</td>
+<td>0.122 m</td>
+<td>0.45 %</td>
+<td>4.19</td>
+<td>98.4 %</td>
+<td>0</td>
+</tr>
+<tr>
+<td>3% 野值，无门限</td>
+<td>0.1662 m</td>
+<td>0.283 m</td>
+<td>1.12 %</td>
+<td><strong>79.04</strong></td>
+<td>9.9 %</td>
+<td>0</td>
+</tr>
+<tr>
+<td>3% 野值，门限 <code>max_dvl_jump=1.5</code> / <code>max_dvl_speed=1.5</code></td>
+<td><strong>0.0694 m</strong></td>
+<td>0.115 m</td>
+<td>0.43 %</td>
+<td><strong>4.24</strong></td>
+<td>99.9 %</td>
+<td>81</td>
+</tr>
+</tbody>
+</table>
+<p>81 次拒绝约占 2451 次 DVL 量测的 3.3%，与注入比例一致；NEES 从 79.04 回到 4.24，
+说明异常量测没有进入滤波器，协方差一致性也恢复到基线水平。</p>
+<p><img alt="DVL 跳变门限对比" src="../../img/water/ekf_dvl_gate.png"/></p>
 <h2 id="8">8. 与已有模块的关系</h2>
 <ul>
 <li><code>mujoco_sim_node</code>：提供真值与物理仿真，本模块只读 <code>/rov/odom</code> 作为"传感器真值源"；</li>
