@@ -232,3 +232,51 @@ def test_single_station_estimate_off_origin_target():
         out = st.on_los(los)
     assert out["ok"] and out["mode"] == "single"
     assert math.hypot(out["x"] - tgt[0], out["y"] - tgt[1]) < 0.05
+
+
+# --------------------------------------------------------------------------- #
+# 时间同步与坐标系检查（评审指出：视线直接用最近一次里程计姿态，无 stale 保护）
+# --------------------------------------------------------------------------- #
+def test_stale_odom_timestamp_is_rejected():
+    st = GeoState({"max_stamp_skew_s": 0.2})
+    st.on_odom((60.0, 0.0, 80.0), (1.0, 0.0, 0.0, 0.0), stamp_s=10.0)
+    out = st.on_los((0.0, 0.0, -1.0), stamp_s=10.5)
+    assert not out["ok"] and "时间戳" in out["reason"]
+
+
+def test_fresh_timestamps_are_accepted():
+    st = GeoState({"max_stamp_skew_s": 0.2})
+    st.on_odom((60.0, 0.0, 80.0), (1.0, 0.0, 0.0, 0.0), stamp_s=10.0)
+    out = st.on_los((0.0, 0.0, -1.0), stamp_s=10.1)
+    assert out["ok"] and out["mode"] == "accumulating"
+
+
+def test_odom_frame_id_mismatch_is_rejected():
+    st = GeoState({"odom_frame_id": "map", "los_frame_id": "body"})
+    st.on_odom((60.0, 0.0, 80.0), (1.0, 0.0, 0.0, 0.0), frame_id="odom")
+    out = st.on_los((0.0, 0.0, -1.0), frame_id="body")
+    assert not out["ok"] and "坐标系" in out["reason"]
+
+
+def test_los_frame_id_mismatch_is_rejected():
+    st = GeoState({"odom_frame_id": "map", "los_frame_id": "body"})
+    st.on_odom((60.0, 0.0, 80.0), (1.0, 0.0, 0.0, 0.0), frame_id="map")
+    out = st.on_los((0.0, 0.0, -1.0), frame_id="odom")
+    assert not out["ok"] and "坐标系" in out["reason"]
+
+
+def test_matching_frames_and_timestamps_are_accepted():
+    st = GeoState({"odom_frame_id": "map", "los_frame_id": "body",
+                   "max_stamp_skew_s": 0.2})
+    st.on_odom((60.0, 0.0, 80.0), (1.0, 0.0, 0.0, 0.0),
+               stamp_s=10.0, frame_id="map")
+    out = st.on_los((0.0, 0.0, -1.0), stamp_s=10.05, frame_id="body")
+    assert out["ok"]
+
+
+def test_offline_usage_without_timestamps_still_works():
+    """离线（不传时间戳/坐标系）仍能跑，向后兼容。"""
+    st = GeoState()
+    st.on_odom((60.0, 0.0, 80.0), (1.0, 0.0, 0.0, 0.0))
+    out = st.on_los((0.0, 0.0, -1.0))
+    assert out["ok"] and out["mode"] == "accumulating"

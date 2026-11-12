@@ -114,7 +114,7 @@ cd src/air/uav_target_geolocation
 python main.py                 # 解析 600 次 + 闭环 20 架次 × 3 算例，约 45 s
 python main.py --no-sim        # 只跑解析层，秒级
 python main.py --case two_station_shallow
-python -m pytest test/ -q      # 64 passed, 1 skipped
+python -m pytest test/ -q      # 70 passed, 1 skipped
 python tools/make_figures.py   # 重新生成本页配图
 ```
 
@@ -142,9 +142,14 @@ python tools/make_figures.py   # 重新生成本页配图
   视线），像素量化噪声并入 σ 与偏置，不单独建模；
 - 交会只在 z = 0 平面上做，没有利用视线俯仰分量做三维交会；
 - ROS 节点是简化版：站点切换靠 `/target/geo/new_station` 手动触发，视线
-  只做单站打点与逐站累积，不含目标运动模型；
-- 本机为 Windows + Python 3.12/3.13、没有 ROS 2，launch 与 geo_node 链路
-  未实跑，只做了状态机与参数校验（`test_ros_node.py`）；
+  只做单站打点与逐站累积，不含目标运动模型；节点已做时间同步与坐标系
+  检查（`max_stamp_skew_s` / `odom_frame_id` / `los_frame_id`），时间戳
+  偏差过大或 frame_id 不匹配时拒收该帧；
+- 本机为 Windows + Python 3.13、没有 ROS 2，无法本地实跑 launch；CI 里
+  有专门的 ROS 2 Humble job（`ci_uav_target_geolocation.yml` 的 `ros2`），
+  用官方 `ros:humble-desktop` 容器 `colcon build` 后 `ros2 launch` 起
+  geo_node，并跑 `tools/ros2_smoke_test.py` 实测 /uav/odom、/gimbal/los、
+  /target/ground 的话题收发（待仓库 workflow 批准后可见）；
 - 闭环里的外力直接写入 `xfrc_applied` 的力分量（每步改写一次）。MuJoCo 的
   `xfrc_applied` 跨步保留，逐子步累加的写法会让力按子步数叠乘、几秒内
   飞散——`uav_mujoco_sim.apply_wind` 的注释与其行为不一致，本模块没有

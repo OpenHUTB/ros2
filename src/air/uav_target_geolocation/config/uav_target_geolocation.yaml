@@ -19,3 +19,8 @@ geo_node:
     new_station_topic: /target/geo/new_station
     # 地面高度（米，ENU）
     ground_z: 0.0
+    # 视线与里程计时间戳的最大允许偏差（秒），超过则拒收该帧（时间同步保护）
+    max_stamp_skew_s: 0.2
+    # 期望的坐标系（header.frame_id），空串 = 不校验
+    odom_frame_id: ""
+    los_frame_id: ""

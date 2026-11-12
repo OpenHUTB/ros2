@@ -37,6 +37,13 @@ DEFAULTS = {
     "diag_topic": "/target/geo_diag",
     "new_station_topic": "/target/geo/new_station",
     "ground_z": 0.0,
+    # 视线与里程计时间戳的最大允许偏差（秒）：超过则拒收该帧，避免拿
+    # 陈旧里程计姿态去解算新视线（时间同步保护）
+    "max_stamp_skew_s": 0.2,
+    # 期望的坐标系（header.frame_id）：空串 = 不校验。云台视线是机体系，
+    # 里程计是世界系（map/odom），配置后若收到不匹配的 frame_id 直接拒收
+    "odom_frame_id": "",
+    "los_frame_id": "",
 }
 
 
@@ -83,6 +90,10 @@ def node_params(overrides: Optional[dict] = None) -> dict:
         raise ValueError("min_stations_for_fusion 至少为 1")
     if p["ground_z"] > 0.0:
         raise ValueError("ground_z 应该 ≤ 0（ENU 地面在无人机下方）")
+    if p["max_stamp_skew_s"] < 0:
+        raise ValueError("max_stamp_skew_s 不能为负")
+    if not isinstance(p["odom_frame_id"], str) or not isinstance(p["los_frame_id"], str):
+        raise ValueError("odom_frame_id / los_frame_id 必须是字符串")
     return p
 
 
@@ -95,12 +106,14 @@ class GeoState:
                      float(self.p["los_bias_deg"][1]))
         self.pos: Optional[np.ndarray] = None
         self.quat: Optional[np.ndarray] = None
+        self.odom_stamp: Optional[float] = None
+        self.odom_frame: Optional[str] = None
         self.buffer: List[np.ndarray] = []
         self.stations_pos: List[np.ndarray] = []
         self.stations_dir: List[np.ndarray] = []
 
     # ---------------------------------------------------------------- 输入
-    def on_odom(self, pos, quat) -> None:
+    def on_odom(self, pos, quat, stamp_s=None, frame_id=None) -> None:
         p = np.asarray(pos, dtype=float).reshape(-1)
         q = np.asarray(quat, dtype=float).reshape(-1)
         if p.shape != (3,) or q.shape != (4,):
@@ -111,6 +124,8 @@ class GeoState:
         if n < 1e-9:
             raise ValueError("四元数为零")
         self.pos, self.quat = p, q / n
+        self.odom_stamp = stamp_s
+        self.odom_frame = frame_id
 
     def on_new_station(self) -> dict:
         """收尾当前站：平均视线、单站打点、累积交会。"""
@@ -147,16 +162,39 @@ class GeoState:
                    "reason": "站数不足，只有单站估计"}
         return out
 
-    def on_los(self, los_body) -> dict:
+    def on_los(self, los_body, stamp_s=None, frame_id=None) -> dict:
         """收到一帧视线：先按标定扣掉零位偏置，再累积；攒够一批自动收尾。"""
         if self.pos is None or self.quat is None:
             return {"ok": False, "reason": "还没有收到里程计"}
+        reason = self._check_sync(stamp_s, frame_id)
+        if reason is not None:
+            return {"ok": False, "reason": reason}
         d = los_body_to_world(self._debias(los_body), self.quat)
         self.buffer.append(d)
         if len(self.buffer) >= int(self.p["samples_per_station"]):
             return self.on_new_station()
         return {"ok": True, "mode": "accumulating",
                 "n": len(self.buffer)}
+
+    def _check_sync(self, stamp_s=None, frame_id=None) -> Optional[str]:
+        """时间同步与坐标系检查；通过返回 None，否则返回拒收原因。
+
+        两个都是"防御陈旧/错位数据"：视线消息里的时间戳与最近一次里程计
+        时间戳相差超过 ``max_stamp_skew_s``，或 frame_id 与配置的期望值
+        不符时，直接拒收该帧，避免用错位姿态解算并发布看似正常的定位。
+        """
+        if self.p["odom_frame_id"] and self.odom_frame != self.p["odom_frame_id"]:
+            return (f"里程计坐标系不匹配：期望 {self.p['odom_frame_id']!r}，"
+                    f"收到 {self.odom_frame!r}")
+        if self.p["los_frame_id"] and frame_id != self.p["los_frame_id"]:
+            return (f"视线坐标系不匹配：期望 {self.p['los_frame_id']!r}，"
+                    f"收到 {frame_id!r}")
+        if (stamp_s is not None and self.odom_stamp is not None):
+            skew = abs(stamp_s - self.odom_stamp)
+            if skew > float(self.p["max_stamp_skew_s"]):
+                return (f"里程计与视线时间戳偏差 {skew:.3f}s，"
+                        f"超过上限 {self.p['max_stamp_skew_s']}s")
+        return None
 
     def _debias(self, los_body) -> np.ndarray:
         """按标定值反向旋转视线（机体系）。
@@ -212,6 +250,9 @@ def main(args=None) -> int:                     # noqa: C901
         ("diag_topic", DEFAULTS["diag_topic"]),
         ("new_station_topic", DEFAULTS["new_station_topic"]),
         ("ground_z", DEFAULTS["ground_z"]),
+        ("max_stamp_skew_s", DEFAULTS["max_stamp_skew_s"]),
+        ("odom_frame_id", DEFAULTS["odom_frame_id"]),
+        ("los_frame_id", DEFAULTS["los_frame_id"]),
     ])
     gp = lambda name: node.get_parameter(name).value  # noqa: E731
     state = GeoState({
@@ -220,6 +261,9 @@ def main(args=None) -> int:                     # noqa: C901
         "min_stations_for_fusion": int(gp("min_stations_for_fusion")),
         "samples_per_station": int(gp("samples_per_station")),
         "ground_z": float(gp("ground_z")),
+        "max_stamp_skew_s": float(gp("max_stamp_skew_s")),
+        "odom_frame_id": str(gp("odom_frame_id")),
+        "los_frame_id": str(gp("los_frame_id")),
     })
     pub_ground = node.create_publisher(PointStamped, gp("ground_topic"), 10)
     pub_diag = node.create_publisher(String, gp("diag_topic"), 10)
@@ -237,13 +281,19 @@ def main(args=None) -> int:                     # noqa: C901
             pt.point.z = float(gp("ground_z"))
             pub_ground.publish(pt)
 
+    def _to_s(stamp) -> float:
+        """builtin_interfaces/Time → 秒（浮点）。"""
+        return float(stamp.sec) + float(stamp.nanosec) * 1e-9
+
     def _on_odom(msg: Odometry) -> None:
         q = msg.pose.pose.orientation
         p = msg.pose.pose.position
-        state.on_odom((p.x, p.y, p.z), (q.w, q.x, q.y, q.z))
+        state.on_odom((p.x, p.y, p.z), (q.w, q.x, q.y, q.z),
+                      _to_s(msg.header.stamp), msg.header.frame_id)
 
     def _on_los(msg: Vector3Stamped) -> None:
-        _emit(state.on_los((msg.vector.x, msg.vector.y, msg.vector.z)))
+        _emit(state.on_los((msg.vector.x, msg.vector.y, msg.vector.z),
+                           _to_s(msg.header.stamp), msg.header.frame_id))
 
     def _on_new_station(_msg: Empty) -> None:
         _emit(state.on_new_station())

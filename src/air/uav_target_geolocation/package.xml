@@ -15,7 +15,10 @@
   <exec_depend>nav_msgs</exec_depend>
   <exec_depend>launch</exec_depend>
   <exec_depend>launch_ros</exec_depend>
+  <exec_depend>ament_index_python</exec_depend>
   <exec_depend>python3-numpy</exec_depend>
+  <!-- mujoco 是 Python 包（非 rosdep key），运行时由 uav_mujoco_sim 统一
+       提供安装；本包只依赖 uav_mujoco_sim 暴露的仿真/话题接口 -->
   <exec_depend>uav_mujoco_sim</exec_depend>
 
   <test_depend>ament_pytest</test_depend>
