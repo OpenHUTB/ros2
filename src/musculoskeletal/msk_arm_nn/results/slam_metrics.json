@@ -1,0 +1,84 @@
+{
+  "generated": "2026-11-11T13:16:45",
+  "scene": "reach,shelf,draw",
+  "seconds": 0.0,
+  "ate_rmse_m": 0.0,
+  "ate_max_m": 0.0,
+  "final_position_error_m": 0.0,
+  "coverage_mean": 0.8941,
+  "coverage_final": 0.8658,
+  "coverage_drivable": 0.8941,
+  "map_iou_mean": 0.9987,
+  "map_free_iou_mean": 0.9987,
+  "map_obstacle_iou_mean": 0.4113,
+  "iou_definition": "map_iou_mean/map_free_iou_mean are free-space IoU inside the observed region; map_obstacle_iou_mean is the strict cell-level obstacle IoU",
+  "occupied_recall_mean": 1.0,
+  "map_cells": [
+    69,
+    69
+  ],
+  "resolution_m": 0.01,
+  "collisions": 0,
+  "falls": 0,
+  "slam_source": "range_scan_mapper",
+  "controller_source": "range_scan",
+  "scenes": {
+    "reach": {
+      "scene": "reach",
+      "resolution_m": 0.01,
+      "map_cells": [
+        69,
+        69
+      ],
+      "coverage": 0.9227,
+      "occupied_cells": 0,
+      "ground_truth_obstacle_cells": 0,
+      "iou": 1.0,
+      "free_iou": 1.0,
+      "occupied_precision": 1.0,
+      "occupied_recall": 1.0,
+      "occupied_iou": 1.0,
+      "source": "range_scan_mapper"
+    },
+    "shelf": {
+      "scene": "shelf",
+      "resolution_m": 0.01,
+      "map_cells": [
+        69,
+        69
+      ],
+      "coverage": 0.8937,
+      "occupied_cells": 7,
+      "ground_truth_obstacle_cells": 12,
+      "iou": 0.9986,
+      "free_iou": 0.9986,
+      "occupied_precision": 0.1429,
+      "occupied_recall": 1.0,
+      "occupied_iou": 0.1429,
+      "source": "range_scan_mapper"
+    },
+    "draw": {
+      "scene": "draw",
+      "resolution_m": 0.01,
+      "map_cells": [
+        69,
+        69
+      ],
+      "coverage": 0.8658,
+      "occupied_cells": 11,
+      "ground_truth_obstacle_cells": 24,
+      "iou": 0.9976,
+      "free_iou": 0.9976,
+      "occupied_precision": 0.0909,
+      "occupied_recall": 1.0,
+      "occupied_iou": 0.0909,
+      "source": "range_scan_mapper"
+    }
+  },
+  "odometry_only": {
+    "scene": "reach,shelf,draw",
+    "ate_rmse_m": 0.0,
+    "final_position_error_m": 0.0,
+    "scenes": {}
+  }
+}
