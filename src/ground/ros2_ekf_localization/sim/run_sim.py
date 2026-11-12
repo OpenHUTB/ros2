@@ -95,11 +95,15 @@ def summarize(mode: str, pos_err, head_err, nees) -> dict:
     }
 
 
-def plot(traj_name: str, results: dict, truth, traj, pos_rate: float, out: str) -> None:
-    import matplotlib
+def plot(traj_name: str, results: dict, truth, traj, pos_rate: float, out: str) -> bool:
+    """出图；matplotlib 属于可选依赖，没装时返回 False 由调用方提示。"""
+    try:
+        import matplotlib
 
-    matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+    except ImportError:
+        return False
 
     fig, axes = plt.subplots(1, 3, figsize=(16.5, 4.8))
     colors = {"odom": "#d62728", "ekf_imu": "#ff7f0e", "ekf_full": "#2ca02c"}
@@ -147,6 +151,7 @@ def plot(traj_name: str, results: dict, truth, traj, pos_rate: float, out: str) 
     os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
     fig.savefig(out, dpi=140)
     plt.close(fig)
+    return True
 
 
 def main() -> int:
@@ -176,7 +181,7 @@ def main() -> int:
     out = args.out or os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "..", "results", f"{args.traj}.png"
     )
-    plot(args.traj, results, truth, traj, args.pos_rate, out)
+    drawn = plot(args.traj, results, truth, traj, args.pos_rate, out)
 
     print(f"轨迹={args.traj}  位置观测={args.pos_rate:g} Hz  种子={args.seed}  步数={len(traj)}")
     print("-" * 64)
@@ -187,7 +192,10 @@ def main() -> int:
         nees_s = "—" if not np.isfinite(nees) else f"{nees:.2f}"
         print(f"{mode:<10}{m['final_pos_err']:>12.3f}{m['max_pos_err']:>12.3f}"
               f"{m['rms_pos_err']:>10.3f}{m['final_head_err']:>14.4f}{nees_s:>8}")
-    print(f"  图表已保存: {os.path.abspath(out)}")
+    if drawn:
+        print(f"  图表已保存: {os.path.abspath(out)}")
+    else:
+        print("  未安装 matplotlib，跳过出图（指标表照常输出）")
     return 0
 
 
