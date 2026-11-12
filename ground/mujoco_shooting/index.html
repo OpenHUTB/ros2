@@ -336,9 +336,21 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#_5">控制流程</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_6">测试</a>
+<li class="toctree-l2"><a class="reference internal" href="#_6">弹道解算、风偏补偿与成绩报告</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#_7">弹道模型</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_7">说明</a>
+<li class="toctree-l3"><a class="reference internal" href="#82-ms2">为什么原来等效重力只有 8.2 m/s²</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_8">成绩统计与逐发记录</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_9">实测</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_10">测试</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_11">说明</a>
 </li>
 </ul>
 </li>
@@ -1089,7 +1101,10 @@ python3<span class="w"> </span>src/ground/mujoco_shooting/main.py
 <span class="c1"># 3. 无头跑一局：不开窗口，跑完打印结果，返回码 0 = 全部击倒</span>
 python3<span class="w"> </span>src/ground/mujoco_shooting/main.py<span class="w"> </span>--headless<span class="w"> </span>--max-steps<span class="w"> </span><span class="m">12000</span>
 
-<span class="c1"># 4. Linux 无显示服务（WSL2 / 服务器）时，给无头模式指定软件渲染</span>
+<span class="c1"># 4. 无头 + 侧风 + 成绩单：风加速度 (ax, ay)，逐发记录写 CSV</span>
+python3<span class="w"> </span>src/ground/mujoco_shooting/main.py<span class="w"> </span>--headless<span class="w"> </span>--wind<span class="w"> </span><span class="m">0</span>.8<span class="w"> </span><span class="m">0</span>.3<span class="w"> </span>--report<span class="w"> </span>out.csv
+
+<span class="c1"># 5. Linux 无显示服务（WSL2 / 服务器）时，给无头模式指定软件渲染</span>
 <span class="nv">MUJOCO_GL</span><span class="o">=</span>osmesa<span class="w"> </span>python3<span class="w"> </span>src/ground/mujoco_shooting/main.py<span class="w"> </span>--headless
 </code></pre></div>
 <p>安装后可以用这个命令检查是否装好：
@@ -1115,12 +1130,20 @@ python3<span class="w"> </span>src/ground/mujoco_shooting/main.py<span class="w"
 <td>纯控制逻辑：选靶、P-D 瞄准、弹道初速、击倒判定（不依赖 mujoco，可单测）</td>
 </tr>
 <tr>
+<td><code>src/ground/mujoco_shooting/ballistics.py</code></td>
+<td>弹道反解（固定飞行时间 + 恒定风加速度）与成绩统计（纯标准库）</td>
+</tr>
+<tr>
 <td><code>src/ground/mujoco_shooting/main.py</code></td>
-<td>状态机与两种跑法（viewer / headless）</td>
+<td>状态机与两种跑法（viewer / headless），含 <code>--wind / --report</code></td>
 </tr>
 <tr>
 <td><code>tests/test_mujoco_shooting_local.py</code></td>
 <td>12 项离线测试：纯逻辑 + 无头物理冒烟</td>
+</tr>
+<tr>
+<td><code>tests/test_mujoco_shooting_ballistics.py</code></td>
+<td>18 项离线测试：弹道解算 + 成绩统计（不需要 mujoco）</td>
 </tr>
 </tbody>
 </table>
@@ -1129,17 +1152,85 @@ python3<span class="w"> </span>src/ground/mujoco_shooting/main.py<span class="w"
 <li><strong>扫描</strong>：开场 0.8 s 炮塔左右扫场（绿色激光示意）；</li>
 <li><strong>选靶</strong>：在还立着的靶子里，选与当前炮塔朝向夹角最小的一个；</li>
 <li><strong>瞄准</strong>：P-D 控制炮塔速度，角度与角速度都进入死区才开火；</li>
-<li><strong>发射</strong>：固定飞行时间 0.45 s，水平速度 = 距离 / 飞行时间，垂直速度按重力补偿；打偏过的靶子下一发力度 ×1.25；</li>
+<li><strong>发射</strong>：固定飞行时间 0.45 s，水平速度 = 距离 / 飞行时间（含风偏补偿），垂直速度按重力补偿；打偏过的靶子下一发力度 ×1.25；</li>
 <li><strong>判定</strong>：靶子铰链角超过 0.25 rad 记为击倒；全部击倒 / 12 发用尽 / 超时则结束。</li>
 </ol>
-<h2 id="_6">测试</h2>
-<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>tests/test_mujoco_shooting_local.py
+<h2 id="_6">弹道解算、风偏补偿与成绩报告</h2>
+<h3 id="_7">弹道模型</h3>
+<p>发射时不再把抛物线写死在循环里，而是解一个"固定飞行时间"的反问题（<code>ballistics.py</code>）：</p>
+<div class="highlight"><pre><span></span><code>vx = (x − x0)/T − ½·ax·T
+vy = (y − y0)/T − ½·ay·T
+vz = (z − z0 + ½·g·T²)/T
+</code></pre></div>
+<p><code>T</code> 固定 0.45 s，距离越远初速度越大；风 <code>(ax, ay)</code> 作为<strong>恒定水平加速度</strong>参与解算，
+仿真里每步给飞行中的小球加 <code>m·a</code> 的外力，因此有风时也能落回靶心。</p>
+<h3 id="82-ms2">为什么原来等效重力只有 8.2 m/s²</h3>
+<p><code>scene.py</code> 的 <code>&lt;default&gt;</code> 给所有关节设了 <code>damping="0.05" armature="0.02"</code>，小球原来用的
+<code>&lt;freejoint&gt;</code> 会一并继承：</p>
+<ul>
+<li><code>armature</code> 把转动/平动惯量从 0.1 kg 抬到 0.12 kg，重力加速度变成 <code>0.1·g / 0.12 ≈ 8.2 m/s²</code>；</li>
+<li><code>damping</code> 让小球边飞边减速，水平速度每 0.1 s 掉约 0.05 m/s。</li>
+</ul>
+<p>结果是解析弹道和仿真对不上（打远处会系统性偏低）。现在 12 个球的自由关节显式写成
+<code>&lt;joint type="free" damping="0" armature="0"/&gt;</code>，实心球本来就该没有关节阻尼，弹道与解析式一致。</p>
+<h3 id="_8">成绩统计与逐发记录</h3>
+<p>无头模式现在会输出成绩单（<code>score_shots</code>）：</p>
+<div class="highlight"><pre><span></span><code>==============================================
+打靶成绩
+==============================================
+  结束原因    : 全部击倒
+  发射发数    : 9
+  击倒靶数    : 6 / 6
+  命中率      : 66.7%
+  一发一个靶  : 3 个
+  平均用弹    : 1.50 发/靶
+  耗时        : 11.94 s
+  风加速度    : (0.80, 0.30) m/s²
+==============================================
+</code></pre></div>
+<p><code>--report out.csv</code> 会把逐发记录写成 CSV（UTF-8 BOM，Excel 直接打开）：
+<code>shot / sim_time_s / target / distance_m / speed_m_s / hit</code>，末尾附一行汇总。</p>
+<h3 id="_9">实测</h3>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>发射</th>
+<th>击倒</th>
+<th>命中率</th>
+<th>平均用弹</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>无风</td>
+<td>9</td>
+<td>6 / 6</td>
+<td>66.7%</td>
+<td>1.50 发/靶</td>
+</tr>
+<tr>
+<td>风 (0.8, 0.3) m/s²</td>
+<td>9</td>
+<td>6 / 6</td>
+<td>66.7%</td>
+<td>1.50 发/靶</td>
+</tr>
+</tbody>
+</table>
+<p>自由空间单发验证（风 3.0 m/s²、飞行 0.45 s）：不做补偿落点偏 <strong>0.32 m</strong>，补偿后只偏 <strong>0.045 m</strong>。</p>
+<h2 id="_10">测试</h2>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>tests/test_mujoco_shooting_local.py<span class="w">        </span><span class="c1"># 12 项：纯逻辑 + 无头物理</span>
+python3<span class="w"> </span>tests/test_mujoco_shooting_ballistics.py<span class="w">   </span><span class="c1"># 18 项：弹道解算 + 成绩统计（不需要 mujoco）</span>
 </code></pre></div>
 <p>没装 mujoco 时只跑纯逻辑部分（选靶、瞄准、弹道补偿）；装了则额外跑一局无头物理，断言 12 发内 6 个靶全部倒下。</p>
 <p>本机实测（Windows + Python 3.13 + mujoco 3.17）：</p>
-<div class="highlight"><pre><span></span><code>结果: {'steps': 5974, 'shots': 9, 'down': 6, 'targets': 6, 'all_down': True, 'time_s': 11.95}
+<div class="highlight"><pre><span></span><code>结果: {'shots': 9, 'downed': 6, 'hit_rate': 0.667, 'first_shot_hits': 3,
+       'avg_shots_per_down': 1.5, 'duration': 11.948, 'finished': True,
+       'reason': '全部击倒', 'steps': 5974, 'targets': 6, 'all_down': True,
+       'time_s': 11.95, 'wind': (0.0, 0.0), 'down': 6}
 </code></pre></div>
-<h2 id="_7">说明</h2>
+<h2 id="_11">说明</h2>
 <p>本作业的代码与文档在编写过程中使用了 AI 大模型辅助，本人已核对并确认提交内容，对提交内容负责。</p></div>
 </div>
 </div><footer>

@@ -196,17 +196,29 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#_11">六、冗余自由度</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_12">七、运行结果</a>
+<li class="toctree-l2"><a class="reference internal" href="#ik">七、分层任务优先级全身 IK</a>
 <ul>
-<li class="toctree-l3"><a class="reference internal" href="#_13">末端画圆跟踪</a>
+<li class="toctree-l3"><a class="reference internal" href="#_12">四种任务</a>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#_14">动图</a>
+<li class="toctree-l3"><a class="reference internal" href="#_13">场景一：姿态保持</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_14">场景二：限位规避</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_15">实现上的一个坑</a>
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_15">八、调试中踩的坑</a>
+<li class="toctree-l2"><a class="reference internal" href="#_16">八、运行结果</a>
 <ul>
-<li class="toctree-l3"><a class="reference internal" href="#_16">坑一：默认初值给了全零，正好落在奇异位形</a>
+<li class="toctree-l3"><a class="reference internal" href="#_17">末端画圆跟踪</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_18">动图</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_19">九、调试中踩的坑</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#_20">坑一：默认初值给了全零，正好落在奇异位形</a>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#3">坑二：平面机构的 3 维雅可比恒奇异</a>
 </li>
@@ -214,13 +226,13 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_17">九、运行方法</a>
+<li class="toctree-l2"><a class="reference internal" href="#_21">十、运行方法</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#93">十、测试覆盖（93 个）</a>
+<li class="toctree-l2"><a class="reference internal" href="#125">十一、测试覆盖（125 个）</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_18">十一、文件结构</a>
+<li class="toctree-l2"><a class="reference internal" href="#_22">十二、文件结构</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_19">十二、已知限制</a>
+<li class="toctree-l2"><a class="reference internal" href="#_23">十三、已知限制</a>
 </li>
 </ul>
 </li>
@@ -1302,8 +1314,131 @@ Jw_i = z_i
 说明末端确实没有被移动，而关节角被调整了。</p>
 <p>配套的还有关节限位代价函数（双曲形式，越靠近限位代价越大），梯度可以直接
 投到零空间里做次级任务。</p>
-<h2 id="_12">七、运行结果</h2>
-<h3 id="_13">末端画圆跟踪</h3>
+<h2 id="ik">七、分层任务优先级全身 IK</h2>
+<p>前六节解的都是"单个末端任务"：给一个位姿，反解一组关节角。真实人形机器人上
+往往同时要求：手要到位、腕姿态别歪、关节别贴限位。这些目标会打架，简单加权
+求和（<code>w₁·e₁ + w₂·e₂</code>）权重很难调——权重大了末端不准，权重小了次级目标形同
+虚设。</p>
+<p>做法是把任务按优先级排成栈，<strong>高优先级的结果不允许被低优先级破坏</strong>：</p>
+<div class="highlight"><pre><span></span><code>Δq = J₁⁺e₁ + N₁·J₂⁺e₂ + N₁N₂·J₃⁺e₃ + …
+N_i = I − J_i⁺J_i ,   J_i·N_i = 0
+</code></pre></div>
+<p>实现（<code>scripts/whole_body_ik.py</code>）里不显式求伪逆，沿用阻尼最小二乘，并递推
+更新投影矩阵：</p>
+<div class="highlight"><pre><span></span><code>N_i = N_{i−1} − N_{i−1}Jᵢᵀ(JᵢN_{i−1}Jᵢᵀ + λ²I)⁻¹JᵢN_{i−1}
+</code></pre></div>
+<h3 id="_12">四种任务</h3>
+<table>
+<thead>
+<tr>
+<th>任务</th>
+<th>维数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PositionTask</code></td>
+<td>3</td>
+<td>末端到目标点</td>
+</tr>
+<tr>
+<td><code>PoseTask</code></td>
+<td>6</td>
+<td>位置 + 旋转向量（姿态乘 0.3 折算到米量级）</td>
+</tr>
+<tr>
+<td><code>PostureTask</code></td>
+<td>n</td>
+<td>关节空间，把关节拉向参考位形</td>
+</tr>
+<tr>
+<td><code>LimitAvoidanceTask</code></td>
+<td>n</td>
+<td>沿限位代价负梯度回退，单步限幅</td>
+</tr>
+</tbody>
+</table>
+<p>关节空间任务（雅可比是单位阵）不走阻尼公式：那会把零空间之外的分量除以
+λ²，数值上直接爆炸。</p>
+<h3 id="_13">场景一：姿态保持</h3>
+<p>7 自由度手臂做 3 维位置任务，零空间 4 维，让冗余关节回到参考位形：</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>单任务</th>
+<th>全身 IK</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>末端误差</td>
+<td>5.90e-11 m</td>
+<td><strong>1.05e-12 m</strong></td>
+</tr>
+<tr>
+<td><code>\|q − q_ref\|</code></td>
+<td>0.5316</td>
+<td><strong>0.4462</strong></td>
+</tr>
+<tr>
+<td>迭代次数</td>
+<td>4</td>
+<td>9</td>
+</tr>
+</tbody>
+</table>
+<p>末端精度没有牺牲，离参考位形近了 16%——这是在零空间里完成的。</p>
+<p><img alt="姿态偏差" src="../../img/humanoid/whole_body_ik/wb_posture_compare.png"/></p>
+<h3 id="_14">场景二：限位规避</h3>
+<p>肘角 2.45 rad（限位上限 2.6），末端还要再走 5 cm：</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>单任务</th>
+<th>全身 IK</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>末端误差</td>
+<td>2.03e-10 m</td>
+<td>1.43e-09 m</td>
+</tr>
+<tr>
+<td>最小限位裕度</td>
+<td>0.018</td>
+<td><strong>0.254</strong></td>
+</tr>
+<tr>
+<td>限位代价</td>
+<td>0.861</td>
+<td><strong>0.000</strong></td>
+</tr>
+<tr>
+<td>肘角 q3</td>
+<td>2.577</td>
+<td>2.270</td>
+</tr>
+</tbody>
+</table>
+<p>末端误差都在 1e-9 量级，但肘关节从"贴着限位"退回到安全区。</p>
+<p><img alt="限位裕度" src="../../img/humanoid/whole_body_ik/wb_limit_margin.png"/></p>
+<h3 id="_15">实现上的一个坑</h3>
+<p>投影矩阵的阻尼必须<strong>小</strong>（<code>_PROJ_DAMPING = 1e-6</code>），步长的阻尼可以大。最初
+两者共用自适应 λ，奇异位形处 λ 涨到 0.2，零空间"漏"了，次级任务开始改主
+任务——2R 平面臂加姿态任务后，主任务误差卡在 0.02 m 下不去。把投影阻尼
+拆出来之后就正常了（约 3 倍差距：0.02 m → 1e-9 m）。</p>
+<p><strong>重构时注意</strong>：这两个 λ 不能合并。<code>tests/test_whole_body_ik.py</code> 里的
+<code>TestPlanarChain::test_no_null_space_for_posture</code> 就是专门钉住这个回归的
+用例——把 <code>_PROJ_DAMPING</code> 改回共用自适应 λ，它会立刻失败。</p>
+<p>演示：</p>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>scripts/demo_whole_body.py
+</code></pre></div>
+<h2 id="_16">八、运行结果</h2>
+<h3 id="_17">末端画圆跟踪</h3>
 <p>7 自由度手臂的末端沿半径 0.12 m 的<strong>竖直圆</strong>（x-z 平面）走一圈，共 25 个
 目标点，每个点以上一个点的解作为初值：</p>
 <table>
@@ -1333,12 +1468,12 @@ Jw_i = z_i
 不经过这个位形，平均只要 3 次迭代。</p>
 <p><img alt="跟踪误差" src="../../img/humanoid/whole_body_ik/ik_convergence.png"/></p>
 <p><img alt="迭代次数" src="../../img/humanoid/whole_body_ik/ik_iterations.png"/></p>
-<h3 id="_14">动图</h3>
+<h3 id="_18">动图</h3>
 <p><img alt="末端画圆" src="../../img/humanoid/whole_body_ik/ik_circle.gif"/></p>
 <p>蓝线是连杆、黑点是关节、红圈是末端、绿十字是当前目标，浅绿色一圈是整条
 目标轨迹、浅红色是末端走过的路径。末端始终压在目标轨迹上。</p>
-<h2 id="_15">八、调试中踩的坑</h2>
-<h3 id="_16">坑一：默认初值给了全零，正好落在奇异位形</h3>
+<h2 id="_19">九、调试中踩的坑</h2>
+<h3 id="_20">坑一：默认初值给了全零，正好落在奇异位形</h3>
 <p>一开始 <code>solve_position_ik</code> 的缺省初值是全零。对 7 自由度手臂来说，全零
 意味着<strong>完全伸直</strong>，而肘关节限位是 (0, 2.6)——弯肘反而让 x 方向误差变大，
 一阶迭代推不动。</p>
@@ -1353,11 +1488,12 @@ Jw_i = z_i
 实现 3 维任务（平面内 2 个位置 + 绕 z 的 1 个姿态），6 维误差里有一半根本
 不可达——不是算法的问题，是任务提得超出了机构能力。</p>
 <p>改成用 7 自由度手臂测，38 次迭代收敛到 1.28e-11。</p>
-<h2 id="_17">九、运行方法</h2>
+<h2 id="_21">十、运行方法</h2>
 <div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>src/humanoid/whole_body_ik
 python3<span class="w"> </span>main.py<span class="w">            </span><span class="c1"># 完整演示</span>
 python3<span class="w"> </span>main.py<span class="w"> </span>--quick<span class="w">    </span><span class="c1"># 跳过画圆</span>
 python3<span class="w"> </span>main.py<span class="w"> </span>--gif<span class="w">      </span><span class="c1"># 生成动图（需 pillow）</span>
+python3<span class="w"> </span>scripts/demo_whole_body.py<span class="w">   </span><span class="c1"># 全身 IK：姿态保持 + 限位规避</span>
 ./main.sh<span class="w">                  </span><span class="c1"># 等价的 shell 入口</span>
 </code></pre></div>
 <p>测试：</p>
@@ -1368,7 +1504,7 @@ python3<span class="w"> </span>-m<span class="w"> </span>unittest<span class="w"
 <div class="highlight"><pre><span></span><code>roslaunch<span class="w"> </span>whole_body_ik<span class="w"> </span>main.launch
 roslaunch<span class="w"> </span>whole_body_ik<span class="w"> </span>quick.launch
 </code></pre></div>
-<h2 id="93">十、测试覆盖（93 个）</h2>
+<h2 id="125">十一、测试覆盖（125 个）</h2>
 <table>
 <thead>
 <tr>
@@ -1453,6 +1589,31 @@ roslaunch<span class="w"> </span>whole_body_ik<span class="w"> </span>quick.laun
 <td>2</td>
 <td>7 自由度收敛、姿态维度校验</td>
 </tr>
+<tr>
+<td>全身 IK：投影矩阵</td>
+<td>4</td>
+<td><code>J·N≈0</code>、幂等、零空间维数、单位阵任务使投影归零</td>
+</tr>
+<tr>
+<td>全身 IK：任务</td>
+<td>11</td>
+<td>维数、误差方向、姿态权重、限幅、异常输入</td>
+</tr>
+<tr>
+<td>全身 IK：求解器</td>
+<td>9</td>
+<td>收敛性、确定性、参数校验、不可达目标</td>
+</tr>
+<tr>
+<td>全身 IK：优先级</td>
+<td>6</td>
+<td>主任务不被破坏、姿态收敛、顺序生效、限位规避</td>
+</tr>
+<tr>
+<td>全身 IK：平面链</td>
+<td>2</td>
+<td>2R 无冗余场景不退化</td>
+</tr>
 </tbody>
 </table>
 <p>其中几条"证明性质"的测试：</p>
@@ -1464,7 +1625,7 @@ roslaunch<span class="w"> </span>whole_body_ik<span class="w"> </span>quick.laun
 <li><code>test_dls_dq_bounded_near_singularity</code> —— DLS 步长反而变小</li>
 <li><code>test_projection_does_not_move_end_effector</code> —— 零空间投影后 <code>|J·Δq| &lt; 1e-6</code></li>
 </ul>
-<h2 id="_18">十一、文件结构</h2>
+<h2 id="_22">十二、文件结构</h2>
 <div class="highlight"><pre><span></span><code>src/humanoid/whole_body_ik/
 ├── package.xml / CMakeLists.txt / setup.py
 ├── .gitignore               忽略 demo_out 与 __pycache__
@@ -1480,15 +1641,18 @@ roslaunch<span class="w"> </span>whole_body_ik<span class="w"> </span>quick.laun
 │   ├── kinematics.py        关节 / 链 / 正解 / 雅可比
 │   ├── ik_solver.py         三种逆解 + 自适应阻尼
 │   ├── manipulability.py    可操作性 / 奇异值 / 椭球
+│   ├── whole_body_ik.py     分层任务优先级全身 IK
+│   ├── demo_whole_body.py   全身 IK 演示（姿态保持 / 限位规避）
 │   ├── simple_plot.py       PNG 折线图
 │   ├── animate.py           线框动图
 │   └── main.py              真正的入口（main.* 约定，roslaunch 用）
 ├── test/test_ik.py
+├── test/test_whole_body_ik.py
 └── README.md
 </code></pre></div>
 <p>图片放在 <code>docs/img/humanoid/whole_body_ik/</code>，文档放在 <code>docs/humanoid/whole_body_ik.md</code>，
 与 <code>humanoid_push_recovery</code> 等模块一致。</p>
-<h2 id="_19">十二、已知限制</h2>
+<h2 id="_23">十三、已知限制</h2>
 <ul>
 <li>逆解是<strong>局部</strong>方法，收敛依赖初值。默认给限位中点，但目标远离当前位形时
   可能落到不同的关节解（2R 的肘上/肘下两组解就是典型例子）</li>
@@ -1496,6 +1660,9 @@ roslaunch<span class="w"> </span>whole_body_ik<span class="w"> </span>quick.laun
 <li>没有考虑碰撞，关节限位只在关节空间夹取</li>
 <li>可操作性指标用的是标准 Yoshikawa 定义，没有做尺度归一化（位置和姿态
   量纲不同，6 维指标需要谨慎解读）</li>
+<li>全身 IK 的优先级是<strong>逐任务投影</strong>的近似实现：阻尼伪逆让零空间只是近似
+  正交（<code>|J·N| ~ 1e-8</code>），任务层数多了精度会累积下降；冲突剧烈时低优先级
+  任务会被压成"受限最优"而不是完全满足</li>
 </ul></div>
 </div>
 </div><footer>
