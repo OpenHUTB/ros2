@@ -84,6 +84,7 @@ nav:
     - 10. Turtlebot3 Gazebo键盘控制: 'chapter/turtlebot3_gazebo_control.md'
 
 - 人形机器人:
+    - 具身人形物理仿真与平衡行走控制: './humanoid/embodied_humanoid_control.md'
     - 关节 Stribeck 摩擦辨识与前馈补偿: './humanoid/joint_friction_identification.md'
     - 人形机器人基础: './humanoid/humanoid_basics.md'
     - 双臂搬运负载的神经网络平衡控制: './humanoid/humanoid_carry_payload_nn.md'
