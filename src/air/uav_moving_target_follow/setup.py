@@ -28,7 +28,6 @@ setup(
                 " 移动地面目标的后方等距跟随：截获预测、standoff 参考生成、"
                 "MuJoCo 闭环验证。",
     license="MIT",
-    tests_require=["pytest"],
     entry_points={
         "console_scripts": [
             "main = uav_moving_target_follow.cli:main",
