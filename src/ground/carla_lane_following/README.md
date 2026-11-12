@@ -24,7 +24,8 @@
 ## 4. 安装
 
 ```bat
-python -m pip install D:\hutb\PythonAPI\carla\dist\hutb-2.10.1-cp310-cp310-win_amd64.whl
+# 下面两个路径是示例，按你的 OpenHUTB 安装位置替换（也可设 HUTB_ROOT 环境变量）
+python -m pip install %HUTB_ROOT%\PythonAPI\carla\dist\hutb-2.10.1-cp310-cp310-win_amd64.whl
 python -m pip install numpy matplotlib pyyaml pillow
 ```
 
@@ -32,7 +33,7 @@ python -m pip install numpy matplotlib pyyaml pillow
 
 ```bat
 :: 终端 1
-D:\hutb\CarlaUE4.exe Town10HD_Opt -windowed -carla-rpc-port=2000
+%HUTB_ROOT%\CarlaUE4.exe Town10HD_Opt -windowed -carla-rpc-port=2000
 
 :: 终端 2
 cd src\ground\carla_lane_following

@@ -15,7 +15,7 @@ pick_python() {
 
 if ! PY=$(pick_python); then
     echo "[错误] 没有任何 Python 能 import carla。请先安装客户端 wheel："
-    echo "       pip install D:\\hutb\\PythonAPI\\carla\\dist\\hutb-2.10.1-cp310-cp310-win_amd64.whl"
+    echo "       pip install ${HUTB_ROOT:-<OpenHUTB 安装目录>}/PythonAPI/carla/dist/hutb-2.10.1-cp310-cp310-win_amd64.whl"
     exit 1
 fi
 
