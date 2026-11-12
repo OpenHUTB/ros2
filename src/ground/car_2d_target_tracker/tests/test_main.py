@@ -58,6 +58,46 @@ class CarTest(unittest.TestCase):
             car.auto_step(1.0 / 60.0, 400.0, 200.0)
         self.assertEqual(car.collisions, 1)
 
+    def test_escape_gets_around_obstacle_blocking_the_target(self):
+        """回归：障碍正压在"车→目标"连线上时，必须绕过去，而不是贴着墙原地打转。
+
+        旧行为：撞上后 ``v = 0``、只按最大角速度原地转。实测该场景 30 s 里
+        95.6% 的时间速度低于 5 px/s，末距始终 440 px，永远到不了目标。
+        """
+        obstacle = [(460.0, 300.0, 90.0)]      # 正压在 (120,300) → (800,300) 中间
+        with mock.patch.object(main, "OBSTACLES", obstacle):
+            car = main.Car(120.0, 300.0, 0.0)
+            dt = 1.0 / 60.0
+            arrived_at = None
+            slow_frames = 0
+            frames = 0
+            for i in range(int(30.0 / dt)):
+                arrived = car.auto_step(dt, 800.0, 300.0)
+                frames += 1
+                if abs(car.v) < 5.0:
+                    slow_frames += 1
+                if arrived:
+                    arrived_at = (i + 1) * dt
+                    break
+            self.assertIsNotNone(arrived_at, "绕不过障碍：30 s 内没到达目标")
+            self.assertLess(arrived_at, 15.0, "绕行太慢：%.2f s" % arrived_at)
+            # 也不能靠"一直不动"混过去：卡死时间占比要明显低于旧实现的 95.6%
+            self.assertLess(slow_frames / max(1, frames), 0.40)
+
+    def test_escape_follows_obstacle_surface_not_into_it(self):
+        """绕行时车不能穿进障碍里：与最近障碍的间隙始终 >= 0（容差 1e-6）。"""
+        obstacle = [(460.0, 300.0, 90.0)]
+        with mock.patch.object(main, "OBSTACLES", obstacle):
+            car = main.Car(120.0, 300.0, 0.0)
+            dt = 1.0 / 60.0
+            worst = float("inf")
+            for _ in range(int(20.0 / dt)):
+                car.auto_step(dt, 800.0, 300.0)
+                ox, oy, r = obstacle[0]
+                gap = math.hypot(car.x - ox, car.y - oy) - r - main.CAR_RADIUS
+                worst = min(worst, gap)
+            self.assertGreaterEqual(worst, -1e-6, "车穿进了障碍：gap=%.4f px" % worst)
+
     def test_manual_collision_counts_once(self):
         car = main.Car(254.5, 200.0, 0.0)
         keys = {k: False for k in (main.pygame.K_w, main.pygame.K_a,
