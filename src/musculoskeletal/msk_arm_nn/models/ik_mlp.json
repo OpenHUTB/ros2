@@ -1,0 +1,24 @@
+{
+  "architecture": [
+    5,
+    96,
+    96,
+    2
+  ],
+  "batch": 64,
+  "epochs": 60,
+  "ik_mae_deg": 0.6047,
+  "ik_mae_rad": 0.01055,
+  "ik_max_deg": 9.2107,
+  "input": "target (x, y, r, sin, cos), normalised",
+  "lr": 0.002,
+  "model": "ik_mlp",
+  "output": "(q1/Q1_SCALE, q2/Q2_SCALE)",
+  "reachable_targets_mae_deg": 0.5652,
+  "samples": 12007,
+  "scene_targets_mae_deg": 0.6067,
+  "seconds": 68.78,
+  "target_deg": 2.0,
+  "task": "inverse kinematics: target position -> (q1, q2), elbow-up",
+  "val_samples": 1801
+}

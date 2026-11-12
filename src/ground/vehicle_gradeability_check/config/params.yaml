@@ -1,0 +1,17 @@
+vehicle_gradeability_check:
+  ros__parameters:
+    mass_kg: 1500.0
+    gravity: 9.81
+    crr: 0.012
+    cda: 0.72
+    air_density: 1.225
+    max_drive_force_n: 4500.0
+    friction_coef: 0.6
+    slope_timeout_s: 1.0
+    speed_timeout_s: 1.0
+    output_csv: /tmp/vehicle_gradeability_check_runtime.csv
+
+vehicle_gradeability_demo_sim:
+  ros__parameters:
+    rate_hz: 20.0
+    duration_s: 10.0
