@@ -1,0 +1,6 @@
+friction_sim:
+  ros__parameters:
+    seed: 0
+friction_identifier:
+  ros__parameters:
+    min_samples: 8

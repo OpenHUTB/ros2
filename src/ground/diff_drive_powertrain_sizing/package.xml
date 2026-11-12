@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>diff_drive_powertrain_sizing</name>
+  <version>0.1.0</version>
+  <description>
+    差速底盘驱动系统选型核算：滚动/坡度/加速/风阻阻力，折算轮边转矩、轮速与功率，对比直接驱动与减速箱方案。纯标准库实现，不依赖 rclpy。
+  </description>
+  <maintainer email="328919000+Hilin-67@users.noreply.github.com">Hilin-67</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>launch</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

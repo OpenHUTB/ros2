@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>semi_active_suspension</name>
+  <version>0.1.0</version>
+  <description>
+    半主动悬架车身姿态控制仿真：
+    7 自由度整车垂向模型（车身垂向/俯仰/侧倾 + 四个非簧载质量），
+    用天棚 + 地棚混合阻尼律在线调节四个减振器，对比过减速带、
+    急刹点头、过弯侧倾与 ISO 8608 C 级随机路面四个工况。
+  </description>
+  <maintainer email="327110089+lzxbaba@users.noreply.github.com">李英杰</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>std_srvs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>visualization_msgs</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>ament_index_python</exec_depend>
+  <exec_depend>rviz2</exec_depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

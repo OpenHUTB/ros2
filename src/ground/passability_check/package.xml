@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>passability_check</name>
+  <version>0.1.0</version>
+  <description>
+    车辆几何通过性核算：由轴距、前后悬、三个测点的离地高度与车底最低点位置，
+    算出接近角、离去角、纵向通过角，并把车按真实位姿沿一条纵剖面（地库坡道 /
+    山路过顶 / 减速带）走一遍，逐点判断车头、车底、车尾会不会蹭、蹭多深。
+    纯标准库实现，不依赖仿真器与 GPU，可在没有 ROS 的机器上离线回归。
+  </description>
+  <maintainer email="jiaohua745-blip@users.noreply.github.com">jiaohua745-blip</maintainer>
+  <license>MIT</license>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>ament_index_python</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

@@ -25,7 +25,7 @@ def run(args):
     (args.output / "summary.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
     if args.render:
         from .visualize import render_run
-        render_run(args.output, args.scenario, args.duration)
+        render_run(args.output, args.scenario, args.duration, args.speed)
     print("运行结果 / Run result: " + json.dumps(result))
 
 
@@ -36,7 +36,31 @@ def main(argv=None):
     parser.add_argument("--duration", type=float, default=8.0)
     parser.add_argument("--output", type=Path, default=Path("results"))
     parser.add_argument("--render", action="store_true", help="保存仿真动画 / Save simulation animation")
+    parser.add_argument("--collect", action="store_true", help="采集监督数据 / Collect supervised data")
+    parser.add_argument("--episodes", type=int, default=30)
+    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--train", action="store_true", help="训练MLP / Train MLP")
+    parser.add_argument("--epochs", type=int, default=80, help="训练轮数 / Training epochs")
+    parser.add_argument("--evaluate", action="store_true", help="评估模型 / Evaluate model")
+    parser.add_argument("--dataset", type=Path, default=Path("dataset"))
+    parser.add_argument("--model", type=Path, default=Path("model"))
+    parser.add_argument("--benchmark", action="store_true", help="运行三场景对照 / Run scenario benchmark")
     args = parser.parse_args(argv)
-    if not (0 < args.speed <= 3 and 0 < args.duration <= 120):
+    standalone_task = args.benchmark or args.train or args.evaluate or args.collect
+    if not standalone_task and not (0 < args.speed <= 3 and 0 < args.duration <= 120):
         parser.error("速度须在 (0,3]，时长须在 (0,120]。 / Invalid speed or duration.")
-    run(args)
+    if args.benchmark:
+        from .benchmark import benchmark
+        print(json.dumps(benchmark(args.model / "risk_speed_mlp.npz", args.output / "benchmark.json"), indent=2))
+    elif args.train:
+        from .train_model import train
+        print(json.dumps(train(args.dataset, args.model, epochs=args.epochs, seed=args.seed), indent=2))
+    elif args.evaluate:
+        from .evaluate_model import evaluate
+        print(json.dumps(evaluate(args.dataset, args.model), indent=2))
+    elif args.collect:
+        from .dataset import collect
+        manifest = collect(args.output, args.episodes, args.seed, args.duration)
+        print(json.dumps(manifest["splits"], indent=2))
+    else:
+        run(args)
