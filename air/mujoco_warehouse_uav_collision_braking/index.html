@@ -59,8 +59,6 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../chapter/chap1/chap1/">1. 认识 ROS</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap1/turtle_waypoint_patrol/">小海龟多航点巡航与暂停恢复</a>
-</li>
 <li class="toctree-l1"><a class="reference internal">2. ROS 基础 - ROS 基础</a>
 <ul>
 <li class="toctree-l2"><a class="reference internal" href="../../chapter/chap2/">章节首页</a>
@@ -226,6 +224,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/knee_tracking/">膝关节肌肉骨骼仿真与轨迹跟踪</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/msk_muscle_ident/">给定黑箱关节轨迹，反推肌肉参数</a>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">机械臂操作</span></p>
 <ul>
@@ -234,6 +234,8 @@
 </ul>
 <p class="caption"><span class="caption-text">地面载具</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap1/turtle_waypoint_patrol/">小海龟多航点巡航与暂停恢复</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../ground/offline_checks/">离线测试接入 GitHub Actions</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../ground/encoder_quantization_velocity/">编码器量化误差与速度估计滤波对比</a>
@@ -537,6 +539,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../ground/turning_sweep_check/">转弯扫掠校验</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../ground/vehicle_gradeability_check/">爬坡能力与牵引力余量核算</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/vehicle_wading_check/">涉水深度与浮力裕度核算</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../ground/passability_check/">车辆几何通过性核算（接近角/离去角/纵向通过角）</a>
 </li>
@@ -1143,7 +1147,7 @@ ros2<span class="w"> </span>launch<span class="w"> </span>mujoco_warehouse_uav_c
 </tr>
 </tbody>
 </table>
-<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>main.py<span class="w"> </span>--collect<span class="w"> </span>--episodes<span class="w"> </span><span class="m">30</span><span class="w"> </span>--seed<span class="w"> </span><span class="m">42</span><span class="w"> </span>--duration<span class="w"> </span><span class="m">8</span><span class="w"> </span>--output<span class="w"> </span>dataset
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>main.py<span class="w"> </span>--collect<span class="w"> </span>--episodes<span class="w"> </span><span class="m">30</span><span class="w"> </span>--seed<span class="w"> </span><span class="m">42</span><span class="w"> </span>--duration<span class="w"> </span><span class="m">8</span>
 python3<span class="w"> </span>-m<span class="w"> </span>unittest<span class="w"> </span>discover<span class="w"> </span>-s<span class="w"> </span>tests<span class="w"> </span>-v
 </code></pre></div>
 <table>
@@ -1178,7 +1182,7 @@ python3<span class="w"> </span>-m<span class="w"> </span>unittest<span class="w"
 </table>
 <p>每条轨迹最多8 s，首次接触后停止，因而样本数量随轨迹变化。巡航与参考制动行为混合用于覆盖接近障碍时的观测。标签表达参考规则，不表示真实飞行中的碰撞概率。</p>
 <p><a href="dataset_manifest.json">数据清单</a> 保存种子、轨迹参数、特征顺序、分区统计和数组SHA-256；<a href="sample_rows.csv">样本片段</a> 便于查看数据结构。</p>
-<p>13 项单元测试覆盖几何与控制行为、首帧闭合速度复位、固定种子复现、轨迹泄漏拒绝、模型训练和评估输出。三个分区的轨迹集合互不相交，且每个分区均包含三个场景和三类风险标签。</p>
+<p>16 项单元测试（含 CLI 默认路径 3 项）覆盖几何与控制行为、首帧闭合速度复位、固定种子复现、轨迹泄漏拒绝、模型训练和评估输出。三个分区的轨迹集合互不相交，且每个分区均包含三个场景和三类风险标签。</p>
 <h2 id="_8">轻量模型</h2>
 <p>训练器使用 NumPy MLP，输入20维，隐藏层为24和16个单元，输出风险三分类与速度回归。训练过程固定随机种子，保存标准化均值、尺度、权重和偏置，模型文件可独立加载。</p>
 <div class="mermaid">flowchart LR
