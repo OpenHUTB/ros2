@@ -73,8 +73,9 @@ def observe_points(tower: Tower, tower_idx: int, base_azimuth: float,
     out = []
     z = min(max(params.height_ratio * tower.height,
                 params.min_height_m), params.max_height_m)
-    for k in range(n_angles(tower)):
-        az = base_azimuth + 2.0 * math.pi * k / 3.0
+    n = n_angles(tower)
+    for k in range(n):
+        az = base_azimuth + 2.0 * math.pi * k / n
         out.append(ObservePoint(
             tower=tower_idx, tag="T%02d-A%d" % (tower_idx + 1, k + 1),
             azimuth=az,

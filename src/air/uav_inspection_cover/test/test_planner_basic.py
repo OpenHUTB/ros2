@@ -46,6 +46,20 @@ def test_observe_point_count_2_to_3():
     assert len(vps) == sum(n_angles(t) for t in c.towers)
 
 
+def test_low_tower_azimuths_spread_uniformly():
+    # 低塔（<32m）取 2 个观察角，方位角应 180° 均匀铺开——曾硬编码 /3.0，
+    # 2 角度塔实际得到 120° 间隔、留下 240° 观察盲区
+    low = Tower("T", 0.0, 0.0, 26.0)
+    az = sorted(vp.azimuth % (2 * math.pi) for vp in corridor_viewpoints([low], P))
+    assert len(az) == 2
+    assert az[1] - az[0] == pytest.approx(math.pi)
+    # 高塔 3 角度 120° 均匀
+    tall = Tower("T", 0.0, 0.0, 40.0)
+    az3 = sorted(vp.azimuth % (2 * math.pi) for vp in corridor_viewpoints([tall], P))
+    assert az3[1] - az3[0] == pytest.approx(2 * math.pi / 3)
+    assert az3[2] - az3[1] == pytest.approx(2 * math.pi / 3)
+
+
 def test_point_seg_dist_basics():
     assert point_seg_dist(0, 5, -10, 0, 10, 0) == 5.0     # 内垂足
     assert point_seg_dist(15, 0, -10, 0, 10, 0) == 5.0    # 端点外
