@@ -46,9 +46,8 @@ def _reset(node):
 
 
 def test_evaluate_release_without_input():
-    ok, reason = evaluate_release(10.0, None, 0.0, False, 1.0, 2.0)
-    assert ok is False
-    assert '尚未收到' in reason
+    """从未收到输入时，人工复位应当被允许（上游可能是事件驱动）。"""
+    assert evaluate_release(10.0, None, 0.0, False, 1.0, 2.0) == (True, '')
 
 
 def test_evaluate_release_rejects_active_input():
@@ -82,7 +81,8 @@ def test_evaluate_release_zero_timeout_skips_link_check():
 
 
 def test_input_stale_when_never_received():
-    assert input_stale(10.0, None, 1.0) is True
+    """没收到过输入不等于链路失效，否则会一启动就自锁。"""
+    assert input_stale(10.0, None, 1.0) is False
 
 
 def test_input_stale_within_timeout():
@@ -104,11 +104,34 @@ def test_start_latched_by_default(latch):
     assert latch.status_pub.last().data == 'latched: start'
 
 
-def test_reset_rejected_without_input(latch):
+def test_reset_allowed_without_any_input(latch):
+    """默认参数下不应自锁死：没有输入也能人工复位。"""
     response = _reset(latch)
+    latch.on_timer()
 
-    assert response.success is False
-    assert '尚未收到' in response.message
+    assert response.success is True
+    assert latch.estop_pub.last().data is False
+    assert latch.status_pub.last().data == 'clear'
+
+
+def test_latch_publishes_immediately():
+    """收到 true 后立刻发布急停，不等 1 Hz 定时器。"""
+    rclpy.init()
+    try:
+        node = EstopLatch(parameter_overrides=[
+            Parameter(name='start_latched', value=False),
+            Parameter(name='input_timeout', value=0.0),
+        ])
+        node.estop_pub = _RecordingPublisher()
+        node.status_pub = _RecordingPublisher()
+
+        node.estop_callback(Bool(data=True))
+
+        assert node.estop_pub.last().data is True
+        assert node.status_pub.last().data == 'latched: input'
+        node.destroy_node()
+    finally:
+        rclpy.shutdown()
 
 
 def test_reset_clears_latch(latch):
@@ -144,7 +167,30 @@ def test_reset_rejected_while_input_active(latch):
     assert '仍处于触发状态' in response.message
 
 
-def test_input_timeout_latches_when_open():
+def test_input_timeout_latches_after_input_stops():
+    """收到过输入之后再中断，才按失效安全闩锁。"""
+    rclpy.init()
+    try:
+        node = EstopLatch(parameter_overrides=[
+            Parameter(name='start_latched', value=False),
+            Parameter(name='input_timeout', value=1.0),
+        ])
+        node.estop_pub = _RecordingPublisher()
+        node.status_pub = _RecordingPublisher()
+        node.estop_callback(Bool(data=False))
+        node.last_input_time = node._now_seconds() - 5.0
+
+        node.on_timer()
+
+        assert node.latched is True
+        assert node.status_pub.last().data == 'latched: input_timeout'
+        node.destroy_node()
+    finally:
+        rclpy.shutdown()
+
+
+def test_no_input_does_not_self_latch():
+    """事件驱动的上游一直不发消息时，不应因超时自己锁死。"""
     rclpy.init()
     try:
         node = EstopLatch(parameter_overrides=[
@@ -156,8 +202,7 @@ def test_input_timeout_latches_when_open():
 
         node.on_timer()
 
-        assert node.latched is True
-        assert node.status_pub.last().data == 'latched: input_timeout'
+        assert node.latched is False
         node.destroy_node()
     finally:
         rclpy.shutdown()
@@ -200,11 +245,25 @@ def test_invalid_parameter_rejected(name, value):
 
 
 def test_integer_hold_time_is_accepted():
-    """CLI 传整数不应触发参数类型异常。"""
+    """支持 dynamic_typing 的发行版上，CLI 传整数不应触发类型异常。"""
     rclpy.init(args=['--ros-args', '-p', 'release_hold_time:=2'])
     try:
-        node = EstopLatch()
+        try:
+            node = EstopLatch()
+        except Exception:
+            pytest.skip('当前发行版的参数声明不支持整数覆盖 double')
         assert node.release_hold_time == pytest.approx(2.0)
+        node.destroy_node()
+    finally:
+        rclpy.shutdown()
+
+
+def test_float_hold_time_is_accepted():
+    """Foxy 与 Humble 都支持的写法。"""
+    rclpy.init(args=['--ros-args', '-p', 'release_hold_time:=2.5'])
+    try:
+        node = EstopLatch()
+        assert node.release_hold_time == pytest.approx(2.5)
         node.destroy_node()
     finally:
         rclpy.shutdown()
