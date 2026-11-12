@@ -15,8 +15,9 @@ def main() -> None:
     parser.add_argument("--linear", type=float, default=0.55, help="目标线速度（米/秒）")
     parser.add_argument("--angular", type=float, default=0.0, help="目标角速度（弧度/秒）")
     parser.add_argument("--ambient", type=float, default=25.0, help="环境温度（摄氏度）")
+    parser.add_argument("--render", help="将本次仿真终点的真实 MuJoCo 帧保存为 PNG")
     args = parser.parse_args()
-    states = run_constant_command(args.steps, args.linear, args.angular, args.ambient)
+    states = run_constant_command(args.steps, args.linear, args.angular, args.ambient, render_path=args.render or None)
     final = states[-1]
     print(json.dumps({
         "steps": len(states),
@@ -25,6 +26,7 @@ def main() -> None:
         "y_m": round(final.y_m, 3),
         "yaw_rad": round(final.yaw_rad, 4),
         "pitch_rad": round(final.pitch_rad, 4),
+        "max_abs_pitch_rad": round(max(abs(state.pitch_rad) for state in states), 6),
         "speed_mps": round(final.speed_mps, 3),
         "left_temperature_c": round(final.left_temperature_c, 3),
         "right_temperature_c": round(final.right_temperature_c, 3),

@@ -26,3 +26,10 @@ def test_motor_temperature_starts_at_ambient() -> None:
     simulation = DifferentialDriveSimulation(ambient_c=35.0)
     assert simulation.left_motor.temperature_c == 35.0
     assert simulation.right_motor.temperature_c == 35.0
+
+
+def test_120_second_drive_tracks_speed_and_remains_stable() -> None:
+    target = 0.55
+    states = run_constant_command(12000, linear_mps=target)
+    assert max(abs(state.pitch_rad) for state in states) < 0.05
+    assert abs(states[-1].speed_mps - target) / target < 0.05

@@ -9,6 +9,7 @@
   <exec_depend>ament_index_python</exec_depend>
   <exec_depend>launch</exec_depend>
   <exec_depend>python3-numpy</exec_depend>
+  <!-- MuJoCo has no key in the validated Humble rosdep source; install its Python wheel as documented. -->
   <test_depend>python3-pytest</test_depend>
   <export>
     <build_type>ament_python</build_type>

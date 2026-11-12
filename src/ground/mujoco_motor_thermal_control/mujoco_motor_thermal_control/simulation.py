@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 
 import mujoco
 import numpy as np
@@ -14,13 +15,17 @@ MODEL_XML = r"""
 <mujoco model="thermal_diffdrive">
   <compiler angle="radian" autolimits="true"/>
   <option timestep="0.01" gravity="0 0 -9.81" integrator="implicitfast"/>
+  <visual><global offwidth="720" offheight="480"/></visual>
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1="0.72 0.82 0.90" rgb2="0.95 0.96 0.98" width="128" height="128"/>
+  </asset>
   <default>
     <joint damping="0.02" armature="0.01"/>
     <geom friction="1.2 0.01 0.001" condim="3"/>
     <motor ctrllimited="true" ctrlrange="-2.5 2.5"/>
   </default>
   <worldbody>
-    <light pos="0 0 3" dir="0 0 -1"/>
+    <light pos="0 0 3" dir="0 0 -1" directional="true"/>
     <geom name="floor" type="plane" size="12 12 0.1" rgba="0.85 0.87 0.89 1"/>
     <body name="chassis" pos="0 0 0.13">
       <freejoint name="root"/>
@@ -34,12 +39,12 @@ MODEL_XML = r"""
         <geom type="cylinder" size="0.07 0.025" mass="0.55" quat="0.7071068 0.7071068 0 0" rgba="0.15 0.17 0.19 1"/>
       </body>
       <body name="front_caster" pos="0.16 0 -0.105">
-        <joint type="ball" damping="0.01"/>
-        <geom type="sphere" size="0.025" mass="0.05" friction="0.2 0.01 0.001" rgba="0.3 0.32 0.34 1"/>
+        <joint type="ball" damping="0"/>
+        <geom type="sphere" size="0.025" mass="0.05" friction="0.05 0.01 0.001" rgba="0.85 0.45 0.12 1"/>
       </body>
       <body name="rear_caster" pos="-0.16 0 -0.105">
-        <joint type="ball" damping="0.01"/>
-        <geom type="sphere" size="0.025" mass="0.05" friction="0.2 0.01 0.001" rgba="0.3 0.32 0.34 1"/>
+        <joint type="ball" damping="0"/>
+        <geom type="sphere" size="0.025" mass="0.05" friction="0.05 0.01 0.001" rgba="0.85 0.45 0.12 1"/>
       </body>
     </body>
   </worldbody>
@@ -127,8 +132,15 @@ def run_constant_command(
     linear_mps: float = 0.55,
     angular_rps: float = 0.0,
     ambient_c: float = 25.0,
+    *,
+    render_path: str | Path | None = None,
 ) -> list[SimulationState]:
     if steps <= 0:
         raise ValueError("steps must be positive")
     simulation = DifferentialDriveSimulation(ambient_c=ambient_c)
-    return [simulation.step(linear_mps, angular_rps) for _ in range(steps)]
+    states = [simulation.step(linear_mps, angular_rps) for _ in range(steps)]
+    if render_path is not None:
+        from mujoco_motor_thermal_control.render import render_snapshot
+
+        render_snapshot(simulation.model, simulation.data, render_path)
+    return states
