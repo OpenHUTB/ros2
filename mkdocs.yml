@@ -82,6 +82,7 @@ nav:
         - 章节首页: './chapter/chap9.md'
         - Gazebo 仿真相机与图像话题验证: './chapter/chap9/gazebo_camera_sim.md'
         - ROV 六自由度推力分配: './chapter/chap9/rov_thruster_allocation_ls.md'
+        - 无人机禁飞区膨胀绕行: './chapter/chap9/uav_geofence_bypass.md'
     - 10. Turtlebot3 Gazebo键盘控制: 'chapter/turtlebot3_gazebo_control.md'
 
 - 人形机器人:
