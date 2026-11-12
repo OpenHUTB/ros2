@@ -1,6 +1,8 @@
 """pygame 渲染：领航者圆周轨迹、三个成员与期望队形位置。"""
 
+import argparse
 import math
+import os
 import sys
 
 import pygame
@@ -8,7 +10,7 @@ import pygame
 from . import config
 
 
-def draw(screen, team):
+def draw(screen, team, font):
     screen.fill((22, 24, 28))
 
     # 领航者参考轨迹圆
@@ -41,7 +43,6 @@ def draw(screen, team):
     for p, c in zip(team.followers, colors):
         pygame.draw.circle(screen, c, (int(p[0]), int(p[1])), 7)
 
-    font = pygame.font.SysFont(["simhei", "Noto Sans CJK SC", "WenQuanYi Micro Hei", "sans-serif"], 19)
     line1 = "多车编队保持  步数 %d  队形误差 %.2f px" % (team.step_count, team.error())
     line2 = "领航者圆周半径 %.0f px   跟随者增益 %.2f   收敛阈值 %.0f px" % (
         config.RADIUS, config.GAIN, config.TOL)
@@ -49,12 +50,23 @@ def draw(screen, team):
     screen.blit(font.render(line2, True, (172, 178, 188)), (14, 36))
 
 
+def _make_font():
+    """字体在主循环外创建一次，绘制时复用，不每帧重建。"""
+    return pygame.font.SysFont(
+        ["simhei", "Noto Sans CJK SC", "WenQuanYi Micro Hei", "sans-serif"], 19)
+
+
 def run(headless_frames=None):
+    if headless_frames is not None:
+        # 指定帧数时走无头渲染，视频与音频都用 dummy 驱动，不依赖真实设备。
+        os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+        os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
     pygame.init()
     screen = pygame.display.set_mode((config.WORLD_W, config.WORLD_H))
     pygame.display.set_caption("多车编队保持")
     clock = pygame.time.Clock()
     team = _make_team()
+    font = _make_font()
     frames = 0
     running = True
     while running:
@@ -62,7 +74,7 @@ def run(headless_frames=None):
             if event.type == pygame.QUIT:
                 running = False
         team.step()
-        draw(screen, team)
+        draw(screen, team, font)
         pygame.display.flip()
         clock.tick(config.FPS)
         frames += 1
@@ -76,8 +88,13 @@ def _make_team():
     return Team()
 
 
-def main():
-    run()
+def main(argv=None):
+    parser = argparse.ArgumentParser(description="多车编队保持 2D 仿真（pygame）")
+    parser.add_argument("--frames", type=int, default=None,
+                        help="只跑指定帧数后退出，并以 SDL dummy 驱动无头渲染，"
+                             "用于生成文档截图")
+    args = parser.parse_args(argv)
+    run(args.frames)
 
 
 if __name__ == "__main__":
