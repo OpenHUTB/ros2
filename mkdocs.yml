@@ -158,6 +158,7 @@ nav:
     - 拮抗共激活分析（二连杆机械臂肌肉骨骼仿真）: './muscle_arm_cocontraction_simulation.md'
 - 地面载具:
     - 小海龟多航点巡航与暂停恢复: 'chapter/chap1/turtle_waypoint_patrol/index.md'
+    - 8 字轨迹可视化（figure8_sim）: './figure8_sim/README.md'
     - 离线测试接入 GitHub Actions: './ground/offline_checks.md'
     - 编码器量化误差与速度估计滤波对比: './ground/encoder_quantization_velocity.md'
     - CAN 报文信号解码与 CRC/计数器校验: './ground/can_signal_decode.md'
