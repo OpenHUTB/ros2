@@ -204,8 +204,16 @@ class AUVAgent:
     state: Dict = field(default_factory=dict)
 
     def position(self) -> np.ndarray:
-        loc = self.state.get('Location', np.zeros(3))
-        return np.array(loc, dtype=float)
+        """读取当前位置。
+
+        dry-run 用 ``Location``，HoloOcean 的观测按传感器类型做键，位置在
+        ``LocationSensor`` 里，两种都兼容。
+        """
+        for key in ('Location', 'LocationSensor'):
+            value = self.state.get(key)
+            if value is not None:
+                return np.array(value, dtype=float)
+        return np.zeros(3)
 
     def update_energy(self, dt: float, cmd: np.ndarray,
                       idle_drain_rate: float = 0.02,
@@ -330,7 +338,11 @@ class HuntingScenario:
                 {
                     'name': ag_cfg['name'],
                     'agent_type': ag_cfg.get('agent_type', 'TorpedoAUV'),
-                    'sensors': [{'sensor_type': 'AcousticModem'}],
+                    # 必须带位置传感器，否则 tick() 里没有位置观测
+                    'sensors': [
+                        {'sensor_type': 'AcousticModem'},
+                        {'sensor_type': 'LocationSensor'},
+                    ],
                 }
                 for ag_cfg in self.config.get('agents', [])
             ],
