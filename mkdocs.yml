@@ -57,6 +57,7 @@ nav:
     - ROS 2 QoS 兼容性检查实验: 'chap2/ros2_qos_compatibility_lab.md'
 - ROS 教程:
     - 1. 认识 ROS: 'chapter/chap1/chap1.md'
+    - 小海龟多航点巡航与暂停恢复: 'chapter/chap1/turtle_waypoint_patrol/index.md'
     - 2. ROS 基础 - ROS 基础:
         - 章节首页: './chapter/chap2.md'
         - ROS Noetic 多传感器话题时间同步: 'chap2/ros1_message_time_sync/index.md'
@@ -135,6 +136,8 @@ nav:
     - 肌肉驱动的夹爪抓取: './musculoskeletal/msk_gripper.md'
     - 肌肉驱动的下肢关节与步态: './musculoskeletal/muscle_leg_gait.md'
     - 膝关节肌肉骨骼仿真与轨迹跟踪: './musculoskeletal/knee_tracking.md'
+- 机械臂操作:
+    - MuJoCo 单臂抓取与 π0 推理接口复现（CPU 演示）: './manipulation/pi0_mujoco_grasp.md'
 - 地面载具:
     - 离线测试接入 GitHub Actions: './ground/offline_checks.md'
     - 编码器量化误差与速度估计滤波对比: './ground/encoder_quantization_velocity.md'
@@ -200,11 +203,13 @@ nav:
     - 双惯量传动扭振状态反馈极点配置: './ground/drivetrain_torsion_state_feedback.md'
     - MuJoCo 差速小车到达目标点（go-to-goal）: './ground/mujoco_diff_drive_go_to_goal.md'
     - MuJoCo 差速小车射线绕行避障: './ground/mujoco_obstacle_avoidance.md'
+    - MuJoCo 差速小车走迷宫: './ground/diff_drive_maze.md'
     - MuJoCo 地面小车射线感知与分级减速避障: './ground/mujoco_car_avoidance.md'
     - MuJoCo 地面小车神经网络端到端避障: './ground/mujoco_car_nn_avoidance.md'
     - MuJoCo 两轮自平衡小车: './ground/mujoco_balance_car.md'
     - MuJoCo 差速小车电机温升模型: './ground/mujoco_motor_thermal_model.md'
     - MuJoCo 地面差速小车侧倾/翻车风险预测与主动限速: './ground/mujoco_car_rollover_guard.md'
+    - ROS 2 电机温度保护节点: './ground/mujoco_motor_thermal_guard.md'
     - MuJoCo 地面差速小车单侧驱动失效检测与差速补偿: './ground/mujoco_car_drive_fault.md'
     - MuJoCo 四轮独立悬架越野小车仿真: './ground/mujoco_offroad_suspension.md'
     - 2D 小车目标追踪仿真: './ground/car_2d_target_tracker.md'
@@ -232,6 +237,7 @@ nav:
     - ROS2 DWA 局部规划器随机场景压力测试与舒适性评价: './ground/ros2_dwa_benchmark.md'
     - ROS2 A*+DWA 的 Gazebo 三维验证: './ground/ros2_dwa_gazebo.md'
     - UWB 多基站测距定位布站几何精度对比评测: './ground/uwb_baseline_geometry_eval.md'
+    - 电机温度时序预测与误差评估: './ground/mujoco_motor_temperature_predictor.md'
     - TurtleBot3 自主导航与避障参数优化: './ground/turtlebot3_auto_nav/README.md'
     - TurtleBot3 键盘遥控: './ground/turtlebot3_keyboard_teleop.md'
     - ROS2 TurtleBot3 激光雷达避障实验: './ground/ros2_turtlebot3_obstacle.md'
@@ -363,6 +369,8 @@ nav:
     - 无人机降落过程监控（指令-运动一致性）: './air/uav_landing_monitor.md'
     - 移动平台（车/船）精准降落: './air/uav_moving_platform_landing.md'
     - 无人机键盘控制: './air/uav_keyboard_control.md'
+    - 无人机行为克隆模型对比基准（网络结构与数据增强）: './air/uav_bc_bench.md'
+    - 无人机 SLAM 建图与导航: './air/uav_slam_nav.md'
     - MuJoCo 四旋翼垂直通道 PPO 定高与抗扰控制: './air/uav_vertical_ppo.md'
     - 基于 PPO 的无人机导航避障: './air/uav_ppo_nav.md'
     - uav_ppo_nav 本地测试（pytest）: './air/uav_ppo_nav_local_test.md'
@@ -461,6 +469,7 @@ nav:
     - 无人机自主充电/机巢仿真: './air/drone_charging_nest.md'
     - AirSim 无人机 IMU 速度估计（MLP）: './air/uav_airsim_imu_velocity_estimator.md'
     - 倾转旋翼过渡走廊与倾转角调度: './air/uav_tiltrotor_transition_corridor/index.md'
+    - AirSim 无人机 IMU 姿态估计（MLP）: './air/uav_airsim_attitude_estimator.md'
 - 水域载具:
     - 水域载具 ROS2 接口: './water/HoloOcean.md'
     - 环境搭建:
