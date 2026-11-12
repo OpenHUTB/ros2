@@ -15,10 +15,9 @@ setup(
     install_requires=['setuptools', 'numpy'],
     zip_safe=True,
     maintainer='OpenHUTB',
-    maintainer_email='openhutb@example.com',
+    maintainer_email='234208483+gfdklzr@users.noreply.github.com',
     description='从深度点云拟合地面平面并估计坡度角',
     license='Apache-2.0',
-    tests_require=['pytest'],
     entry_points={
         'console_scripts': [
             'slope_sim = ground_slope_estimation.slope_sim:main',
