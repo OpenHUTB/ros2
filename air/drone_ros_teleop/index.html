@@ -1551,8 +1551,8 @@ python<span class="w"> </span>src/air/air_teleop/drone_joy_teleop.py
     F --&gt; O[vx, vy, vz, yaw_rate]
 </div>
 <ul>
-<li>模型网络结构见 <a href="../../src/air/air_learning/model.py">模型实现源码 (src/air/air_learning/model.py)</a>；</li>
-<li>训练入口见 <a href="../../src/air/air_learning/train.py">训练脚本 (src/air/air_learning/train.py)</a>。</li>
+<li>模型网络结构见 <a href="https://github.com/OpenHUTB/ros2/blob/master/src/air/air_learning/model.py">模型实现源码 (src/air/air_learning/model.py)</a>；</li>
+<li>训练入口见 <a href="https://github.com/OpenHUTB/ros2/blob/master/src/air/air_learning/train.py">训练脚本 (src/air/air_learning/train.py)</a>。</li>
 </ul>
 <p>训练采用 <strong>MSE 损失 + Adam 优化器</strong>（默认 30 轮、学习率 1e-3、批大小 16），数据集按 8:2 固定种子
 划分训练/验证集，只在验证集 Loss 创新低时落盘 <code>models/best_drone_model.pth</code>，保证可复现。</p>
