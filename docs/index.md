@@ -578,6 +578,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 如果对文档中的任何问题可以在 [本文档的源码仓库](https://github.com/OpenHUTB/ros2) 中的 [问题](https://github.com/OpenHUTB/ros2/issues) 页面讨论或者提交 [拉取请求](https://github.com/OpenHUTB/.github/blob/master/CONTRIBUTING.md) 直接修改文档。
 
 ___
+* [欠驱动无人艇低速定点保持与横漂补偿](./water/ros2_usv_station_keeping/index.md) —— 几何制导 + 在线流估计 + 双环控制，无侧推器也能顶流定点
 
 ## 7. 经典控制 <span id='classical_control'></span>
 
