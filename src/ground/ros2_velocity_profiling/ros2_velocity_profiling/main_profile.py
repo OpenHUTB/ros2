@@ -8,7 +8,7 @@ import rclpy
 from nav_msgs.msg import Path
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
-from std_msgs.msg import Float64MultiArray
+from std_msgs.msg import Float64MultiArray, MultiArrayDimension
 
 try:
     from .profile import speed_profile
@@ -49,6 +49,11 @@ class VelocityProfileNode(Node):
         w = profile.curvature * profile.speed
         data = np.column_stack([profile.speed, w]).ravel().tolist()
         out = Float64MultiArray()
+        dim = MultiArrayDimension()
+        dim.label = "v_w_pairs"
+        dim.size = len(profile.speed)
+        dim.stride = 2
+        out.layout.dim.append(dim)
         out.data = data
         self.pub.publish(out)
 
@@ -68,4 +73,5 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
 

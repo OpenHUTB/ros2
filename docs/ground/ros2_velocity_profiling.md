@@ -1,4 +1,4 @@
-# ROS 2 路径速度规划（曲率/加速度约束）
+﻿# ROS 2 路径速度规划（曲率/加速度约束）
 
 A\* / 样条给出几何路径，差速底盘还需要每点的速度。本模块按**带符号曲率**和
 加速度约束生成速度剖面，输出 $(v,w)$：左转 `w>0`、右转 `w<0`，起终点按参数停车。
@@ -62,7 +62,7 @@ ros2 launch ros2_velocity_profiling main_launch.py
 
 ```bash
 cd src/ground/ros2_velocity_profiling
-python3 -m unittest discover -s test -v   # 9 项
+python3 -m unittest discover -s test -v   # 12 项
 python3 -m ros2_velocity_profiling.sim
 ```
 
@@ -101,6 +101,7 @@ python3 -m ros2_velocity_profiling.sim
 
 ## 7. 大模型声明
 
-代码与文档在编写过程中使用了 AI 大模型辅助。作者已实际运行 9 项单元测试和
+代码与文档在编写过程中使用了 AI 大模型辅助。作者已实际运行 12 项单元测试和
 3 条离线路径，并在 Ubuntu 20.04 + Foxy 下完成 `colcon build`；对提交内容的
 正确性与完整性负全部责任。
+

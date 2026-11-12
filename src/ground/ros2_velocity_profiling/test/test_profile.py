@@ -1,4 +1,4 @@
-import math
+﻿import math
 import os
 import sys
 import unittest
@@ -42,6 +42,23 @@ class TestProfile(unittest.TestCase):
         self.assertLessEqual(prof.max_accel, 0.8 + 1e-2)
         self.assertLessEqual(float(prof.speed.max()), 1.0 + 1e-9)
 
+    def test_w_sign_follows_curvature(self):
+        prof = speed_profile([(0.0, 0.0), (1.0, 0.0), (1.0, -1.0)])
+        self.assertLess(float(prof.curvature[1]), 0.0)
+        self.assertLess(float(prof.curvature[1] * prof.speed[1]), 0.0)
+
+    def test_duplicate_points_are_tolerated(self):
+        prof = speed_profile([(0.0, 0.0), (0.0, 0.0), (1.0, 0.0), (2.0, 0.0)])
+        self.assertEqual(len(prof.speed), 4)
+        self.assertTrue(np.isfinite(prof.curvature).all())
+
+    def test_time_increase_is_bounded(self):
+        for factory in (circle_points, slalom_points, square_points):
+            row = evaluate("path", factory())
+            ratio = row["profile_time_s"] / row["constant_time_s"]
+            self.assertGreater(ratio, 1.1)
+            self.assertLess(ratio, 2.0)
+
     def test_two_points_are_valid(self):
         prof = speed_profile([(0.0, 0.0), (2.0, 0.0)])
         self.assertEqual(len(prof.speed), 2)
@@ -64,3 +81,4 @@ class TestProfile(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
