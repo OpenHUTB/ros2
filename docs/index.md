@@ -163,6 +163,7 @@ ROS 2 Action 斐波那契数列计算示例：[chap2/fibonacci_action](./chap2/f
 
 ## 4. 地面载具  <span id='ground_vehicle'></span>
 
+* [Dubins 曲线轨迹生成与可视化](./ground/dubins_path.md) —— 6 种基本组合（LSL/LSR/RSL/RSR/RLR/LRL）枚举最短带运动学约束路径，纯 pygame 2D 可视化
 * [RRT 快速随机扩展树路径规划](./ground/rrt_path_planning.md) —— 矩形障碍空间下的 RRT 采样规划：随机树扩展、目标偏置、Liang-Barsky 碰撞检测与路径回溯，pygame 2D 可视化
 * [Bezier 曲线轨迹生成与可视化](./ground/bezier_trajectory.md) —— de Casteljau 算法与 Bernstein 多项式生成 Bezier 曲线，附 B 样条对比、曲率分析与弧长计算，纯 pygame 2D 可视化
 * [小海龟多航点巡航与暂停恢复](./chapter/chap1/turtle_waypoint_patrol/index.md)
