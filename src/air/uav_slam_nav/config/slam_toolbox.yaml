@@ -1,0 +1,32 @@
+# slam_toolbox 异步建图参数（ROS2 Humble）
+slam_toolbox:
+  ros__parameters:
+    solver_plugin: solver_plugins::CeresSolver
+    ceres_linear_solver: SPARSE_NORMAL_CHOLESKY
+    ceres_preconditioner: SCHUR_JACOBI
+    ceres_trust_strategy: LEVENBERG_MARQUARDT
+    ceres_dogleg_type: TRADITIONAL_DOGLEG
+    ceres_loss_function: None
+
+    odom_frame: odom
+    map_frame: map
+    base_frame: base_link
+    scan_topic: /scan
+    use_map_saver: true
+    mode: mapping
+
+    resolution: 0.1
+    max_laser_range: 30.0
+    minimum_time_interval: 0.1
+    transform_timeout: 0.2
+    tf_buffer_duration: 30.0
+    stack_size_to_use: 40000000
+
+    do_loop_closing: true
+    loop_match_minimum_chain_size: 10
+    loop_search_maximum_distance: 3.0
+    loop_match_minimum_response_fine: 0.1
+
+    map_update_interval: 1.0
+    minimum_travel_distance: 0.3
+    minimum_travel_heading: 0.2

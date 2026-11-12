@@ -1,0 +1,15 @@
+{
+  "classes": [
+    "drivable",
+    "vehicle",
+    "pedestrian",
+    "obstacle"
+  ],
+  "n_features": 9,
+  "hidden": [
+    32,
+    32
+  ],
+  "macro_iou": 0.9841608166692946,
+  "accuracy": 0.9974135287101721
+}

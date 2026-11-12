@@ -1,0 +1,122 @@
+{
+  "algorithms": {
+    "dqn_2x64": {
+      "algorithm": "DQN",
+      "episodes": 30,
+      "hidden": [
+        64,
+        64
+      ],
+      "mean_collisions": 0.0,
+      "mean_reached": 1.0,
+      "mean_return": 13.419,
+      "mean_steps": 8.0,
+      "success_rate": 1.0
+    },
+    "dqn_3x64": {
+      "algorithm": "DQN",
+      "episodes": 30,
+      "hidden": [
+        64,
+        64,
+        64
+      ],
+      "mean_collisions": 0.0,
+      "mean_reached": 1.0,
+      "mean_return": 13.416,
+      "mean_steps": 7.8,
+      "success_rate": 1.0
+    },
+    "pg_2x64": {
+      "algorithm": "REINFORCE",
+      "episodes": 30,
+      "hidden": [
+        64,
+        64
+      ],
+      "mean_collisions": 0.0,
+      "mean_reached": 0.43,
+      "mean_return": 5.28,
+      "mean_steps": 47.6,
+      "success_rate": 0.433
+    }
+  },
+  "env": {
+    "action_table": [
+      [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.8,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.8,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.8,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        0.8
+      ],
+      [
+        0.6,
+        0.0,
+        0.6,
+        0.0
+      ],
+      [
+        0.6,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.45,
+        0.45,
+        0.45,
+        0.45
+      ]
+    ],
+    "actions": 8,
+    "dt": 0.1,
+    "max_steps": 80,
+    "penalties": "collision -1.5, effort -0.05*delta, step -0.02",
+    "random_start": true,
+    "scene": "reach",
+    "state": "28-dim arm/target/depth features"
+  },
+  "eval_episodes": 30,
+  "hidden_layer_comparison": {
+    "algorithm": "DQN",
+    "three_hidden_layers": {
+      "mean_return": 13.416,
+      "success_rate": 1.0,
+      "train_seconds": 138.82
+    },
+    "two_hidden_layers": {
+      "mean_return": 13.419,
+      "success_rate": 1.0,
+      "train_seconds": 163.66
+    }
+  },
+  "regenerated": "2026-11-11T13:12:01",
+  "seconds": 49.18,
+  "seed": 2026,
+  "state_dim": 28,
+  "task": "reach the target with a muscle-driven two-link arm (discrete activation primitives, real Hill-muscle dynamics)"
+}

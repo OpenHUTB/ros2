@@ -1,0 +1,35 @@
+<launch>
+  <!-- 雷达感知层：AirSim 桥接 + 180° 累积扫描 + 24 扇区特征 -->
+  <arg name="airsim_ip" default="172.25.176.1"/>
+  <arg name="vehicle_name" default="Drone_1"/>
+  <arg name="auto_takeoff" default="false"/>
+  <arg name="takeoff_height" default="4.0"/>
+  <arg name="publish_tf" default="true"/>
+  <arg name="scan_bins" default="180"/>
+  <arg name="scan_frame" default="laser"/>
+  <arg name="rate" default="10.0"/>
+  <arg name="accumulate_sec" default="1.0"/>
+
+  <!-- 桥接节点：发布 odom 话题；建图/可视化时打开 odom->base_link TF -->
+  <node name="drone_bridge" pkg="uav_lidar_dqn_navigation" type="drone_bridge.py" output="screen">
+    <param name="airsim_ip" value="$(arg airsim_ip)"/>
+    <param name="vehicle_name" value="$(arg vehicle_name)"/>
+    <param name="auto_takeoff" value="$(arg auto_takeoff)"/>
+    <param name="takeoff_height" value="$(arg takeoff_height)"/>
+    <param name="publish_tf" value="$(arg publish_tf)"/>
+  </node>
+
+  <!-- 雷达扫描：累积一段时间点云拼成 180° LaserScan，同时发布 24 扇区特征 -->
+  <node name="lidar_scan" pkg="uav_lidar_dqn_navigation" type="lidar_scan_node.py" output="screen">
+    <param name="airsim_ip" value="$(arg airsim_ip)"/>
+    <param name="vehicle_name" value="$(arg vehicle_name)"/>
+    <param name="scan_bins" value="$(arg scan_bins)"/>
+    <param name="scan_frame" value="$(arg scan_frame)"/>
+    <param name="rate" value="$(arg rate)"/>
+    <param name="accumulate_sec" value="$(arg accumulate_sec)"/>
+  </node>
+
+  <!-- 雷达安装在机体中心下方 0.5 m，补上 base_link->laser 静态 TF -->
+  <node pkg="tf2_ros" type="static_transform_publisher" name="base_to_laser"
+        args="0 0 -0.5 0 0 0 base_link $(arg scan_frame)"/>
+</launch>

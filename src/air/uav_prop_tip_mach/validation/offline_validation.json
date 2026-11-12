@@ -1,0 +1,33 @@
+{
+  "os": "Windows 11 (10.0.26200)",
+  "python": "3.12.14",
+  "third_party_dependencies": "无（仅标准库；测试用 pytest）",
+  "scope": "offline: pytest test (13) + main.py + PYTHONIOENCODING=gbk run; no ROS, no simulator",
+  "result": {
+    "pytest_passed": 13,
+    "pytest_failed": 0,
+    "cli_outputs": ["report.json"],
+    "gbk_console_run": true,
+    "speed_of_sound_m_s": 340.29,
+    "tip_speed_hover_m_s": 86.45,
+    "tip_mach_hover": 0.254,
+    "tip_mach_max": 0.352,
+    "tip_mach_level": "ok",
+    "disk_loading_n_m2": 96.79,
+    "disk_loading_level": "low",
+    "induced_velocity_m_s": 6.285,
+    "pass": true
+  },
+  "ci": {
+    "workflow": ".github/workflows/uav_prop_tip_mach_tests.yml",
+    "jobs": [
+      "Prop tip Mach tests (ubuntu, python 3.8, 含 GBK 步骤)",
+      "Windows smoke test (GBK stdio)"
+    ]
+  },
+  "ros_validation": {
+    "checked": false,
+    "reason": "本模块是纯离线核算，没有 rclpy 节点；只提供 ExecuteProcess 形式的 launch 包装。colcon build / ros2 launch 需要在 Ubuntu 22.04 + Humble 上验证"
+  },
+  "independent_machine_review": false
+}

@@ -1,0 +1,2 @@
+index,start_x,start_y,goal_x,goal_y,distance,placed,success,final_error,min_error,duration,steps,path_length,collided,collision_steps,shield_steps,shield_reasons,fault_step,fault_handled,expert_dev_mean,expert_dev_max
+1,-4.0,-4.0,16.0,12.0,25.61,True,True,0.884,0.884,39.63,382,47.66,0,0,0,,40,0,1.725,4.743

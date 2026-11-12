@@ -1,0 +1,6 @@
+torque_vectoring_node:
+  ros__parameters:
+    mu: 0.95                 # 路面附着系数（保守估计）
+    enable_tv: true          # false = 开放式差速器对照组
+    dead_wheels: ""          # 失效电机，逗号分隔，0/1/2/3 = 左前/右前/左后/右后
+    rate_hz: 100.0
