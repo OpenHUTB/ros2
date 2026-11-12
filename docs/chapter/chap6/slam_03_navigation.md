@@ -484,7 +484,79 @@ rviz 中可同时观察到粒子云、全局/局部路径、目标点与膨胀�
 | `Joint state ... not found in URDF` 警告 | arbotix 关节名与 URDF 命名不一致 | 不影响导航，可忽略 |
 | `pdist_scale/gdist_scale deprecated` 警告 | 参数名已弃用 | 功能不受影响，可忽略 |
 
-## 13. 小结
+## 13. 离线检查地图与规划全局路径
+
+前面的流程每次都要起 Gazebo + move_base 才能看一眼"这张图能不能走"。真机上更麻烦，
+得把整套环境再拉起来。`mrobot_navigation/scripts/map_planner.py` 把其中两件事搬到离线：
+**地图体检**和**全局路径规划**。
+
+它只依赖 Python 标准库（PNG 也是用 `zlib` 手写的），Windows / macOS / Ubuntu 都能跑，
+不需要 ROS、Gazebo 或 numpy。
+
+### 13.1 它做了什么
+
+1. 读 `map_saver` 生成的 `.pgm` + `.yaml`（P5/P2，支持 `negate` 与两个阈值）；
+2. 按 `occupied_thresh` / `free_thresh` 分成 占用 / 自由 / 未知 三类；
+3. 统计自由/占用/未知比例，以及**最大连通自由区**——自由空间被噪点切成很多块时，
+   导航会"看得到、走不过去"；
+4. 按机器人半径做障碍膨胀（等价于 costmap 的 `inflation_radius`）；
+5. A* 规划全局路径，再做视线法平滑（只做几何捷径，曲率还是交给 local planner）；
+6. 输出一张叠加图：黑=墙、白=自由、灰=未知、浅红=膨胀区、蓝=路径。
+
+### 13.2 用法
+
+```bash
+cd src/chap6/catkin_ws/src/mrobot_navigation
+
+# 只体检地图
+python3 scripts/map_planner.py --map maps/gmapping_map.yaml --stats
+
+# 规划路径（坐标与 rviz 的 2D Nav Goal 一致，单位米）
+python3 scripts/map_planner.py --map maps/gmapping_map.yaml \
+    --start 1.15 5.46 --goal 9.77 5.17 --radius 0.18 --out plan.png
+```
+
+`--radius` 就是机器人的外接半径，和 `costmap_common_params.yaml` 里的
+`robot_radius` 保持一致即可。
+
+### 13.3 本章地图的实测结果
+
+```text
+地图尺寸      : 512 × 544 px
+物理范围      : 25.60 m × 27.20 m（分辨率 0.050 m/px）
+自由 / 占用 / 未知 : 11.5% / 1.2% / 87.4%
+最大连通自由区: 97.7%（占自由空间）
+可通行面积    : 7.1%（半径 0.18 m 膨胀后，膨胀前 11.5%）
+
+A* 路径点数   : 183
+A* 路径长度   : 10.59 m
+平滑后点数    : 6（长度 9.96 m）
+直线距离      : 8.62 m（绕行系数 1.15）
+```
+
+三点解读：
+
+* **未知占 87.4%** 很正常——`map_saver` 会按地图尺寸铺满初始化，机器人没走到的地方就是未知；
+* **最大连通自由区 97.7%** 说明这张图的可通行区域基本连成一片，没有被激光噪点切碎；
+* **绕行系数 1.15** 表示路径比直线多走 15%，属于走廊里正常绕行，不是原地打转。
+
+![离线规划结果](../../img/code/chap6/61_offline_map_planner.png)
+
+图中绿色是起点、红色是终点、蓝色是平滑后的全局路径；浅红色区域是膨胀后的"机器人中心禁区"，
+路径始终走在白色自由区里。
+
+### 13.4 测试
+
+```bash
+cd src/chap6/catkin_ws/src/mrobot_navigation
+python3 -m unittest discover -s test
+```
+
+33 个用例覆盖 PGM 解析（含注释、截断、非法 magic）、YAML 阈值语义、`negate` 反色、
+坐标换算、连通区统计、chamfer 距离变换、膨胀单调性、A* 最优性与不可达、斜穿墙角禁止、
+平滑不穿墙等性质。
+
+## 14. 小结
 
 本节完成了基于 arbotix 假仿真的完整自主导航流程：安装 `navigation`、`arbotix` → 准备精简版
 `mrobot_bringup`、`mrobot_description` 与 `mrobot_navigation` 并修复 Noetic 兼容问题 → 编译 →
