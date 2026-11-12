@@ -42,20 +42,14 @@ import numpy as np
 from gymnasium import spaces
 
 from route import Route, make_route
+from route_constants import (CROSS_SCALE, LOOKAHEAD_SCALE, MAX_RANGE,
+                             N_SECTORS, OBS_DIM, Z_SCALE)
 
 # ---- 与 uav_ppo_nav.policy 保持一致的量纲 ----
-N_SECTORS = 24
-MAX_RANGE = 12.0
 MAX_HORIZ_SPEED = 3.0
 MAX_VERT_SPEED = 1.5
 MAX_YAW_RATE = 1.0
 ACT_DIM = 4
-
-# ---- 本模块新增 ----
-CROSS_SCALE = 4.0          # 横向偏差归一化尺度 (m)
-LOOKAHEAD_SCALE = 6.0      # 前方航点相对位置归一化尺度 (m)
-Z_SCALE = 2.0              # 高度偏差归一化尺度 (m)
-OBS_DIM = N_SECTORS + 6    # 24 激光 + 6 航线相关 = 30
 
 
 class RouteEnv(gym.Env):

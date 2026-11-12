@@ -4,8 +4,8 @@
   <version>0.1.0</version>
   <description>
     基于激光雷达与深度强化学习（DQN）的无人机自主导航（AirSim + ROS Noetic）。
-    包含键盘遥控、雷达特征提取、DQN 避障导航、hector_slam 建图、
-    图像端到端 DQN 控制五项能力。
+    包含键盘遥控、雷达特征提取、DQN 避障导航、gmapping 同步建图、
+    前置相机图像端到端 DQN 视觉导航五项能力。
   </description>
   <maintainer email="student@example.com">UAV DQN Navigation</maintainer>
   <license>MIT</license>
@@ -21,6 +21,7 @@
   <depend>tf</depend>
   <depend>tf2_ros</depend>
   <exec_depend>python3-rospkg</exec_depend>
+  <exec_depend>python3-opencv</exec_depend>
 
   <export/>
 </package>

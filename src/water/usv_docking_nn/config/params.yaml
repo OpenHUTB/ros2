@@ -1,0 +1,11 @@
+# 无人艇自主靠泊：节点运行参数
+#
+# 由 launch/main.launch 通过 <rosparam command="load"> 载入到节点私有命名空间，
+# 因此这里的键名必须与节点里 rospy.get_param("~xxx") 的 xxx 一致。
+# launch 里的 <param> 在载入之后下发，可覆盖本文件的值（mode/rate/seed）。
+mode: nn          # nn（神经网络） | expert（专家） | manual（订阅外部 /usv/cmd_vel）
+rate: 20.0        # 控制频率 (Hz)
+seed: 0           # 仿真随机种子
+# model_dir 默认取 <包目录>/models（devel 与 install 空间都能定位）；
+# 如需指向别处，取消下面一行注释并改成实际路径。
+# model_dir: /path/to/models
