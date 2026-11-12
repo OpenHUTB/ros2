@@ -450,7 +450,9 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [PX4 SITL + MAVROS2 Offboard 起降与失效保护](./air/px4_mavros2_offboard.md)
 
 
-* [禁飞区检测模块](no_fly_zone_check/index.md)
+* [AirSim 实时禁飞区检测](./air/no_fly_zone_check/index.md)
+
+* [离线航线穿越禁飞区检测](./no_fly_zone_check/index.md)
 
 * [MuJoCo无人机幕墙定距扫描](air/mujoco_facade_capture/index.md)
 
