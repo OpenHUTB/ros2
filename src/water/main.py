@@ -1,11 +1,6 @@
 #!/usr/bin/env python3
-"""
-多 AUV 协同围捕 —— 启动入口。
-
-使用:
-    python main.py
-"""
-from multi_agent_hunting import main
+"""AUV 水质监测自主采样任务规划."""
+from water_monitoring import run_demo
 
 if __name__ == "__main__":
-    main()
+    run_demo()
