@@ -179,6 +179,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [牵引车挂车折刀判定](./ground/trailer_kinematics.md)
 * [速度曲线规划](./ground/speed_profile_check.md)
 * [转弯扫掠校验](./ground/turning_sweep_check.md)
+* [爬坡能力与牵引力余量核算](./ground/vehicle_gradeability_check.md) —— 按整车质量、坡度、车速与附着系数核算所需/可用牵引力和余量，区分可爬坡、动力不足与打滑风险
 * [车辆几何通过性核算](./ground/passability_check.md) —— 接近角/离去角/纵向通过角 + 沿剖面逐位姿判断车头/车底/车尾会不会蹭、蹭多深
 * [RQT 插件](./ground/rqt_plugin.md)
 * [激光雷达点云语义分割](./ground/carla_lidar_pointcloud_segmentation.md)
