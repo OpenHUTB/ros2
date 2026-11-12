@@ -57,9 +57,9 @@ class ImuAttEnv:
         return np.concatenate(list(self.buffer), axis=0).astype(np.float32)
 
     def attitude(self):
-        """真值 roll/pitch（弧度），来自 AirSim 估计姿态的四元数。"""
-        q = self.client.getMultirotorState(vehicle_name=self.vehicle).kinematics_estimated.orientation
-        return euler_from_quat((q.w_val, q.x_val, q.y_val, q.z_val))
+        """真值 roll/pitch（弧度），与 pose() 同一口径（kinematics_estimated 的四元数）。"""
+        _, q = self.pose()
+        return euler_from_quat(q)
 
     def pose(self):
         st = self.client.getMultirotorState(vehicle_name=self.vehicle).kinematics_estimated

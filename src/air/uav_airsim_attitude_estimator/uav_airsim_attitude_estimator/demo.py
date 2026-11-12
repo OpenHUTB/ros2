@@ -56,7 +56,8 @@ def run_demo(weights="models_trained/attitude.npz", out_gif="demo.gif",
             x = env.imu_window()
             pred = (net.forward(((x - x_mean) / x_std).astype(np.float32)) * y_std) + y_mean
             truth = np.array(env.attitude(), dtype=np.float32)
-            errs.append((np.abs(pred - truth)[0], np.abs(pred - truth)[1]))
+            err = np.abs(pred - truth)
+            errs.append((err[0], err[1]))
             frames.append(env.scene_rgb())
             if verbose and t % 25 == 0:
                 print("step %3d  真值 roll %.3f pitch %.3f | 估计 roll %.3f pitch %.3f"

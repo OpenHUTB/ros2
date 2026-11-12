@@ -47,16 +47,23 @@ uav_airsim_attitude_estimator/
 │   ├── demo.py       螺旋航线实飞演示并录 gif
 │   └── node.py       ROS2 节点（订阅 /uav/imu，发布 /uav/attitude）
 ├── launch/main.launch.py
+├── test/test_mlp.py                          不依赖 AirSim/ROS 的自检与复算
 ├── models_trained/
 │   ├── attitude.npz          权重 + 标准化参数
 │   └── attitude_data.npz     660 条训练样本
-├── package.xml / setup.py / setup.cfg / resource/
+├── package.xml / setup.py / setup.cfg / requirements.txt / resource/
 └── README.md
 ```
 
 ## 用法
 
 ```bash
+# 依赖（numpy / Pillow / airsim==1.8.1）
+pip install -r requirements.txt
+
+# 自检：不需要 AirSim，约 2 秒，5/5 通过
+python3 test/test_mlp.py
+
 # 采集（需要先启动 AirSim Blocks）
 python3 main.py --collect --episodes 6 --steps 110
 
@@ -66,7 +73,7 @@ python3 main.py --train --epochs 120 --lr 0.001
 # 实飞演示并生成 demo.gif
 python3 main.py --demo --steps 150 --gif demo.gif
 
-# ROS2 节点
+# ROS2 节点（weights 参数可给绝对路径，相对路径会按包根目录解析）
 ros2 launch uav_airsim_attitude_estimator main.launch.py
 ```
 
@@ -82,5 +89,14 @@ ros2 launch uav_airsim_attitude_estimator main.launch.py
 ## 环境
 
 - AirSim v1.8.1（Blocks，WindowsNoEditor）
-- Python 3.13 + numpy 2.5.4 + pillow 12.3.0 + airsim 1.8.1
+- 依赖见 `requirements.txt`：numpy / Pillow / airsim==1.8.1（`pip install -r requirements.txt`）
+- 实测 Python 3.13 + numpy 2.5.4 + pillow 12.3.0 + airsim 1.8.1
 - 提交目标环境：Ubuntu 20.04, ROS 2 Humble
+
+## 图与复现产物
+
+- `docs/img/uav/attitude/demo.gif` —— 实飞演示动图（160 帧）
+- `docs/img/uav/attitude/holdout_compare.png` —— 留出集 99 条的预测-真值对照（时间序列 + 散点）
+- `docs/img/uav/attitude/terminal_selfcheck.png` —— `python3 test/test_mlp.py` 实跑的终端输出（5/5 通过）
+
+以上三张图都由 `docs/air/uav_airsim_attitude_estimator.md` 引用。

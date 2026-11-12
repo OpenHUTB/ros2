@@ -202,6 +202,12 @@ $$
 
 R² 0.631 意味着网络解释了 63% 的姿态方差。这个数字没有被"完美拟合"掩盖：如果是直接读真值造成的退化，R² 会是 1.000 附近（本项目中途曾选过一个"下视深度→对地高度"的题目，离线 R² 达到 1.000，但根因是 AirSim 的 `DepthPlanar` 本身就是真实物理深度、等于读真值，已主动放弃）。0.631 对应的是真实存在、尚未完全解决的回归误差。
 
+留出集 99 条（`val_ratio=0.15`、`seed=0`，按 `train.py` 的划分复刻）上逐条对照如下：
+
+![留出集预测与真值对照](../img/uav/attitude/holdout_compare.png)
+
+图中灰线为真值、橙线为网络预测；下排散点以真值为横轴、预测为纵轴，灰色对角线是"完全命中"。同一批样本上分量的现算指标为 roll MAE 0.62° / R² 0.48、pitch MAE 1.39° / R² 0.65（平均 MAE 1.01°）——roll 因为 Blocks 场景侧倾只有 ±3°，标签方差小，R² 明显低于 pitch，这与第 10 节的局限 1 一致。
+
 ### 6.4 实飞演示
 
 150 步螺旋航线，平均 MAE **0.9°**，与离线 1.0° 基本一致。这一点很重要：很多"离线指标好、实飞崩掉"的案例，根因是采集状态与演示状态不同（例如摆位采集 vs 飞行演示）。本项目从一开始就用飞行中采样，所以两条曲线贴合。
@@ -335,7 +341,14 @@ pred = self.net.forward(((x - self.x_mean) / self.x_std).astype(np.float32))
 out = (pred * self.y_std + self.y_mean).ravel()
 ```
 
-权重路径通过 `declare_parameter("weights")` 暴露，launch 里传 `share` 目录下的绝对路径。
+权重路径通过 `declare_parameter("weights")` 暴露，launch 里传 `share` 目录下的绝对路径。若传相对路径且当前工作目录找不到该文件，节点会退回到包根目录（`models_trained/` 所在那一层）再解析一次；两次都找不到时直接抛 `FileNotFoundError` 并打印解析后的路径，避免 `np.load` 抛出信息量不足的异常。
+
+```python
+if not os.path.isabs(wpath) and not os.path.exists(wpath):
+    wpath = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), wpath
+    )
+```
 
 ## 8. 踩坑记录
 
@@ -359,8 +372,8 @@ out = (pred * self.y_std + self.y_mean).ravel()
 curl --ssl-no-revoke -L -o Blocks.zip \
   https://github.com/microsoft/AirSim/releases/download/v1.8.1-windows/Blocks.zip
 
-# Python 依赖
-pip install numpy pillow imageio airsim
+# Python 依赖（等价于 pip install numpy pillow airsim==1.8.1）
+pip install -r requirements.txt
 ```
 
 `~/Documents/AirSim/settings.json` 需要有 `SimMode: "Multirotor"` 和多旋翼载具定义（本实验用 `Drone1`、`SimpleFlight`）。
@@ -394,6 +407,7 @@ ros2 launch uav_airsim_attitude_estimator main.launch.py
 - 采集完打印的样本数与标签范围应与第 6.1 节一致（660 条、roll ±0.05 rad 量级）
 - 训练完的验证 R² 应在 0.5~0.7 之间。**如果出现 1.000，说明标签泄漏了**，检查是否误把真值当输入
 - 演示 MAE 应在 1° 左右。**如果明显高于离线误差**，检查采集与演示的飞行状态是否一致
+- 留出集复算能直接对上 6.3 的表：按 `seed=0` 的 99 条留出样本重算得 MSE 5.85e-4 rad²、MAE 0.0175 rad（1.01°）、R² 0.631
 
 不需要 AirSim 也能先自检网络与权重（约 2 秒）：
 
@@ -402,6 +416,10 @@ python3 test/test_mlp.py
 # 5/5 通过（在 660 条真实样本上复算：先按 x_mean/x_std 标准化、
 #          前向后按 y_std/y_mean 反标准化，两分量相关系数 0.799 / 0.900）
 ```
+
+本地以 `requirements.txt` 装好依赖后实跑该命令的终端画面：
+
+![自检终端输出](../img/uav/attitude/terminal_selfcheck.png)
 
 注意本模块的数据集是**唯一没有在存盘时标准化**的一个——`attitude_data.npz` 里 `X`/`Y` 是原始值，标准化参数单独存在 `attitude.npz` 的 `x_mean/x_std/y_mean/y_std` 里；而 imu / wind 的数据集存盘时 `X` 已经标准化过。混用两种约定会得到明显偏低的相关系数。
 

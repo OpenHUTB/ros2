@@ -19,9 +19,16 @@ class AttitudeNode(Node):
         super().__init__("uav_airsim_attitude_estimator")
         self.declare_parameter("weights", "models_trained/attitude.npz")
         wpath = self.get_parameter("weights").value
-        if not os.path.isabs(wpath):
-            wpath = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__)), wpath)
-                                 if not os.path.exists(wpath) else wpath)
+        if not os.path.isabs(wpath) and not os.path.exists(wpath):
+            # 相对路径且当前工作目录找不到时，按本包根目录（models_trained 所在那一层）解析
+            wpath = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__))), wpath
+            )
+        if not os.path.exists(wpath):
+            raise FileNotFoundError(
+                "权重文件不存在：%s（用 weights 参数传绝对路径，或先运行 python3 main.py --train 生成）"
+                % wpath
+            )
 
         w = np.load(wpath)
         self.net = MLP(n_in=30, hidden=(32,), n_out=2, seed=0)
