@@ -1,0 +1,41 @@
+{
+  "activation_mae": 0.0219,
+  "architecture": [
+    28,
+    160,
+    160,
+    4
+  ],
+  "augment_samples": 7500,
+  "batch": 96,
+  "epochs": 80,
+  "input": "EE polar + target polar + q + dq + activation + 4x4 depth = 28",
+  "input_dim": 28,
+  "lr": 0.002,
+  "max_muscle_mae": 0.0286,
+  "model": "activation_mlp",
+  "muscles": [
+    "shoulder_flexor",
+    "shoulder_extensor",
+    "elbow_flexor",
+    "elbow_extensor"
+  ],
+  "normalised_rmse": 0.03789,
+  "output": "4 muscle activations in [0, 1]",
+  "per_muscle_mae": [
+    0.0286,
+    0.0167,
+    0.0236,
+    0.0188
+  ],
+  "seconds": 480.58,
+  "task": "behaviour cloning of the analytic muscle activation policy",
+  "train_samples": 8988,
+  "val_episodes": [
+    1,
+    1000,
+    1005,
+    2000
+  ],
+  "val_samples": 101
+}

@@ -18,6 +18,8 @@ from typing import Dict
 
 import numpy as np
 
+from route_constants import CROSS_SCALE, LOOKAHEAD_SCALE, Z_SCALE
+
 OBS_DIM = 30
 ACT_DIM = 4
 
@@ -71,7 +73,6 @@ def build_observation(hist, cross, cross_angle, goal_rel_xy, speed_h, z_err) -> 
     speed_h        : 水平速度（米/秒）
     z_err          : 高度偏差（米）
     """
-    from route_env import CROSS_SCALE, LOOKAHEAD_SCALE, Z_SCALE  # noqa: WPS433
     hist = np.asarray(hist, dtype=np.float32).reshape(-1)
     g = np.asarray(goal_rel_xy, dtype=np.float32).reshape(-1)[:2]
     extra = np.array([

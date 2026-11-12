@@ -19,9 +19,12 @@ scripts/linalg.py           3D 旋转、4x4 位姿、解方程、Jacobi 特征�
 scripts/kinematics.py       关节、串联链、正运动学、几何雅可比
 scripts/ik_solver.py        伪逆 / 阻尼最小二乘 / 零空间 / 自适应阻尼
 scripts/manipulability.py   Yoshikawa 指标、奇异值、椭球、限位代价
+scripts/whole_body_ik.py    分层任务优先级全身 IK（末端 + 姿态 + 限位）
+scripts/demo_whole_body.py  全身 IK 演示（姿态保持 / 限位规避）
 scripts/simple_plot.py      手写 PNG 折线图（只用 zlib）
 scripts/animate.py          线框图动图（需要 Pillow）
 test/test_ik.py             93 个单元测试
+test/test_whole_body_ik.py  32 个单元测试（投影矩阵、任务、优先级、限位）
 ```
 
 ## 运行
@@ -31,6 +34,7 @@ cd src/humanoid/whole_body_ik
 python3 main.py            # 完整演示，出 6 张曲线
 python3 main.py --quick    # 跳过画圆跟踪
 python3 main.py --gif      # 额外生成动图（需 pip install pillow）
+python3 scripts/demo_whole_body.py   # 全身 IK 演示：姿态保持 + 限位规避
 ./main.sh                  # 等价的 shell 入口
 ```
 
@@ -41,7 +45,7 @@ cd src/humanoid/whole_body_ik
 python3 -m unittest discover -s test
 ```
 
-跑完应显示 `Ran 93 tests ... OK`。
+跑完应显示 `Ran 125 tests ... OK`。
 
 ## 用 launch 启动
 
@@ -62,5 +66,7 @@ roslaunch whole_body_ik quick.launch    # 快速
 | 位姿逆解（6 维） | 38 次迭代，误差 1.28e-11 |
 | 奇异点 q1=0.005 | 伪逆步长 4.472，DLS 0.0006 |
 | 零空间投影 \|J·Δq\| | 1.50e-16 |
+| 全身 IK：位置 + 姿态保持（7 自由度） | 末端误差 1.05e-12 m，离参考位形近 16% |
+| 全身 IK：位置 + 限位规避（肘部贴上限） | 末端误差 1.43e-09 m，限位裕度 0.018 → 0.254 |
 
 详细说明见站点文档：`docs/humanoid/whole_body_ik.md`

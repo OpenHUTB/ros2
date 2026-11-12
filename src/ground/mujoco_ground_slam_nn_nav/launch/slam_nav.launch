@@ -1,0 +1,49 @@
+<launch>
+  <!-- Full SLAM + A* navigation + pure-pursuit mission. -->
+  <arg name="scene" default="warehouse"/>
+  <arg name="seed" default="20261026"/>
+  <arg name="noise" default="true"/>
+  <arg name="viewer" default="true"/>
+  <arg name="teleop" default="true"/>
+  <arg name="duration" default="90"/>
+  <arg name="goal_x" default="22.0"/>
+  <arg name="goal_y" default="14.0"/>
+  <arg name="use_neural_planner" default="false"/>
+  <arg name="use_nn_controller" default="false"/>
+  <arg name="visualize" default="true"/>
+
+  <node pkg="mujoco_ground_slam_nn_nav" type="sim_node.py" name="gvnn_sim" output="screen">
+    <param name="scene" value="$(arg scene)"/>
+    <param name="seed" value="$(arg seed)"/>
+    <param name="noise" value="$(arg noise)"/>
+  </node>
+
+  <node pkg="mujoco_ground_slam_nn_nav" type="slam_node.py" name="gvnn_slam" output="screen">
+    <param name="start_x" value="2.0"/>
+    <param name="start_y" value="2.0"/>
+    <param name="start_yaw" value="0.0"/>
+  </node>
+
+  <node pkg="mujoco_ground_slam_nn_nav" type="planner_node.py" name="gvnn_planner" output="screen">
+    <param name="goal_x" value="$(arg goal_x)"/>
+    <param name="goal_y" value="$(arg goal_y)"/>
+    <param name="use_neural" value="$(arg use_neural_planner)"/>
+  </node>
+
+  <node pkg="mujoco_ground_slam_nn_nav" type="controller_node.py" name="gvnn_controller" output="screen">
+    <param name="use_nn" value="$(arg use_nn_controller)"/>
+  </node>
+
+  <node pkg="mujoco_ground_slam_nn_nav" type="mission_node.py" name="gvnn_mission" output="screen">
+    <param name="mode" value="classical"/>
+    <param name="scene" value="$(arg scene)"/>
+    <param name="goal_x" value="$(arg goal_x)"/>
+    <param name="goal_y" value="$(arg goal_y)"/>
+    <param name="duration" value="$(arg duration)"/>
+  </node>
+
+  <node if="$(arg viewer)" pkg="mujoco_ground_slam_nn_nav" type="viewer_node.py" name="gvnn_viewer" output="screen">
+    <param name="scene" value="$(arg scene)"/>
+    <param name="teleop" value="$(arg teleop)"/>
+  </node>
+</launch>

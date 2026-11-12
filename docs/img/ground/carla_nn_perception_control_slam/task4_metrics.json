@@ -1,0 +1,8 @@
+{
+  "frames": 70,
+  "elapsed_s": 1.3,
+  "avg_speed_kmh": 28.57,
+  "max_speed_kmh": 58.36,
+  "mean_abs_steer": 0.068,
+  "inference_fps": 54.13
+}

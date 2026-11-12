@@ -1,0 +1,52 @@
+name: Turtle patrol Noetic
+on:
+  push:
+    branches: [feat/turtle-waypoint-patrol]
+    paths:
+      - 'src/chap1/turtle_waypoint_patrol/**'
+      - '.github/workflows/turtle_patrol_tests.yml'
+  pull_request:
+    paths:
+      - 'src/chap1/turtle_waypoint_patrol/**'
+      - '.github/workflows/turtle_patrol_tests.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  noetic:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    container:
+      image: osrf/ros:noetic-desktop@sha256:d5b6240d52269a86c3dcdacbca2a94e655a8fe9ea98390f2af0486b496ee6bf3
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Python 3.8 offline checks and catkin build/install
+        run: |
+          source /opt/ros/noetic/setup.bash
+          mkdir -p "$GITHUB_WORKSPACE/patrol_evidence" /tmp/patrol_ws/src
+          bash src/chap1/turtle_waypoint_patrol/run_checks.sh --offline 2>&1 | tee patrol_evidence/offline.txt
+          ln -s "$GITHUB_WORKSPACE/src/chap1/turtle_waypoint_patrol" /tmp/patrol_ws/src/turtle_waypoint_patrol
+          catkin_make -C /tmp/patrol_ws -DPYTHON_EXECUTABLE=/usr/bin/python3 2>&1 | tee patrol_evidence/build.txt
+          catkin_make -C /tmp/patrol_ws install 2>&1 | tee patrol_evidence/install.txt
+      - name: Three real turtlesim runs with original exit deadline
+        run: |
+          source /opt/ros/noetic/setup.bash
+          export TMPDIR="$GITHUB_WORKSPACE/patrol_evidence"
+          for attempt in 1 2 3; do
+            bash src/chap1/turtle_waypoint_patrol/run_checks.sh --headless 2>&1 | tee "patrol_evidence/run_${attempt}.txt"
+          done
+      - name: Installed roslaunch entry and services
+        run: |
+          source /tmp/patrol_ws/install/setup.bash
+          python3 src/chap1/turtle_waypoint_patrol/verify_launch.py --output "$GITHUB_WORKSPACE/patrol_evidence/installed_launch"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: turtle-patrol-noetic
+          path: patrol_evidence/
+          if-no-files-found: error

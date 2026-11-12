@@ -71,12 +71,16 @@ class RooftopLandingNode(object):
         self.min_area = float(g("perception/min_roof_area", 8.0))
         self.min_height = float(g("perception/min_height", 0.5))
         self.height_mode = g("perception/min_height_mode", "relative")
-        self.ground_margin = float(g("perception/ground_margin", 1.0))
-        self.max_planes = int(g("perception/max_planes", 5))
+        self.ground_margin = float(g("perception/ground_margin", 4.0))
+        self.require_ground = bool(g("perception/require_ground_reference", True))
+        self.max_planes = int(g("perception/max_planes", 15))
         self.min_radius = float(g("perception/min_landing_radius", 0.6))
         self.prefer = g("perception/prefer", "highest")
         self.cluster_cell = float(g("perception/cluster_cell", 1.0))
         self.cluster_min_points = int(g("perception/cluster_min_points", 2))
+        # 落点算法：auto（默认，凹形/带天井时自动切栅格法）/ grid / hull
+        self.landing_mode = g("perception/landing_mode", "auto")
+        self.grid_cell = float(g("perception/grid_cell", 0.5))
 
         self.safe_alt = float(g("approach/safe_altitude", 5.0))
         self.goal_timeout = float(g("approach/goal_timeout", 60.0))
@@ -127,10 +131,10 @@ class RooftopLandingNode(object):
         rospy.loginfo("[rooftop_landing] 已启动，状态=%s，高度约定 z_up=%s"
                       % (self.state, self.z_up))
         rospy.loginfo("[rooftop_landing] 屋顶高度判定：mode=%s"
-                      "（ground_margin=%.1f m，min_height=%.2f m 仅 absolute 模式生效），"
-                      "主循环 %.1f Hz"
+                      "（ground_margin=%.1f m，min_height=%.2f m 仅 absolute 模式生效，"
+                      "require_ground_reference=%s），主循环 %.1f Hz"
                       % (self.height_mode, self.ground_margin, self.min_height,
-                         self.tick_hz))
+                         self.require_ground, self.tick_hz))
         rospy.loginfo("[rooftop_landing] 订阅 %s / %s / %s；发布 %s / %s"
                       % (self.t_lidar, self.t_odom, self.t_status,
                          self.t_goal, self.t_cmd))
@@ -261,6 +265,8 @@ class RooftopLandingNode(object):
             cluster_cell=self.cluster_cell,
             cluster_min_points=self.cluster_min_points,
             min_height_mode=self.height_mode, ground_margin=self.ground_margin,
+            require_ground_reference=self.require_ground,
+            landing_mode=self.landing_mode, grid_cell=self.grid_cell,
             info=info)
         rospy.loginfo("[rooftop_landing] 点云 %d 点，检测到 %d 个候选水平面"
                       % (len(cloud), len(roofs)))
@@ -273,6 +279,13 @@ class RooftopLandingNode(object):
         elif self.height_mode != "relative":
             rospy.loginfo("[rooftop_landing] 高度基准：绝对阈值 %.2f m"
                           % info.get("threshold", self.min_height))
+        elif self.require_ground:
+            # 只有 1 个水平面：分不清是地面还是屋顶 ⇒ 本次不产生候选
+            rospy.logwarn_throttle(
+                5.0, "[rooftop_landing] 只提取到 %d 个水平面，无法确定地面基准，"
+                     "本次不降落（继续搜索）；若本场景确实只有屋顶、看不到地面，"
+                     "可设 perception/require_ground_reference:=false"
+                     % info.get("planes", 0))
         else:
             rospy.loginfo("[rooftop_landing] 只提取到 %d 个水平面，"
                           "无法确定地面基准，本次不做高度过滤"
@@ -297,6 +310,11 @@ class RooftopLandingNode(object):
             "[rooftop_landing] 选中屋顶：高度 %.2f m，面积 %.1f m^2，"
             "降落点 (%.2f, %.2f)，内切圆半径 %.2f m"
             % (self.landing_alt, target["area"], lx, ly, target["radius"]))
+        # 落点来源要打出来：凹形/带天井的屋顶上，凸包法与栅格法给出的点可能差很多，
+        # 排查"为什么落在天井里"时第一眼就要看到用的是哪一种。
+        rospy.loginfo(
+            "[rooftop_landing] 落点来源 %s（占据面积/凸包面积 = %.2f）"
+            % (target.get("landing_mode", "hull"), target.get("shape_ratio", 1.0)))
         self.publish_landing_point(target)
         self.publish_landing_marker(target)
         self.publish_goal(target)
@@ -410,6 +428,24 @@ class RooftopLandingNode(object):
         s.scale.x = s.scale.y = s.scale.z = max(0.4, 2.0 * target["radius"])
         s.color.r, s.color.g, s.color.b, s.color.a = 0.1, 1.0, 0.2, 0.6
         arr.markers.append(s)
+
+        # 凹形 / 带天井的屋顶：上面那条凸包线框会把凹口、天井"填平"，看起来像
+        # 一整块完整的屋顶。这里再画一层占据格（半透明蓝），RViz 里才能看出
+        # 哪块是屋顶、哪块是洞，也才能解释落点为什么放在那一侧。
+        if target.get("landing_mode") == "grid":
+            fp = rp.footprint_points(target)
+            if fp:
+                f = Marker()
+                f.header.frame_id = self.world
+                f.header.stamp = rospy.Time.now()
+                f.ns, f.id, f.type, f.action = "roof_footprint", 2, Marker.CUBE_LIST, Marker.ADD
+                f.scale.x = f.scale.y = float(target["grid"]["cell"]) * 0.9
+                f.scale.z = 0.05
+                f.color.r, f.color.g, f.color.b, f.color.a = 0.2, 0.5, 1.0, 0.35
+                f.pose.orientation.w = 1.0
+                f.points = [Point(float(x), float(y), float(zz) + 0.02)
+                            for (x, y, zz) in fp]
+                arr.markers.append(f)
         self.pub_mark.publish(arr)
 
     def spin(self):

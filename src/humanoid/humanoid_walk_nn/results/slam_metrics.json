@@ -1,0 +1,107 @@
+{
+  "generated": "2026-11-11T10:20:01",
+  "scene": "hall,warehouse,obstacle",
+  "seconds": 28.17,
+  "ate_rmse_m": 0.1675,
+  "ate_max_m": 0.3339,
+  "final_position_error_m": 0.1417,
+  "coverage_mean": 0.483,
+  "coverage_final": 0.7938,
+  "coverage_drivable": 0.483,
+  "map_cells": [
+    150,
+    375
+  ],
+  "resolution_m": 0.08,
+  "collisions": 0,
+  "falls": 0,
+  "slam_source": "SlamFrontend",
+  "controller_source": "fallback_geometric_expert",
+  "scenes": {
+    "hall": {
+      "scene": "hall",
+      "seconds": 26.15,
+      "ate_rmse_m": 0.1876,
+      "ate_max_m": 0.3244,
+      "final_position_error_m": 0.1489,
+      "coverage_mean": 0.6037,
+      "coverage_final": 0.9812,
+      "coverage_drivable": 0.6037,
+      "map_cells": [
+        150,
+        375
+      ],
+      "resolution_m": 0.08,
+      "collisions": 0,
+      "falls": 0,
+      "slam_source": "SlamFrontend",
+      "controller_source": "fallback_geometric_expert"
+    },
+    "warehouse": {
+      "scene": "warehouse",
+      "seconds": 35.0,
+      "ate_rmse_m": 0.2095,
+      "ate_max_m": 0.3339,
+      "final_position_error_m": 0.1854,
+      "coverage_mean": 0.4,
+      "coverage_final": 0.6808,
+      "coverage_drivable": 0.4,
+      "map_cells": [
+        250,
+        300
+      ],
+      "resolution_m": 0.08,
+      "collisions": 0,
+      "falls": 0,
+      "slam_source": "SlamFrontend",
+      "controller_source": "fallback_geometric_expert"
+    },
+    "obstacle": {
+      "scene": "obstacle",
+      "seconds": 23.35,
+      "ate_rmse_m": 0.1055,
+      "ate_max_m": 0.2559,
+      "final_position_error_m": 0.0908,
+      "coverage_mean": 0.4454,
+      "coverage_final": 0.7195,
+      "coverage_drivable": 0.4454,
+      "map_cells": [
+        250,
+        250
+      ],
+      "resolution_m": 0.08,
+      "collisions": 0,
+      "falls": 0,
+      "slam_source": "SlamFrontend",
+      "controller_source": "fallback_geometric_expert"
+    }
+  },
+  "odometry_only": {
+    "scene": "hall,warehouse,obstacle",
+    "ate_rmse_m": 0.0331,
+    "final_position_error_m": 0.0259,
+    "scenes": {
+      "hall": {
+        "scene": "hall",
+        "ate_rmse_m": 0.0353,
+        "final_position_error_m": 0.0238,
+        "seconds": 26.15,
+        "controller_source": "fallback_geometric_expert"
+      },
+      "warehouse": {
+        "scene": "warehouse",
+        "ate_rmse_m": 0.0295,
+        "final_position_error_m": 0.0347,
+        "seconds": 35.0,
+        "controller_source": "fallback_geometric_expert"
+      },
+      "obstacle": {
+        "scene": "obstacle",
+        "ate_rmse_m": 0.0344,
+        "final_position_error_m": 0.0193,
+        "seconds": 23.35,
+        "controller_source": "fallback_geometric_expert"
+      }
+    }
+  }
+}

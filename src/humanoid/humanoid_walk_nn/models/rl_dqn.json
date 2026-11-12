@@ -1,0 +1,17 @@
+{
+  "algorithm": "DQN",
+  "best_epoch": 50,
+  "episodes": 250,
+  "final_recent_success": 0.8,
+  "hidden": [
+    64,
+    64
+  ],
+  "mean_collisions": 0.07,
+  "mean_falls": 0.27,
+  "mean_return": 20.526,
+  "mean_steps": 30.3,
+  "success_rate": 0.767,
+  "train_seconds": 3.37,
+  "train_steps": 9733
+}

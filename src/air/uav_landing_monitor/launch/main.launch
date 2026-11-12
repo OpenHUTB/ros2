@@ -1,0 +1,44 @@
+<launch>
+  <!-- ============================================================
+       uav_landing_monitor 统一启动入口（作业要求的 launch 启动）
+
+         roslaunch uav_landing_monitor main.launch
+
+       前置条件（另开终端先把桥接层和降落模块跑起来）：
+         roslaunch carlair_ros_bridge main.launch host:=<仿真器地址>
+         roslaunch rooftop_landing_nn main.launch      # 或 rooftop_landing
+
+       本节点只“看”不“控”：订阅里程计/速度指令/状态，输出告警与报告。
+
+       可选参数示例：
+         roslaunch uav_landing_monitor main.launch csv:=/tmp/landing.csv
+         roslaunch uav_landing_monitor main.launch z_up:=false     # 桥接层高度是 NED 下为正
+         roslaunch uav_landing_monitor main.launch stale_input_s:=0.5
+       ============================================================ -->
+
+  <arg name="csv"            default=""     doc="非空则把逐帧数据写成 CSV 路径"/>
+  <arg name="z_up"           default="true" doc="高度分量是否上为正（ENU）"/>
+  <arg name="target_mode"    default="auto" doc="auto|landing|goal_offset|fixed"/>
+  <arg name="target_z"       default="0.0"  doc="target_mode:=fixed 时的目标高度 (m)"/>
+  <arg name="use_target_z"   default="false" doc="是否使用上面的固定目标高度"/>
+  <arg name="rate_hz"        default="10.0" doc="判据计算频率 (Hz)"/>
+  <arg name="verbose"        default="true" doc="告警是否同时打到 rosout"/>
+  <arg name="stale_input_s"  default="1.0"  doc="里程计超时 (s)"/>
+  <arg name="timeout_s"      default="90.0" doc="下降超时 (s)"/>
+
+  <!-- 参数必须写在 <node> 里面：节点读的是私有参数（~topic/...），
+       写在 <node> 外面会变成全局参数而读不到。 -->
+  <node pkg="uav_landing_monitor" type="main.py" name="uav_landing_monitor"
+        output="screen" required="true">
+    <rosparam command="load" file="$(find uav_landing_monitor)/config/uav_landing_monitor.yaml"/>
+
+    <param name="frame/z_up"             value="$(arg z_up)"/>
+    <param name="monitor/csv"            value="$(arg csv)"/>
+    <param name="monitor/rate_hz"        value="$(arg rate_hz)"/>
+    <param name="monitor/verbose"        value="$(arg verbose)"/>
+    <param name="target/mode"            value="$(arg target_mode)"/>
+    <param name="thresholds/stale_input_s" value="$(arg stale_input_s)"/>
+    <param name="thresholds/timeout_s"   value="$(arg timeout_s)"/>
+    <param name="target/z"               value="$(arg target_z)" if="$(arg use_target_z)"/>
+  </node>
+</launch>

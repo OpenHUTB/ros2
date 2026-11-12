@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>tire_slip_curve</name>
+  <version>1.0.0</version>
+  <description>
+    轮胎滑移率-附着曲线核算：用一条有闭式解的解析曲线，讲清峰值附着、锁死附着的衰减，
+    以及 ABS 为什么要把滑移率控制在峰值附近。纯标准库，不依赖 CARLA / numpy / GPU。
+  </description>
+
+  <maintainer email="2962141671@qq.com">Wist-sutton</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+
+  <export/>
+</package>

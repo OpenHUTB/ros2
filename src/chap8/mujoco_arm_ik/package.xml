@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>mujoco_arm_ik</name>
+  <version>1.0.0</version>
+  <description>
+    MuJoCo 二连杆平面机械臂逆运动学（IK）画圆轨迹仿真：
+    末端沿半径 0.15 m 的圆形轨迹匀速运动，解析 2 连杆 IK 实时解算关节角，
+    关节 PD 位置控制驱动，并把末端实际位置逐帧投影成黄色轨迹线；
+    运行时打印仿真侧跟踪误差（末端实际位置 vs 目标），与 IK 解算精度分开报告。
+    纯 Python + MuJoCo，不依赖 ROS 话题；launch 仅用于一键启动脚本。
+  </description>
+  <maintainer email="kl-kl07@users.noreply.github.com">kl-kl07</maintainer>
+  <license>Apache-2.0</license>
+  <url type="repository">https://github.com/OpenHUTB/ros2/tree/master/src/chap8/mujoco_arm_ik</url>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-pil</exec_depend>
+</package>

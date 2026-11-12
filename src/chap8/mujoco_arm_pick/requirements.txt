@@ -1,0 +1,4 @@
+# mujoco_arm_pick 运行依赖
+mujoco>=3.0
+numpy
+pillow

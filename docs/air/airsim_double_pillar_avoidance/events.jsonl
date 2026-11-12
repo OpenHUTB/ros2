@@ -1,0 +1,7 @@
+{"time_unix_s": 1793895354.2779248, "state": "mission_started", "reason": ""}
+{"time_unix_s": 1793895382.1499608, "state": "pillar_cleared", "reason": "pillars_cleared=1"}
+{"time_unix_s": 1793895393.7183146, "state": "pillar_cleared", "reason": "pillars_cleared=2"}
+{"time_unix_s": 1793895415.46987, "state": "pillar_cleared", "reason": "pillars_cleared=3"}
+{"time_unix_s": 1793895437.290885, "state": "goal_reached", "reason": "pillars_cleared=3"}
+{"time_unix_s": 1793895448.168103, "state": "landing_error", "reason": "TimeoutError: Request timed out"}
+{"time_unix_s": 1793895448.1691048, "state": "landing_unconfirmed", "reason": ""}

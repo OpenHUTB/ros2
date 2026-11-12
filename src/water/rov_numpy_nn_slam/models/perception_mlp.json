@@ -1,0 +1,80 @@
+{
+  "architecture": [
+    64,
+    128,
+    128,
+    64
+  ],
+  "augment_pairs": 7500,
+  "batch": 64,
+  "epochs": 40,
+  "hidden": 128,
+  "history": [
+    {
+      "epoch": 1,
+      "train_mse": 0.046503,
+      "val_rmse_norm": 0.14146
+    },
+    {
+      "epoch": 5,
+      "train_mse": 0.017612,
+      "val_rmse_norm": 0.13736
+    },
+    {
+      "epoch": 10,
+      "train_mse": 0.014401,
+      "val_rmse_norm": 0.12362
+    },
+    {
+      "epoch": 15,
+      "train_mse": 0.011439,
+      "val_rmse_norm": 0.11126
+    },
+    {
+      "epoch": 20,
+      "train_mse": 0.009678,
+      "val_rmse_norm": 0.10237
+    },
+    {
+      "epoch": 25,
+      "train_mse": 0.00868,
+      "val_rmse_norm": 0.09767
+    },
+    {
+      "epoch": 30,
+      "train_mse": 0.007865,
+      "val_rmse_norm": 0.0922
+    },
+    {
+      "epoch": 35,
+      "train_mse": 0.00683,
+      "val_rmse_norm": 0.08634
+    },
+    {
+      "epoch": 40,
+      "train_mse": 0.006191,
+      "val_rmse_norm": 0.08206
+    }
+  ],
+  "lr": 0.001,
+  "mae_m": 0.3532,
+  "mae_norm": 0.04586,
+  "model": "perception_mlp",
+  "rmse_denoised": 0.6319,
+  "rmse_denoised_norm": 0.08206,
+  "rmse_denoised_valid": 0.529,
+  "rmse_improvement_pct": 42.15,
+  "rmse_improvement_valid_pct": 17.25,
+  "rmse_noisy": 1.0923,
+  "rmse_noisy_norm": 0.14186,
+  "rmse_noisy_valid": 0.6393,
+  "seconds": 125.1,
+  "target": "residual (clean - noisy), output = noisy + residual clipped",
+  "task": "sonar denoising (64 beams), predicts residual clean-noisy",
+  "train_samples": 8300,
+  "val_episodes": [
+    0,
+    1
+  ],
+  "val_samples": 527
+}

@@ -1,5 +1,8 @@
-*.png binary
-*.jpg binary
-*.jpeg binary
-*.gif binary
-*.pdf binary
+*.sh text eol=lf
+*.bat text eol=crlf
+*.py text eol=lf
+*.md text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.csv text eol=lf
+*.json text eol=lf

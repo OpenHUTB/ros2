@@ -1,0 +1,12 @@
+/**:
+  ros__parameters:
+    host: 127.0.0.1
+    port: 41451
+    vehicle_name: ""
+    magnetometer_name: ""
+    magnetometer_topic: /uav/magnetometer
+    frame_id: base_link
+    publish_rate: 20.0
+    reconnect_period: 2.0
+    rpc_timeout: 1.0
+    field_scale: 1.0

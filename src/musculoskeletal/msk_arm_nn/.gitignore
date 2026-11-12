@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.python/
+
+# ROS / catkin
+build/
+devel/
+logs/
+*.bag
+catkin_ws/
+
+# results that are heavy or machine-specific
+results/*.npz
+docs/assets/*.tmp
+
+# editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# recordings made locally (keep the published ones)
+media/*.log

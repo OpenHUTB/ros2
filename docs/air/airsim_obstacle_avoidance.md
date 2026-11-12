@@ -54,9 +54,12 @@
 
 ## 运行效果
 
-![用户提供的 AirSim Unity 无人机实际运行动图](../img/air/airsim_obstacle_avoidance/flight_demo.gif)
+<video controls preload="metadata" width="100%">
+  <source src="../../img/air/airsim_obstacle_avoidance/flight_demo.mp4" type="video/mp4">
+  当前浏览器不支持 HTML5 视频播放。
+</video>
 
-动图来自用户实际运行录制。用户原文件虽名为 GIF，文件头实际为 MP4，现已保留为 [原始运行视频](../img/air/airsim_obstacle_avoidance/flight_demo.mp4)（5,884,254 字节），并转码为真正的 GIF（640×425、8 fps、413 帧、8,010,410 字节，小于 10 MB），保留完整时序，未使用生成图冒充实验结果。观察重点为起飞、柱子附近运动和绕行后继续向目标前进；实际最小间距没有独立测量，不将参数值当作实测安全距离。
+页面直接播放本次 AirSim 运行记录，媒体文件和运行轨迹分别保留。观察重点为起飞、柱子附近运动和绕行后继续向目标前进；实际最小间距没有独立测量，不将参数值当作实测安全距离。
 
 
 ## 已知限制与尚未验证内容
@@ -73,11 +76,11 @@
 
 - [x] 源码与教程分别放在 src/air 与 docs/air，新增文件使用英文下划线命名。
 - [x] 提供 main.py、launch/run_demo.ps1、requirements.txt、README；ROS launch 不适用于本次直接 API 实验。
-- [x] 新增首页与空域载具导航入口，真实 GIF 小于 10 MB；未添加 PNG。
+- [x] 新增首页与空域载具导航入口，页面内播放原始 MP4。
 - [x] 已保留实际飞行日志，未把虚拟环境、缓存和临时 artifacts 目录作为源码提交。
 - [ ] main.py/启动器单独实飞、ROS 接口及自动降落确认未验证，不虚报完成。
 
-- [x] 已运行 `mkdocs serve --livereload -a 127.0.0.1:8001`，页面及嵌入 GIF 均返回 HTTP 200；文档构建成功。仓库其他页面仍有既有链接告警。
+- [x] 执行 `mkdocs build` 后验证生成页面，视频请求返回 HTTP 206，并完成播放与进度跳转检查。
 - [x] 最终检查 `git diff --check`、未解决冲突和暂存文件清单；此次仅新增本模块及首页/导航入口，没有删除公共文件。
 
 ## 大模型使用声明

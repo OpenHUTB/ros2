@@ -1,0 +1,124 @@
+{
+  "accuracy": 0.7894,
+  "architecture": [
+    20,
+    64,
+    64,
+    8
+  ],
+  "batch": 64,
+  "confusion": [
+    [
+      391,
+      32,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1
+    ],
+    [
+      35,
+      25,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      42,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  ],
+  "directions": [
+    "ahead",
+    "ahead_left",
+    "left",
+    "back_left",
+    "back",
+    "back_right",
+    "right",
+    "ahead_right"
+  ],
+  "epochs": 50,
+  "input": "16 sonar sectors + goal polar (20)",
+  "lr": 0.001,
+  "model": "planner_mlp",
+  "per_class_accuracy": {
+    "ahead": 0.922,
+    "ahead_left": 0.417,
+    "ahead_right": 0.0,
+    "back": null,
+    "back_left": null,
+    "back_right": null,
+    "left": null,
+    "right": null
+  },
+  "seconds": 1.51,
+  "task": "discrete local action (8 directions) classification",
+  "train_samples": 800,
+  "val_episodes": [
+    0,
+    1
+  ],
+  "val_samples": 527
+}

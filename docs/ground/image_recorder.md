@@ -4,8 +4,8 @@
 本模块属于 ROS 2 与仿真环境之间的桥接功能。基于 ROS 2 实现了一个图像录制节点，用于订阅 Carla 仿真器发布的摄像头话题，实现按下回车键将当前图像保存至本地的功能，为后续的视觉数据处理提供辅助。
 
 ## 运行环境
-* 操作系统：Ubuntu 22.04（虚拟机）
-* ROS 2 版本：Humble
+* 操作系统：Ubuntu 20.04（Foxy 实测）/ Ubuntu 22.04（Humble 未实测）
+* ROS 2 版本：Foxy 已验证（Humble 未实测）
 * 依赖库：rclpy, sensor_msgs, cv_bridge, opencv-python
 
 ## 核心代码内容
@@ -49,7 +49,32 @@ source install/setup.bash
 ```
 ros2 launch image_recorder main.launch.py
 ```
-5.验证运行结果：终端输出 [INFO] [image_recorder_node]: Node started, waiting for images...，表示节点编译部署成功，已进入监听状态。
+5.验证运行结果：终端输出形如
+`[INFO] [image_recorder_node]: Node started, topic=/carla/ego_vehicle/camera/rgb/front/image, output_dir=., show_window=True`，
+表示节点已订阅到话题并进入监听状态。
+
+### 可用参数（launch 同名参数）
+
+| 参数 | 默认 | 说明 |
+| --- | --- | --- |
+| `image_topic` | `/carla/ego_vehicle/camera/rgb/front/image` | 订阅的图像话题，缺少前导 `/` 会自动补上 |
+| `output_dir` | `.` | 保存目录，不存在时递归创建 |
+| `image_format` | `jpg` | `jpg` / `jpeg` / `png` |
+| `show_window` | `true` | 无图形界面时设为 `false`：不弹窗、逐帧保存 |
+
+无界面录制示例：
+
+```bash
+ros2 launch image_recorder main.launch.py \
+  show_window:=false output_dir:=$HOME/captures image_format:=png
+```
+
+> 验证状态：Foxy（Ubuntu 20.04）已实测 `ros2 launch` + 终端 Ctrl-C，连续 3 次 clean exit 0；
+> Humble 的 launch + Ctrl-C 未实测，其关闭路径由单元测试
+> `test_spin_external_shutdown_is_clean` 覆盖。
+
+图片按 `capture_YYYYmmdd_HHMMSS_fff_NNN.png` 命名（时间戳 + 递增序号），不会互相覆盖；
+`cv2.imwrite()` 失败时会打印 `Failed to write image: ...`，不再误报 `Saved as ...`。
 
 ![运行效果图片](../img/run_result.png)
 
