@@ -364,6 +364,7 @@ nav:
     - 无人机测距几何一致性检查: './air/mujoco_uav_range_sensor_quality.md'
     - Town10立面自主巡航与图像采集: './air/town10_facade_cruise_capture/index.md'
     - AirSim 无人机弓字形区域勘测: './air/drone_lawnmower_survey.md'
+    - 无人机输电线路双侧巡检航线预览: './air/uav_powerline_inspection.md'
     - 输电线路无人机巡检任务预检: './air/powerline_mission_preflight.md'
     - Town10幕墙图像病害识别: './air/town10_facade_defect_detection/index.md'
 
