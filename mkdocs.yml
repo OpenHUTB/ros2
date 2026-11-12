@@ -432,6 +432,7 @@ nav:
     - 水面无人艇：激光雷达建图与神经网络局部规划: './water/usv_mujoco_nn.md'
     - 声呐数据滤波初步验证: './water/rov_sonar_filter.md'
     - ROV 水下机器人 MuJoCo 建图导航与神经网络控制: './water/rov_mujoco_slam_nn_nav/README.md'
+    - DAVE 水下机器人仿真环境搭建与 REXROV/Oberon7 机械臂作业演示: './water/dave_underwater_sim.md'
 
 
 - 经典控制:

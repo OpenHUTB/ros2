@@ -486,6 +486,8 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 
 * [水面无人艇：激光雷达建图与神经网络局部规划](./water/usv_mujoco_nn.md) —— MuJoCo 三自由度船体，射线激光雷达 + log-odds 占据栅格建图，MLP 输出局部目标点实现自主避障，封装为 ROS Noetic 节点
 
+* [DAVE 水下机器人仿真环境搭建与 REXROV/Oberon7 机械臂作业演示](./water/dave_underwater_sim.md) —— 基于 Project DAVE（ROS Noetic + Gazebo 11）的 REXROV + Oberon7 机械臂水下作业仿真，附安装脚本与截图/动图
+
 ### 规划
 
 * [水下多传感器感知与 3D 轨迹跟踪控制](./water/rov_trajectory_tracking.md)
