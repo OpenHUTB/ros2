@@ -1,0 +1,6 @@
+{
+  "alarm_samples": 97,
+  "stale_samples": 19,
+  "final_state": "CLEAR",
+  "validation_scope": "offline mathematical demo; ROS runtime not tested"
+}

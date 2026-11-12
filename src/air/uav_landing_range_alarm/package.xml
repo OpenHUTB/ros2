@@ -1,0 +1,4 @@
+<package format="2"><name>uav_landing_range_alarm</name><version>0.1.0</version>
+<description>处理低空近地测距的阈值抖动、连续确认和断流，只输出报警，不宣称自动降落。</description><maintainer email="327714038+tanyongkang0618-spec@users.noreply.github.com">tanyongkang0618-spec</maintainer>
+<license>MIT</license><buildtool_depend>catkin</buildtool_depend>
+<depend>rospy</depend><depend>std_msgs</depend><depend>sensor_msgs</depend><exec_depend>python3-matplotlib</exec_depend></package>

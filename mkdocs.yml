@@ -348,15 +348,7 @@ nav:
     - 急停闩锁与人工复位: './ground/estop_latch.md'
    - 城市道路地面载具二维动力学、激光 SLAM 与神经网络导航: './ground/road_numpy_nn_slam.md'
 - 空域载具:
-    - 无人机空间围栏与速度门控: './air/uav_box_geofence_guard/index.md'
-    - MuJoCo 城市屋顶光伏覆盖率测量: './air/mujoco_uav_rooftop_pv_coverage_survey.md'
-    - MuJoCo 屋顶光伏覆盖率测量第二天: './air/mujoco_uav_rooftop_pv_coverage_survey_day2.md'
-    - winter 场景无人机圆周飞行: './air/winter_circle.md'
-    - AirSim ROS 1 Noetic PPO 联调: './air/airsim_rl_planner_ros1.md'
-    - 无人机制动旧入口: './ground/mujoco_drone_distance_stop.md'
-    - 无人机测距制动与神经控制: './air/mujoco_uav_range_neural_braking.md'
-    - 无人机测距制动轨迹指标分析: './air/mujoco_uav_braking_metrics.md'
-    - 无人机测距几何一致性检查: './air/mujoco_uav_range_sensor_quality.md'
+
     - Town10立面自主巡航与图像采集: './air/town10_facade_cruise_capture/index.md'
     - AirSim 无人机弓字形区域勘测: './air/drone_lawnmower_survey.md'
     - 输电线路无人机巡检任务预检: './air/powerline_mission_preflight.md'

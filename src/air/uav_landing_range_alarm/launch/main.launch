@@ -1,0 +1,1 @@
+<launch><node pkg="uav_landing_range_alarm" type="main.py" name="uav_landing_range_alarm" args="--ros" output="screen"/></launch>
