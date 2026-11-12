@@ -6,14 +6,14 @@
 <meta content="IE=edge" http-equiv="X-UA-Compatible"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <link href="../../img/favicon.ico" rel="shortcut icon"/>
-<title>Carla PilotNet 端到端控制 ROS 封装（离线仿真演示） - 模拟器的 ROS 文档</title>
+<title>Carla PilotNet 端到端控制（离线仿真演示） - 模拟器的 ROS 文档</title>
 <link href="../../css/theme.css" rel="stylesheet"/>
 <link href="../../css/theme_extra.css" rel="stylesheet"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
 <link href="../../extra.css" rel="stylesheet"/>
 <script>
         // Current page data
-        var mkdocs_page_name = "Carla PilotNet \u7aef\u5230\u7aef\u63a7\u5236 ROS \u5c01\u88c5\uff08\u79bb\u7ebf\u4eff\u771f\u6f14\u793a\uff09";
+        var mkdocs_page_name = "Carla PilotNet \u7aef\u5230\u7aef\u63a7\u5236\uff08\u79bb\u7ebf\u4eff\u771f\u6f14\u793a\uff09";
         var mkdocs_page_input_path = "ground/carla_pilotnet_ros.md";
         var mkdocs_page_url = null;
       </script>
@@ -247,7 +247,7 @@
 </li>
 </ul>
 <p class="caption"><span class="caption-text">地面载具</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../../chapter/chap1/turtle_waypoint_patrol/">小海龟多航点巡航与暂停恢复</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../offline_checks/">离线测试接入 GitHub Actions</a>
@@ -306,7 +306,23 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../carla_end_to_end_nn/">端到端神经网络图像驾驶</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../carla_nn_roundabout_entry/">环岛汇入端到端驾驶（图像→控制）</a>
+<li class="toctree-l1 current"><a class="reference internal current" href="#">Carla PilotNet 端到端控制（离线仿真演示）</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="#_1">神经网络结构</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_2">图像预处理</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_3">依赖安装</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_4">编译与运行</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_5">话题验证</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_6">源码解析</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_7">性能说明</a>
+</li>
+</ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../ad_demo/">自动驾驶示例</a>
 </li>
@@ -672,6 +688,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_depth_gate_racing_e2e/">深度图端到端穿越门竞速</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_mujoco_depth_avoidance/">无人机深度相机神经网络避障（MuJoCo）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_grid_navigation/">MuJoCo 无人机栅格激光建图与路径重规划</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/telemetry_diagnostics/">无人机遥测异常检测与 ROS2 在线诊断</a>
 </li>
@@ -1048,7 +1066,8 @@
 <div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
 <ul class="wy-breadcrumbs">
 <li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
-<li class="breadcrumb-item active">Carla PilotNet 端到端控制 ROS 封装（离线仿真演示）</li>
+<li class="breadcrumb-item">地面载具</li>
+<li class="breadcrumb-item active">Carla PilotNet 端到端控制（离线仿真演示）</li>
 <li class="wy-breadcrumbs-aside">
 <a href="https://github.com/OpenHUTB/ros2/edit/master/docs/ground/carla_pilotnet_ros.md"> 编辑页面</a>
 </li>
@@ -1109,6 +1128,10 @@ roslaunch carla_pilotnet_ros main.launch
 </ul></div>
 </div>
 </div><footer>
+<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
+<a class="btn btn-neutral float-left" href="../carla_end_to_end_nn/" title="端到端神经网络图像驾驶"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../ad_demo/" title="自动驾驶示例">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+</div>
 <hr/>
 <div role="contentinfo">
 <!-- Copyright etc -->
@@ -1124,6 +1147,8 @@ roslaunch carla_pilotnet_ros main.launch
 <span>
 <a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
 </span>
+<span><a href="../carla_end_to_end_nn/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../ad_demo/" style="color: #fcfcfc">后一页 »</a></span>
 </span>
 </div>
 <script src="../../js/jquery-3.6.0.min.js"></script>

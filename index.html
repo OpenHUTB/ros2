@@ -336,7 +336,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/carla_end_to_end_nn/">端到端神经网络图像驾驶</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="ground/carla_nn_roundabout_entry/">环岛汇入端到端驾驶（图像→控制）</a>
+<li class="toctree-l1"><a class="reference internal" href="ground/carla_pilotnet_ros/">Carla PilotNet 端到端控制（离线仿真演示）</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/ad_demo/">自动驾驶示例</a>
 </li>
@@ -702,6 +702,8 @@
 <li class="toctree-l1"><a class="reference internal" href="air/uav_depth_gate_racing_e2e/">深度图端到端穿越门竞速</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="air/uav_mujoco_depth_avoidance/">无人机深度相机神经网络避障（MuJoCo）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="air/uav_grid_navigation/">MuJoCo 无人机栅格激光建图与路径重规划</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="air/telemetry_diagnostics/">无人机遥测异常检测与 ROS2 在线诊断</a>
 </li>
@@ -1276,7 +1278,7 @@
 <li><a href="ground/carla_lidar_obstacle_detection/">激光雷达点云 3D 目标检测与召回率评估</a> —— 语义点云按实例分组 + 多帧累积；逐帧平均召回率 0.43（precision 0.65）</li>
 <li><a href="ground/ad_agent/">自动驾驶代理</a></li>
 <li><a href="ground/carla_end_to_end_nn/">端到端神经网络图像驾驶</a></li>
-<li><a href="ground/carla_nn_roundabout_entry/">环岛汇入端到端驾驶（图像→控制）</a></li>
+<li><a href="ground/carla_pilotnet_ros/">Carla PilotNet 端到端控制（离线仿真演示）</a></li>
 <li><a href="ground/ad_demo/">自动驾驶示例</a></li>
 <li><a href="ground/rostopic_cruise/">rostopic 手动驱动</a></li>
 <li><a href="ground/carla_benchmark_suite/">作业综合整合与性能评价</a></li>
@@ -1509,6 +1511,7 @@
 </li>
 <li><a href="air/airsim_height_aware_overfly/">AirSim Unity 无人机高度自适应越障实验</a> —— 深度图逐列恢复障碍顶边，矮墙原地爬升越过、高障碍退回水平绕行；57 项离线测试 + 2026-11-09 两次越障实飞（越障后保持 5.2 m、到点误差 &lt;0.7 m；相机偏移修正后 committed 约 2.6 m，尚未复飞）</li>
 <li><a href="air/uav_mujoco_depth_avoidance/">无人机深度相机神经网络避障飞行（MuJoCo）</a> —— 64×64 机载深度图 → numpy CNN → 三扇区通行度 → 速度/偏航闭环，3 场景 × 5 实例共 15/15 成功</li>
+<li><a href="air/uav_grid_navigation/">MuJoCo 无人机栅格激光建图与路径重规划</a></li>
 <li><a href="air/landing_assessment/">无人机着陆阶段识别与接地载荷预测</a></li>
 <li>
 <p><a href="air/air_ground_detection_benchmark/">高度与倾角检测评估</a> —— 统计不同相机高度和俯仰角下的检测精度、召回率与小目标召回率</p>

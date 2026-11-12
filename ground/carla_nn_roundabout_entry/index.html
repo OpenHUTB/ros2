@@ -6,14 +6,14 @@
 <meta content="IE=edge" http-equiv="X-UA-Compatible"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <link href="../../img/favicon.ico" rel="shortcut icon"/>
-<title>环岛汇入端到端驾驶（图像→控制） - 模拟器的 ROS 文档</title>
+<title>环岛汇入端到端驾驶（相机图像 → 方向/油门/制动） - 模拟器的 ROS 文档</title>
 <link href="../../css/theme.css" rel="stylesheet"/>
 <link href="../../css/theme_extra.css" rel="stylesheet"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
 <link href="../../extra.css" rel="stylesheet"/>
 <script>
         // Current page data
-        var mkdocs_page_name = "\u73af\u5c9b\u6c47\u5165\u7aef\u5230\u7aef\u9a7e\u9a76\uff08\u56fe\u50cf\u2192\u63a7\u5236\uff09";
+        var mkdocs_page_name = "\u73af\u5c9b\u6c47\u5165\u7aef\u5230\u7aef\u9a7e\u9a76\uff08\u76f8\u673a\u56fe\u50cf \u2192 \u65b9\u5411/\u6cb9\u95e8/\u5236\u52a8\uff09";
         var mkdocs_page_input_path = "ground/carla_nn_roundabout_entry.md";
         var mkdocs_page_url = null;
       </script>
@@ -247,7 +247,7 @@
 </li>
 </ul>
 <p class="caption"><span class="caption-text">地面载具</span></p>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../../chapter/chap1/turtle_waypoint_patrol/">小海龟多航点巡航与暂停恢复</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../offline_checks/">离线测试接入 GitHub Actions</a>
@@ -306,23 +306,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../carla_end_to_end_nn/">端到端神经网络图像驾驶</a>
 </li>
-<li class="toctree-l1 current"><a class="reference internal current" href="#">环岛汇入端到端驾驶（图像→控制）</a>
-<ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="#1">1. 方法概述</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#2">2. 运行方式</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#3">3. 合成相机数据</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#4">4. 训练结果</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#5-24-episode">5. 闭环对比（固定车流，24 episode）</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#6">6. 文件结构</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#7">7. 已知限制</a>
-</li>
-</ul>
+<li class="toctree-l1"><a class="reference internal" href="../carla_pilotnet_ros/">Carla PilotNet 端到端控制（离线仿真演示）</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../ad_demo/">自动驾驶示例</a>
 </li>
@@ -688,6 +672,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_depth_gate_racing_e2e/">深度图端到端穿越门竞速</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_mujoco_depth_avoidance/">无人机深度相机神经网络避障（MuJoCo）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_grid_navigation/">MuJoCo 无人机栅格激光建图与路径重规划</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/telemetry_diagnostics/">无人机遥测异常检测与 ROS2 在线诊断</a>
 </li>
@@ -1064,8 +1050,7 @@
 <div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
 <ul class="wy-breadcrumbs">
 <li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
-<li class="breadcrumb-item">地面载具</li>
-<li class="breadcrumb-item active">环岛汇入端到端驾驶（图像→控制）</li>
+<li class="breadcrumb-item active">环岛汇入端到端驾驶（相机图像 → 方向/油门/制动）</li>
 <li class="wy-breadcrumbs-aside">
 <a href="https://github.com/OpenHUTB/ros2/edit/master/docs/ground/carla_nn_roundabout_entry.md"> 编辑页面</a>
 </li>
@@ -1179,10 +1164,6 @@ NN 学到的是图像→动作的映射，而非仅在训练集上过拟合。</
 </ul></div>
 </div>
 </div><footer>
-<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
-<a class="btn btn-neutral float-left" href="../carla_end_to_end_nn/" title="端到端神经网络图像驾驶"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
-<a class="btn btn-neutral float-right" href="../ad_demo/" title="自动驾驶示例">后一页 <span class="icon icon-circle-arrow-right"></span></a>
-</div>
 <hr/>
 <div role="contentinfo">
 <!-- Copyright etc -->
@@ -1198,8 +1179,6 @@ NN 学到的是图像→动作的映射，而非仅在训练集上过拟合。</
 <span>
 <a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
 </span>
-<span><a href="../carla_end_to_end_nn/" style="color: #fcfcfc">« 前一页</a></span>
-<span><a href="../ad_demo/" style="color: #fcfcfc">后一页 »</a></span>
 </span>
 </div>
 <script src="../../js/jquery-3.6.0.min.js"></script>
