@@ -8,7 +8,8 @@ import numpy as np
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "ros2_lidar_features"))
 
 from features import detect_doors, extract_lines, points_from_scan  # noqa: E402
-from sim import Segment, closed_corridor, corridor, evaluate, raycast  # noqa: E402
+from sim import (Segment, closed_corridor, corridor, evaluate,  # noqa: E402
+                 noisy_corridor, raycast)
 
 
 class TestLines(unittest.TestCase):
@@ -42,6 +43,12 @@ class TestDoors(unittest.TestCase):
         self.assertAlmostEqual(xs[0], 3.0, delta=0.15)
         self.assertAlmostEqual(xs[1], 4.0, delta=0.15)
 
+    def test_noisy_scan_still_fits(self):
+        row = evaluate(noisy_corridor())
+        self.assertEqual(row["doors"], 1)
+        self.assertGreater(row["mean_residual_m"], 0.001)
+        self.assertLess(row["width_error_m"], 0.15)
+
     def test_closed_corridor_has_no_door(self):
         row = evaluate(closed_corridor())
         self.assertEqual(row["doors"], 0)
@@ -71,4 +78,5 @@ class TestDoors(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
 

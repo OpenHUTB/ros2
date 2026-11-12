@@ -1,4 +1,4 @@
-"""Split-and-merge line extraction and door-gap detection from 2-D scans."""
+﻿"""Split-and-merge line extraction and door-gap detection from 2-D scans."""
 
 from __future__ import annotations
 
@@ -82,6 +82,10 @@ def extract_lines(points: np.ndarray, threshold: float = 0.08,
         else:
             current.append(i)
     runs.append(points[current])
+    if len(runs) > 1:
+        first, last = runs[0], runs[-1]
+        if float(np.linalg.norm(last[-1] - first[0])) <= 2.0 * max_gap:
+            runs = [np.vstack([last, first])] + runs[1:-1]
     segments: List[np.ndarray] = []
     for run in runs:
         _split(run, threshold, min_points, segments)
@@ -132,3 +136,4 @@ def detect_doors(lines: Sequence[Line], min_width: float = 0.6,
                 doors.append((float(p1[0]), float(p1[1]),
                               float(p2[0]), float(p2[1])))
     return doors
+

@@ -31,7 +31,7 @@ ros2 launch ros2_lidar_features main_launch.py
 
 ```bash
 cd src/ground/ros2_lidar_features
-python3 -m unittest discover -s test -v   # 7 项
+python3 -m unittest discover -s test -v   # 8 项
 python3 -m ros2_lidar_features.sim
 ```
 
@@ -42,6 +42,7 @@ python3 -m ros2_lidar_features.sim
 | 场景 | 线段数 | 平均残差 | 门洞数 | 门宽 | 误差 |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | 带门洞走廊 | 3 | 0.000 m | 1 | 1.081 m | **0.081 m** |
+| 带噪声走廊（σ=0.01 m） | 3 | 0.0042 m | 1 | 1.065 m | **0.065 m** |
 | 封闭走廊 | 2 | 0.000 m | 0 | — | — |
 
 ![线段与门洞](../../../docs/img/ground/ros2_lidar_features/features.png)
@@ -57,7 +58,9 @@ python3 -m ros2_lidar_features.sim
 
 ## 6. 大模型声明
 
-代码与文档在编写过程中使用了 AI 大模型辅助。作者已实际运行 7 项单元测试和
+代码与文档在编写过程中使用了 AI 大模型辅助。作者已实际运行 8 项单元测试和
 2 个合成场景，并对提交内容的正确性与完整性负全部责任。
+
+
 
 

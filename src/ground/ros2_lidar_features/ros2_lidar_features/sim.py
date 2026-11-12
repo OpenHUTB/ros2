@@ -1,4 +1,4 @@
-﻿"""Synthetic corridor scans and metrics for line/door extraction."""
+"""Synthetic corridor scans and metrics for line/door extraction."""
 
 from __future__ import annotations
 
@@ -56,8 +56,19 @@ def closed_corridor() -> Dict[str, object]:
     return {"name": "closed", "segments": segments, "door_width": 0.0}
 
 
+def noisy_corridor() -> Dict[str, object]:
+    spec = corridor()
+    spec["name"] = "noisy"
+    spec["noise"] = 0.01
+    return spec
+
+
 def evaluate(spec: Dict[str, object]) -> Dict[str, object]:
     ranges = raycast(spec["segments"], n_beams=720)  # type: ignore[arg-type]
+    if spec.get("noise"):
+        rng = np.random.default_rng(7)
+        noise = rng.normal(0.0, float(spec["noise"]), size=ranges.size)
+        ranges = np.where(np.isfinite(ranges), ranges + noise, ranges)
     points = points_from_scan(ranges, -math.pi, 2.0 * math.pi / len(ranges),
                               max_range=8.0)
     lines = extract_lines(points, angle_increment=2.0 * math.pi / len(ranges))
@@ -77,7 +88,7 @@ def evaluate(spec: Dict[str, object]) -> Dict[str, object]:
 
 
 def run_benchmark() -> List[Dict[str, object]]:
-    return [evaluate(corridor()), evaluate(closed_corridor())]
+    return [evaluate(corridor()), evaluate(noisy_corridor()), evaluate(closed_corridor())]
 
 
 def main() -> None:
@@ -87,6 +98,7 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
 
 
 
