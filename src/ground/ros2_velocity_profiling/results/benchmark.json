@@ -1,0 +1,48 @@
+{
+  "environment": {
+    "python": "3.12",
+    "numpy": "2.x",
+    "os": "Windows 11"
+  },
+  "v_max": 1.0,
+  "a_max": 0.8,
+  "a_lat_max": 0.5,
+  "scenarios": [
+    {
+      "path": "circle",
+      "points": 300,
+      "length_m": 7.54,
+      "constant_time_s": 7.54,
+      "profile_time_s": 11.179,
+      "constant_max_lat": 0.833,
+      "profile_max_lat": 0.45,
+      "profile_max_accel": 0.8,
+      "min_speed": 0.0,
+      "max_speed": 0.735
+    },
+    {
+      "path": "slalom",
+      "points": 300,
+      "length_m": 14.34,
+      "constant_time_s": 14.34,
+      "profile_time_s": 18.734,
+      "constant_max_lat": 1.893,
+      "profile_max_lat": 0.457,
+      "profile_max_accel": 0.8,
+      "min_speed": 0.0,
+      "max_speed": 1.0
+    },
+    {
+      "path": "square",
+      "points": 373,
+      "length_m": 18.626,
+      "constant_time_s": 18.626,
+      "profile_time_s": 23.443,
+      "constant_max_lat": 1.25,
+      "profile_max_lat": 0.474,
+      "profile_max_accel": 0.8,
+      "min_speed": 0.0,
+      "max_speed": 1.0
+    }
+  ]
+}

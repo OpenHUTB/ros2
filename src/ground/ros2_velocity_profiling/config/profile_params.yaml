@@ -1,0 +1,8 @@
+velocity_profiling:
+  ros__parameters:
+    input_topic: /plan
+    output_topic: /cmd_profile
+    v_max: 1.0
+    a_max: 0.8
+    a_lat_max: 0.5
+    min_speed: 0.12
