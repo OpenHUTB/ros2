@@ -206,6 +206,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 
 * [网页远程遥控小车](./ground/web_remote_car.md)
 * [MuJoCo AEB自动紧急制动仿真](./ground/mujoco_vehicle_aeb.md)
+* [载重偏置下的制动距离与跑偏](./ground/brake_load_transfer.md) —— 轴荷转移、抱死顺序与制动跑偏，18 项单元测试 + 两张实测图
 * [端到端驾驶（图像到控制指令）](./ground/pix2cmd_end2end_driving.md)
 
 * [MuJoCo 差速小车轮滑感知与轨迹补偿](./ground/mujoco_diff_drive_slip_compensation.md)
