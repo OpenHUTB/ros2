@@ -656,6 +656,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/mujoco_ground_slam_nn_nav/">MuJoCo 地面无人车 SLAM 建图导航与神经网络控制</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="ground/ground_slope_estimation/">地面坡度估计</a>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">空域载具</span></p>
 <ul>
@@ -730,6 +732,8 @@
 <li class="toctree-l1"><a class="reference internal" href="air/uav_yaw_stabilize/">无人机航向角 PD 稳定控制与阶跃转向仿真</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="air/uav_depth_gate_racing_e2e/">深度图端到端穿越门竞速</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="air/uav_neural_perception/">前视 CNN 行为克隆视觉导航</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="air/uav_mujoco_depth_avoidance/">无人机深度相机神经网络避障（MuJoCo）</a>
 </li>
@@ -1533,6 +1537,7 @@
 <li><a href="ground/ros2_ekf_localization/">ROS2 差速机器人 EKF 多传感器融合定位</a> —— 轮式里程计 + IMU 航向 + 绝对位置观测的 EKF，输出 /odometry/filtered 供控制器直接使用</li>
 <li><a href="ground/heartbeat_watchdog/">上游心跳看门狗</a> —— 监视上游节点的 <code>/heartbeat</code>，超时判定失联并发布急停，与 <code>cmd_vel_guard</code> 互补</li>
 <li><a href="ground/mujoco_ground_slam_nn_nav/">MuJoCo 地面无人车 SLAM 建图导航与神经网络控制</a></li>
+<li><a href="ground/ground_slope_estimation/">地面坡度估计</a></li>
 </ul>
 <h2 id="5">5. 空域载具 <span id="air_vehicle"></span></h2>
 <ul>
@@ -1607,6 +1612,9 @@
 </li>
 <li>
 <p><a href="air/flight_pattern_recognition/">无人机飞行轨迹类型识别与 ROS2 自动任务日志</a></p>
+</li>
+<li>
+<p><a href="air/uav_neural_perception/">前视 CNN 行为克隆视觉导航</a> —— 前视 RGB 图像 → CNN → 机体系速度指令，行为克隆直线跟随</p>
 </li>
 <li>
 <p><a href="air/uav_depth_gate_racing_e2e/">深度图端到端穿越门竞速</a></p>
