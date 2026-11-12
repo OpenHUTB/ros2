@@ -289,6 +289,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [地面载具动力性测试](./ground/carla_vehicle_dynamics_test.md)
 * [MuJoCo小车多目标导航](./ground/mujoco_multi_goal_nav.md)
 * [列车 ATO 自动运行与站台精确停车](./ground/train_ato_stop.md) —— 按线路限速与坡道生成目标速度曲线，站台停车误差 0.02～0.18 m（标尺 0.3 m），另有 ATP 超速监督与晚制动对照
+* [多编组列车纵向动力学与车钩力](./ground/train_consist_coupler.md) —— N 节车 + N-1 个弹簧-阻尼-间隙车钩逐节积分，指令按车传播；理想同步时车钩力严格为 0，头尾两种方向给出镜像的压钩/拉钩，8 节 100 ms 延迟到 125 kN，停车误差仍在 0.3 m 内
 * [ROS2 A* 全局路径平滑（Catmull-Rom）](./ground/ros2_path_smoothing.md)
 * [多车协同编队（CARLA）](./ground/carla_platoon.md) —— Leader 沿参考轨迹领航，3 辆 follower 沿同轨迹保持恒定弧长间距跟进的一字纵队编队
 * [ROS2 2D 激光占据栅格建图](./ground/ros2_occupancy_mapping.md)

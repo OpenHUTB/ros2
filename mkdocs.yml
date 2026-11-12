@@ -278,6 +278,7 @@ nav:
     - MuJoCo 小车跟车仿真: './ground/mujoco_car_follow.md'
     - MuJoCo 小车滑斜坡: './ground/mujoco_slope_car.md'
     - 列车 ATO 自动运行与站台精确停车: './ground/train_ato_stop.md'
+    - 多编组列车纵向动力学与车钩力: './ground/train_consist_coupler.md'
     - ROS2 A* 全局路径平滑（Catmull-Rom）: './ground/ros2_path_smoothing.md'
     - 多车协同编队（CARLA）: './ground/carla_platoon.md'
     - ROS2 2D 激光占据栅格建图: './ground/ros2_occupancy_mapping.md'
