@@ -342,6 +342,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [MuJoCo 地面无人车 SLAM 建图导航与神经网络控制](./ground/mujoco_ground_slam_nn_nav/README.md)
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
+* [深度相机地形可通行性神经网络评估](./air/uav_depth_terrain_passability_nn.md) —— 三扇区采样高度台阶坡度，两层 MLP 评估通行度并选择中央通道，闭环沿走廊前进
 * [仓储通道巡检无人机测距与分级制动](./air/mujoco_warehouse_uav_collision_braking.md)
 
 * [多无人机空域监测（多边形禁飞区与机间冲突）](./air/multi_uav_airspace_monitor.md) —— 面向多机轨迹的电子围栏、最近接近距离和冲突解脱建议

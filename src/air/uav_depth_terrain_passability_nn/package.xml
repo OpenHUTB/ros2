@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>uav_depth_terrain_passability_nn</name>
+  <version>0.0.1</version>
+  <description>深度相机地形可通行性评估：三扇区采样地形高度、台阶与坡度，两层 numpy MLP 评估各扇区通行度并选择可通行走廊，闭环沿中央通道前进。</description>
+  <maintainer email="799628765@qq.com">wqs159</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <depend>rclpy</depend>
+  <depend>nav_msgs</depend>
+  <depend>std_msgs</depend>
+
+  <test_depend>pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
