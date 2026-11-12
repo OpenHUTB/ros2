@@ -82,6 +82,7 @@ ROS每章节运行代码:
     * [MuJoCo 二连杆机械臂 IK 画圆](./chapter/mujoco_arm_ik.md)
 * [第 9 章](./chapter/chap9.md) - ROS 2
     * [Gazebo 仿真相机与图像话题验证](./chapter/chap9/gazebo_camera_sim.md)
+    * [ROV 六自由度推力分配](./chapter/chap9/rov_thruster_allocation_ls.md)
 * [第 10 章](./chapter/turtlebot3_gazebo_control.md) - Turtlebot3 Gazebo键盘控制
 
 
@@ -418,6 +419,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [无人机降落过程监控（指令-运动一致性）](./air/uav_landing_monitor.md) —— 在线校验「速度指令 vs 实际高度变化」，抓“喊了不动 / 掉得没人管 / 超时没落地”这类静默故障，输出告警、状态 JSON 与 CSV 报告
 * [移动平台（车/船）精准降落](./air/uav_moving_platform_landing.md) —— 只吃一路带延迟的平台位置，在线估速度、预测相遇点，落点误差 0.03 m（追实测位置的朴素做法 0.48 m 且落不准），附四种制导策略的定量对照
 * [无人机键盘控制](./air/uav_keyboard_control.md)
+* [无人机 AirSim 键盘遥控（ROS 2 Humble）](./air/uav_airsim_keyboard.md) —— W/S/A/D/R/F/Q/E 键直控 AirSim 多旋翼，内置 AirSim 桥与看门狗，支持起飞/降落服务
 * [无人机行为克隆模型对比基准（网络结构与数据增强）](./air/uav_bc_bench.md) —— 三种网络结构 × 有无数据增强的对照实验，按圈分组切分，含恒零基线
 
 * [基于 PPO 的无人机导航避障](./air/uav_ppo_nav.md)
@@ -618,6 +620,7 @@ ___
 * [MuJoCo 单臂抓取与 π0 推理接口复现（CPU 演示）](./manipulation/pi0_mujoco_grasp.md) —— 基于 MuJoCo 的单臂抓取/放置仿真，含 π0 观测→动作块接口（CPU 策略替身）
 
 * [ROS2 话题桥接（二连杆机械臂肌肉骨骼仿真）](./muscle_arm_ros2_bridge.md)
-
+=======
+* [二连杆机械臂 OpenSim 建模与 PD 控制仿真](./two_link_arm_opensim_simulation.md)
 ## 参考文献
 * [MuJoCo 失落公园无人机端到端视觉转向](./air/mujoco_abandoned_park_uav_visual_steering.md)
