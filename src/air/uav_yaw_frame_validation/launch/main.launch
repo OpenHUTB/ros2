@@ -1,0 +1,1 @@
+<launch><node pkg="uav_yaw_frame_validation" type="main.py" name="uav_yaw_frame_validation" args="--ros" output="screen"/></launch>
