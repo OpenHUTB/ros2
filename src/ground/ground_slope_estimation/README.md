@@ -44,7 +44,7 @@ bash run_eval.sh
 ```
 
 结果写入 `results/scan_<坡度>deg_<噪声>mm.csv`，汇总表在 `results/summary.csv`，
-四联图在 `results/effect.png`。
+三张子图（估计 vs 真值、噪声影响、高程偏差）在 `results/effect.png`。
 
 ## 参数
 
@@ -56,10 +56,12 @@ bash run_eval.sh
 | `ransac_threshold` | 0.02 | RANSAC 内点距离阈值（米） |
 | `out_dir` | results | CSV 输出目录 |
 | `seed` | 0 | 噪声与 RANSAC 采样种子 |
+| `publish_count` | 20 | 结果在 `slope_estimate` 上连续发布的次数，设为 0 则不发布 |
+| `publish_rate` | 10.0 | 连续发布的频率（Hz） |
 
 ## 结果
 
-1 kHz 无关，单帧 1600 条射线，坡度 0°~20°、深度噪声 0/5/10 mm：
+单帧 1600 条射线，坡度 0°~20°、深度噪声 0/5/10 mm：
 
 | 真值(°) | 噪声(mm) | 最小二乘(°) | RANSAC(°) | LS 误差(°) | 高程误差(m) |
 | --- | --- | --- | --- | --- | --- |
