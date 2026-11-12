@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>muscle_fatigue</name>
+  <version>1.0.0</version>
+
+  <description>
+    肌肉疲劳建模：在 Hill 肌肉模型基础上给最大力乘一个随时间变化的疲劳因子
+    phi(t)，比较持续收缩与间歇收缩下的力衰减。只用 Python 标准库，
+    不依赖 MuJoCo / ROS / matplotlib。
+  </description>
+
+  <maintainer email="luoyabo2747207795@users.noreply.github.com">luoyabo2747207795</maintainer>
+
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+</package>

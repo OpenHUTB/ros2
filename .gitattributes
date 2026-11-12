@@ -1,5 +1,3 @@
-*.png binary
-*.jpg binary
-*.jpeg binary
-*.gif binary
-*.pdf binary
+
+*.sh text eol=lf
+*.bat text eol=crlf

@@ -1,0 +1,175 @@
+name: ROV ballast trim tests
+
+on:
+  push:
+    paths:
+      - 'src/water/rov_ballast_trim/**'
+      - '.github/workflows/rov_ballast_trim_tests.yml'
+  pull_request:
+    paths:
+      - 'src/water/rov_ballast_trim/**'
+      - '.github/workflows/rov_ballast_trim_tests.yml'
+
+jobs:
+  test:
+    name: Ballast trim tests (no ROS / simulator)
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: src/water/rov_ballast_trim
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.8'
+
+      - name: Install test dependency
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install -r requirements-dev.txt
+
+      - name: Run unit tests
+        run: python3 -m pytest test -v
+
+      - name: Run tests without pytest
+        run: |
+          python3 test/test_ballast_trim.py
+          python3 test/test_packaging.py
+
+      - name: Run main.py smoke test
+        run: |
+          python3 main.py --output "${RUNNER_TEMP}/ballast_out"
+          test -s "${RUNNER_TEMP}/ballast_out/report.json"
+          python3 main.py --target-gm 0.05 --output "${RUNNER_TEMP}/ballast_gm"
+
+      # 模拟 Windows 中文控制台：单位全为 ASCII，不得崩溃
+      - name: Run main.py with GBK stdout
+        env:
+          PYTHONIOENCODING: gbk
+        run: python3 main.py --output "${RUNNER_TEMP}/ballast_gbk"
+
+      - name: Byte-compile the module
+        run: python3 -m py_compile main.py rov_ballast_trim/*.py launch/main.launch.py test/*.py tools/make_figures.py
+
+      - name: Regenerate figure
+        run: |
+          python3 -m pip install pillow
+          python3 tools/make_figures.py --output "${RUNNER_TEMP}/fig"
+          test -s "${RUNNER_TEMP}/fig/trim_sensitivity.png"
+
+  ros2:
+    name: ROS 2 Humble build and launch
+    # 用官方 ros:humble 容器（与上游 ros2_rov_pipeline_follow 等 workflow 一致）：
+    # 不走 ros-tooling/setup-ros 的网络下载，避免 apt/curl 抖动导致的偶发失败。
+    # 注意：colcon 必须在仓库根目录构建，install/ 才会被 setup.bash 纳入 AMENT_PREFIX_PATH。
+    runs-on: ubuntu-22.04
+    container: ros:humble
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install test tooling
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends python3-pytest python3-pip
+          python3 -c "import pytest, sys; print('pytest', pytest.__version__, 'on', sys.version.split()[0])"
+
+      - name: colcon build (repository root)
+        run: |
+          source /opt/ros/humble/setup.bash
+          # 上游 src/water/package.xml 把 src/water 整体识别成一个 ament_python 包，
+          # colcon 认定该目录是包后不再向下递归，本模块会被忽略。
+          # 显式给 --base-paths 把发现范围限定在本模块目录（与上游 ros2_rov_pipeline_follow 一致）。
+          colcon build --base-paths src/water/rov_ballast_trim \
+            --packages-select rov_ballast_trim --symlink-install \
+            --event-handlers console_direct+
+          test -f install/setup.bash
+          grep -q 'rov_ballast_trim' install/setup.bash || ls install
+
+      - name: ros2 launch (default parameters)
+        run: |
+          source /opt/ros/humble/setup.bash
+          source install/setup.bash
+          echo "AMENT_PREFIX_PATH=$AMENT_PREFIX_PATH"
+          ros2 pkg prefix rov_ballast_trim
+          mkdir -p "${RUNNER_TEMP}/launch_out"
+          ros2 launch rov_ballast_trim main.launch.py output:="${RUNNER_TEMP}/launch_out"
+          test -s "${RUNNER_TEMP}/launch_out/report.json"
+          python3 - <<'PY'
+          import json
+          import os
+
+          path = os.path.join(os.environ['RUNNER_TEMP'], 'launch_out', 'report.json')
+          report = json.load(open(path, encoding='utf-8'))
+          print('GM =', report['state_after_ballast']['gm_m'])
+          print('ballast =', report['ballast_plan']['mass_kg'], 'kg')
+          print('feasible =', report['ballast_plan']['feasible'])
+          assert report['ballast_plan']['feasible'] is True
+          assert abs(report['state_after_ballast']['gm_m'] - 0.042135) < 1e-6
+          assert abs(report['mass']['required_ballast_kg'] - 38.505) < 1e-6
+          PY
+
+      - name: ros2 launch (target_gm 0.05)
+        run: |
+          source /opt/ros/humble/setup.bash
+          source install/setup.bash
+          mkdir -p "${RUNNER_TEMP}/launch_gm"
+          ros2 launch rov_ballast_trim main.launch.py target_gm:=0.05 output:="${RUNNER_TEMP}/launch_gm"
+          test -s "${RUNNER_TEMP}/launch_gm/report.json"
+          python3 - <<'PY'
+          import json
+          import os
+
+          path = os.path.join(os.environ['RUNNER_TEMP'], 'launch_gm', 'report.json')
+          report = json.load(open(path, encoding='utf-8'))
+          gm = report['state_after_ballast']['gm_m']
+          print('GM =', gm, 'z =', report['ballast_plan']['z_m'])
+          assert abs(gm - 0.05) < 1e-9
+          PY
+
+      - name: ros2 pkg info
+        run: |
+          source /opt/ros/humble/setup.bash
+          source install/setup.bash
+          ros2 pkg executables rov_ballast_trim
+          # 不要用 `ros2 pkg xml ... | head`：head 提前关管道会让 Python 写 stdout 时
+          # BrokenPipeError 并以 120 退出。先落盘再截取。
+          ros2 pkg xml rov_ballast_trim > "${RUNNER_TEMP}/pkg.xml"
+          head -5 "${RUNNER_TEMP}/pkg.xml"
+          grep -q "<name>rov_ballast_trim</name>" "${RUNNER_TEMP}/pkg.xml"
+
+  windows:
+    name: Windows smoke test (GBK stdio)
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: src/water/rov_ballast_trim
+        shell: pwsh
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.8'
+
+      - name: Install test dependency
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt
+
+      - name: Run tests
+        run: python -m pytest test -v
+
+      - name: Run main.py with GBK stdout
+        env:
+          PYTHONIOENCODING: gbk
+        run: python main.py --output "$env:TEMP/ballast_out"

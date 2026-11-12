@@ -1,0 +1,17 @@
+# 地面车辆涉水深度与浮力裕度核算参数
+wading_checker:
+  ros__parameters:
+    mass_kg: 1500.0
+    intake_height_m: 0.65
+    exhaust_height_m: 0.35
+    door_sill_height_m: 0.40
+    displacement_volume_factor: 0.35
+    friction_coef_dry: 0.60
+    friction_coef_wet: 0.35
+    control_rate_hz: 20.0
+    csv_path: /tmp/vehicle_wading_check_runtime.csv
+
+wading_sim:
+  ros__parameters:
+    rate_hz: 20.0
+    duration_s: 24.0

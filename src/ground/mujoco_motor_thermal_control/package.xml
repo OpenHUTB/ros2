@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>mujoco_motor_thermal_control</name>
+  <version>0.1.0</version>
+  <description>MuJoCo 差速小车驱动电机温升仿真</description>
+  <maintainer email="fzy985211_2025@qq.com">sirius185</maintainer>
+  <license>Apache-2.0</license>
+  <buildtool_depend>ament_python</buildtool_depend>
+  <exec_depend>ament_index_python</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <!-- MuJoCo has no key in the validated Humble rosdep source; install its Python wheel as documented. -->
+  <test_depend>python3-pytest</test_depend>
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

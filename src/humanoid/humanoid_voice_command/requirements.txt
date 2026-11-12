@@ -1,0 +1,9 @@
+# 语音链路依赖（CPU 版即可，不需要 CUDA）
+# torch 请单独按 README 用官方 CPU 源安装，避免 pip 默认拉取 2 GB 的 CUDA 版：
+#   pip install torch --index-url https://download.pytorch.org/whl/cpu
+numpy<3
+openai-whisper>=20231117
+soundfile>=0.12
+pyyaml
+# 可选：麦克风实时采集（容器/无音频设备的评测机不需要）
+# sounddevice>=0.4

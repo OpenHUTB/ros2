@@ -1,0 +1,31 @@
+<launch>
+  <!-- 三个端口都可以在命令行覆盖，被占用时不必改文件：
+       roslaunch web_remote_car start_all.launch frontend_port:=8001 video_port:=8081 bridge_port:=9091 -->
+  <arg name="bridge_port" default="9090"/>
+  <arg name="video_port" default="8080"/>
+  <arg name="frontend_port" default="8000"/>
+
+  <!-- rosbridge_websocket，允许局域网访问 -->
+  <node name="rosbridge" pkg="rosbridge_server" type="rosbridge_websocket" output="screen" respawn="true">
+    <param name="port" value="$(arg bridge_port)"/>
+    <param name="address" value="0.0.0.0"/>
+  </node>
+
+  <!-- web_video_server 视频流，默认端口 8080，与网页默认值一致 -->
+  <node name="web_video_server" pkg="web_video_server" type="web_video_server" output="screen" respawn="true">
+    <param name="port" value="$(arg video_port)"/>
+    <param name="address" value="0.0.0.0"/>
+  </node>
+
+  <!-- 前端静态页面服务：托管 www 目录，随 launch 一起启动。
+       以前要另开终端跑 python3 -m http.server 8000，忘了执行就会“网页无法连接”，
+       现在由本节点负责，roslaunch 一条命令就能打开 http://<本机IP>:8000/ -->
+  <node name="frontend_http" pkg="web_remote_car" type="web_server.py" output="screen">
+    <param name="port" value="$(arg frontend_port)"/>
+    <param name="address" value="0.0.0.0"/>
+    <param name="web_root" value="$(find web_remote_car)/www"/>
+  </node>
+
+  <!-- 不需要TF可视化就注释掉下面这行 -->
+  <!-- <node name="tf_repub" pkg="tf2_web_republisher" type="tf2_web_republisher" output="screen"/> -->
+</launch>

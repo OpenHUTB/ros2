@@ -1,0 +1,32 @@
+<launch>
+  <!-- One entry point for every module of the assignment.
+
+       roslaunch neural_ca_drone_ros main.launch scene:=dense module:=full
+
+       module: perception | planning | control | e2e | full
+  -->
+  <arg name="scene" default="sparse" doc="sparse | dense | dynamic | corridor"/>
+  <arg name="module" default="full" doc="perception | planning | control | e2e | full"/>
+  <arg name="rate" default="10.0"/>
+  <arg name="rviz" default="false"/>
+  <arg name="goal_x" default="49.0"/>
+  <arg name="goal_y" default="0.0"/>
+
+  <node pkg="neural_ca_drone_ros" type="sim_bridge.py" name="ca_sim_bridge"
+        output="screen" required="true">
+    <param name="scene" value="$(arg scene)"/>
+    <param name="rate" value="$(arg rate)"/>
+  </node>
+
+  <node pkg="neural_ca_drone_ros" type="main.py" name="neural_ca_drone"
+        output="screen" required="true">
+    <param name="module" value="$(arg module)"/>
+    <param name="rate" value="$(arg rate)"/>
+    <param name="goal_x" value="$(arg goal_x)"/>
+    <param name="goal_y" value="$(arg goal_y)"/>
+    <param name="replan_period" value="0.5"/>
+  </node>
+
+  <node if="$(arg rviz)" pkg="rviz" type="rviz" name="rviz"
+        args="-d $(find neural_ca_drone_ros)/config/ca_drone.rviz"/>
+</launch>

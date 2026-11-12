@@ -10,7 +10,7 @@
 
 ## 2. 环境要求与安装
 
-下表是正式部署目标环境。本次实际复测使用预装 VMware 镜像，环境和结果见第 7 节；该兼容性镜像不能替代标准 Humble 安装流程。
+下表是正式部署目标环境。本次实际复测使用预装 VMware 镜像，环境和结果见第 7 节；该镜像中的 Humble 是手工预装到 `/opt/ros/humble` 的目录，不受 dpkg 管理，也不是容器或 WSL，不能替代标准 Humble 安装流程。
 
 | 项目 | 版本 |
 | --- | --- |
@@ -330,6 +330,7 @@ python3 -m lidar_obstacle_nn.evaluate_model \
 | --- | --- |
 | OS / ROS 版本 | Ubuntu 20.04.6 LTS / ROS 2 Humble（预装兼容性镜像） |
 | Python 版本 | 3.8.10 |
+| Humble 安装方式 | 手工预装 `/opt/ros/humble` 目录，不受 dpkg 管理；非容器、非 WSL |
 | Gazebo 版本 | Gazebo Fortress 6.17.1 |
 | PyTorch 版本 | 2.4.1+cpu |
 | 激光雷达 | 360 束 GPU LiDAR，5 Hz，0.05–30 m |
