@@ -96,6 +96,7 @@ nav:
     - 简化双足步态动画演示: './humanoid/zmp_walk_planner.md'
     - 人形机器人轻量级 ZMP 步行控制基线: './humanoid/humanoid_zmp_walking.md'
 - 肌肉骨骼人:
+    - ROS2 话题桥接（二连杆机械臂肌肉骨骼仿真）: './muscle_arm_ros2_bridge.md'
     - 肌肉骨骼人基础: './musculoskeletal/musculoskeletal_basics.md'
     - 肌肉-肌腱串联弹性实验: './musculoskeletal/msk_tendon_basics.md'
     - MuJoCo肌肉骨骼人键盘遥操作行走踢腿蹲起: './musculoskeletal/msk_human_walking_teleop.md'
