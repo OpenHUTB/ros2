@@ -23,7 +23,7 @@ def generate_launch_description():
         main_script = os.path.join(pkg_prefix, "lib", PACKAGE_NAME, "main.py")
     except Exception:
         main_script = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)), "..", "..", "main.py")
+            os.path.dirname(os.path.abspath(__file__)), "..", "main.py")
 
     headless = LaunchConfiguration("headless")
 

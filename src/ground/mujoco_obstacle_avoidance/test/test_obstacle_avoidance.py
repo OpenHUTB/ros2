@@ -41,7 +41,7 @@ def test_diff_drive_vels():
     wl, wr = m.diff_drive_vels(0.6, 0.0)
     assert abs(wl - wr) < 1e-12
     assert abs(wl - 0.6 / m.WHEEL_RADIUS) < 1e-12
-    # 原地转 v=0：左右轮等大反号
+    # v=0 纯转动：左右轮等大反号
     wl, wr = m.diff_drive_vels(0.0, 1.0)
     assert abs(wl + wr) < 1e-12
     print("[ok] diff_drive_vels 差速逆解（轮角速度 rad/s）")
