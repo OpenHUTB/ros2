@@ -62,9 +62,13 @@ src/ground/heartbeat_watchdog/
 
 | 状态 | 条件 | 急停 |
 |---|---|---|
-| `waiting` | 启动后还没收到任何心跳 | `true`（失效安全） |
+| `waiting` | `watched_nodes` 中仍有节点**从未**上报过心跳 | `true`（失效安全） |
 | `ok` | 名单内所有节点都在超时时间内上报过 | `false` |
-| `stale: a, b` | 至少一个节点超时未上报，或从未上报 | `true` |
+| `stale: a, b` | 名单内节点都上报过，但至少一个已超时 | `true` |
+
+只记录 `watched_nodes` 名单内的心跳，其他节点的心跳会被忽略，因此「有无关节点在发心跳、但我们要监视的节点还没起来」仍然停留在 `waiting`，不会被误判为 `stale`。
+
+话题名在代码中是相对名（`heartbeat`、`watchdog_status`、`emergency_stop`），在默认根命名空间下等价于上表的绝对路径；若用 `namespace` 启动，实际话题会带上前缀。
 
 启动阶段即输出 `waiting` + 急停，是为了避免「上游还没起来，底盘先动」；上游心跳到达后自动转为 `ok`。
 
