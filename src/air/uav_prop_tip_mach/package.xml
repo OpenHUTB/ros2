@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>uav_prop_tip_mach</name>
+  <version>0.1.0</version>
+  <description>
+    旋翼桨尖马赫数与桨盘载荷核算：由桨径、转速与温度算桨尖速度与马赫数，
+    由整机质量与桨盘面积算桨盘载荷与悬停诱导速度（动量理论），并给出反解上限。
+    纯标准库实现，不依赖 rclpy。
+  </description>
+  <maintainer email="3909057723@qq.com">xy18574557330</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>launch</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

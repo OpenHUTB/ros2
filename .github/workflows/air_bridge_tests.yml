@@ -4,12 +4,18 @@ on:
   push:
     paths:
       - 'src/air/carlair_ros_bridge/**'
-      - 'tests/**'
+      - 'src/air/uav_bc_bench/**'
+      - 'src/air/uav_landing_monitor/**'
+      - 'src/air/uav_keyboard_control/**'
+      - 'src/air/uav_e2e_rl/**'
       - '.github/workflows/air_bridge_tests.yml'
   pull_request:
     paths:
       - 'src/air/carlair_ros_bridge/**'
-      - 'tests/**'
+      - 'src/air/uav_bc_bench/**'
+      - 'src/air/uav_landing_monitor/**'
+      - 'src/air/uav_keyboard_control/**'
+      - 'src/air/uav_e2e_rl/**'
       - '.github/workflows/air_bridge_tests.yml'
 
 jobs:
@@ -26,7 +32,7 @@ jobs:
           python-version: '3.8'
 
       - name: Install test dependencies
-        run: python3 -m pip install --upgrade pip numpy pyyaml
+        run: python3 -m pip install --upgrade pip numpy pyyaml pytest
 
       - name: Run bridge tests
         run: |
@@ -37,5 +43,31 @@ jobs:
             python3 tests/test_imu_local.py
           fi
 
-      - name: Byte-compile bridge scripts
-        run: python3 -m py_compile src/air/carlair_ros_bridge/scripts/*.py
+      - name: Run uav_landing_monitor tests
+        run: python3 src/air/uav_landing_monitor/tests/test_uav_landing_monitor_local.py
+
+      - name: Byte-compile keyboard scripts
+        run: python3 -m py_compile src/air/uav_keyboard_control/uav_keyboard_control/*.py src/air/uav_keyboard_control/test/*.py src/air/uav_keyboard_control/launch/*.py src/air/uav_keyboard_control/setup.py
+
+      - name: Run uav_keyboard_control tests
+        run: python3 src/air/uav_keyboard_control/test/test_keyboard_local.py
+
+      - name: Byte-compile e2e_rl scripts
+        run: python3 -m py_compile src/air/uav_e2e_rl/uav_e2e_rl/*.py src/air/uav_e2e_rl/test/*.py src/air/uav_e2e_rl/launch/*.py src/air/uav_e2e_rl/setup.py
+
+      - name: Run uav_e2e_rl tests
+        run: python3 src/air/uav_e2e_rl/test/test_e2e_logic_local.py
+
+      - name: Run keyboard control tests
+        run: |
+          python3 -m unittest discover -s src/air/uav_keyboard_control/tests -v
+
+      - name: Run uav_bc_bench tests
+        run: python3 -m pytest src/air/uav_bc_bench/test -q
+
+      - name: Byte-compile air scripts
+        run: |
+          python3 -m py_compile src/air/carlair_ros_bridge/scripts/*.py
+
+      - name: Byte-compile landing monitor scripts
+        run: python3 -m py_compile src/air/uav_landing_monitor/scripts/*.py src/air/uav_landing_monitor/tools/*.py

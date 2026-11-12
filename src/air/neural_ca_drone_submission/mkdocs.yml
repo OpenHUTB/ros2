@@ -1,0 +1,111 @@
+site_name: 基于神经网络的无人机感知—规划—控制避障
+site_description: 低空经济 2502 课程大作业 · 纯 NumPy 神经网络 · CA-Sim 仿真 · ROS1/ROS2
+site_author: 陈康艺（2535030044）
+docs_dir: docs
+site_dir: site
+use_directory_urls: true
+
+theme:
+  name: material
+  language: zh
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.tabs.link
+    - toc.follow
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: teal
+      toggle:
+        icon: material/weather-night
+        name: 切换到深色模式
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: teal
+      toggle:
+        icon: material/weather-sunny
+        name: 切换到浅色模式
+  icon:
+    repo: fontawesome/brands/github
+
+repo_name: neural-ca-drone
+repo_url: https://github.com/example/neural-ca-drone
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - footnotes
+  - def_list
+  - toc:
+      permalink: true
+      toc_depth: 4
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.details
+  - pymdownx.keys
+  - pymdownx.caret
+  - pymdownx.mark
+  - pymdownx.tilde
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+extra_css:
+  - stylesheets/extra.css
+
+nav:
+  - 首页: index.md
+  - 任务与方案:
+      - 任务分析: overview.md
+      - 系统架构: architecture.md
+  - 快速开始:
+      - 环境安装: install.md
+      - 运行入口 main.py: quickstart.md
+  - 仿真环境:
+      - CA-Sim 仿真器: simulator.md
+      - 场景与坐标: scenes.md
+      - Gazebo 仿真步骤: gazebo.md
+  - 神经网络模块:
+      - 感知：深度图占用栅格: perception.md
+      - 规划：神经启发式 A*: planning.md
+      - 控制：模仿学习控制器: control.md
+      - 端到端：深度图到速度: e2e.md
+  - 实验与结果:
+      - 实验协议: protocol.md
+      - 性能评价: results.md
+      - 动图演示: gifs.md
+  - ROS 部署:
+      - ROS1 Noetic: ros1.md
+      - ROS2 Humble: ros2.md
+      - 虚拟机实测: vm.md
+  - 工程实践:
+      - 代码结构: repo.md
+      - 复现实验: reproduce.md
+      - 常见问题: faq.md
+
+extra:
+  generator: false
+
+copyright: 低空经济 2502 · 陈康艺 · 课程大作业

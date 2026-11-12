@@ -1,0 +1,5 @@
+# 运行产物位置由 scripts/output_paths.py 的 resolve_out_dir 决定：
+# 源码树里默认写仓库 docs/img/chap8/，装到 devel/install 后退到 ~/.cache/<pkg>/output，
+# 也可用 --out 或 $IMPEDANCE_OUT_DIR 指定；包目录下不会产生 docs/，故不在此忽略。
+__pycache__/
+*.pyc

@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<!-- lateral_stability_margin：不足转向梯度与侧向稳定裕度核算（不依赖 CARLA） -->
+<launch>
+
+  <!-- ① 默认参数：一处改，全 launch 生效 -->
+  <rosparam command="load" file="$(find lateral_stability_margin)/config/lateral_stability_margin.yaml"/>
+
+  <!-- ② 整车参数 -->
+  <arg name="mass" default="1500.0" doc="整车质量 kg"/>
+  <arg name="wheelbase" default="2.7" doc="轴距 m"/>
+  <arg name="cg_to_front" default="1.2" doc="质心到前轴距离 m"/>
+  <arg name="gravity" default="9.81" doc="重力加速度 m/s^2"/>
+
+  <!-- ③ 轮胎侧偏刚度 -->
+  <arg name="front_cornering" default="80000.0" doc="前轴侧偏刚度 N/rad"/>
+  <arg name="rear_cornering" default="95000.0" doc="后轴侧偏刚度 N/rad"/>
+
+  <!-- ④ 工况 -->
+  <arg name="radius" default="50.0" doc="转弯半径 m"/>
+  <arg name="speed_kmh" default="40.0" doc="稳态圆周车速 km/h"/>
+
+  <!-- ⑤ 断言阈值 -->
+  <arg name="understeer_min" default="0.0" doc="不足转向梯度下限 rad/(m/s^2)"/>
+  <arg name="ackermann_speed_kmh" default="2.0" doc="校验阿克曼角的低速 km/h"/>
+  <arg name="ackermann_tolerance" default="0.02" doc="低速转向角与 L/R 的相对偏差上限"/>
+  <arg name="publish_hz" default="1.0" doc="保活重发频率 Hz"/>
+
+  <!-- ⑥ 把 arg 落到同名参数上（arg 名不能带斜杠，否则会被静默忽略） -->
+  <param name="/vehicle/mass" value="$(arg mass)" type="double"/>
+  <param name="/vehicle/wheelbase" value="$(arg wheelbase)" type="double"/>
+  <param name="/vehicle/cg_to_front" value="$(arg cg_to_front)" type="double"/>
+  <param name="/vehicle/gravity" value="$(arg gravity)" type="double"/>
+  <param name="/tire/front_cornering" value="$(arg front_cornering)" type="double"/>
+  <param name="/tire/rear_cornering" value="$(arg rear_cornering)" type="double"/>
+  <param name="/scene/radius" value="$(arg radius)" type="double"/>
+  <param name="/scene/speed_kmh" value="$(arg speed_kmh)" type="double"/>
+  <param name="/check/understeer_min" value="$(arg understeer_min)" type="double"/>
+  <param name="/check/ackermann_speed_kmh" value="$(arg ackermann_speed_kmh)" type="double"/>
+  <param name="/check/ackermann_tolerance" value="$(arg ackermann_tolerance)" type="double"/>
+  <param name="/rate/publish_hz" value="$(arg publish_hz)" type="double"/>
+
+  <!-- ⑦ 节点 -->
+  <node pkg="lateral_stability_margin" type="main.py"
+        name="lateral_stability_margin" output="screen"/>
+
+</launch>

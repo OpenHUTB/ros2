@@ -1,0 +1,187 @@
+{
+  "architecture": [
+    2048,
+    256,
+    256,
+    1024
+  ],
+  "batch": 64,
+  "context": "3x3 mean-filtered depth context, MLP predicts the residual from the smoothed image",
+  "epochs": 120,
+  "hidden": 256,
+  "history": [
+    {
+      "epoch": 1,
+      "noisy_rmse": 0.01983,
+      "train_mse": 0.026473,
+      "val_rmse": 0.07173
+    },
+    {
+      "epoch": 5,
+      "noisy_rmse": 0.01983,
+      "train_mse": 0.001612,
+      "val_rmse": 0.03128
+    },
+    {
+      "epoch": 10,
+      "noisy_rmse": 0.01983,
+      "train_mse": 0.000284,
+      "val_rmse": 0.01577
+    },
+    {
+      "epoch": 15,
+      "noisy_rmse": 0.01983,
+      "train_mse": 0.000103,
+      "val_rmse": 0.01172
+    },
+    {
+      "epoch": 20,
+      "noisy_rmse": 0.01983,
+      "train_mse": 8.7e-05,
+      "val_rmse": 0.01066
+    },
+    {
+      "epoch": 25,
+      "noisy_rmse": 0.01983,
+      "train_mse": 7.9e-05,
+      "val_rmse": 0.00973
+    },
+    {
+      "epoch": 30,
+      "noisy_rmse": 0.01983,
+      "train_mse": 6.4e-05,
+      "val_rmse": 0.00808
+    },
+    {
+      "epoch": 35,
+      "noisy_rmse": 0.01983,
+      "train_mse": 5.9e-05,
+      "val_rmse": 0.00776
+    },
+    {
+      "epoch": 40,
+      "noisy_rmse": 0.01983,
+      "train_mse": 5.8e-05,
+      "val_rmse": 0.00763
+    },
+    {
+      "epoch": 45,
+      "noisy_rmse": 0.01983,
+      "train_mse": 5.8e-05,
+      "val_rmse": 0.00761
+    },
+    {
+      "epoch": 50,
+      "noisy_rmse": 0.01983,
+      "train_mse": 5.6e-05,
+      "val_rmse": 0.00759
+    },
+    {
+      "epoch": 55,
+      "noisy_rmse": 0.01983,
+      "train_mse": 5.7e-05,
+      "val_rmse": 0.00753
+    },
+    {
+      "epoch": 60,
+      "noisy_rmse": 0.01983,
+      "train_mse": 5.6e-05,
+      "val_rmse": 0.00751
+    },
+    {
+      "epoch": 65,
+      "noisy_rmse": 0.01983,
+      "train_mse": 5.5e-05,
+      "val_rmse": 0.00743
+    },
+    {
+      "epoch": 70,
+      "noisy_rmse": 0.01983,
+      "train_mse": 5.5e-05,
+      "val_rmse": 0.0075
+    },
+    {
+      "epoch": 75,
+      "noisy_rmse": 0.01983,
+      "train_mse": 5.4e-05,
+      "val_rmse": 0.00739
+    },
+    {
+      "epoch": 80,
+      "noisy_rmse": 0.01983,
+      "train_mse": 5.4e-05,
+      "val_rmse": 0.00742
+    },
+    {
+      "epoch": 85,
+      "noisy_rmse": 0.01983,
+      "train_mse": 5.3e-05,
+      "val_rmse": 0.00737
+    },
+    {
+      "epoch": 90,
+      "noisy_rmse": 0.01983,
+      "train_mse": 5.3e-05,
+      "val_rmse": 0.00736
+    },
+    {
+      "epoch": 95,
+      "noisy_rmse": 0.01983,
+      "train_mse": 5.3e-05,
+      "val_rmse": 0.00736
+    },
+    {
+      "epoch": 100,
+      "noisy_rmse": 0.01983,
+      "train_mse": 5.2e-05,
+      "val_rmse": 0.00736
+    },
+    {
+      "epoch": 105,
+      "noisy_rmse": 0.01983,
+      "train_mse": 5.3e-05,
+      "val_rmse": 0.00734
+    },
+    {
+      "epoch": 110,
+      "noisy_rmse": 0.01983,
+      "train_mse": 5.2e-05,
+      "val_rmse": 0.00734
+    },
+    {
+      "epoch": 115,
+      "noisy_rmse": 0.01983,
+      "train_mse": 5.2e-05,
+      "val_rmse": 0.00734
+    },
+    {
+      "epoch": 120,
+      "noisy_rmse": 0.01983,
+      "train_mse": 5.2e-05,
+      "val_rmse": 0.00732
+    }
+  ],
+  "lr": 0.0015,
+  "mae": 0.00576,
+  "model": "perception_mlp",
+  "pixels": 1024,
+  "rmse_denoised": 0.00732,
+  "rmse_denoised_flat": 0.0073,
+  "rmse_improvement_flat_pct": 63.4,
+  "rmse_improvement_pct": 63.09,
+  "rmse_noisy": 0.01983,
+  "rmse_noisy_flat": 0.01996,
+  "rmse_smoothed": 0.06505,
+  "rmse_smoothed_improvement_pct": -227.98,
+  "seconds": 377.87,
+  "target": "residual (clean - noisy), output = noisy + residual clipped",
+  "task": "32x32 depth-image denoising, predicts residual clean-noisy",
+  "train_samples": 496,
+  "val_episodes": [
+    1,
+    1000,
+    1005,
+    2000
+  ],
+  "val_samples": 101
+}

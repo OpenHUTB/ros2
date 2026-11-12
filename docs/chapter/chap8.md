@@ -5,3 +5,4 @@
 ## 教程小节
 
 - [MoveIt 六自由度机械臂运动规划与 OMPL 规划器对比](chap8/moveit_arm_planning.md)
+- [机械臂拧螺丝仿真](chap8/mujoco_arm_screw.md)

@@ -1,0 +1,5 @@
+# 推理与仿真依赖。torch 请装 CPU 版，避免 pip 默认拉取 CUDA 版（200 MB+）：
+#   pip install torch --index-url https://download.pytorch.org/whl/cpu
+numpy>=1.24,<3
+mujoco>=3.1
+pyyaml>=6.0
