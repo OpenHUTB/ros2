@@ -163,6 +163,20 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#10">10. 常见问题</a>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#11_1">11. 阿克曼运动学离线验证与路径跟踪</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#111">11.1 文件</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#112">11.2 阿克曼几何</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#113-pure-pursuit">11.3 Pure Pursuit</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#114">11.4 运行</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#115">11.5 与真车节点的关系</a>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal">8. ROS 机器人综合应用</a>
@@ -661,6 +675,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../ground/torque_vectoring_yaw_control/">四轮独立驱动扭矩矢量横摆控制</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../ground/ros2_stuck_recovery/">ROS2 差速机器人卡死检测与自动脱困</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/heartbeat_watchdog/">上游心跳看门狗</a>
 </li>
 </ul>
 <p class="caption"><span class="caption-text">空域载具</span></p>
@@ -1565,6 +1581,110 @@ catkin_make
 <p>功能包复制到已存在的同名目录时可能发生目录嵌套，导致加载的仍是旧配置。删除旧目录后重新复制，或在 Rviz 中手动 <code>Add</code> → <code>LaserScan</code>，话题选择 <code>/laser/scan</code>。</p>
 <p><strong>Q7：键盘节点按键后小车没有反应？</strong></p>
 <p>检查运行键盘节点的终端窗口是否获取鼠标焦点，并确认系统处于英文输入法状态；待机时终端持续打印全 0 数据属于正常现象。</p>
+<hr/>
+<h2 id="11_1">11. 阿克曼运动学离线验证与路径跟踪</h2>
+<p>第 6 节的键盘遥控节点只在按键时算一次阿克曼解算，想验证"这套转向几何对不对""给定一条路线小车能不能跟住"，每次都得起 Gazebo 重新开一遍。这一节补两个<strong>不需要 ROS</strong> 的工具，直接在笔记本上跑。</p>
+<h3 id="111">11.1 文件</h3>
+<div class="highlight"><pre><span></span><code>src/chap7/smartcar_control/
+├── scripts/ackermann_kinematics.py   # 阿克曼几何 + 自行车模型 + Pure Pursuit
+├── scripts/pure_pursuit_demo.py      # 三种路径的离线跟踪演示
+└── test/test_ackermann_kinematics.py # 36 个单元测试
+</code></pre></div>
+<p><code>ackermann_kinematics.py</code> 里的公式与 C++ 节点逐项一致（轴距 0.1885 m、轮距 0.16 m、最大转角 0.4 rad、轮半径 0.025 m），所以离线算出来的四轮指令就是真车节点的指令。</p>
+<h3 id="112">11.2 阿克曼几何</h3>
+<p>给定虚拟前轮转角 $\delta$ 与轴距 $L$、轮距 $W$：</p>
+<p>
+<script type="math/tex; mode=display">
+\delta_{left}=\arctan\frac{L\tan\delta}{L-\tfrac12 W\tan\delta},\qquad
+\delta_{right}=\arctan\frac{L\tan\delta}{L+\tfrac12 W\tan\delta}
+</script>
+</p>
+<p>
+<script type="math/tex; mode=display">
+v_{left}=v\left(1-\frac{W\tan\delta}{2L}\right),\qquad
+v_{right}=v\left(1+\frac{W\tan\delta}{2L}\right)
+</script>
+</p>
+<p>内侧轮转角更大、速度更慢，外侧轮走更长的弧。曲率 $\kappa=\tan\delta/L$，最大转角对应最小转弯半径：</p>
+<p>
+<script type="math/tex; mode=display">
+R_{min}=\frac{L}{\tan\delta_{max}}=\frac{0.1885}{\tan 0.4}\approx 0.446\ \text{m}
+</script>
+</p>
+<h3 id="113-pure-pursuit">11.3 Pure Pursuit</h3>
+<p>在路径上取前视距离 $L_d$ 处的点，用"车头指向它"的曲率跟踪：</p>
+<p>
+<script type="math/tex; mode=display">
+\kappa=\frac{2\sin\alpha}{L_d},\qquad \delta=\arctan(\kappa L)
+</script>
+</p>
+<p><code>simulate()</code> 用自行车模型积分，输出横向偏差、转向饱和比例等指标。</p>
+<h3 id="114">11.4 运行</h3>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>src/chap7/smartcar_control
+
+<span class="c1"># 三种路径（圆、换道、双移线）</span>
+python3<span class="w"> </span>scripts/pure_pursuit_demo.py
+
+<span class="c1"># 只跑圆周，调前视距离和车速</span>
+python3<span class="w"> </span>scripts/pure_pursuit_demo.py<span class="w"> </span>--path<span class="w"> </span>circle<span class="w"> </span>--lookahead<span class="w"> </span><span class="m">0</span>.8<span class="w"> </span>--speed<span class="w"> </span><span class="m">0</span>.5
+
+<span class="c1"># 单元测试</span>
+python3<span class="w"> </span>-m<span class="w"> </span>unittest<span class="w"> </span>discover<span class="w"> </span>-s<span class="w"> </span><span class="nb">test</span>
+</code></pre></div>
+<p>轨迹 CSV 默认写到 <code>scripts/demo_out/</code>（已在该目录的 <code>.gitignore</code> 里忽略）。</p>
+<blockquote>
+<p>指标口径：横向偏差只统计 1 s 起步段之后的样本。如果仿真时长本身就短于 1 s，
+<code>cross_track_rms</code> / <code>cross_track_max</code> 返回 <strong>None</strong>（<code>samples=0</code>），而不是 0——
+避免"车离线 5 m 但指标显示完美"这种误导。演示脚本会把这种情况打印成「样本不足」。</p>
+</blockquote>
+<p>实测（前视 0.5 m、车速 0.4 m/s）：</p>
+<table>
+<thead>
+<tr>
+<th>路径</th>
+<th>路径长</th>
+<th>用时</th>
+<th>横向偏差 RMS</th>
+<th>最大</th>
+<th>转向饱和</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>圆周 R=1.0 m</td>
+<td>6.28 m</td>
+<td>15.61 s</td>
+<td><strong>1.0 mm</strong></td>
+<td>2.1 mm</td>
+<td>0%</td>
+</tr>
+<tr>
+<td>正弦换道 4 m / 0.6 m</td>
+<td>4.05 m</td>
+<td>10.03 s</td>
+<td><strong>2.1 mm</strong></td>
+<td>2.7 mm</td>
+<td>0%</td>
+</tr>
+<tr>
+<td>双移线 4.8 m</td>
+<td>5.47 m</td>
+<td>13.53 s</td>
+<td><strong>13.5 mm</strong></td>
+<td>17.9 mm</td>
+<td>0%</td>
+</tr>
+</tbody>
+</table>
+<p>阿克曼解算示例（$\delta=0.2$ rad、$v=0.4$ m/s）：左前轮 +0.218 rad、右前轮 +0.185 rad；左后轮 0.366 m/s、右后轮 0.434 m/s，换算成轮速 14.6 / 17.4 rad/s。</p>
+<h3 id="115">11.5 与真车节点的关系</h3>
+<ul>
+<li>同样的输入（车速 + 转角）→ 同样的四轮指令，可以直接对照 C++ 终端打印的
+  <code>left_speed / right_speed / left_angle / right_angle</code>；</li>
+<li>前视距离太小会在<strong>折线角点</strong>处画龙（圆、换道这类光滑路径受影响很小），太大则切弯；</li>
+<li>想接到真车上，把 <code>PurePursuit.command()</code> 输出的 <code>(v, δ)</code> 送进原来的
+  <code>ackermann_angles / wheel_speeds</code> 即可，不需要改控制器接口。</li>
+</ul>
 <hr/>
 <p>本章完成了阿克曼四轮小车从 xacro 建模、xacro 旧语法修复、ros_control 控制器配置、阿克曼运动解算与键盘遥控，到激光雷达自扫故障排查和三传感器数据验证的完整流程，全部实验结果均在 Ubuntu 20.04 + ROS Noetic 环境下复现通过，工程代码位于仓库 <code>src/chap7</code> 目录。</p></div>
 </div>
