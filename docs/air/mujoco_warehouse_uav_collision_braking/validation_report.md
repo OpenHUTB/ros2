@@ -5,7 +5,7 @@
 数据由 `seed=42`、30条轨迹、三个仓储场景产生；训练分区18条轨迹，验证分区6条，测试分区6条。模型使用 NumPy MLP，隐藏层为24和16个单元。
 
 ```bash
-python3 main.py --collect --episodes 30 --seed 42 --duration 8 --output dataset
+python3 main.py --collect --episodes 30 --seed 42 --duration 8
 python3 main.py --train --dataset dataset --model model --seed 42
 python3 main.py --evaluate --dataset dataset --model model
 python3 main.py --benchmark --model model --output results

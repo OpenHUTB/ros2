@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'src/air/carlair_ros_bridge/**'
+      - 'src/air/uav_airsim_keyboard/**'
       - 'src/air/uav_bc_bench/**'
       - 'src/air/uav_landing_monitor/**'
       - 'src/air/uav_keyboard_control/**'
@@ -12,6 +13,7 @@ on:
   pull_request:
     paths:
       - 'src/air/carlair_ros_bridge/**'
+      - 'src/air/uav_airsim_keyboard/**'
       - 'src/air/uav_bc_bench/**'
       - 'src/air/uav_landing_monitor/**'
       - 'src/air/uav_keyboard_control/**'
@@ -60,6 +62,9 @@ jobs:
 
       - name: Run uav_bc_bench tests
         run: python3 -m pytest src/air/uav_bc_bench/test -q
+
+      - name: Run uav_airsim_keyboard tests
+        run: python3 -m pytest src/air/uav_airsim_keyboard/test -q
 
       - name: Byte-compile air scripts
         run: |
