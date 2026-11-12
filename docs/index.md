@@ -138,6 +138,7 @@ ROS 2 Action 斐波那契数列计算示例：[chap2/fibonacci_action](./chap2/f
 * [人形机器人跑步牛顿第二定律理论计算与演示](./humanoid/humanoid_newton_running.md)
 * [人形机器人全身柔顺控制](./humanoid/humanoid_g1_compliance.md)
 * [人形机器人 MuJoCo 建图导航与神经网络控制](./humanoid/humanoid_mujoco_slam_nn_nav.md)
+* [倒立摆（Cart-Pole）的 LQR 最优平衡控制](./humanoid/cartpole_lqr.md) —— 手写线性代数解 Riccati 方程得 K=[-0.954, -2.186, -35.768, -5.839]，终态摆角 2.8e-4 rad，10 项单测
 
 ## 3. 肌肉骨骼人 <span id='musculoskeletal'></span>
 
@@ -360,6 +361,7 @@ ROS 2 Action 斐波那契数列计算示例：[chap2/fibonacci_action](./chap2/f
 * [MuJoCo 地面无人车 SLAM 建图导航与神经网络控制](./ground/mujoco_ground_slam_nn_nav/README.md)
 * [地面坡度估计](./ground/ground_slope_estimation.md)
 * [急停闩锁与人工复位](./ground/estop_latch.md) —— 把 `/emergency_stop` 锁住，必须调用 `/estop_latch/reset` 人工确认才放行，默认上电即闩锁
+* [智能驾驶员模型（IDM）跟车与车队减速波仿真](./ground/idm_car_following.md) —— 五车纵列跟驰，最低速/下潜/时刻与解析一致，9 项单测
 
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
@@ -603,6 +605,7 @@ ROS 2 Action 斐波那契数列计算示例：[chap2/fibonacci_action](./chap2/f
 * [倾转旋翼过渡走廊与倾转角调度](./air/uav_tiltrotor_transition_corridor/index.md) —— 平飞平衡方程 + 功率/前进比双约束二分求走廊，按走廊调度倾转角并做掉高保护
 
 * [AirSim 无人机 IMU 姿态估计（MLP）](./air/uav_airsim_attitude_estimator.md) —— IMU 5 帧 30 维进单隐层 MLP 回归 roll/pitch，平均 MAE 0.9°
+* [四旋翼高度 PD + 扩张状态观测器（ESO/ADRC）抗扰控制](./air/quad_eso_hover.md) —— PD 稳态偏差 0.640 m、PD+ESO 近似 0，扰动估计收敛至 -5.810，9 项单测
 
 ## 6. 水域载具  <span id='water_vehicle'></span>
 
