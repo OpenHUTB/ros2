@@ -10,7 +10,7 @@ ROS 2 Humble 的 AirSim 磁力计桥接。模块把 AirSim 多旋翼磁力计数
 - 将机体 FRD 磁场转换到 ROS FLU；
 - 支持 `field_scale`，显式处理 AirSim 原始单位到目标单位的换算；
 - 使用可靠 QoS 和三轴协方差；
-- AirSim 连接在后台执行，`connection_timeout` 限制单次 RPC；
+- AirSim 连接和读取在后台执行，`rpc_timeout` 限制单次 RPC；
 - AirSim 断连后停止发布旧数据并定期重连；
 - 提供统一的 `main` 入口和 ROS 2 launch。
 
@@ -58,8 +58,8 @@ ros2 topic echo /uav/magnetometer --once
 
 ![磁力计桥接代码级验证输出（非真实 AirSim 数据）](../../../docs/img/air/airsim_ros2_magnetometer/preview.png)
 
-默认坐标系为 `base_link`，`publish_rate` 为 `20.0` Hz，
-`connection_timeout` 为 `1.0` 秒，`reconnect_period` 为 `2.0` 秒。
+默认坐标系为 `base_link`，`publish_rate` 为 `20.0` Hz，表示最大调度和发布
+频率；`rpc_timeout` 为 `1.0` 秒，`reconnect_period` 为 `2.0` 秒。
 
 ## 测试
 
@@ -69,7 +69,8 @@ colcon test --packages-select airsim_ros2_magnetometer
 colcon test-result --verbose
 ```
 
-测试覆盖 FRD→FLU、尺度换算、协方差、非法样本、后台阻塞连接和启动检查。
+测试覆盖 FRD→FLU、尺度换算、协方差、非法样本、后台阻塞连接和读取、
+连续失败重连、AirSim 客户端缺失提示和启动检查，共 10 项。
 
 ## 范围与限制
 

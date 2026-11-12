@@ -7,6 +7,7 @@ import shutil
 import signal
 import subprocess
 import sys
+import threading
 import time
 from types import SimpleNamespace
 
@@ -51,13 +52,17 @@ def test_launch_starts_without_airsim() -> None:
 def test_connection_is_nonblocking(monkeypatch) -> None:
     class BlockingClient:
         instances = []
+        entered = threading.Event()
+        release = threading.Event()
 
         def __init__(self, ip, port, timeout_value):
             self.timeout_value = timeout_value
             self.__class__.instances.append(self)
 
         def confirmConnection(self):
-            time.sleep(0.15)
+            self.__class__.entered.set()
+            if not self.__class__.release.wait(timeout=1.0):
+                raise RuntimeError("test did not release the connection")
 
     monkeypatch.setitem(
         sys.modules,
@@ -76,14 +81,24 @@ def test_connection_is_nonblocking(monkeypatch) -> None:
         assert node._publisher.qos_profile.reliability == (
             ReliabilityPolicy.RELIABLE
         )
-        node.connection_timeout = 0.5
+        node.rpc_timeout = 0.5
         started = time.monotonic()
         assert node._ensure_connected() is False
-        assert time.monotonic() - started < 0.1
-        time.sleep(0.25)
+        assert time.monotonic() - started < 0.25
+        assert BlockingClient.entered.wait(timeout=1.0)
+        BlockingClient.release.set()
+        deadline = time.monotonic() + 2.0
+        while (
+            node._connection_future is None
+            or not node._connection_future.done()
+        ):
+            if time.monotonic() >= deadline:
+                raise AssertionError("background connection was not completed")
+            time.sleep(0.01)
         assert node._ensure_connected() is True
         assert BlockingClient.instances[-1].timeout_value == pytest.approx(0.5)
     finally:
+        BlockingClient.release.set()
         if node is not None:
             node.destroy_node()
         if rclpy.ok():

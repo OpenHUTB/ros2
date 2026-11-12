@@ -36,29 +36,34 @@ class AirSimMagnetometerBridge(Node):
         self.reconnect_period = float(
             self.declare_parameter("reconnect_period", 2.0).value
         )
-        self.connection_timeout = float(
-            self.declare_parameter("connection_timeout", 1.0).value
+        self.rpc_timeout = float(
+            self.declare_parameter("rpc_timeout", 1.0).value
         )
         self.field_scale = float(self.declare_parameter("field_scale", 1.0).value)
         for name, value in (
             ("publish_rate", self.publish_rate),
             ("reconnect_period", self.reconnect_period),
-            ("connection_timeout", self.connection_timeout),
+            ("rpc_timeout", self.rpc_timeout),
             ("field_scale", self.field_scale),
         ):
             if not math.isfinite(value):
                 raise ValueError(f"{name} must be finite")
         if self.publish_rate <= 0.0 or self.reconnect_period <= 0.0:
             raise ValueError("rate parameters must be positive")
-        if self.connection_timeout <= 0.0 or self.field_scale <= 0.0:
-            raise ValueError("connection timeout and field scale must be positive")
+        if self.rpc_timeout <= 0.0 or self.field_scale <= 0.0:
+            raise ValueError("rpc timeout and field scale must be positive")
 
         self._client = None
         self._read_failures = 0
         self._next_connect_time = 0.0
         self._sample_logged = False
-        self._executor = ThreadPoolExecutor(max_workers=1)
+        self._shutting_down = False
+        self._rpc_executor = ThreadPoolExecutor(
+            max_workers=1,
+            thread_name_prefix="airsim-mag-rpc",
+        )
         self._connection_future: Future | None = None
+        self._read_future: Future | None = None
         self._publisher = self.create_publisher(
             MagneticField,
             self.topic,
@@ -75,19 +80,23 @@ class AirSimMagnetometerBridge(Node):
         if self._connection_future is not None:
             if not self._connection_future.done():
                 return False
+            connection_future = self._connection_future
+            self._connection_future = None
             try:
-                client = self._connection_future.result()
+                client = connection_future.result()
             except ImportError:
                 self.get_logger().error(
                     "AirSim Python client is not installed; run "
-                    "python3 -m pip install -r requirements.txt"
+                    "python3 -m pip install -r requirements.txt",
+                    throttle_duration_sec=5.0,
                 )
                 return False
             except Exception as exc:
-                self.get_logger().warning(f"Cannot connect to AirSim: {exc}")
+                self.get_logger().warning(
+                    f"Cannot connect to AirSim: {exc}",
+                    throttle_duration_sec=5.0,
+                )
                 return False
-            finally:
-                self._connection_future = None
             self._client = client
             self._read_failures = 0
             return True
@@ -95,7 +104,7 @@ class AirSimMagnetometerBridge(Node):
         if now < self._next_connect_time:
             return False
         self._next_connect_time = now + self.reconnect_period
-        self._connection_future = self._executor.submit(self._connect_once)
+        self._connection_future = self._rpc_executor.submit(self._connect_once)
         return False
 
     def _connect_once(self):
@@ -107,19 +116,43 @@ class AirSimMagnetometerBridge(Node):
             client = airsim.MultirotorClient(
                 ip=self.host,
                 port=self.port,
-                timeout_value=self.connection_timeout,
+                timeout_value=self.rpc_timeout,
             )
         client.confirmConnection()
         return client
 
     def _on_timer(self) -> None:
+        if self._shutting_down:
+            return
         if not self._ensure_connected() or self._client is None:
             return
+        self._complete_read()
+        if self._client is None:
+            return
+        self._schedule_read()
+
+    def _schedule_read(self) -> None:
+        """Schedule one AirSim read without blocking the ROS executor."""
+        if self._client is None or self._read_future is not None:
+            return
+        self._read_future = self._rpc_executor.submit(
+            self._read_once,
+            self._client,
+        )
+
+    def _read_once(self, client):
+        return client.getMagnetometerData(
+            magnetometer_name=self.magnetometer_name,
+            vehicle_name=self.vehicle_name,
+        )
+
+    def _complete_read(self) -> None:
+        read_future = self._read_future
+        if read_future is None or not read_future.done():
+            return
+        self._read_future = None
         try:
-            sample = self._client.getMagnetometerData(
-                magnetometer_name=self.magnetometer_name,
-                vehicle_name=self.vehicle_name,
-            )
+            sample = read_future.result()
             normalized = parse_magnetometer_sample(sample)
             if not self._sample_logged:
                 self._sample_logged = True
@@ -149,7 +182,8 @@ class AirSimMagnetometerBridge(Node):
                 )
 
     def destroy_node(self) -> None:
-        self._executor.shutdown(wait=False, cancel_futures=True)
+        self._shutting_down = True
+        self._rpc_executor.shutdown(wait=False, cancel_futures=True)
         super().destroy_node()
 
 

@@ -430,6 +430,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [无人机 SLAM 建图与导航](./air/uav_slam_nav.md) —— Humble 侧 slam_toolbox + nav2，跨 ros1_bridge 接 Noetic bridge
 * [无人机深度相机建图与自主导航（深度反投影 + A* + 纯追踪）](./air/uav_depth_mapping_nav.md) —— 深度相机反投影建图、A* 规划与纯追踪控制的完整闭环（原 uav_slam_nav 更名，避免与已合并模块重名）
 * [AirSim ROS 2 Humble 最小桥接](./air/airsim_ros2_bringup.md)
+* [AirSim ROS 2 Humble GNSS 桥接](./air/airsim_ros2_gnss.md)
 * [AirSim ROS 2 Humble 磁力计桥接](./air/airsim_ros2_magnetometer.md)
 * [无人机 LiDAR 地面/障碍分割](./air/uav_lidar_ground_filter.md)
 * [无人机屋顶降落](./air/rooftop_landing.md) —— 用机载 LiDAR 检测屋顶平面，取轮廓的最大内切圆圆心作为降落点，自主飞抵其上方后垂直降落

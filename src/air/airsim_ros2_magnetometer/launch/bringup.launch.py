@@ -23,7 +23,9 @@ def generate_launch_description() -> LaunchDescription:
     topic = LaunchConfiguration("magnetometer_topic")
     frame_id = LaunchConfiguration("frame_id")
     publish_rate = LaunchConfiguration("publish_rate")
-    connection_timeout = LaunchConfiguration("connection_timeout")
+    reconnect_period = LaunchConfiguration("reconnect_period")
+    rpc_timeout = LaunchConfiguration("rpc_timeout")
+    field_scale = LaunchConfiguration("field_scale")
     use_sim_time = LaunchConfiguration("use_sim_time")
     return LaunchDescription(
         [
@@ -34,7 +36,9 @@ def generate_launch_description() -> LaunchDescription:
             DeclareLaunchArgument("magnetometer_topic", default_value="/uav/magnetometer"),
             DeclareLaunchArgument("frame_id", default_value="base_link"),
             DeclareLaunchArgument("publish_rate", default_value="20.0"),
-            DeclareLaunchArgument("connection_timeout", default_value="1.0"),
+            DeclareLaunchArgument("reconnect_period", default_value="2.0"),
+            DeclareLaunchArgument("rpc_timeout", default_value="1.0"),
+            DeclareLaunchArgument("field_scale", default_value="1.0"),
             DeclareLaunchArgument("use_sim_time", default_value="false"),
             Node(
                 package="airsim_ros2_magnetometer",
@@ -53,9 +57,11 @@ def generate_launch_description() -> LaunchDescription:
                         "magnetometer_topic": ParameterValue(topic, value_type=str),
                         "frame_id": ParameterValue(frame_id, value_type=str),
                         "publish_rate": ParameterValue(publish_rate, value_type=float),
-                        "connection_timeout": ParameterValue(
-                            connection_timeout, value_type=float
+                        "reconnect_period": ParameterValue(
+                            reconnect_period, value_type=float
                         ),
+                        "rpc_timeout": ParameterValue(rpc_timeout, value_type=float),
+                        "field_scale": ParameterValue(field_scale, value_type=float),
                         "use_sim_time": ParameterValue(
                             use_sim_time,
                             value_type=bool,

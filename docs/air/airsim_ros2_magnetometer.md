@@ -21,9 +21,9 @@
 | `magnetometer_name` | `""` | AirSim 磁力计名称 |
 | `magnetometer_topic` | `/uav/magnetometer` | 输出话题 |
 | `frame_id` | `base_link` | 磁场消息坐标系 |
-| `publish_rate` | `20.0` | 定时读取和发布频率（Hz） |
+| `publish_rate` | `20.0` | 读取调度的最大频率（Hz）；实际受 RPC 延迟限制 |
 | `reconnect_period` | `2.0` | 断线后重连等待时间（s） |
-| `connection_timeout` | `1.0` | 单次 AirSim RPC 连接超时（s） |
+| `rpc_timeout` | `1.0` | AirSim 连接和单次读取 RPC 超时（s） |
 | `field_scale` | `1.0` | AirSim 数值到 ROS 数值的比例 |
 
 发布端使用 `RELIABLE` QoS，协方差未知时保持全零，不虚构传感器精度。
@@ -104,8 +104,10 @@ $$
 T_p=\frac{1}{f_p},
 $$
 
-其中 $f_p$ 是 `publish_rate`。模块也拒绝非有限、非正的发布周期、重连周期、
-连接超时和尺度参数，避免把 `NaN` 或 `Inf` 传给定时器和 RPC。
+其中 $f_p$ 是 `publish_rate`，它表示最大调度和发布频率。单次 RPC 超过周期
+时实际频率会下降，但 AirSim 调用不会占用 ROS executor。模块也拒绝非有限、
+非正的发布周期、重连周期、RPC 超时和尺度参数，避免把 `NaN` 或 `Inf` 传给
+定时器和 RPC。
 
 消息时间戳取当前 ROS 时钟 `get_clock().now()`，不是 AirSim 样本时间。
 因此它表示“桥接节点本次发布时刻”，而不是磁力计采样时刻；当前版本不做
@@ -129,10 +131,13 @@ ROS 定时器触发
 已有 AirSim client？──否──▶ 最多创建一个后台连接任务
      │是                         │
      ▼                           ▼
-读取磁力计样本            成功后在下一周期登记 client
+处理已完成的读取 Future    成功后在下一周期登记 client
      │
      ▼
-检查三轴磁场与协方差是否为有限合法值
+没有在途读取？──是──▶ 提交下一次后台读取
+     │否
+     ▼
+检查已完成样本的三轴磁场与协方差
      │
      ▼
 FRD(x,y,z) ──▶ FLU(x,-y,-z)
@@ -148,17 +153,20 @@ FRD(x,y,z) ──▶ FLU(x,-y,-z)
 
 1. client 不存在且到达 `_next_connect_time` 时，把 `_connect_once()` 提交给单线程
    `ThreadPoolExecutor`，定时器立即返回。
-2. 后台任务按 `connection_timeout` 创建 `MultirotorClient` 并调用
+2. 后台任务按 `rpc_timeout` 创建 `MultirotorClient` 并调用
    `confirmConnection()`；未完成前，后续定时器不会重复创建连接。
 3. 连接成功后，后续周期登记 client 并开始读取；`ImportError` 会提示安装
    `requirements.txt`，其它连接异常记录 warning 后按 `reconnect_period` 重试。
 
 读取流程：
 
-1. 调用 `getMagnetometerData(magnetometer_name=..., vehicle_name=...)`；
-2. 校验并转换样本，失败样本不会发布；
-3. 第一次有效样本写一条 debug 日志，便于确认字段量级；
-4. 发布消息并将连续失败计数清零。
+1. 定时器在没有在途读取时，把
+   `getMagnetometerData(magnetometer_name=..., vehicle_name=...)` 提交给同一个
+   后台 RPC 线程，然后立即返回；
+2. 后续定时周期只轮询 Future，不阻塞等待 AirSim；
+3. Future 完成后在主 executor 中校验并转换样本，失败样本不会发布；
+4. 第一次有效样本写一条 debug 日志，便于确认字段量级；
+5. 发布消息并将连续失败计数清零，再提交下一次读取。
 
 故障流程：
 
@@ -185,14 +193,12 @@ FRD(x,y,z) ──▶ FLU(x,-y,-z)
 
 | 位置 | 内容 |
 | --- | --- |
-| `main.py:20-42` | 节点构造函数、全部 ROS 参数声明及 client 工厂注入点 |
-| `main.py:43-54` | 有限性、正数检查和非法参数拒绝 |
-| `main.py:56-67` | 连接状态、线程池、可靠 QoS 发布者和定时器 |
-| `main.py:72-99` | 非阻塞连接调度：复用未完成 Future，按重连周期提交新连接 |
-| `main.py:101-113` | 默认创建 `MultirotorClient`，显式传入 `connection_timeout` |
-| `main.py:115-149` | 定时读取、转换、发布，以及连续 5 次失败后的断线处理 |
-| `main.py:151-153` | 关闭线程池并销毁 ROS 节点 |
-| `main.py:156-168` | `main()` 入口、外部关闭异常处理和幂等 shutdown |
+| `main.py:20-75` | 节点构造、参数声明、非法参数拒绝、可靠 QoS 和 client 工厂注入点 |
+| `main.py:77-108` | 非阻塞连接调度：复用未完成 Future，按重连周期提交新连接 |
+| `main.py:110-122` | 默认创建 `MultirotorClient`，显式传入 `rpc_timeout` |
+| `main.py:124-182` | 后台读取调度、Future 完成处理，以及连续 5 次失败后的断线处理 |
+| `main.py:184-187` | 关闭线程池并销毁 ROS 节点 |
+| `main.py:190-202` | `main()` 入口、外部关闭异常处理和幂等 shutdown |
 
 `client_factory` 是测试注入点：生产环境不传入时动态导入 `airsim`，测试环境可传入
 假 client，从而覆盖连接、读取失败和重连状态，而不要求启动模拟器。
@@ -202,9 +208,9 @@ FRD(x,y,z) ──▶ FLU(x,-y,-z)
 | 位置 | 内容 |
 | --- | --- |
 | `bringup.launch.py:13-18` | 通过 `get_package_share_directory()` 解析安装后的 YAML 路径 |
-| `bringup.launch.py:30-38` | 声明 host、port、载具、话题、频率和超时参数 |
-| `bringup.launch.py:39-65` | 启动 `main`，加载 YAML，并把基本类型声明为 int、float、str、bool |
-| `bringup.launch.py:59-62` | `use_sim_time` 显式包装为 bool，避免字符串类型冲突 |
+| `bringup.launch.py:30-42` | 声明 host、port、载具、话题、频率、重连、RPC 超时和尺度参数 |
+| `bringup.launch.py:43-72` | 启动 `main`，加载 YAML，并把基本类型声明为 int、float、str、bool |
+| `bringup.launch.py:59-68` | 数值参数与 `use_sim_time` 显式包装为 float/bool |
 
 配置文件 `config/magnetometer.yaml` 提供运行参数，launch 显式传入的值优先级更高。
 安装路径由 ament index 解析，不使用依赖当前用户名的绝对路径。
@@ -216,18 +222,20 @@ FRD(x,y,z) ──▶ FLU(x,-y,-z)
 | `test/test_magnetometer.py:17-36` | `test_frd_to_flu_and_scale` | 三轴符号、`field_scale`、协方差缩放和 `frame_id` |
 | `test/test_magnetometer.py:39-52` | `test_unknown_covariance_stays_zero` | 未知协方差不被伪造成经验值 |
 | `test/test_magnetometer.py:55-63` | `test_non_finite_field_is_rejected` | NaN 样本拒绝 |
-| `test/test_reconnect.py:39-55` | `test_four_failures_recover_without_reconnect` | 短时故障不立即断连，恢复后继续发布 |
-| `test/test_reconnect.py:58-71` | `test_fifth_failure_disconnects` | 第 5 次失败触发断线状态 |
-| `test/test_reconnect.py:74-86` | `test_reconnect_restores_client` | 重连后恢复 client |
-| `test/test_node_startup.py:16-48` | `test_launch_starts_without_airsim` | AirSim 离线时 launch 仍能启动节点和话题 |
-| `test/test_node_startup.py:51-91` | `test_connection_is_nonblocking` | 后台连接不阻塞、超时值生效、发布 QoS 为 reliable |
+| `test/test_reconnect.py:70-92` | `test_four_failures_recover_without_reconnect` | 短时故障不立即断连，恢复后继续发布 |
+| `test/test_reconnect.py:94-110` | `test_fifth_failure_disconnects` | 第 5 次失败触发断线状态 |
+| `test/test_reconnect.py:112-125` | `test_reconnect_restores_client` | 重连后恢复 client |
+| `test/test_node_startup.py:17-50` | `test_launch_starts_without_airsim` | AirSim 离线时 launch 仍能启动节点和话题 |
+| `test/test_reconnect.py:127-152` | `test_blocking_read_does_not_block_timer` | 后台读取阻塞时定时器立即返回，完成后恢复发布 |
+| `test/test_reconnect.py:154-171` | `test_missing_airsim_client_reports_install_hint` | 未安装客户端时给出正确安装提示 |
+| `test/test_node_startup.py:52-105` | `test_connection_is_nonblocking` | 后台连接不阻塞、超时值生效、发布 QoS 为 reliable |
 
 `.github/workflows/air_bridge_tests.yml:12,22,78-113` 中新增包专属路径过滤和
 `ROS 2 Humble magnetometer build + tests` 作业。CI 使用
 官方 `ros:humble-ros-base` 容器，再执行
 `colcon build --packages-select airsim_ros2_magnetometer`、
 `colcon test --packages-select airsim_ros2_magnetometer` 和
-`colcon test-result --verbose`。因此 `test/` 下的 8 个用例会在仓库流水线中执行。
+`colcon test-result --verbose`。因此 `test/` 下的 10 个用例会在仓库流水线中执行。
 
 ## 5. 构建与运行
 
@@ -281,8 +289,9 @@ colcon test-result --verbose
 
 ![磁力计桥接代码级验证输出（非真实 AirSim 数据）](../img/air/airsim_ros2_magnetometer/preview.png)
 
-图中的 `8 passed` 只表示转换、消息构造、连接状态机、启动和 QoS 检查通过；
-它不表示 AirSim/OpenHUTB 已提供有效磁力计数据。
+截图记录的是修改前的 `8 passed` 代码级检查；当前测试集已扩展为 10 项。
+这些检查只表示转换、消息构造、连接/读取状态机、启动和 QoS 检查通过，不表示
+AirSim/OpenHUTB 已提供有效磁力计数据。
 
 ## 7. 范围与限制
 
