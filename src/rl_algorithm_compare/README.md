@@ -75,7 +75,11 @@ python3 -m rl_algorithm_compare.benchmark --seeds 0,1 --episodes 120
 python3 -m unittest discover -s test      # 19 个用例，不需要 MuJoCo
 ```
 
-输出 `results/benchmark/summary.csv`（各配置均值/标准差/最值）与 `curves.csv`（跨种子平均曲线）。
+输出 `results/benchmark/summary.csv`（各配置均值/标准差/最值）与 `curves.csv`（跨种子平均曲线），
+该目录已在 `.gitignore` 中忽略。
+
+耗时参考：2 个种子 × 120 回合（3 组配置）在本机约 3 分钟；只跑 DQN 两组配置约 2 分钟。
+回合数越大越慢，CI 里建议 `--episodes 20` 起步。
 
 ## 结果
 

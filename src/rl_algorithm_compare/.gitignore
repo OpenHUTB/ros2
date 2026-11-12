@@ -1,0 +1,7 @@
+# 基准评测与训练的默认输出目录
+results/benchmark/
+results/*.csv
+results/*.pkl
+
+__pycache__/
+*.pyc
