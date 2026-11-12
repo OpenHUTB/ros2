@@ -412,6 +412,7 @@ nav:
     - 无人机执行器故障注入与控制退化观测: './air/uav_actuator_fault_sim.md'
     - 四旋翼吊挂负载防摆控制: './air/uav_slung_load.md'
     - 无人机桨故障健康度估计（1D-CNN+GRU）: './air/uav_rotor_fault_detector_nn.md'
+    - 桨故障下的端到端推力策略（深度图+健康度）: './air/uav_fault_e2e_thrust_policy.md'
     - 无人机桨故障下的神经容错控制: './air/uav_neural_fault_tolerant_control.md'
     - 无人机编队飞行: './air/uav_formation_flight.md'
     - 移动地面目标的后方等距跟随: './air/uav_moving_target_follow.md'
