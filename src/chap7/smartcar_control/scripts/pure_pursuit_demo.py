@@ -58,10 +58,14 @@ def run_case(name, path, lookahead, speed, dt, out_dir, verbose=True):
     if verbose:
         print("\n%-10s 路径长 %.2f m  用时 %.2f s  里程 %.2f m"
               % (name, result["path_length"], result["duration"], result["distance"]))
-        print("           横向偏差 RMS %.4f m  最大 %.4f m  转向饱和 %.1f%%  %s"
-              % (result["cross_track_rms"], result["cross_track_max"],
-                 result["saturate_ratio"] * 100.0,
-                 "到达终点" if result["finished"] else "未到终点"))
+        if result["cross_track_rms"] is None:
+            print("           横向偏差 样本不足（仿真 %.2f s，还没过 %.1f s 起步段）"
+                  % (result["duration"], 1.0))
+        else:
+            print("           横向偏差 RMS %.4f m  最大 %.4f m  转向饱和 %.1f%%  %s"
+                  % (result["cross_track_rms"], result["cross_track_max"],
+                     result["saturate_ratio"] * 100.0,
+                     "到达终点" if result["finished"] else "未到终点"))
 
     if out_dir:
         if not os.path.isdir(out_dir):

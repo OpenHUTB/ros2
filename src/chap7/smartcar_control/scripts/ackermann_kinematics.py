@@ -138,6 +138,8 @@ def bicycle_step(pose, speed, delta, dt, wheelbase=WHEELBASE):
     """
     if dt <= 0:
         raise ValueError("dt 必须为正")
+    if wheelbase <= 0:
+        raise ValueError("轴距必须为正")
     x, y, theta = pose
     x += speed * math.cos(theta) * dt
     y += speed * math.sin(theta) * dt
@@ -228,6 +230,8 @@ class PurePursuit(object):
             raise ValueError("前视距离必须为正")
         if speed <= 0:
             raise ValueError("车速必须为正")
+        if wheelbase <= 0:
+            raise ValueError("轴距必须为正")
         self.path = path
         self.lookahead = float(lookahead)
         self.speed = float(speed)
@@ -257,14 +261,16 @@ class PurePursuit(object):
 # ---------------------------------------------------------------------------
 def simulate(path, start_pose=(0.0, 0.0, 0.0), lookahead=0.5, speed=0.4,
              dt=0.01, max_time=60.0, wheelbase=WHEELBASE,
-             max_steer=MAX_STEER, finish_tolerance=0.05):
+             max_steer=MAX_STEER, finish_tolerance=0.05, warmup=1.0):
     """让小车沿 path 跑一圈，返回轨迹与统计指标。
 
     返回 dict：
         trajectory    [(t, x, y, theta, steer), …]
         duration      仿真时长 (s)
         distance      实际行驶里程 (m)
-        cross_track_rms / cross_track_max   横向偏差（去掉前 1 s 起步段）
+        cross_track_rms / cross_track_max   横向偏差（去掉前 warmup 秒起步段；
+                                            **样本不足时为 None**，不要当成 0 用）
+        samples       参与统计的采样点数（0 表示仿真太短、没有有效样本）
         saturate_ratio  转向被最大转角截断的时间占比
         finished      是否到达路径终点（终点容差 finish_tolerance）
         path_length   路径总长
@@ -285,7 +291,7 @@ def simulate(path, start_pose=(0.0, 0.0, 0.0), lookahead=0.5, speed=0.4,
         _speed, steer, _target, s = controller.command(pose)
         _s, cross = path.project(pose)
         trajectory.append((t, pose[0], pose[1], pose[2], steer))
-        if t > 1.0:                      # 跳过起步阶段
+        if t > warmup:                   # 跳过起步阶段
             errors.append(abs(cross))
         if abs(abs(steer) - max_steer) < 1e-9:
             saturated += 1
@@ -300,17 +306,25 @@ def simulate(path, start_pose=(0.0, 0.0, 0.0), lookahead=0.5, speed=0.4,
             break
 
     _s, cross = path.project(pose)
-    if t > 1.0:
+    if t > warmup:
         errors.append(abs(cross))
     trajectory.append((t, pose[0], pose[1], pose[2], 0.0))
 
-    rms = math.sqrt(sum(e * e for e in errors) / len(errors)) if errors else 0.0
+    # 样本不足（仿真时长短于 warmup）时指标无意义，返回 None 而不是 0：
+    # 返回 0 会让"车离线 5 m"的短仿真看起来"完美贴合"，把结论带偏。
+    if errors:
+        rms = math.sqrt(sum(e * e for e in errors) / len(errors))
+        cross_max = max(errors)
+    else:
+        rms = None
+        cross_max = None
     return {
         "trajectory": trajectory,
         "duration": t,
         "distance": distance,
         "cross_track_rms": rms,
-        "cross_track_max": max(errors) if errors else 0.0,
+        "cross_track_max": cross_max,
+        "samples": len(errors),
         "saturate_ratio": (saturated / float(steps)) if steps else 0.0,
         "finished": s >= path.length - finish_tolerance,
         "path_length": path.length,

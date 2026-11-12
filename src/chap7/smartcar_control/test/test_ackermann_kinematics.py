@@ -235,6 +235,29 @@ class TestSimulate(unittest.TestCase):
         with self.assertRaises(ValueError):
             simulate(circle_path(), dt=0.0)
 
+    def test_short_run_has_no_metrics(self):
+        """仿真短于起步段时指标必须是 None，不能伪装成 0（review 回归用例）。"""
+        path = Path([(0.0, 0.0), (0.1, 0.0)])
+        result = simulate(path, start_pose=(0.0, 5.0, 0.0),
+                          lookahead=0.5, speed=0.4, max_time=5.0)
+        self.assertLess(result["duration"], 1.0)
+        self.assertIsNone(result["cross_track_rms"])
+        self.assertIsNone(result["cross_track_max"])
+        self.assertEqual(result["samples"], 0)
+
+    def test_metrics_present_for_long_run(self):
+        path = circle_path(radius=1.0)
+        result = simulate(path, start_pose=(1.0, 0.0, math.pi / 2),
+                          lookahead=0.5, speed=0.4)
+        self.assertGreater(result["samples"], 0)
+        self.assertIsNotNone(result["cross_track_rms"])
+
+    def test_bad_wheelbase_raises_value_error(self):
+        with self.assertRaises(ValueError):
+            bicycle_step((0.0, 0.0, 0.0), 0.5, 0.0, 0.1, wheelbase=0.0)
+        with self.assertRaises(ValueError):
+            PurePursuit(Path([(0.0, 0.0), (1.0, 0.0)]), wheelbase=0.0)
+
     def test_trajectory_shape(self):
         path = circle_path(radius=1.0, samples=60)
         result = simulate(path, start_pose=(1.0, 0.0, math.pi / 2),

@@ -574,6 +574,12 @@ python3 scripts/pure_pursuit_demo.py --path circle --lookahead 0.8 --speed 0.5
 python3 -m unittest discover -s test
 ```
 
+轨迹 CSV 默认写到 `scripts/demo_out/`（已在该目录的 `.gitignore` 里忽略）。
+
+> 指标口径：横向偏差只统计 1 s 起步段之后的样本。如果仿真时长本身就短于 1 s，
+> `cross_track_rms` / `cross_track_max` 返回 **None**（`samples=0`），而不是 0——
+> 避免"车离线 5 m 但指标显示完美"这种误导。演示脚本会把这种情况打印成「样本不足」。
+
 实测（前视 0.5 m、车速 0.4 m/s）：
 
 | 路径 | 路径长 | 用时 | 横向偏差 RMS | 最大 | 转向饱和 |
@@ -588,7 +594,7 @@ python3 -m unittest discover -s test
 
 * 同样的输入（车速 + 转角）→ 同样的四轮指令，可以直接对照 C++ 终端打印的
   `left_speed / right_speed / left_angle / right_angle`；
-* 前视距离太小会在弯道画龙（`--lookahead 0.1` 时横向偏差明显变大），太大则切弯；
+* 前视距离太小会在**折线角点**处画龙（圆、换道这类光滑路径受影响很小），太大则切弯；
 * 想接到真车上，把 `PurePursuit.command()` 输出的 `(v, δ)` 送进原来的
   `ackermann_angles / wheel_speeds` 即可，不需要改控制器接口。
 
