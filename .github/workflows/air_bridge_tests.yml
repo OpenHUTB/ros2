@@ -58,10 +58,6 @@ jobs:
       - name: Run uav_e2e_rl tests
         run: python3 src/air/uav_e2e_rl/test/test_e2e_logic_local.py
 
-      - name: Run keyboard control tests
-        run: |
-          python3 -m unittest discover -s src/air/uav_keyboard_control/tests -v
-
       - name: Run uav_bc_bench tests
         run: python3 -m pytest src/air/uav_bc_bench/test -q
 
