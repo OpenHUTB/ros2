@@ -397,6 +397,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [无人机键盘控制](./air/uav_keyboard_control.md)
 
 * [基于 PPO 的无人机导航避障](./air/uav_ppo_nav.md)
+* [uav_ppo_nav 本地测试（pytest）](./air/uav_ppo_nav_local_test.md) —— 缺 gymnasium 时 `test_env` 干净跳过，pytest 1 passed / 1 skipped，直接运行 14 项通过
 * [无人机定高日志误差与抗扰恢复时间评估](./air/uav_hover_log_eval.md)
 * [四旋翼悬停油门求解（推力曲线 + 海拔 + 电池电压）](./air/uav_hover_throttle.md) —— 悬停油门 55.8%，4000 m 升到 68.2%，电池 3.5 V/节升到 66.9%
 

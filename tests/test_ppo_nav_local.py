@@ -94,6 +94,9 @@ def test_policy():
 
 # ================================================================= B. env
 def test_env():
+    if NavEnv is None:
+        import pytest
+        pytest.skip("需要 gymnasium（%s）" % ENV_SKIP)
     print("== B. NavEnv 训练环境 ==")
     env = NavEnv(num_obstacles=6, seed=0)
     obs, _ = env.reset()
