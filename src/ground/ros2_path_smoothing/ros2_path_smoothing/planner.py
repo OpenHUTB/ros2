@@ -45,8 +45,12 @@ def astar(grid: Grid, start: Cell, goal: Cell) -> List[Cell]:
     open_heap = [(0.0, 0.0, start)]
     came_from = {}
     gscore = {start: 0.0}
+    closed = set()
     while open_heap:
         _, g, current = heapq.heappop(open_heap)
+        if current in closed:
+            continue
+        closed.add(current)
         if current == goal:
             path = [current]
             while current in came_from:
@@ -212,8 +216,10 @@ def smooth_path(grid: Grid, path: Sequence[Cell],
     simple_safe = clearance(grid, simple_world) >= min_clearance
     candidates = [(simple_world, simple_safe)]
     if len(simple_world) >= 3:
+        control = resample_by_arclength(
+            simple_world, max(3, int(path_length(simple_world) / 0.5) + 1))
         for alpha in (1.0, 0.75, 0.5, 0.25):
-            smooth = catmull_rom(simple_world, samples=12)
+            smooth = catmull_rom(control, samples=12)
             raw_resampled = resample_by_arclength(raw_world, len(smooth))
             blended = alpha * smooth + (1.0 - alpha) * raw_resampled
             if path_free(grid, blended):
@@ -228,4 +234,5 @@ def smooth_path(grid: Grid, path: Sequence[Cell],
     if best_path is None:
         return raw_world, False
     return best_path, best_safe
+
 
