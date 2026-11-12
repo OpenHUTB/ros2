@@ -2,11 +2,16 @@
 
 
 import math
+from collections import deque
 
 
 from . import config, formation
 
 
+# 轨迹与误差记录的长度上限，避免长时间运行时内存与绘制开销无限增长。
+# 60 FPS 下 3000 点约等于 50 秒窗口，足够观察收敛过程与稳态保持。
+TRAIL_MAXLEN = 3000
+ERROR_WINDOW = 3000
 
 
 class Team:
@@ -14,8 +19,8 @@ class Team:
         self.step_count = 0
         self.leader_pos, self.leader_heading = formation.leader_state(0)
         self.followers = list(config.INIT_POSITIONS)
-        self.trails = [[p] for p in self.followers]
-        self.leader_trail = [self.leader_pos]
+        self.trails = [deque([p], maxlen=TRAIL_MAXLEN) for p in self.followers]
+        self.leader_trail = deque([self.leader_pos], maxlen=TRAIL_MAXLEN)
         self.errors = []
 
 
@@ -61,4 +66,6 @@ class Team:
 
         err = self.error()
         self.errors.append(err)
+        if len(self.errors) > ERROR_WINDOW:
+            del self.errors[0]
         return err
