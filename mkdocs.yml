@@ -55,6 +55,7 @@ nav:
     - ROS 2 传感器数据均值滤波节点 (mean_filter): 'chap2/mean_filter.md'
     - ROS2 服务与参数基础实验（uav_mode_node）: 'chap2/ros2_service_param_demo.md'
     - ROS 2 QoS 兼容性检查实验: 'chap2/ros2_qos_compatibility_lab.md'
+    - ROS 2 Action 斐波那契数列计算示例: 'fibonacci_action.md'
 - ROS 教程:
     - 1. 认识 ROS: 'chapter/chap1/chap1.md'
     - 2. ROS 基础 - ROS 基础:
