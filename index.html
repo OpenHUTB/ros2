@@ -898,6 +898,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="air/uav_airsim_imu_velocity_estimator/">AirSim 无人机 IMU 速度估计（MLP）</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="air/uav_tiltrotor_transition_corridor/">倾转旋翼过渡走廊与倾转角调度</a>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">水域载具</span></p>
 <ul>
@@ -974,6 +976,8 @@
 <li class="toctree-l1"><a class="reference internal" href="water/rov_mujoco_slam_nn_nav/">ROV 水下机器人 MuJoCo 建图导航与神经网络控制</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="water/dave_underwater_sim/">DAVE 水下机器人仿真环境搭建与 REXROV/Oberon7 机械臂作业演示</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="water/ros2_usv_station_keeping/">欠驱动无人艇低速定点保持与横漂补偿</a>
 </li>
 </ul>
 <p class="caption"><span class="caption-text">经典控制</span></p>
@@ -1678,6 +1682,7 @@
 <li>
 <p><a href="air/uav_airsim_imu_velocity_estimator/">AirSim 无人机 IMU 速度估计（MLP）</a> —— IMU 5 帧 30 维进，单隐层 MLP 出速度大小，验证 R² 0.453、实飞 MAE 1.32 m/s</p>
 </li>
+<li><a href="air/uav_tiltrotor_transition_corridor/">倾转旋翼过渡走廊与倾转角调度</a> —— 平飞平衡方程 + 功率/前进比双约束二分求走廊，按走廊调度倾转角并做掉高保护</li>
 </ul>
 <h2 id="6">6. 水域载具  <span id="water_vehicle"></span></h2>
 <h3 id="_1">感知</h3>
@@ -1779,6 +1784,9 @@
 </ul>
 <p>如果对文档中的任何问题可以在 <a href="https://github.com/OpenHUTB/ros2">本文档的源码仓库</a> 中的 <a href="https://github.com/OpenHUTB/ros2/issues">问题</a> 页面讨论或者提交 <a href="https://github.com/OpenHUTB/.github/blob/master/CONTRIBUTING.md">拉取请求</a> 直接修改文档。</p>
 <hr/>
+<ul>
+<li><a href="water/ros2_usv_station_keeping/">欠驱动无人艇低速定点保持与横漂补偿</a> —— 几何制导 + 在线流估计 + 双环控制，无侧推器也能顶流定点</li>
+</ul>
 <h2 id="7">7. 经典控制 <span id="classical_control"></span></h2>
 <ul>
 <li><a href="classical_control/cartpole_balance/">倒立摆平衡小车 (cart-pole, LQR 最优控制)</a> —— 用 LQR 让倒立摆从倾斜被拉回竖直保持不倒,演示 ROS 发布/订阅闭环与最优控制</li>
