@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>fibonacci_action</name>
+  <version>0.0.1</version>
+  <description>ROS 2 Action 示例包：斐波那契数列计算的 Action 服务端与客户端演示。包含自定义 action 接口、服务端（逐步计算并发布反馈）、客户端（发送目标阶数并接收结果），以及一键启动的 launch 文件。</description>
+  <maintainer email="yyyyy2026@users.noreply.github.com">yyyyy2026</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <!-- 自定义 action 接口 -->
+  <build_depend>rosidl_default_generators</build_depend>
+  <exec_depend>rosidl_default_runtime</exec_depend>
+  <member_of_group>rosidl_interface_packages</member_of_group>
+
+  <!-- Python 运行依赖 -->
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>action_msgs</exec_depend>
+
+  <exec_depend>python3-numpy</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
