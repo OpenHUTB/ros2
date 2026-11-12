@@ -186,10 +186,11 @@ class ROVEKF:
 
         if self.max_dvl_jump > 0.0 and self._last_dvl is not None:
             gap_expired = False
-            if measurement_time is not None and previous_seen_time is not None:
+            if (self.max_dvl_gap > 0.0
+                    and measurement_time is not None
+                    and previous_seen_time is not None):
                 gap = measurement_time - previous_seen_time
-                gap_expired = gap < 0.0 or (
-                    self.max_dvl_gap > 0.0 and gap > self.max_dvl_gap)
+                gap_expired = gap < 0.0 or gap > self.max_dvl_gap
 
             if gap_expired:
                 self._last_dvl = None

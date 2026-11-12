@@ -74,6 +74,7 @@ def generate_launch_description():
             name='ekf_nav_node',
             output='screen',
             parameters=[{
+                'use_sim_time': True,
                 'max_dvl_jump': ParameterValue(max_dvl_jump, value_type=float),
                 'max_dvl_speed': ParameterValue(max_dvl_speed, value_type=float),
                 'max_dvl_gap': ParameterValue(max_dvl_gap, value_type=float),

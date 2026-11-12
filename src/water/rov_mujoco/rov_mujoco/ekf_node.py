@@ -10,6 +10,8 @@
 深度计确定 z、DVL 确定初始速度。
 """
 
+import time
+
 import numpy as np
 import rclpy
 from rclpy.node import Node
@@ -82,6 +84,12 @@ class EKFNode(Node):
             reacquired_before = self.ekf.dvl_reacquired
             stamp = (msg.header.stamp.sec
                      + 1e-9 * msg.header.stamp.nanosec)
+            if stamp <= 0.0:
+                ros_stamp = self.get_clock().now().nanoseconds * 1e-9
+                stamp = ros_stamp if ros_stamp > 0.0 else time.monotonic_ns() * 1e-9
+                self.get_logger().warn(
+                    'DVL header.stamp 为 0，使用本地单调时钟判断到达间隔',
+                    throttle_duration_sec=5.0)
             self.ekf.update_dvl(
                 self.pending_dvl, sigma=self.sigma_dvl, timestamp=stamp)
             if self.ekf.dvl_rejected != rejected_before:
