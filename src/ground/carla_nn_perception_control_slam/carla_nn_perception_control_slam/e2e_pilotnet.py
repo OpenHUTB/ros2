@@ -8,10 +8,16 @@
 """
 import os, sys, time, json, queue, math
 import numpy as np
-import cv2
+try:
+    import cv2
+except ImportError:
+    cv2 = None
 from PIL import Image, ImageDraw
 
-import carla
+try:
+    import carla
+except ImportError:
+    carla = None
 
 HOST, PORT = '127.0.0.1', 2000
 # ---- 启动参数支持: launch 文件通过 args 传入 host/port ----
@@ -29,15 +35,10 @@ os.makedirs(OUT_DIR, exist_ok=True)
 
 IMG_W, IMG_H = 400, 300          # 采集分辨率
 NET_W, NET_H = 96, 96            # 网络输入分辨率
-# PilotNet 权重：优先取安装空间 share 目录（ros2 run 走 install 空间），
-# 回退到模块根目录（源码空间，与 setup.py / package.xml / models/ 同级）
-try:
-    from ament_index_python.packages import get_package_share_directory
-    _ROOT = get_package_share_directory('carla_nn_perception_control_slam')
-except Exception:
-    _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# PilotNet 权重路径抽到 paths.py（只依赖 os + 可选 ament，无 carla/cv2），
+# 让 CI 无 CARLA 环境也能 import 并断言权重存在
+from .paths import MODEL
 NPZ = os.path.join(DATA_DIR, 'e2e_data.npz')
-MODEL = os.path.join(_ROOT, 'models', 'pilotnet.pt')
 HIST = os.path.join(DATA_DIR, 'train_history.json')
 
 

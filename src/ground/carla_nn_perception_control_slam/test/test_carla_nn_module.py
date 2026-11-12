@@ -93,11 +93,12 @@ class TestShippedWeights(unittest.TestCase):
 
     覆盖 jydw121 在 PR #873 复核中指出的"路径改了一半"问题——
     MODEL 必须能解析到随包入库的 models/pilotnet.pt。
+    路径解析已抽到 paths.py（只依赖 os + 可选 ament），CI 无 CARLA/cv2 也能跑。
     """
 
     def test_shipped_weights_path_exists(self):
-        from carla_nn_perception_control_slam import e2e_pilotnet as m
-        self.assertTrue(os.path.exists(m.MODEL), m.MODEL)
+        from carla_nn_perception_control_slam import paths
+        self.assertTrue(os.path.exists(paths.MODEL), paths.MODEL)
 
 
 if __name__ == "__main__":

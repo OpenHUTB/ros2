@@ -11,9 +11,15 @@
 """
 import os, sys, math, json, time, queue, heapq
 import numpy as np
-import cv2
+try:
+    import cv2
+except ImportError:
+    cv2 = None
 from PIL import Image, ImageDraw
-import carla
+try:
+    import carla
+except ImportError:
+    carla = None
 
 HOST, PORT = '127.0.0.1', 2000
 # ---- 启动参数支持: launch 文件通过 args 传入 host/port ----
