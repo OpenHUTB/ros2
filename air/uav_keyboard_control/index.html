@@ -693,11 +693,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#2">2. 按键映射</a>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#3">3. 编译与运行</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#4">4. 实现要点</a>
 <ul>
-<li class="toctree-l3"><a class="reference internal" href="#41-raw">4.1 终端 raw 模式</a>
-</li>
 <li class="toctree-l3"><a class="reference internal" href="#42">4.2 按键 → 速度：纯函数</a>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#43">4.3 每轮循环发布一条指令</a>
@@ -1069,6 +1065,9 @@
 <p>任务①「无人机仿真 + 键盘控制」的 ROS 侧实现：把终端按键转换为<strong>机体系速度指令</strong>，
 发布到 <code>/uav/cmd_vel</code>，由 <code>carlair_ros_bridge</code> 连仿真器执行。仿真/坐标换算/安全限幅
 集中在桥接层，键盘、规划器、神经网络控制器共用同一条指令通道。</p>
+<blockquote>
+<p><strong>版本说明</strong>：本文档主体（第 2、4、7、8 节及参数表、引言段）描述的是 v0.1（ROS 1）历史实现，包含多键组合斜飞、加速度平滑、技能宏（1/2/3）、KeyTracker 按键保持集合、转义序列解析等功能。本次合并的是 <strong>v0.2（ROS 2 ament_python）</strong>，是精简版：单键锁存 + <code>hold_timeout</code> 超时悬停，已移除组合键、加速度平滑与技能宏，退出只支持 Ctrl-C。当前实现的准确说明见包内 README.md。</p>
+</blockquote>
 <p>在"一个键一个轴"的基础上，本模块还支持<strong>多键组合</strong>（<code>W</code>+<code>A</code> 斜飞、<code>W</code>+<code>Q</code> 边走边转）、
 <strong>加速度限幅的平滑调速</strong>（速度按斜坡逼近目标，松开后同样斜坡回零），以及把键盘从
 "直接控制"升级为"技能控制"的<strong>技能宏</strong>（<code>1</code>/<code>2</code>/<code>3</code> 触发起飞、旋转、前进，基于
@@ -1106,7 +1105,7 @@
 </tr>
 <tr>
 <td><code>Q</code> / <code>E</code></td>
-<td>右转 / 左转</td>
+<td>左转 / 右转</td>
 <td><code>angular.z = ±yaw_rate</code></td>
 </tr>
 <tr>
@@ -1131,7 +1130,7 @@
 </tr>
 </tbody>
 </table>
-<p><code>Q</code>/<code>E</code> 的方向遵循 AirSim 机体系 <code>yaw_rate</code> 约定（<code>Q=+yaw_rate</code> 机头右转）。</p>
+<p><code>Q</code>/<code>E</code> 的方向遵循 ROS REP-103 约定（<code>Q=+angular.z</code> 机头逆时针左转，<code>E=-angular.z</code> 顺时针右转）。</p>
 <p>三点补充：</p>
 <ul>
 <li><strong>组合键</strong>：<code>W</code>+<code>A</code> 下发 <code>linear.x = +horiz_speed, linear.y = +horiz_speed</code>；
@@ -1145,20 +1144,37 @@
   立即取消并接管（手动优先）。</li>
 </ul>
 <h2 id="3">3. 编译与运行</h2>
-<div class="highlight"><pre><span></span><code><span class="c1"># 终端 1：桥接（连仿真 + 执行 + 自动起飞悬停）</span>
+<blockquote>
+<p>注意：<code>uav_keyboard_control</code> 是 ROS 2 节点，<code>carlair_ros_bridge</code> 仍是 ROS 1 catkin 包，两边默认互不可见，必须通过 <code>ros1_bridge</code> 桥接。</p>
+</blockquote>
+<p></p><div class="highlight"><pre><span></span><code><span class="c1"># 终端 1：ROS 1 桥接（连仿真 + 执行 + 自动起飞悬停）</span>
+<span class="nb">source</span><span class="w"> </span>/opt/ros/noetic/setup.bash
 <span class="nb">source</span><span class="w"> </span>~/bridge_ws/devel/setup.bash
 roslaunch<span class="w"> </span>carlair_ros_bridge<span class="w"> </span>main.launch
 
-<span class="c1"># 终端 2：键盘控制</span>
+<span class="c1"># 终端 2：ROS 2 键盘控制节点</span>
+<span class="nb">source</span><span class="w"> </span>/opt/ros/humble/setup.bash
+<span class="nb">source</span><span class="w"> </span>~/ros2_ws/install/setup.bash
+ros2<span class="w"> </span>launch<span class="w"> </span>uav_keyboard_control<span class="w"> </span>keyboard.launch.py
+
+<span class="c1"># 终端 3：ros1_bridge 桥接 ROS 1 &lt;-&gt; ROS 2</span>
+<span class="nb">source</span><span class="w"> </span>/opt/ros/noetic/setup.bash
+<span class="nb">source</span><span class="w"> </span>/opt/ros/humble/setup.bash
 <span class="nb">source</span><span class="w"> </span>~/bridge_ws/devel/setup.bash
-roslaunch<span class="w"> </span>uav_keyboard_control<span class="w"> </span>main.launch
+<span class="nb">source</span><span class="w"> </span>~/ros2_ws/install/setup.bash
+ros2<span class="w"> </span>run<span class="w"> </span>ros1_bridge<span class="w"> </span>dynamic_bridge
 </code></pre></div>
-<p>把焦点放在键盘控制终端，按 <code>W/A/S/D/R/F/Q/E</code> 操控（可同时按住多个键斜飞），松开后平滑减速到悬停，<code>ESC</code> 退出。</p>
-<h2 id="4">4. 实现要点</h2>
-<h3 id="41-raw">4.1 终端 raw 模式</h3>
-<p>Linux 终端默认行缓冲（要按回车），用 <code>termios</code>+<code>tty</code> 进入 raw 模式即可单键即时响应：</p>
-<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">RawKeyReader</span><span class="p">()</span> <span class="k">as</span> <span class="n">reader</span><span class="p">:</span>        <span class="c1"># __enter__ 切 raw，__exit__ 恢复</span>
-    <span class="n">key</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">get_key</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mf">0.03</span><span class="p">)</span>  <span class="c1"># select 非阻塞读一个字符</span>
+<div class="highlight"><pre><span></span><code>把焦点放在键盘控制终端，按 `W/A/S/D/R/F/Q/E` 操控（单键锁存，后按的键覆盖前一个），松开按键保持 0.3 秒后自动悬停，`Ctrl-C` 退出。
+
+## 4. 实现要点
+
+### 4.1 终端 raw 模式
+
+Linux 终端默认行缓冲（要按回车），用 `termios`+`tty` 进入 raw 模式即可单键即时响应：
+
+```python
+with RawKeyReader() as reader:        # __enter__ 切 raw，__exit__ 恢复
+    key = reader.get_key(timeout=0.03)  # select 非阻塞读一个字符
 </code></pre></div>
 <p><code>with</code> 语句保证 <code>Ctrl-C</code> 或异常退出时也能恢复终端设置，不会把用户的终端卡在 raw 模式。</p>
 <h3 id="42">4.2 按键 → 速度：纯函数</h3>
@@ -1282,6 +1298,9 @@ roslaunch<span class="w"> </span>uav_keyboard_control<span class="w"> </span>mai
 <p><strong>结论</strong>：把「虚拟机连不上」归因于 <code>ApiServerAddress</code> 是错的，本机实测中<strong>从未真正需要</strong>这一项。
 如果确实要显式限定监听地址，应写成顶层键 <code>"LocalHostIp": "0.0.0.0"</code>。</p>
 <h3 id="72">7.2 运行步骤</h3>
+<blockquote>
+<p>本节为 v0.1（ROS 1）历史实现步骤。v0.2（ROS 2）的正确流程请见第 3 节「三终端启动与桥接验证」。</p>
+</blockquote>
 <p>前置：按 <a href="../setup_and_connect/">环境搭建与连接</a> 配好虚拟机 ROS 环境；
 按 <a href="../carlair_ros_bridge/">桥接模块</a> 的 <strong>2.1 节</strong>在宿主机启动 CarlaAir 仿真器，
 等终端输出 <code>CarlaAir is ready.</code>（此时 <code>41451</code> 端口就绪）。
@@ -1309,8 +1328,8 @@ rostopic<span class="w"> </span><span class="nb">echo</span><span class="w"> </s
 <span class="nb">export</span><span class="w"> </span><span class="nv">ROS_MASTER_URI</span><span class="o">=</span>http://localhost:11311
 <span class="nb">source</span><span class="w"> </span>/opt/ros/noetic/setup.bash
 <span class="nb">source</span><span class="w"> </span>~/uav_ws/devel/setup.bash
-roslaunch<span class="w"> </span>uav_keyboard_control<span class="w"> </span>main.launch
-<span class="c1"># 在弹出的 xterm 窗口里按 W/A/S/D/R/F/Q/E 操控，松开悬停，ESC 退出</span>
+ros2<span class="w"> </span>launch<span class="w"> </span>uav_keyboard_control<span class="w"> </span>keyboard.launch.py
+<span class="c1"># 在弹出的 xterm 窗口里按 W/A/S/D/R/F/Q/E 操控，松开保持 0.3s 后自动悬停，Ctrl-C 退出</span>
 </code></pre></div>
 <blockquote>
 <p><strong>关于 <code>auto_takeoff</code></strong>：它的语义是「<strong>起飞并悬停</strong>」——桥接层源码里就是
@@ -1331,7 +1350,7 @@ roslaunch<span class="w"> </span>uav_keyboard_control<span class="w"> </span>mai
 <p>键盘闭环验证（用伪终端模拟真人按键，注入协议与脚本见 <a href="#76-%E6%8C%89%E9%94%AE%E9%97%AD%E7%8E%AF%E7%9A%84%E5%A4%8D%E7%8E%B0%E6%96%B9%E6%B3%95">7.6</a>）。
 下面是<strong>最初一次</strong>运行的位姿记录——当时用的是"单次写入 + 保持"协议，由 7.6.1 的源码分析可知该协议下<strong>一个字节只产生一条指令</strong>，因此这组数据只用来证明整条链路有效、位置确实发生变化，<strong>不能当作定量指标</strong>（定量结论见 7.4、7.6）：</p>
 <div class="highlight"><pre><span></span><code>[test] 节点已在伪终端中启动 (pid=22254)
-[test] 按键 前进 W 3.0s / 左移 A 2.5s / 后退 S 2.5s / 右移 D 2.5s / ESC 退出
+[test] 按键 前进 W 3.0s / 左移 A 2.5s / 后退 S 2.5s / 右移 D 2.5s / Ctrl-C 退出
 
 按键前  (x, y, z) = ( 3.6e-07,  2.2e-07, 15.145)    ← 已按 7.2 第 ② 步送到 15 m
 按键后  (x, y, z) = ( 0.389,   -0.403,   15.071)    ← 水平移动约 0.56 m，高度保持
@@ -1410,7 +1429,7 @@ roslaunch<span class="w"> </span>uav_keyboard_control<span class="w"> </span>mai
 </blockquote>
 <h3 id="75">7.5 实测截图</h3>
 <p>键盘控制窗口。<code>main.launch</code> 通过 <code>launch-prefix="xterm -e"</code> 拉起，
-窗口标题为 <code>main.py</code>，黑底白字即是键位帮助：</p>
+窗口标题为 <code>keyboard</code>，黑底白字即是键位帮助：</p>
 <p><img alt="键盘控制窗口" src="../../img/air/uav_keyboard_control/xterm_keyboard_window.png"/></p>
 <p>仿真器中无人机自动起飞至 15 m 悬停。AirSim 叠加层显示
 <code>requestApiControl was successful</code>、<code>Vehicle is already armed</code>、<code>Collision Count:0</code>：</p>
@@ -1586,7 +1605,7 @@ python3<span class="w"> </span>kb_inject_test.py<span class="w"> </span>--mode<s
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">time</span>
 
-<span class="n">CMD</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"rosrun"</span><span class="p">,</span> <span class="s2">"uav_keyboard_control"</span><span class="p">,</span> <span class="s2">"main.py"</span><span class="p">]</span>
+<span class="n">CMD</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"ros2"</span><span class="p">,</span> <span class="s2">"run"</span><span class="p">,</span> <span class="s2">"uav_keyboard_control"</span><span class="p">,</span> <span class="s2">"keyboard"</span><span class="p">]</span>
 
 
 <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>

@@ -1217,15 +1217,22 @@
 </table>
 <p><code>Q</code>/<code>E</code> 的方向遵循 AirSim 机体系 <code>yaw_rate</code> 约定（<code>Q=+yaw_rate</code> 机头右转）。</p>
 <h3 id="_4">编译与运行</h3>
-<div class="highlight"><pre><span></span><code><span class="c1"># 终端 1：桥接（连仿真 + 执行 + 自动起飞悬停）</span>
+<blockquote>
+<p>注意：v0.2 起键盘节点已重写为 ROS 2 ament_python 包，不能在 ROS 1 的 <code>source ~/bridge_ws/devel/setup.bash</code> 环境里直接 <code>ros2 launch</code>。
+正确流程请见 <a href="../uav_keyboard_control/">uav_keyboard_control.md</a> 第 3 节「三终端启动与桥接验证」：
+ROS 1 侧启 roscore + ros1_bridge，ROS 2 侧另开终端 source galactic/humble 后跑 <code>ros2 run uav_keyboard_control keyboard</code>。</p>
+</blockquote>
+<div class="highlight"><pre><span></span><code><span class="c1"># ROS 1 侧：桥接层（连仿真 + 执行 + 自动起飞悬停）</span>
+<span class="nb">source</span><span class="w"> </span>/opt/ros/noetic/setup.bash
 <span class="nb">source</span><span class="w"> </span>~/bridge_ws/devel/setup.bash
 roslaunch<span class="w"> </span>carlair_ros_bridge<span class="w"> </span>main.launch
 
-<span class="c1"># 终端 2：键盘控制</span>
-<span class="nb">source</span><span class="w"> </span>~/bridge_ws/devel/setup.bash
-roslaunch<span class="w"> </span>uav_keyboard_control<span class="w"> </span>main.launch
+<span class="c1"># ROS 2 侧：键盘控制（另开终端，不要和上面 source 同一个终端）</span>
+<span class="nb">source</span><span class="w"> </span>/opt/ros/galactic/setup.bash<span class="w">  </span><span class="c1"># 或 humble</span>
+<span class="nb">source</span><span class="w"> </span>~/ros2_ws/install/setup.bash
+ros2<span class="w"> </span>run<span class="w"> </span>uav_keyboard_control<span class="w"> </span>keyboard
 </code></pre></div>
-<p>把焦点放在键盘控制终端，按 <code>W/A/S/D/R/F/Q/E</code> 操控，松开即悬停，<code>ESC</code> 退出。</p>
+<p>把焦点放在键盘控制终端，按 <code>W/A/S/D/R/F/Q/E</code> 操控，松开即悬停，<code>Ctrl-C</code> 退出。</p>
 <h3 id="_5">实现要点</h3>
 <h4 id="raw">终端 raw 模式</h4>
 <p>Linux 终端默认行缓冲（要按回车），用 <code>termios</code>+<code>tty</code> 进入 raw 模式即可单键即时响应：</p>
@@ -1340,7 +1347,7 @@ rostopic<span class="w"> </span><span class="nb">echo</span><span class="w"> </s
 <span class="nb">export</span><span class="w"> </span><span class="nv">ROS_MASTER_URI</span><span class="o">=</span>http://localhost:11311
 <span class="nb">source</span><span class="w"> </span>/opt/ros/noetic/setup.bash
 <span class="nb">source</span><span class="w"> </span>~/uav_ws/devel/setup.bash
-roslaunch<span class="w"> </span>uav_keyboard_control<span class="w"> </span>main.launch
+ros2<span class="w"> </span>launch<span class="w"> </span>uav_keyboard_control<span class="w"> </span>keyboard.launch.py
 <span class="c1"># 在弹出的 xterm 窗口里按 W/A/S/D/R/F/Q/E 操控，松开悬停，ESC 退出</span>
 </code></pre></div>
 <blockquote>
@@ -1425,7 +1432,7 @@ roslaunch<span class="w"> </span>uav_keyboard_control<span class="w"> </span>mai
 <p><img alt="15 m 悬停" src="../../img/air/uav_keyboard_control/hover_15m.png"/></p>
 <h4 id="_15">按键闭环的复现方法</h4>
 <h5 id="_16">先看清语义：一个字节只产生一条速度指令</h5>
-<p><code>src/air/uav_keyboard_control/scripts/keyboard_control.py</code> 的主循环：</p>
+<p><code>src/air/uav_keyboard_control/uav_keyboard_control/keyboard_node.py</code> 的主循环：</p>
 <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">spin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
     <span class="k">with</span> <span class="n">RawKeyReader</span><span class="p">()</span> <span class="k">as</span> <span class="n">reader</span><span class="p">:</span>
         <span class="k">while</span> <span class="ow">not</span> <span class="n">rospy</span><span class="o">.</span><span class="n">is_shutdown</span><span class="p">():</span>
@@ -1534,7 +1541,7 @@ python3<span class="w"> </span>kb_inject_test.py<span class="w"> </span>--mode<s
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">time</span>
 
-<span class="n">CMD</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"rosrun"</span><span class="p">,</span> <span class="s2">"uav_keyboard_control"</span><span class="p">,</span> <span class="s2">"main.py"</span><span class="p">]</span>
+<span class="n">CMD</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"ros2"</span><span class="p">,</span> <span class="s2">"run"</span><span class="p">,</span> <span class="s2">"uav_keyboard_control"</span><span class="p">,</span> <span class="s2">"keyboard"</span><span class="p">]</span>
 
 
 <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
