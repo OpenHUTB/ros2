@@ -63,6 +63,7 @@ ROS每章节运行代码:
     * [URDF 四轮小车建模与 RViz 显示](./chapter/urdf_car_modeling.md)
 * [第 5 章](./chapter/chap5.md) - 机器人感知
     * [行人隐私脱敏视觉检测节点](./privacy_mask/README.md)
+    * [基于激光雷达扫描的神经网络障碍物分类](./chapter/chap5/lidar_obstacle_nn.md)
 * [第 6 章](./chapter/chap6.md) - 机器人 SLAM 与自主导航
     * [自建小车 Gazebo GMapping 建图](./chapter/urdf_car_gmapping.md)
 * [第 7 章](./chapter/chap7.md) - 阿克曼四轮小车运动控制
@@ -79,6 +80,7 @@ ROS每章节运行代码:
     * [MuJoCo 双自由度机械臂画正方形](./chapter/mujoco_two_dof_arm_square.md)
     * [MuJoCo 二连杆机械臂 IK 画圆](./chapter/mujoco_arm_ik.md)
 * [第 9 章](./chapter/chap9.md) - ROS 2
+    * [Gazebo 仿真相机与图像话题验证](./chapter/chap9/gazebo_camera_sim.md)
 * [第 10 章](./chapter/turtlebot3_gazebo_control.md) - Turtlebot3 Gazebo键盘控制
 
 
