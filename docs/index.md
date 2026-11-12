@@ -344,6 +344,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [ROS2 差速机器人 EKF 多传感器融合定位](./ground/ros2_ekf_localization/index.md) —— 轮式里程计 + IMU 航向 + 绝对位置观测的 EKF，输出 /odometry/filtered 供控制器直接使用
 * [上游心跳看门狗](./ground/heartbeat_watchdog.md) —— 监视上游节点的 `/heartbeat`，超时判定失联并发布急停，与 `cmd_vel_guard` 互补
 * [MuJoCo 地面无人车 SLAM 建图导航与神经网络控制](./ground/mujoco_ground_slam_nn_nav/README.md)
+* [地面坡度估计](./ground/ground_slope_estimation.md)
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
 * [仓储通道巡检无人机测距与分级制动](./air/mujoco_warehouse_uav_collision_braking.md)
@@ -395,6 +396,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 
 * [无人机飞行轨迹类型识别与 ROS2 自动任务日志](./air/flight_pattern_recognition.md)
 
+* [前视 CNN 行为克隆视觉导航](./air/uav_neural_perception.md) —— 前视 RGB 图像 → CNN → 机体系速度指令，行为克隆直线跟随
 * [深度图端到端穿越门竞速](./air/uav_depth_gate_racing_e2e.md)
 
 * [无人机遥测异常检测与 ROS2 在线诊断](./air/telemetry_diagnostics.md)
