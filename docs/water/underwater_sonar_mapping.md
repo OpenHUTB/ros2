@@ -78,6 +78,12 @@ ros2 launch underwater_sonar_mapping main.launch.py
 | `/cmd_vel` | `geometry_msgs/Twist` | 发布 | 避障速度指令 |
 | `/odom` | `nav_msgs/Odometry` | 发布 | 仿真位姿（可替换为真实定位） |
 | `/vfh/status` | `std_msgs/String` | 发布 | JSON：模式、目标距离、转向角、谷宽、净空 |
+| `/tf` | `tf2_msgs/TFMessage` | 发布 | `map → base_link`（里程计） |
+| `/tf_static` | `tf2_msgs/TFMessage` | 发布（一次性） | `base_link → sonar_link`，让扫描能在 RViz 里挂上 |
+
+`LaserScan` 的 `angle_max` 按约定取 `angle_min + (N-1)·increment`（72 束、360° 时为 −π…175°），不是 `2π`。
+`/sonar/scan` 的 `frame_id` 是 `sonar_link`，因此节点在启动时补发一条 `base_link → sonar_link` 的静态变换，
+否则该坐标系在 TF 树里是孤点。
 
 节点内置运动积分，**不依赖物理引擎即可独立演示**；接入真实 ROV 时把 `/cmd_vel` 与 `/odom` 换成外部来源即可，算法部分无需改动。
 

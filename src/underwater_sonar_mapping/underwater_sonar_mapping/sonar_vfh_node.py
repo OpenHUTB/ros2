@@ -21,12 +21,13 @@ import math
 
 import numpy as np
 import rclpy
-from geometry_msgs.msg import Twist
+from geometry_msgs.msg import TransformStamped, Twist
 from nav_msgs.msg import Odometry
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from sensor_msgs.msg import LaserScan
 from std_msgs.msg import Float32MultiArray, String
+from tf2_ros import StaticTransformBroadcaster
 
 from .sonar import ScanningSonar
 from .terrain import BoxObstacle, Seabed, World
@@ -99,6 +100,16 @@ class SonarVfhNode(Node):
         self.cmd_pub = self.create_publisher(Twist, '/cmd_vel', 10)
         self.odom_pub = self.create_publisher(Odometry, '/odom', 10)
         self.status_pub = self.create_publisher(String, '/vfh/status', 10)
+
+        # /sonar/scan 的 frame_id 是 sonar_link，而 /odom 只发 map->base_link。
+        # 不补这一条静态变换，sonar_link 在 TF 树里就是孤点，RViz 挂不上扫描。
+        self.tf_broadcaster = StaticTransformBroadcaster(self)
+        sonar_tf = TransformStamped()
+        sonar_tf.header.stamp = self.get_clock().now().to_msg()
+        sonar_tf.header.frame_id = 'base_link'
+        sonar_tf.child_frame_id = 'sonar_link'
+        sonar_tf.transform.rotation.w = 1.0
+        self.tf_broadcaster.sendTransform(sonar_tf)
 
         self.timer = self.create_timer(self.dt, self.control_step)
         self.get_logger().info(
@@ -193,7 +204,9 @@ class SonarVfhNode(Node):
         scan.header.frame_id = 'sonar_link'
         scan.angle_min = float(bearings[0])
         scan.angle_increment = float(math.radians(self.sonar.fov_deg) / self.sonar.beams)
-        scan.angle_max = float(bearings[-1] + scan.angle_increment)
+        # 按 LaserScan 约定：angle_max = angle_min + (N-1)·increment，即最后一束的角度本身。
+        # 多加一格会让 RViz / pointcloud_to_laserscan 这类按 angle_max 反推束数的消费者错位。
+        scan.angle_max = float(bearings[-1])
         scan.range_min = float(self.sonar.min_range)
         scan.range_max = float(self.sonar.max_range)
         scan.ranges = [float(r) for r in ranges]
