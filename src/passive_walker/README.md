@@ -41,8 +41,12 @@ ros2 topic echo /passive_walker/steps
 或使用 launch：
 
 ```
-ros2 launch passive_walker main.launch.py seconds:=20 push:=0.3
+ros2 launch passive_walker main.launch.py seconds:=20 push:=0.3 period:=0.1
 ```
+
+`seconds` 和 ROS 定时周期 `period` 必须是有限正数；初始速度 `push` 可为任意有限值。
+无效命令行输入会在启动仿真前被拒绝。仿真最后一步会缩短到剩余时长，因此累计仿真时间
+不会因固定物理步长或 ROS 定时周期而超过 `seconds`。
 
 节点支持 `--ros-args`，可以重映射话题或覆盖参数：
 
@@ -54,6 +58,7 @@ ros2 run passive_walker main.py node --seconds 20 --ros-args -r /passive_walker/
 
 ```
 colcon test --packages-select passive_walker
+colcon test-result --verbose
 ```
 
 没装 `mujoco` 时测试会自动跳过（`pytest.importorskip`），不会在干净机器上直接报错。

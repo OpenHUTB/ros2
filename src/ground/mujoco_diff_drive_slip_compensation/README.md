@@ -8,6 +8,8 @@ This ROS 2 package provides a MuJoCo simulation foundation for a four-wheel diff
 
 ## 仿真验证局限与分布偏移说明
 
+ feat/mujoco-slip-online-compensation
+本功能包的轮滑感知模型、在线补偿策略与全部样例数据均在 MuJoCo 仿真环境中生成、训练和评估，尚未在真实机器人硬件上进行测试。仿真中的摩擦模型、接触动力学与传感器噪声和真实世界存在差异，模型迁移到实物时可能出现分布偏移（sim-to-real gap）；本文档报告的 MAE、RMSE、F1、准确率与推理耗时仅对应 MuJoCo 样例测试划分，不能直接代表实物性能。真实硬件数据集验证作为后续工作。
 本功能包的轮滑感知模型与全部样例数据均在 MuJoCo 仿真环境中生成、训练和评估，尚未在真实机器人硬件上进行测试。仿真中的摩擦模型、接触动力学与传感器噪声和真实世界存在差异，模型迁移到实物时可能出现分布偏移（sim-to-real gap）；本文档报告的 MAE、RMSE、F1、准确率与推理耗时仅对应 MuJoCo 样例测试划分，不能直接代表实物性能。真实硬件数据集验证作为后续工作。
 
 ## 环境 / Environment
@@ -24,8 +26,15 @@ This ROS 2 package provides a MuJoCo simulation foundation for a four-wheel diff
 
 ```text
 mujoco_diff_drive_slip_compensation/
-├── config/simulation.yaml
-├── launch/main.launch.py
+├── config/
+│   ├── simulation.yaml
+│   ├── collection.yaml
+│   └── compensation.yaml
+├── launch/
+│   ├── main.launch.py
+│   ├── collect.launch.py
+│   ├── train.launch.py
+│   └── compensate.launch.py
 ├── models/diff_drive.xml
 ├── mujoco_diff_drive_slip_compensation/
 │   ├── kinematics.py
@@ -38,7 +47,9 @@ mujoco_diff_drive_slip_compensation/
 │   ├── scenarios.py
 │   ├── sensors.py
 │   ├── simulator.py
-│   └── slip_model.py
+│   ├── slip_model.py
+│   ├── compensation.py
+│   └── online_compensation.py
 ├── test/
 ├── package.xml
 ├── requirements.txt
@@ -86,6 +97,13 @@ ros2 topic pub --once /cmd_vel geometry_msgs/msg/Twist \
 | 发布 / Publish | `/imu/data` | `sensor_msgs/msg/Imu` | 三轴加速度与角速度 / three-axis acceleration and angular velocity |
 | 发布 / Publish | `/scenario/friction` | `std_msgs/msg/Float64` | 当前滑动摩擦系数 / active sliding-friction coefficient |
 | 发布 / Publish | `/scenario/episode_id` | `std_msgs/msg/String` | 当前完整 episode 标识 / active complete-episode identifier |
+| 订阅 / Subscribe | `/imu/data` | `sensor_msgs/msg/Imu` | 在线补偿的惯性输入 / IMU input for online compensation |
+| 订阅 / Subscribe | `/ground_truth/odom` | `nav_msgs/msg/Odometry` | 时间同步与新鲜度检查 / freshness and synchronization check |
+| 订阅 / Subscribe | `/wheel/encoders` | `sensor_msgs/msg/JointState` | 在线补偿的轮速输入 / wheel-speed input for online compensation |
+| 发布 / Publish | `/cmd_vel/raw` | `geometry_msgs/msg/Twist` | 原始指令回显，便于对比 / raw command echo for comparison |
+| 发布 / Publish | `/cmd_vel/compensated` | `geometry_msgs/msg/Twist` | 滑移补偿后的速度指令 / slip-compensated velocity command |
+| 发布 / Publish | `/slip/estimate` | `std_msgs/msg/Float64` | 当前窗口滑移估计 / current window slip estimate |
+| 发布 / Publish | `/slip/status` | `std_msgs/msg/String` | 预热、停机或正常状态 / warm-up, stop, or ready status |
 
 速度指令超过 `command_timeout` 未更新时，节点将四轮目标速度清零。非有限数值和越出包资源目录的模型路径会被拒绝。
 
@@ -112,7 +130,6 @@ The default scenarios use sliding-friction coefficients `0.25`, `0.55`, and `0.9
 ros2 launch mujoco_diff_drive_slip_compensation collect.launch.py \
   output_directory:=data/raw
 ```
-
 每个 episode 生成同名 `.csv` 和 `.json`。CSV 保存指令、四轮编码器、IMU、摩擦系数和真实位姿；JSON 记录数据格式版本、划分、行数、随机种子、Python、MuJoCo 和功能包版本。`data/` 默认被 Git 忽略。
 
 Each episode produces matching `.csv` and `.json` files. The CSV stores commands, four-wheel encoders, IMU measurements, friction, and ground-truth pose. The JSON records schema version, split, row count, random seed, and Python, MuJoCo, and package versions. `data/` is ignored by Git by default.
@@ -157,6 +174,21 @@ The reproducible 12-episode sample run with seed `25012`, 12-frame windows, 24 h
 样例生成器的 train/validation/test 三个划分使用同一组摩擦系数 `0.02 / 0.08 / 0.4 / 0.9`，测试集摩擦条件在训练阶段均已出现，样例指标属于同分布内插结果，不代表未见过的摩擦条件下的表现。
 
 The train, validation, and test splits of the sample generator use the same friction set `0.02 / 0.08 / 0.4 / 0.9`; every test friction condition appears during training, so sample metrics are in-distribution interpolation and do not represent unseen friction conditions.
+
+## 在线补偿 / Online Compensation
+
+启动在线补偿链路：
+
+Launch the online compensation path:
+
+```bash
+ros2 launch mujoco_diff_drive_slip_compensation compensate.launch.py \
+  model_file:=data/models/slip-v1/slip_model.json
+```
+
+节点同时订阅编码器、IMU、里程计和原始 `/cmd_vel`。传感器时间戳过期、回退或窗口尚未填满时发布零速；窗口就绪后，模型输出限制在 `[-0.5, 0.5]`，线速度补偿比例与线/角加速度均受参数约束。
+
+The node subscribes to encoders, IMU, odometry, and raw `/cmd_vel`. It publishes zero velocity when timestamps are stale, move backwards, or the temporal window is not full. Once ready, the model output is bounded to `[-0.5, 0.5]`, and both the linear correction scale and linear/angular acceleration are parameter-limited.
 
 ## 大模型使用声明 / AI Tooling Statement
 

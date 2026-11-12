@@ -9,6 +9,7 @@ from launch_ros.substitutions import FindPackagePrefix
 def generate_launch_description():
     seconds_arg = DeclareLaunchArgument('seconds', default_value='20.0')
     push_arg = DeclareLaunchArgument('push', default_value='0.3')
+    period_arg = DeclareLaunchArgument('period', default_value='0.1')
 
     # main.py 是普通命令行程序（非 ROS 节点），用 ExecuteProcess 启动，
     # 避免 Node 自动追加 --ros-args 导致 argparse 报错。
@@ -21,8 +22,9 @@ def generate_launch_description():
             main_py, 'node',
             '--seconds', LaunchConfiguration('seconds'),
             '--push', LaunchConfiguration('push'),
+            '--period', LaunchConfiguration('period'),
         ],
         output='screen',
     )
 
-    return LaunchDescription([seconds_arg, push_arg, run])
+    return LaunchDescription([seconds_arg, push_arg, period_arg, run])

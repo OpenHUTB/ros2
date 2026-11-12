@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>uav_actuator_fault_sim</name>
+  <version>1.0.0</version>
+  <description>
+    无人机执行器/传感器故障注入仿真层。在 uav_mujoco_sim 的公开 API 之上插入
+    增益/偏置形式的故障算子，把"桨被打坏"这件事变成可复现、可量化、可录制的仿真事件，
+    并输出坠机判定、生存率、触地速度等指标，供后续故障检测网络与容错控制器训练评测。
+    含任务①要求的键盘遥操作入口。
+  </description>
+  <maintainer email="2920111320@qq.com">Fortranquility</maintainer>
+  <license>MIT</license>
+
+  <!-- 依赖底座：本包只调用其公开 API，不修改它 -->
+  <exec_depend>uav_mujoco_sim</exec_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <!-- 缺 <build_type> 时 colcon 会按"有没有 CMakeLists.txt"猜包类型，本包会被误判成 catkin 包 -->
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
