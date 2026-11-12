@@ -176,7 +176,6 @@ def test_闭环能耗与逐帧需求牵引力积分一致():
                    accel=following.accel,
                    grade=grade_at(r.segments, f.x))
         for f, following in zip(energy_frames, r.frames[1:])
-        if following.accel > 0.0
     )
     assert r.metrics['energy_kwh'] == pytest.approx(expected)
 

@@ -47,7 +47,7 @@
 | 场景 | 运行时间 | 最高速度 | 停车误差 | 牵引能耗 | ATP 介入 | 超线路限速时长 |
 |---|---|---|---|---|---|---|
 | 平直道 | 122.3 s | 126.8 km/h | +0.03 m | 57.7 kWh | 0 | 0 s |
-| 中途限速 | 147.2 s | 116.4 km/h | +0.02 m | 58.2 kWh | 0 | 0 s |
+| 中途限速 | 147.2 s | 116.4 km/h | +0.02 m | 58.4 kWh | 0 | 0 s |
 | 连续坡道 | 144.3 s | 132.6 km/h | -0.18 m | 64.8 kWh | 0 | 0 s |
 | 晚制动（对照） | 117.4 s | 133.7 km/h | **+76.78 m** | 63.9 kWh | 1 | 0 s |
 
@@ -64,13 +64,24 @@
 |---|---|
 | `reported_traction_energy_kwh` | 仿真主循环报告的牵引能耗 |
 | `traction_work_kwh` | 独立按需求牵引力和位移积分的结果 |
+| `traction_limit_shortfall_kwh` | 需求力超过可用牵引力的积分缺口 |
 | `retarding_work_kwh` | 未回收的制动/阻滞机械功 |
+| `net_inertial_work_kwh` | 净惯性功（加速减减速） |
 | `acceleration_work_kwh` / `deceleration_work_kwh` | 正/负惯性功 |
 | `resistance_work_kwh` | Davis 基本阻力功 |
 | `grade_work_kwh` | 坡道功，上坡为正、下坡为负 |
 | `endpoint_kinetic_energy_kwh` | 结束时剩余动能 |
 
-该分解不改动力学，只解释已有能耗；两列牵引能相互校验积分口径。
+该分解不改动力学，只解释已有能耗。`SimResult` 记录实际使用的车辆 `spec` 与
+`dt`，所以默认调用不会误用参数。各项满足：
+
+```text
+W_traction - W_retarding
+  = W_net_inertial + W_resistance + W_grade - W_traction_shortfall
+```
+
+三组停车场景加速与减速功近似相等，是起止动能均为零的守恒结果；末端动能字段
+因此为 0，当前主要用于后续扩展到未完全停车场景。
 
 ## 车辆模型
 
@@ -191,7 +202,7 @@ src/ground/train_ato_stop/
 ├── launch/main.launch.py
 ├── config/train_ato.yaml
 ├── rviz/train_ato_stop.rviz
-└── tests/                     # test_train_ato.py + test_energy.py，共 26 项
+└── tests/                     # test_train_ato.py + test_energy.py，共 28 项
 ```
 
 ## 运行步骤
@@ -201,7 +212,7 @@ src/ground/train_ato_stop/
 ```bash
 cd src/ground/train_ato_stop
 python3 -m train_ato_stop.main --offline --output results
-python3 -m pytest tests -v        # 26 项
+python3 -m pytest tests -v        # 28 项
 ```
 
 ROS 2 模式：

@@ -51,7 +51,7 @@ def run_offline(output: str) -> dict:
     render.write_gif(os.path.join(output, 'ato_demo.gif'), frames, delay=8)
 
     _write_report(os.path.join(output, 'report.md'), results)
-    _write_energy_report(
+    write_energy_report(
         os.path.join(output, 'energy_breakdown.csv'),
         os.path.join(output, 'energy_breakdown.md'),
         results,
@@ -79,14 +79,16 @@ def _write_report(path: str, results: list[sim.SimResult]) -> None:
         fh.write('\n'.join(lines) + '\n')
 
 
-def _write_energy_report(path_csv: str, path_md: str,
-                         results: list[sim.SimResult],
-                         breakdowns: dict[str, EnergyBreakdown]) -> None:
+def write_energy_report(path_csv: str, path_md: str,
+                        results: list[sim.SimResult],
+                        breakdowns: dict[str, EnergyBreakdown]) -> None:
     headers = [
         'scenario',
         'reported_traction_energy_kwh',
         'traction_work_kwh',
+        'traction_limit_shortfall_kwh',
         'retarding_work_kwh',
+        'net_inertial_work_kwh',
         'acceleration_work_kwh',
         'deceleration_work_kwh',
         'resistance_work_kwh',
@@ -108,15 +110,17 @@ def _write_energy_report(path_csv: str, path_md: str,
         writer.writerows(rows)
 
     lines = [
-        '| 场景 | 报告牵引 | 积分牵引 | 阻滞 | 加速 | 减速 | 基本阻力 | 坡道(上坡正) | 末端动能 |',
-        '|---|---:|---:|---:|---:|---:|---:|---:|---:|',
+        '| 场景 | 报告牵引 | 积分牵引 | 牵引缺口 | 阻滞 | 净惯性 | 加速 | 减速 | 基本阻力 | 坡道(上坡正) | 末端动能 |',
+        '|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|',
     ]
     for result in results:
         values = breakdowns[result.name]
         lines.append(
             f"| {result.title} | {result.metrics['energy_kwh']:.3f} | "
             f"{values.traction_work_kwh:.3f} | "
+            f"{values.traction_limit_shortfall_kwh:.3f} | "
             f"{values.retarding_work_kwh:.3f} | "
+            f"{values.net_inertial_work_kwh:.3f} | "
             f"{values.acceleration_work_kwh:.3f} | "
             f"{values.deceleration_work_kwh:.3f} | "
             f"{values.resistance_work_kwh:.3f} | "

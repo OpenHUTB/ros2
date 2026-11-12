@@ -13,7 +13,9 @@ J_PER_KWH = 3.6e6
 @dataclass(frozen=True)
 class EnergyBreakdown:
     traction_work_kwh: float
+    traction_limit_shortfall_kwh: float
     retarding_work_kwh: float
+    net_inertial_work_kwh: float
     acceleration_work_kwh: float
     deceleration_work_kwh: float
     resistance_work_kwh: float
@@ -29,12 +31,13 @@ class EnergyBreakdown:
 
 def energy_breakdown(result: SimResult,
                      spec: TrainSpec | None = None) -> EnergyBreakdown:
-    """Integrate work along the simulated trajectory using matched frame steps."""
-    spec = spec or TrainSpec()
-    traction = retarding = acceleration = deceleration = 0.0
+    """Integrate control-step work using the same v*dt convention as sim.run."""
+    spec = spec or result.spec
+    traction = shortfall = retarding = inertial = 0.0
+    acceleration = deceleration = 0.0
     resistance = grade = 0.0
     for current, following in zip(result.frames, result.frames[1:]):
-        distance = max(0.0, following.x - current.x)
+        distance = max(0.0, current.v * result.dt)
         if distance <= 0.0 or current.v <= 0.0:
             continue
         # frame.accel stores the actuator value applied on the following step.
@@ -44,11 +47,14 @@ def energy_breakdown(result: SimResult,
         grade_force = spec.grade_force(
             grade_at(result.segments, current.x))
         net_force = inertial_force + resistance_force + grade_force
-        traction_force = min(
-            spec.traction_force(current.v), max(0.0, net_force))
+        available_force = spec.traction_force(current.v)
+        traction_force = min(available_force, max(0.0, net_force))
         retarding_force = max(0.0, -net_force)
+        shortfall_force = max(0.0, net_force - available_force)
         traction += traction_force * distance
+        shortfall += shortfall_force * distance
         retarding += retarding_force * distance
+        inertial += inertial_force * distance
         acceleration += max(0.0, inertial_force) * distance
         deceleration += max(0.0, -inertial_force) * distance
         resistance += resistance_force * distance
@@ -59,7 +65,9 @@ def energy_breakdown(result: SimResult,
     )
     return EnergyBreakdown(
         traction_work_kwh=traction / J_PER_KWH,
+        traction_limit_shortfall_kwh=shortfall / J_PER_KWH,
         retarding_work_kwh=retarding / J_PER_KWH,
+        net_inertial_work_kwh=inertial / J_PER_KWH,
         acceleration_work_kwh=acceleration / J_PER_KWH,
         deceleration_work_kwh=deceleration / J_PER_KWH,
         resistance_work_kwh=resistance / J_PER_KWH,
