@@ -1,6 +1,6 @@
 # 诊断脚本（diag/）
 
-本目录保存排查 `humanoid_e2e_recovery` 闭环失稳时用过的 14 个诊断脚本。
+本目录保存排查 `humanoid_e2e_recovery` 闭环失稳时用过的 15 个诊断脚本。
 它们**不是**主流程的一部分，作用是把 README 与 `docs/humanoid/humanoid_e2e_recovery.md`
 里的实测数值变成可复现的：每个脚本只回答一个问题，输出可直接与下表对照。
 
@@ -39,7 +39,8 @@ python3 diag/03_correlation_ceiling.py --help
 | 11 | `11_frame_diff.py` | 帧间差分能否补上速度通道（失败路线） | `python3 diag/11_frame_diff.py --dataset data/e2e_dataset.npz` | 差分逐维 std **0.00038**（单帧 0.00250）；独立 1e-4 兜底 → 训练 **nan**，闭环 **0.58 s** 跌倒 |
 | 12 | `12_zero_bias.py` | 减掉稳态常数偏置能否变好（失败路线） | `python3 diag/12_zero_bias.py` | 稳态首帧输出 **9.04 N·m**；无校正 3.53 s 倒，零偏校正 **1.38 s**（更差） |
 | 13 | `13_dagger.py` | DAgger 一轮能否消除误差累积（失败路线） | `python3 diag/13_dagger.py --dataset data/e2e_dataset.npz --episodes 6` | 新增 1 530 条、合并 5 802 条，纯网络仍 **1.95 s** 跌倒（数据量不是瓶颈） |
-| 14 | `14_pipeline_check.py` | 一条命令复现入库权重的全流程 | `python3 diag/14_pipeline_check.py --episodes 8` | 4 272 条、8/8 回合站住；X 逐维 std 均值 **0.00250**、X_mean 0.3675、X_std 均值 0.0200（大量格子被 floor 钳住）；Y 踝 pitch **58.0/33.8**（−124~300）；离线预测 std 28.27 / 目标 27.74；稳态首帧网络 **9.04** vs 专家 0.00；空站 **3.53 s** 跌倒 63.6° |
+| 14 | `14_pipeline_check.py` | 一条命令复现入库权重的全流程 | `python3 diag/14_pipeline_check.py --episodes 8` | 4 272 条、8/8 回合站住；X 逐维 std 均值 **0.00250**、X_mean 0.3675、X_std 均值 0.0200（大量格子被 floor 钳住）；Y 踝 pitch **58.0/33.8**（−124~300）；离线预测 std 28.27 / 目标 27.74；稳态首帧网络 **9.04** vs 专家 0.00；空站 **3.53 s** 跌倒 63.6°（单帧权重口径） |
+| 15 | `15_pool_temporal_ablation.py` | 同一批数据上，32 格 / 双帧 6 ms / 双帧 102 ms 到底哪个能站住 | `python3 diag/15_pool_temporal_ablation.py --episodes 8` | 一次采集 32 格数据后四档对照：A 16×16 单帧 **2.63 s**、B 32×32 单帧 **1.72 s**、C 双帧 6 ms **2.85 s**、D 双帧 102 ms **站满 10 s**；离线 val_mse 1.48/1.42 好看不等于闭环能站 → 只有 D 采纳入库 |
 
 > 时间窗口提醒：闭环类脚本的 `--seconds` 必须长于预期失稳时间，否则会把"还没倒"读成"站稳"。
 > 例如 β=0 实际在 3.53 s 才倒，用 `--seconds 3` 会显示"站稳 3.0s / 16.0°"。上表的闭环数字默认 10 s 窗口。
