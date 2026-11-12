@@ -1,0 +1,69 @@
+<launch>
+  <!-- GRNN SLAM + A* road navigation: sim + slam + nav + metrics + viewer -->
+  <arg name="scene"          default="downtown"/>
+  <arg name="seed"           default="20261110"/>
+  <arg name="noise"          default="true"/>
+  <arg name="display"        default=":0"/>
+  <arg name="viewer"         default="true"/>
+  <arg name="duration"       default="0.0"/>
+  <arg name="mode"           default="SLAM_NAV"/>
+  <arg name="goal_x"         default=""/>
+  <arg name="goal_y"         default=""/>
+  <arg name="use_nn"         default="false"/>
+  <arg name="replan"         default="6.0"/>
+  <arg name="timeout"        default="120.0"/>
+  <arg name="auto_snapshot"  default=""/>
+  <arg name="render_width"   default="820"/>
+
+  <node pkg="road_numpy_nn_slam" type="sim_node.py" name="sim_node" output="screen">
+    <env name="GRNN_ROOT" value="$(find road_numpy_nn_slam)"/>
+    <param name="scene"    value="$(arg scene)"/>
+    <param name="seed"     value="$(arg seed)"/>
+    <param name="noise"    value="$(arg noise)"/>
+    <param name="duration" value="$(arg duration)"/>
+    <param name="mode"     value="$(arg mode)"/>
+    <param name="state_hz" value="10.0"/>
+    <param name="sensor_hz" value="6.0"/>
+    <param name="camera_hz" value="1.0"/>
+  </node>
+
+  <node pkg="road_numpy_nn_slam" type="slam_node.py" name="slam_node" output="screen">
+    <env name="GRNN_ROOT" value="$(find road_numpy_nn_slam)"/>
+    <param name="scene"      value="$(arg scene)"/>
+    <param name="resolution" value="0.1"/>
+    <param name="publish_hz" value="1.0"/>
+  </node>
+
+  <node pkg="road_numpy_nn_slam" type="nav_node.py" name="nav_node" output="screen">
+    <env name="GRNN_ROOT" value="$(find road_numpy_nn_slam)"/>
+    <param name="scene"      value="$(arg scene)"/>
+    <param name="goal_x"     value="$(arg goal_x)"/>
+    <param name="goal_y"     value="$(arg goal_y)"/>
+    <param name="use_nn"     value="$(arg use_nn)"/>
+    <param name="replan"     value="$(arg replan)"/>
+    <param name="cruise_speed" value="9.5"/>
+    <param name="control_hz" value="10.0"/>
+  </node>
+
+  <node pkg="road_numpy_nn_slam" type="metrics_node.py" name="metrics_node" output="screen">
+    <env name="GRNN_ROOT" value="$(find road_numpy_nn_slam)"/>
+    <param name="scene"      value="$(arg scene)"/>
+    <param name="mode"       value="slam_nav"/>
+    <param name="goal_x"     value="$(arg goal_x)"/>
+    <param name="goal_y"     value="$(arg goal_y)"/>
+    <param name="timeout"    value="$(arg timeout)"/>
+    <param name="shutdown"   value="false"/>
+  </node>
+
+  <node if="$(arg viewer)" pkg="road_numpy_nn_slam" type="viewer_node.py"
+        name="viewer_node" output="screen">
+    <env name="DISPLAY"    value="$(arg display)"/>
+    <env name="GRNN_ROOT"  value="$(find road_numpy_nn_slam)"/>
+    <param name="scene"         value="$(arg scene)"/>
+    <param name="teleop"        value="false"/>
+    <param name="display"       value="$(arg display)"/>
+    <param name="auto_snapshot" value="$(arg auto_snapshot)"/>
+    <param name="render_width"  value="$(arg render_width)"/>
+    <param name="fps"           value="6.0"/>
+  </node>
+</launch>
