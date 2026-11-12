@@ -1,0 +1,8 @@
+# ROS 2 节点参数。launch 里的参数会覆盖这里的同名项。
+hopper_slip_node:
+  ros__parameters:
+    target_height: 0.55      # 躯干顶点目标高度 (m)
+    target_speed: 0.0        # 目标前进速度 (m/s)，0 = 原地跳
+    control_hz: 100.0        # 定时器频率；每个周期推进 control_hz^-1 / 0.002 个物理步
+    publish_rate: 50.0       # 状态话题发布频率 (Hz)
+    start_q: 0.11            # 初始腿压缩量 (m)

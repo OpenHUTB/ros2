@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>uav_vertiport_queue</name>
+  <version>0.1.0</version>
+  <description>
+    低空起降场（vertiport）进离场排队与容量评估。以起降位占用模型描述
+    2 条起飞位 / 2 个降落位 / 4 个停机坪的起降场，提供 FIFO 基线、优先级
+    抢占（医疗/警用插队）与固定间隔（进离场最小间隔 60/90 s 可配）三种
+    排队策略；按固定请求率扫描输出吞吐量曲线、平均等待、最大队列长度与
+    饱和点；三段匀速直线航迹（进场 60 m 进近 / 离场 60 m 转巡航）经
+    uav_mujoco_sim（MuJoCo 刚体模型 + 几何控制器）闭环真飞，验证排队
+    结论在实际执行后仍然成立。
+  </description>
+  <maintainer email="326516287+usernamekkyy@users.noreply.github.com">黄家欣</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>uav_mujoco_sim</exec_depend>
+
+  <test_depend>ament_pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

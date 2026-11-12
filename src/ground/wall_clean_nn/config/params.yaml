@@ -1,0 +1,13 @@
+# 沿墙清扫：节点运行参数
+#
+# 由 launch/main.launch 通过 <rosparam command="load"> 载入节点私有命名空间，
+# 键名必须与 nodes/wall_clean_node.py 里 rospy.get_param("~xxx") 的 xxx 一致。
+# launch 的 <param> 在载入之后下发，可覆盖 mode/rate/seed。
+mode: nn           # nn（神经网络） | expert（专家） | manual（订阅外部 /cleaner/cmd_vel）
+rate: 20.0         # 控制频率 (Hz)
+seed: 0            # 仿真随机种子
+# model_dir 默认取 <包目录>/models（devel / install 空间都能定位）；需要时取消注释
+# model_dir: /path/to/models
+#
+# 注意：房间尺寸、沿墙距离、清扫带宽、雷达参数目前是 sim_core.py 里的常量
+# （HALF_X/HALF_Y/WALL_T/WALL_OFFSET/BAND/…），不通过 ROS 参数下发。

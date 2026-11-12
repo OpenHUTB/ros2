@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# catkin
+build/
+devel/
+install/
+logs/
+
+# 运行日志
+*.log
+
+# 系统垃圾
+.DS_Store
+
+# gen_model.py 生成的程序贴图（运行期产物，缺失时脚本会自动重建）
+models/soil.png
+models/rock.png
+
+# 运行产物（csv / json / mp4 / 关键帧）由脚本写到仓库根 docs/img/，不在本包目录内；
+# 忽略规则与实际落点一致，见 docs/img/.gitignore

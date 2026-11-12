@@ -1,0 +1,13 @@
+uav_moving_target_follow_node:
+  ros__parameters:
+    # uav_moving_target_follow 关键参数
+
+    # 跟随几何
+    standoff_m: 12.0    # 目标后方水平距离 m
+    alt_m: 10.0         # 跟随高度 m
+    cruise_speed: 9.0   # 无人机巡航速度上限 m/s
+
+    # ROS 话题
+    odom_topic: "/uav/odom"
+    target_odom_topic: "/target/odom"
+    setpoint_topic: "/uav_moving_target_follow/setpoint"

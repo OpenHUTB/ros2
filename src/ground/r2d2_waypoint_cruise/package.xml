@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>r2d2_waypoint_cruise</name>
+  <version>0.0.1</version>
+  <description>
+    R2D2 差速小车航点巡航仿真（PyBullet）：沿预设方形路径自动导航巡逻，
+    使用 P 控制器实现航点跟踪，支持循环巡逻与轨迹记录。
+    本模块为独立 PyBullet 仿真脚本，不依赖 ROS 运行时。
+  </description>
+
+  <maintainer email="noreply@example.com">xjm666god</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>python3</exec_depend>
+  <exec_depend>pybullet</exec_depend>
+  <exec_depend>numpy</exec_depend>
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

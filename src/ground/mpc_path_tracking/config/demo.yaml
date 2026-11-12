@@ -1,0 +1,8 @@
+mpc_reference:
+  ros__parameters:
+    duration_s: 20.0
+    offset_m: 1.2
+mpc_tracker:
+  ros__parameters:
+    duration_s: 20.0
+    offset_m: 1.2

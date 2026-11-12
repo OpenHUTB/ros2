@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>system_integration</name>
+  <version>0.1.0</version>
+  <description>任务5：把键盘、模拟相机、导航与策略网络四个模块集成到同一条速度出口</description>
+  <maintainer email="2507417911@qq.com">1woshichenwenguang1</maintainer>
+  <license>Apache-2.0</license>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+
+  <!-- 被集成的四个模块；缺哪个就把对应的 launch 参数关掉 -->
+  <exec_depend>teleop_control</exec_depend>
+  <exec_depend>sensor_perception</exec_depend>
+  <exec_depend>navigation_slam</exec_depend>
+  <exec_depend>policy_learning</exec_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

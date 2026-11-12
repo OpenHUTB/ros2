@@ -1,0 +1,22 @@
+<launch>
+  <!--
+    mujoco_arm_pick.launch —— 二连杆机械臂抓取搬运演示（ROS 1 / catkin）
+    运行前请确保：
+      1) 已安装 Python 依赖：pip3 install -r requirements.txt
+         （mujoco / numpy / pillow；无显卡环境另需可用的 GL 后端）
+      2) 已编译本包:  catkin_make && source devel/setup.bash
+    可选参数：
+      gl : MuJoCo 渲染后端，默认 glfw；无显卡的服务器/虚拟机建议 egl。
+           osmesa 在部分 VMware 上取不到 GL 上下文，会报
+           'NoneType' object has no attribute 'glGetError'
+      out: 显式指定输出 GIF 路径；留空则按脚本规则写仓库 docs/img 或临时目录
+  -->
+  <arg name="gl" default="glfw"/>
+  <arg name="out" default=""/>
+
+  <node name="mujoco_arm_pick" pkg="mujoco_arm_pick" type="main.py"
+        args="$(eval ' --out ' + arg('out') if arg('out') else '')"
+        output="screen" respawn="false">
+    <env name="MUJOCO_GL" value="$(arg gl)"/>
+  </node>
+</launch>

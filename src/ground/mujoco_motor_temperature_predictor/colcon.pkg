@@ -1,0 +1,5 @@
+{
+  "hooks": [
+    "share/mujoco_motor_temperature_predictor/hook/ament_prefix_path.dsv"
+  ]
+}

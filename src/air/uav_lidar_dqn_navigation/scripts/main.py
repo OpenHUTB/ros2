@@ -8,9 +8,13 @@ uav_lidar_dqn_navigation 统一入口
     python3 main.py --mode bridge       # 只启动 AirSim 桥接
     python3 main.py --mode scan         # 雷达扫描发布（建图感知层）
     python3 main.py --mode train        # 任务 2 DQN 策略训练
+    python3 main.py --mode dqn          # 任务 2 DQN 导航部署
+    python3 main.py --mode camera       # 前置相机话题
+    python3 main.py --mode e2e          # 任务 4 图像端到端 DQN 部署
+    python3 main.py --mode e2e_train    # 任务 4 端到端 DQN 训练
 
-本阶段实现桥接、遥控、雷达感知与 DQN 训练；DQN 部署、建图与端到端控制
-在后续 PR 中按层加入，并同步扩充这里的模式表。
+建图（任务 3）需要 launch 组合桥接、扫描、gmapping 与导航多个节点，
+因此没有单独的模式，统一用 main.launch mode:=slam。
 """
 
 import argparse
@@ -53,11 +57,37 @@ def run_train():
     train_dqn_nav.main()
 
 
+def run_dqn():
+    from dqn_nav_node import DQNNavNode
+    DQNNavNode().run()
+
+
+def run_camera():
+    from camera_node import CameraNode
+    CameraNode().run()
+
+
+def run_e2e():
+    from dqn_e2e_node import DQNE2ENode
+    DQNE2ENode().run()
+
+
+def run_e2e_train():
+    import train_dqn_e2e
+    # myargv: [脚本, '--mode', 'e2e_train', 其余训练参数...]
+    sys.argv = ['train_dqn_e2e.py'] + rospy.myargv()[3:]
+    train_dqn_e2e.main()
+
+
 MODES = {
     'bridge': run_bridge,
     'teleop': run_teleop,
     'scan': run_scan,
     'train': run_train,
+    'dqn': run_dqn,
+    'camera': run_camera,
+    'e2e': run_e2e,
+    'e2e_train': run_e2e_train,
 }
 
 
