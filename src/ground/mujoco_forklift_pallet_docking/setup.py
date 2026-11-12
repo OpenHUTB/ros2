@@ -18,5 +18,5 @@ setup(
     zip_safe=False,
     description="相机引导叉车托盘对准与低速插入仿真",
     license="Apache-2.0",
-    entry_points={"console_scripts": ["main = main:main"]},
+    entry_points={"console_scripts": ["forklift_pallet_docking = main:main", "main = main:main"]},
 )

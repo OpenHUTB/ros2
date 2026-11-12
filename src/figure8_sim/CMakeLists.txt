@@ -14,6 +14,12 @@ catkin_install_python(PROGRAMS
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
+# pure-python helper module: installed next to main.py so main.py can import it
+install(PROGRAMS
+  scripts/figure8.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
 install(DIRECTORY launch rviz
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
