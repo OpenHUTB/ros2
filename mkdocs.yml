@@ -131,6 +131,7 @@ nav:
     - 人形机器人全身柔顺控制: './humanoid/humanoid_g1_compliance.md'
     - 人形机器人 MuJoCo 建图导航与神经网络控制: './humanoid/humanoid_mujoco_slam_nn_nav.md'
     - 人形上下台阶步态仿真：ZMP 预瞄控制与台阶参数扫描: './humanoid/humanoid_stair_zmp_preview.md'
+    - MuJoCo单足弹跳机器人简单仿真：SLIP 模型与 Raibert 弹跳控制: './humanoid/mujoco_hopper_slip_control.md'
 
 - 四足机器人:
     - MuJoCo 四足机器人运动控制与步态评估: './quadruped_mujoco_rl.md'
