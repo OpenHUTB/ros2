@@ -202,6 +202,8 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#_4">运行步骤</a>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#_5">本模块的轨迹实现</a>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../humanoid_zmp_walking/">人形机器人轻量级 ZMP 步行控制基线</a>
@@ -665,6 +667,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/airsim_height_aware_overfly/">AirSim Unity 无人机高度自适应越障实验</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/airsim_double_pillar_avoidance/">AirSim Unity 无人机双柱连续 S 形绕行实验</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_facade_capture/">MuJoCo无人机幕墙定距扫描</a>
 </li>
 <li class="toctree-l1"><a class="reference internal">无人机任务管理与安全状态机</a>
@@ -1121,8 +1125,8 @@
 <p>本模块实现简化双足步态演示，在 ROS 2 环境下实现了一个步行轨迹规划可视化节点。节点模拟了人形机器人一个完整步态周期（支撑期与摆动期）的腿部轨迹，并实时绘制出机器人的运动姿态，完成双足行走动画仿真。</p>
 <h2 id="_2">运行环境</h2>
 <ul>
-<li>操作系统：Ubuntu 22.04（虚拟机）</li>
-<li>ROS 2 版本：Humble</li>
+<li>操作系统：Ubuntu 24.04（Jazzy 实测）/ Ubuntu 20.04（Foxy 实测）</li>
+<li>ROS 2 版本：Jazzy 实测、Foxy 实测；Humble 未实测</li>
 <li>依赖库：rclpy, matplotlib</li>
 </ul>
 <h2 id="_3">核心代码文件清单</h2>
@@ -1130,12 +1134,16 @@
 <div class="highlight"><pre><span></span><code>src/
 └── humanoid_zmp_walk_planner/
     ├── humanoid_zmp_walk_planner/        # Python 源码目录
-    │   ├── __init__.py                   # 空文件，标识包 
+    │   ├── __init__.py                   # 空文件，标识 Python 包
+    │   ├── gait.py                       # 纯函数：周期位移、相位、摆动脚高度
     │   └── main.py                       # 简化双足步态动画可视化节点
     ├── resource/                         # 资源目录
     │   └── humanoid_zmp_walk_planner     # 无后缀空文件
     ├── launch/
     │   └── main.launch.py                # 一键启动文件
+    ├── test/                             # 单元测试（15 项，不需要 ROS）
+    │   ├── conftest.py
+    │   └── test_gait.py
     ├── package.xml                       # ROS 2 依赖声明文件
     ├── setup.py                          # ROS 2 功能包配置文件
     ├── setup.cfg                         # 脚本安装路径配置
@@ -1163,13 +1171,21 @@ source install/setup.bash
 <ol>
 <li>启动简化双足步态动画演示与可视化节点：</li>
 </ol>
-<div class="highlight"><pre><span></span><code>ros2 launch humanoid_zmp_walk_planner main.launch.py
+<div class="highlight"><pre><span></span><code>ros2 run humanoid_zmp_walk_planner main          # 入口为 main.*
+ros2 launch humanoid_zmp_walk_planner main.launch.py
 </code></pre></div>
+<p>无显示器环境可设 <code>MPLBACKEND=Agg</code> 运行。</p>
 <ol>
 <li>运行效果：</li>
 </ol>
 <p>节点启动成功。实时计算并绘制出人形机器人的足部运动轨迹，图形界面成功展示了机器人的行走姿态，实现了简化双足步态动画演示。</p>
-<p><img alt="运行效果" src="../../img/capture_3.png"/></p></div>
+<p><img alt="运行效果" src="../../img/capture_3.png"/></p>
+<p>ROS 2 步态动画帧（模块自身绘图代码在 Agg 后端渲染，t=3.7 s，后半周期右脚支撑）：</p>
+<p><img alt="ROS 2 步态帧" src="../../img/humanoid/zmp_walk_planner_runtime.png"/></p>
+<h2 id="_5">本模块的轨迹实现</h2>
+<p><code>step_length</code> 为<strong>单步</strong>长度，一个完整周期（左右各一步）躯干前进 <code>2 * step_length</code>；
+默认参数下每步 0.6 m、周期 1.2 s，速度 1.0 m/s。摆动脚高度与支撑脚由
+<code>humanoid_zmp_walk_planner/gait.py</code> 的 <code>foot_heights()</code> 给出。</p></div>
 </div>
 </div><footer>
 <div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
