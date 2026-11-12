@@ -14,6 +14,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 WRITTEN: list[str] = []
+IMWRITE_RESULT = [True]
 IMSHOW_CALLS: list[str] = []
 
 
@@ -39,11 +40,14 @@ def _install_stubs() -> None:
 
     class Node:
         PARAMS: dict = {}
+        INSTANCES: list = []
 
         def __init__(self, name):
             self._name = name
             self._params = {}
             self.logger = _Logger()
+            self.destroyed = False
+            Node.INSTANCES.append(self)
 
         def declare_parameter(self, name, default=None):
             value = Node.PARAMS.get(name, default)
@@ -71,6 +75,14 @@ def _install_stubs() -> None:
     node_mod.Node = Node
     rclpy.node = node_mod
 
+    exec_mod = types.ModuleType("rclpy.executors")
+
+    class ExternalShutdownException(Exception):
+        pass
+
+    exec_mod.ExternalShutdownException = ExternalShutdownException
+    rclpy.executors = exec_mod
+
     sensor_msgs = types.ModuleType("sensor_msgs")
     smsg = types.ModuleType("sensor_msgs.msg")
 
@@ -92,7 +104,7 @@ def _install_stubs() -> None:
 
     def imwrite(path, image):
         WRITTEN.append(str(path))
-        return True
+        return IMWRITE_RESULT[0]
 
     def imshow(title, image):
         IMSHOW_CALLS.append(title)
@@ -107,6 +119,7 @@ def _install_stubs() -> None:
     sys.modules.update({
         "rclpy": rclpy,
         "rclpy.node": node_mod,
+        "rclpy.executors": exec_mod,
         "sensor_msgs": sensor_msgs,
         "sensor_msgs.msg": smsg,
         "cv_bridge": cv_bridge,

@@ -1,0 +1,119 @@
+{
+  "algorithms": {
+    "dqn_2x64": {
+      "algorithm": "DQN",
+      "best_epoch": 175,
+      "episodes": 250,
+      "final_recent_success": 0.867,
+      "hidden": [
+        64,
+        64
+      ],
+      "mean_collisions": 3.1,
+      "mean_pedestrians_hit": 0.0,
+      "mean_red_light_violations": 0.1,
+      "mean_return": 58.614,
+      "mean_steps": 44.3,
+      "success_rate": 0.667,
+      "train_seconds": 29.75,
+      "train_steps": 12330
+    },
+    "dqn_3x64": {
+      "algorithm": "DQN",
+      "best_epoch": 50,
+      "episodes": 250,
+      "final_recent_success": 0.633,
+      "hidden": [
+        64,
+        64,
+        64
+      ],
+      "mean_collisions": 1.3,
+      "mean_pedestrians_hit": 0.0,
+      "mean_red_light_violations": 0.03,
+      "mean_return": 51.947,
+      "mean_steps": 56.4,
+      "success_rate": 0.5,
+      "train_seconds": 38.3,
+      "train_steps": 14013
+    },
+    "pg_2x64": {
+      "algorithm": "REINFORCE",
+      "episodes": 250,
+      "final_recent_success": 0.533,
+      "hidden": [
+        64,
+        64
+      ],
+      "mean_collisions": 10.27,
+      "mean_pedestrians_hit": 0.0,
+      "mean_red_light_violations": 0.1,
+      "mean_return": 41.378,
+      "mean_steps": 72.6,
+      "success_rate": 0.433,
+      "train_seconds": 40.97,
+      "train_steps": 17239
+    }
+  },
+  "env": {
+    "action_table": [
+      [
+        1.0,
+        0.0
+      ],
+      [
+        1.0,
+        0.35
+      ],
+      [
+        1.0,
+        -0.35
+      ],
+      [
+        0.5,
+        0.7
+      ],
+      [
+        0.5,
+        -0.7
+      ],
+      [
+        0.3,
+        0.0
+      ],
+      [
+        0.0,
+        0.0
+      ],
+      [
+        -0.5,
+        0.0
+      ]
+    ],
+    "actions": 8,
+    "dt": 0.5,
+    "max_steps": 80,
+    "penalties": "collision -1.5, red light -2.0, pedestrian -3.0, off-road -0.02/step",
+    "random_start": true,
+    "scene": "downtown",
+    "state": "7x7 local occupancy + goal polar + speed + light (57 dims)"
+  },
+  "eval_episodes": 30,
+  "hidden_layer_comparison": {
+    "algorithm": "DQN",
+    "three_hidden_layers": {
+      "mean_return": 51.947,
+      "success_rate": 0.5,
+      "train_seconds": 38.3
+    },
+    "two_hidden_layers": {
+      "mean_return": 58.614,
+      "success_rate": 0.667,
+      "train_seconds": 29.75
+    }
+  },
+  "seconds": 115.23,
+  "seed": 2026,
+  "state_dim": 89,
+  "task": "reach the goal in the downtown road network (discrete action abstraction, bicycle model, traffic lights and pedestrians)"
+}

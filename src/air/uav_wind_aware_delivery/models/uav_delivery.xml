@@ -1,0 +1,120 @@
+<mujoco model="uav_wind_aware_delivery">
+  <!--
+    四旋翼 + 吊挂物资。世界系 ENU（x 东、y 北、z 上），机体系 FLU。
+    无人机用 freejoint；物资用 freejoint + weld equality 固定在机腹。
+    释放时 Python 侧把 data.eq_active 置 0，物资变成自由落体并受风阻力。
+    本项目的重点是“落点预测 + 释放点补偿”，飞控采用简化几何控制。
+  -->
+  <compiler angle="radian" coordinate="local" autolimits="true"/>
+
+  <option timestep="0.0025" integrator="RK4" gravity="0 0 -9.81"/>
+
+  <visual>
+    <headlight ambient="0.42 0.42 0.44" diffuse="0.58 0.58 0.58"
+               specular="0.15 0.15 0.15"/>
+    <map znear="0.02" zfar="80"/>
+    <quality shadowsize="2048"/>
+  </visual>
+
+  <asset>
+    <texture name="grid" type="2d" builtin="checker" width="256" height="256"
+             rgb1="0.30 0.34 0.32" rgb2="0.22 0.26 0.24"/>
+    <material name="grid" texture="grid" texrepeat="12 12" reflectance="0.04"/>
+    <material name="body_mat" rgba="0.12 0.14 0.18 1" specular="0.55" shininess="0.5"/>
+    <material name="arm_mat" rgba="0.06 0.07 0.09 1"/>
+    <material name="payload_mat" rgba="0.95 0.55 0.10 1" specular="0.3"/>
+    <material name="pad_mat" rgba="0.10 0.75 0.35 1" specular="0.1"/>
+    <material name="pad_ring" rgba="0.95 0.95 0.95 1"/>
+  </asset>
+
+  <worldbody>
+    <light name="sun" pos="0 0 18" dir="-0.25 0.35 -1" directional="true"
+           diffuse="0.62 0.62 0.60" specular="0.25 0.25 0.25" castshadow="true"/>
+    <light name="fill" pos="0 0 5" dir="0 0 -1" diffuse="0.28 0.30 0.32"
+           castshadow="false"/>
+
+    <!-- 地面：摩擦用于物资落地后停住 -->
+    <geom name="ground" type="plane" size="18 18 0.1" material="grid"
+          friction="0.9 0.02 0.001"/>
+
+    <!-- 目标投放区：中心 (5, 2)，半径 0.6 m -->
+    <body name="target_pad" pos="5 2 0.015">
+      <geom name="pad_disc" type="cylinder" size="0.60 0.015"
+            material="pad_mat" contype="0" conaffinity="0"/>
+      <!-- 四个白色角标组成投放区边界，避免使用 MuJoCo 不支持的 torus -->
+      <geom name="pad_c1" type="box" size="0.06 0.012 0.006" pos="0.55 0 0.02"
+            material="pad_ring" contype="0" conaffinity="0"/>
+      <geom name="pad_c2" type="box" size="0.06 0.012 0.006" pos="-0.55 0 0.02"
+            material="pad_ring" contype="0" conaffinity="0"/>
+      <geom name="pad_c3" type="box" size="0.012 0.06 0.006" pos="0 0.55 0.02"
+            material="pad_ring" contype="0" conaffinity="0"/>
+      <geom name="pad_c4" type="box" size="0.012 0.06 0.006" pos="0 -0.55 0.02"
+            material="pad_ring" contype="0" conaffinity="0"/>
+      <site name="target_site" pos="0 0 0.03" size="0.01"/>
+    </body>
+
+    <!-- 四旋翼 -->
+    <body name="base_link" pos="0 0 1.60">
+      <freejoint name="root"/>
+      <inertial pos="0 0 0" mass="0.90" diaginertia="0.0045 0.0045 0.0080"/>
+
+      <geom name="body_geom" type="box" size="0.055 0.055 0.028"
+            material="body_mat" contype="0" conaffinity="0"/>
+      <geom name="arm_fr" type="capsule" fromto="0 0 0  0.106 -0.106 0"
+            size="0.007" material="arm_mat" contype="0" conaffinity="0"/>
+      <geom name="arm_fl" type="capsule" fromto="0 0 0  0.106  0.106 0"
+            size="0.007" material="arm_mat" contype="0" conaffinity="0"/>
+      <geom name="arm_rl" type="capsule" fromto="0 0 0 -0.106  0.106 0"
+            size="0.007" material="arm_mat" contype="0" conaffinity="0"/>
+      <geom name="arm_rr" type="capsule" fromto="0 0 0 -0.106 -0.106 0"
+            size="0.007" material="arm_mat" contype="0" conaffinity="0"/>
+
+      <!-- 旋翼只做外观；推力/力矩由 Python 的 xfrc_applied 统一施加 -->
+      <body name="rotor1" pos="0.106 -0.106 0.012">
+        <inertial pos="0 0 0" mass="0.018" diaginertia="2e-5 2e-5 2e-5"/>
+        <geom type="cylinder" size="0.062 0.005" rgba="0.10 0.10 0.12 1"
+              contype="0" conaffinity="0"/>
+        <geom type="box" size="0.060 0.008 0.0015" rgba="0.75 0.78 0.82 0.55"
+              contype="0" conaffinity="0" quat="0 0 0.7071 0.7071"/>
+      </body>
+      <body name="rotor2" pos="-0.106 0.106 0.012">
+        <inertial pos="0 0 0" mass="0.018" diaginertia="2e-5 2e-5 2e-5"/>
+        <geom type="cylinder" size="0.062 0.005" rgba="0.10 0.10 0.12 1"
+              contype="0" conaffinity="0"/>
+        <geom type="box" size="0.060 0.008 0.0015" rgba="0.75 0.78 0.82 0.55"
+              contype="0" conaffinity="0" quat="0 0 0.7071 0.7071"/>
+      </body>
+      <body name="rotor3" pos="0.106 0.106 0.012">
+        <inertial pos="0 0 0" mass="0.018" diaginertia="2e-5 2e-5 2e-5"/>
+        <geom type="cylinder" size="0.062 0.005" rgba="0.10 0.10 0.12 1"
+              contype="0" conaffinity="0"/>
+        <geom type="box" size="0.060 0.008 0.0015" rgba="0.75 0.78 0.82 0.55"
+              contype="0" conaffinity="0" quat="0 0 0.7071 0.7071"/>
+      </body>
+      <body name="rotor4" pos="-0.106 -0.106 0.012">
+        <inertial pos="0 0 0" mass="0.018" diaginertia="2e-5 2e-5 2e-5"/>
+        <geom type="cylinder" size="0.062 0.005" rgba="0.10 0.10 0.12 1"
+              contype="0" conaffinity="0"/>
+        <geom type="box" size="0.060 0.008 0.0015" rgba="0.75 0.78 0.82 0.55"
+              contype="0" conaffinity="0" quat="0 0 0.7071 0.7071"/>
+      </body>
+
+      <site name="imu" pos="0 0 0" size="0.005"/>
+      <site name="hook" pos="0 0 -0.035" size="0.01"/>
+    </body>
+
+    <!-- 物资：初始在机腹下方 0.30 m，weld 固定；释放后自由落体 -->
+    <body name="payload" pos="0 0 1.30">
+      <freejoint name="payload_free"/>
+      <inertial pos="0 0 0" mass="0.20" diaginertia="0.0009 0.0009 0.0009"/>
+      <geom name="payload_geom" type="box" size="0.075 0.075 0.075"
+            material="payload_mat" friction="0.8 0.02 0.001"/>
+      <site name="payload_site" pos="0 0 0" size="0.01"/>
+    </body>
+  </worldbody>
+
+  <equality>
+    <!-- active="true" 表示初始连接；释放时 data.eq_active 置 0 -->
+    <weld name="payload_weld" body1="base_link" body2="payload" active="true"/>
+  </equality>
+</mujoco>

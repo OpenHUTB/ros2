@@ -88,6 +88,7 @@ ROS每章节运行代码:
     * [无人机禁飞区膨胀绕行](./chapter/chap9/uav_geofence_bypass.md)
     * [无人机 LOS 航点制导](./chapter/chap9/uav_los_waypoint_guidance.md)
     * [倒车纯追踪路径跟踪](./chapter/chap9/pure_pursuit_reverse.md)
+    * [激光雷达回波强度辅助可通行性](./chapter/chap9/lidar_intensity_traversability.md)
 * [第 10 章](./chapter/turtlebot3_gazebo_control.md) - Turtlebot3 Gazebo键盘控制
 
 
@@ -100,6 +101,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [关节 Stribeck 摩擦辨识与前馈补偿](./humanoid/joint_friction_identification.md) —— 恒速扫掠 + 网格/最小二乘辨识 Stribeck 四参数（库仑 −1.7%、静摩擦 −1.0%），前馈补偿把正弦跟踪 RMS 从 0.00703 降到 0.00310 rad（改善 55.9%）
 
 * [人形机器人基础](./humanoid/humanoid_basics.md)
+* [人形机器人双足步行仿真、激光 SLAM 与纯 NumPy 神经网络导航](./humanoid/humanoid_walk_nn.md)
 * [人形机器人双臂搬运负载的神经网络平衡控制](./humanoid/humanoid_carry_payload_nn.md)
 * [双足步态生成与 ZMP 稳定性](./humanoid/bipedal_gait_zmp.md)
 * [基于三次样条插值的双足多步态平滑切换](./humanoid/biped_cubic_spline_gait_switch.md)
@@ -176,6 +178,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [车道保持控制](./ground/carla_lane_keeping/lane_keeping_control.md)
 * [传感器感知与给定轨迹跟踪（神经网络版）](./ground/carla_perception_control.md)
 * [R2D2小车自动巡航仿真](./ground/r2d2_cruise.md)
+* [语义分割车道线巡游与 PID 横向控制](./ground/carla_lane_following.md) —— 语义分割提取车道线 + 单侧估计，PID 闭环转向；20 s 跑满，平均归一化偏移 0.086
 * [R2D2小车航点巡航仿真](./ground/r2d2_waypoint_cruise.md) —— P控制器航点跟踪，方形路径循环巡逻，附轨迹数据记录
 * [路径点发布器](./ground/waypoint.md)
 * [激光雷达建图与神经网络规划导航](./ground/carla_mapping_navigation.md)
@@ -214,6 +217,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 
 * [YOLOv8 视觉感知目标跟随仿真](./ground/yolov8_target_tracking.md)
 * [车辆键盘遥操作与二维模拟](./ground/vehicle_pygame_teleop.md)
+* [基于 TTC 的前向目标跟踪自动紧急制动](./ground/carla_ttc_emergency_braking.md) —— 前向目标跟踪求 TTC，超阈值满制动；激光雷达决策，实测停在前车 7.29 m
 * [地面车 PID 巡航速度跟踪仿真](./ground/ugv_cruise_pid.md)
 * [差速小车电机温度与电流观测记录](./ground/mujoco_motor_sensor_recorder.md)
 * [ROS2 差速机器人卡死检测与自动脱困](./ground/ros2_stuck_recovery/index.md) —— 用指令/里程计/IMU/测距的一致性区分顶住、打滑、单轮悬空，分级执行倒车-转向-试探脱困，3 级失败停车上报；7 个场景 × 10 种子可离线复现
@@ -259,6 +263,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [神经网络强化学习算法与网络结构对比（MuJoCo CartPole）](./ground/rl_algorithm_compare.md)
 * [车辆稳态操稳特性对比（不足 / 中性 / 过度转向）](./ground/steady_state_handling_eval.md) —— 质心位置对转向梯度、横摆增益与侧偏角的影响
 * [基于Mujoco的键盘遥控小车](./ground/mujoco_car_project.md)
+* [MuJoCo 叉车同步建图与自主导航](./ground/forklift_slam_nav.md)
 * [MuJoCo 叉车相机引导的托盘接近与低速插入](./ground/mujoco_forklift_pallet_docking.md)
 * [地面载具横向控制算法对比（纯跟踪 / Stanley / LQR）](./ground/lateral_control_benchmark.md) —— 同一车辆模型与指标下定量比较三种横向控制器
 * [MPPI 采样 MPC 与蒸馏神经网络的 8 字赛道跟踪对比](./ground/mujoco_mppi_neural_tracker.md) —— 同一赛道上比较 MPPI、蒸馏网络与纯追踪的精度/算力/抗噪
@@ -340,6 +345,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [ROS2 差速机器人 EKF 多传感器融合定位](./ground/ros2_ekf_localization/index.md) —— 轮式里程计 + IMU 航向 + 绝对位置观测的 EKF，输出 /odometry/filtered 供控制器直接使用
 * [上游心跳看门狗](./ground/heartbeat_watchdog.md) —— 监视上游节点的 `/heartbeat`，超时判定失联并发布急停，与 `cmd_vel_guard` 互补
 * [MuJoCo 地面无人车 SLAM 建图导航与神经网络控制](./ground/mujoco_ground_slam_nn_nav/README.md)
+* [地面坡度估计](./ground/ground_slope_estimation.md)
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
 * [仓储通道巡检无人机测距与分级制动](./air/mujoco_warehouse_uav_collision_braking.md)
@@ -354,6 +360,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [无人机航向角 PD 稳定控制与阶跃转向仿真](./air/uav_yaw_stabilize.md) —— 阵风力矩与往复风扰下的航向保持精度、阵风恢复时间，附实现动图
 * [AirSim ROS 1 Noetic PPO 联调](./air/airsim_rl_planner_ros1.md)
 * [无人机制动旧入口](./ground/mujoco_drone_distance_stop.md)
+* [城市道路地面载具：二维自行车动力学、激光 SLAM 与纯 NumPy 神经网络导航](./ground/road_numpy_nn_slam.md)
 
 
 * [Town10 立面自主巡航与图像采集](./air/town10_facade_cruise_capture/index.md)
@@ -364,6 +371,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 
 * [AirSim Unity 无人机曲线绕柱避障实验](./air/airsim_obstacle_avoidance.md)
 * [AirSim Unity 无人机高度自适应越障实验](./air/airsim_height_aware_overfly.md) —— 深度图逐列恢复障碍顶边，矮墙原地爬升越过、高障碍退回水平绕行；57 项离线测试 + 2026-11-09 两次越障实飞（越障后保持 5.2 m、到点误差 <0.7 m；相机偏移修正后 committed 约 2.6 m，尚未复飞）
+* [AirSim Unity 无人机双柱连续 S 形绕行实验](./air/airsim_double_pillar_avoidance.md) —— 在前视深度反应式绕柱基础上增加绕行侧解锁与冷却状态机，使沿程后续柱子按自身位置重新选边，形成 S 形路径（已实飞到达目标、第二柱反向绕行验证；降落确认待复验）
 * [无人机深度相机神经网络避障飞行（MuJoCo）](./air/uav_mujoco_depth_avoidance.md) —— 64×64 机载深度图 → numpy CNN → 三扇区通行度 → 速度/偏航闭环，3 场景 × 5 实例共 15/15 成功
 * [MuJoCo 无人机栅格激光建图与路径重规划](./air/uav_grid_navigation.md)
 * [无人机着陆阶段识别与接地载荷预测](./air/landing_assessment.md)
@@ -390,6 +398,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 
 * [无人机飞行轨迹类型识别与 ROS2 自动任务日志](./air/flight_pattern_recognition.md)
 
+* [前视 CNN 行为克隆视觉导航](./air/uav_neural_perception.md) —— 前视 RGB 图像 → CNN → 机体系速度指令，行为克隆直线跟随
 * [深度图端到端穿越门竞速](./air/uav_depth_gate_racing_e2e.md)
 
 * [无人机遥测异常检测与 ROS2 在线诊断](./air/telemetry_diagnostics.md)
@@ -432,6 +441,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [无人机 SLAM 建图与导航](./air/uav_slam_nav.md) —— Humble 侧 slam_toolbox + nav2，跨 ros1_bridge 接 Noetic bridge
 * [无人机深度相机建图与自主导航（深度反投影 + A* + 纯追踪）](./air/uav_depth_mapping_nav.md) —— 深度相机反投影建图、A* 规划与纯追踪控制的完整闭环（原 uav_slam_nav 更名，避免与已合并模块重名）
 * [AirSim ROS 2 Humble 最小桥接](./air/airsim_ros2_bringup.md)
+* [AirSim ROS 2 Humble GNSS 桥接](./air/airsim_ros2_gnss.md)
 * [无人机 LiDAR 地面/障碍分割](./air/uav_lidar_ground_filter.md)
 * [无人机屋顶降落](./air/rooftop_landing.md) —— 用机载 LiDAR 检测屋顶平面，取轮廓的最大内切圆圆心作为降落点，自主飞抵其上方后垂直降落
 * [无人机屋顶降落（学习型落点选择）](./air/rooftop_landing_nn.md) —— 用点云高度图 + 小 CNN 直接回归屋顶落点；凹形屋顶（U/L/天井）与稀疏点云下比凸包最大内切圆更稳，附三组消融对比
@@ -488,6 +498,8 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 
 * [神经视觉惯性里程计与三后端 SLAM 对比](./air/uav_neural_vio_slam.md)
 
+* [无人机 EKF 状态估计（IMU/GPS/气压计融合）](./air/uav_ekf_state_estimation.md) —— 6 状态导航滤波、阵风扰动与纯 GPS/航位推算对比
+
 * [MuJoCo 四旋翼仿真与 ROS2 桥接底座](./air/uav_mujoco_sim.md)
 * [MuJoCo 四旋翼垂直通道 PPO 定高与抗扰控制](./air/uav_vertical_ppo.md)
 
@@ -500,6 +512,8 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [无人机桨故障后的自主迫降](./air/uav_fault_emergency_landing.md) —— 下视深度相机在线建 2.5D 高度图，全卷积网络给"能不能落"打分选点，另一神经网络输出速度指令闭环飞过去；实测垂直下降穿楼、选点迫降安全着陆（触地垂直速度 0.05 m/s）
 
 * [无人机桨故障下的神经容错控制](./air/uav_neural_fault_tolerant_control.md) —— 几何控制器给出期望合推力与力矩，加权最小二乘按健康度重新分配到四桨（桨彻底失效时主动放弃偏航），再用 5252 参数的 MLP 学分配残差；12 次对比飞行里把跟踪误差降到 0.188 m（相对加权分配降 29%）而生存率不变
+
+* [四旋翼风扰下物资精准空投（MuJoCo）](./air/uav_wind_aware_delivery.md) —— 吊挂物资起飞，侧风下用 MLP 预测落点并迭代补偿释放点；10 组随机风平均误差 0.2674 m，不补偿 1.0532 m
 
 * [无人机编队飞行](./air/uav_formation_flight.md) —— 长机按航点巡航、僚机保持队形（一字/纵队/三角可动态切换），三架共用一条 AirSim RPC，依次起飞、低空展开后进入任务
 * [移动地面目标的后方等距跟随](./air/uav_moving_target_follow.md) —— 解析截获预测 + standoff 参考生成 + 偏移方向限速，MuJoCo 真飞跟随误差 0.1~4.6 m
@@ -586,6 +600,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [浑浊水体视觉增强与目标追踪（ROS 2，合成视频演示）](./water/water_vision_enhancement.md) —— 通道增益校正、白平衡、CLAHE 与暗通道去散射增强，KCF/CSRT/MOSSE 目标追踪，附合成浑浊水体演示节点
 
 * [水面无人艇：激光雷达建图与神经网络局部规划](./water/usv_mujoco_nn.md) —— MuJoCo 三自由度船体，射线激光雷达 + log-odds 占据栅格建图，MLP 输出局部目标点实现自主避障，封装为 ROS Noetic 节点
+* [水面无人艇 COLREG 会遇避碰](./water/usv_colreg_avoidance.md) —— 按避碰规则判断对遇/交叉/追越局面，让路船自动右转避让
 
 * [USV 弗劳德缩比换算与拖曳功率估算](./water/usv_froude_scaling.md) —— 弗劳德相似定模型速度、λ³ 定阻力、λ^3.5 定功率；默认 10 m 船 10 倍缩尺，模型 2.5 N 换算实船总阻力 1925 N、轴功率 17.5 kW
 
@@ -654,26 +669,10 @@ ___
 
 * [二连杆机械臂 OpenSim 建模与 PD 控制仿真](./two_link_arm_opensim_simulation.md)
 
+* [ROS2 话题桥接（二连杆机械臂肌肉骨骼仿真）](./muscle_arm_ros2_bridge.md)
 * [二连杆机械臂肌肉骨骼建模与 MuJoCo 仿真](./muscle_arm_mujoco_simulation.md)
 
-## 9. 路径规划与跟踪 <span id='motion_planning'></span>
 
-从「几何上找到一条路」到「沿这条路走得又稳又舒服」，这三个模块按 RRT → 速度规划 →
-跟踪的顺序串起一条完整的运动链路，全部用 Python 标准库实现，不依赖 numpy / matplotlib。
-
-* [RRT 采样式二维路径规划与平滑](./motion_planning/rrt_path_planning.md) —— 单一快速扩展随机树，配合目标偏置、步长限制与碰撞检测，再用随机捷径平滑削掉锯齿；含 12 项离线单测
-* [梯形与 S 曲线速度规划](./motion_planning/trapezoidal_profile.md) —— 以加加速度（jerk）为约束把加速度也做成梯形，与梯形曲线对比速度、加速度的突变；含 11 项离线单测
-* [Stanley 前视路径跟踪（含曲率前馈）](./motion_planning/stanley_tracking.md) —— 航向误差与横向误差的比例控制，叠加曲率前馈消除弯道稳态偏差；含 15 项离线单测
-
-三个包都提供 launch：`sim_node` 发布 `/odom`，`plan_control_node` 订阅 `/odom` 并发布
-`/cmd_vel` 与 `/planning/path`，可直接在 RViz 中观察规划路径与跟踪效果。不启动 ROS 也能
-单独核对算法，离线单测共 38 项：
-
-```bash
-cd src/motion_planning/rrt_path_planning   && python3 tests/test_rrt.py        # 12 项
-cd src/motion_planning/trapezoidal_profile && python3 tests/test_profile.py    # 11 项
-cd src/motion_planning/stanley_tracking    && python3 tests/test_stanley.py    # 15 项
-```
 
 ## 参考文献
 * [MuJoCo 失落公园无人机端到端视觉转向](./air/mujoco_abandoned_park_uav_visual_steering.md)
