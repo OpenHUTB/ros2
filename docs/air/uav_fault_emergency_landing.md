@@ -189,11 +189,11 @@ matplotlib（画图）。不需要独显、Gazebo、Unreal。
 cd src/air/uav_fault_emergency_landing
 pip install -r requirements.txt
 
-python main.py --selftest      # 31/31
-python -m pytest test -q       # 16 passed
+python main.py --selftest      # 32 OK / 0 FAIL
+python -m pytest test -q       # 23 passed, 1 skipped
 python main.py --gen-data      # 评分地图 120 张 + 制导样本 4000 条，约 30 s
 python main.py --train         # 两个网络各约 0.5 s
-python main.py --eval          # 三模式 x 三工况
+python main.py --eval          # 三模式 x 三工况（健康 / 剩余 50% / 剩余 22%）
 python main.py --demo results/landing_demo.gif
 ```
 
@@ -269,7 +269,7 @@ ros2 launch uav_fault_emergency_landing landing.launch.py mode:=neural rotor:=1
 
 1. **单桨完全失效、双桨失效仍是物理不可恢复的**：本模块不宣称能救回来，两种情况在
    故障后 1 s 内姿态就发散（与 `uav_neural_fault_tolerant_control` 的结论一致）。
-   对比实验因此用推力衰减 0.5 / 0.3 / 0.2 这类"还能飞但性能下降"的工况。
+   对比实验因此用"健康 / 剩余推力 50% / 剩余推力 22%"三组工况，跨过分配层的补偿边界。
 2. **只覆盖 MuJoCo 单机仿真**，没有真机与实飞数据。
 3. **四旋翼没有碰撞体**，"撞到障碍物"是用射线量的几何间隙与落点真值高度判出来的，
    不是物理碰撞——这一条在文档里必须写清楚，否则容易过度解读。

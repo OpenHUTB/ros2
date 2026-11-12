@@ -102,7 +102,7 @@ python main.py --gen-data
 # 3) 训练两个网络（各约 0.5 s）
 python main.py --train
 
-# 4) 三种模式 × 三种故障工况的对比（约 15 s）
+# 4) 三种模式 × 三组工况（健康 / 剩余推力 50% / 剩余推力 22%）的对比（约 15 s）
 python main.py --eval
 
 # 5) 出一段对比动图
@@ -112,7 +112,7 @@ python main.py --demo results/landing_demo.gif
 单元测试：
 
 ```bash
-python -m pytest test -q     # 16 passed
+python -m pytest test -q     # 23 passed, 1 skipped
 ```
 
 ## ROS2 启动
