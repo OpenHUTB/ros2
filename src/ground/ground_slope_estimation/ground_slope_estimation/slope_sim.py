@@ -41,6 +41,8 @@ class SlopeScanNode(Node):
         self.declare_parameter('out_dir', 'results')
         self.declare_parameter('seed', 0)
         self.declare_parameter('ransac_threshold', 0.02)
+        self.declare_parameter('publish_count', 20)
+        self.declare_parameter('publish_rate', 10.0)
 
         self.slope_deg = float(self.get_parameter('slope_deg').value)
         self.noise_std = float(self.get_parameter('noise_std').value)
@@ -49,6 +51,8 @@ class SlopeScanNode(Node):
         self.seed = int(self.get_parameter('seed').value)
         self.ransac_threshold = float(
             self.get_parameter('ransac_threshold').value)
+        self.publish_count = int(self.get_parameter('publish_count').value)
+        self.publish_rate = float(self.get_parameter('publish_rate').value)
 
         self.client = p.connect(p.DIRECT)
         if self.client < 0:
@@ -130,7 +134,7 @@ class SlopeScanNode(Node):
         message = Float64MultiArray()
         message.data = [result['slope_true'], result['slope_ls'],
                         result['slope_ransac'], result['height_ls']]
-        self.publisher.publish(message)
+        self._publish(message)
         self._write(result)
         self.get_logger().info(
             '真值 {:.2f}°，最小二乘 {:.2f}°，RANSAC {:.2f}°，'
@@ -138,6 +142,19 @@ class SlopeScanNode(Node):
                 result['slope_true'], result['slope_ls'],
                 result['slope_ransac'], result['height_ls'],
                 result['ransac_inlier_ratio']))
+
+    def _publish(self, message):
+        """按 publish_rate 连续发布 publish_count 次。
+
+        节点算完一次就退出，若只发布一次，后启动的 `ros2 topic echo`
+        基本收不到；连续发布一段时间可以把结果留在总线上。
+        """
+        if self.publish_count <= 0:
+            return
+        period = 1.0 / self.publish_rate if self.publish_rate > 0.0 else 0.1
+        for _ in range(self.publish_count):
+            self.publisher.publish(message)
+            rclpy.spin_once(self, timeout_sec=period)
 
     def _write(self, result):
         os.makedirs(self.out_dir, exist_ok=True)
