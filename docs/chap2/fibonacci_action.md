@@ -2,7 +2,7 @@
 
 本页面介绍 `fibonacci_action` 模块：一个纯粹的 ROS 2 Python 示例包，演示 **ROS 2 Action** 的核心通信模式——长任务 + 进度反馈 + 中途取消。Action 在导航路径跟踪、机械臂规划、无人机航点飞行等需要「异步执行 + 实时反馈 + 可取消」的机器人任务中广泛使用，是 ROS 2 三大通信机制（Topic / Service / Action）中最复杂的一种。
 
-选择斐波那契数列计算是因为它天然适合 Action 场景：每算出一项就可以发布一次 Feedback，任务耗时可调节（通过 `asyncio.sleep` 模拟），完成后返回完整数列作为 Result。
+选择斐波那契数列计算是因为它天然适合 Action 场景：每算出一项就可以发布一次 Feedback，任务耗时可调节（通过 `time.sleep` 模拟），完成后返回完整数列作为 Result。
 
 源码位置：[src/fibonacci_action](https://github.com/OpenHUTB/ros2/tree/master/src/fibonacci_action)
 
@@ -256,17 +256,28 @@ self._action_server = ActionServer(
     cancel_callback=self.cancel_callback,
 )
 
-# 2. 异步 execute_callback —— 中途可检查取消
-async def execute_callback(self, goal_handle):
+# 2. 同步 execute_callback —— 每轮循环检查取消
+def execute_callback(self, goal_handle):
     for i in range(1, goal_handle.request.order):
         if goal_handle.is_cancel_requested:    # <-- 检查取消
             goal_handle.canceled()
             return Fibonacci.Result()
         ...
         goal_handle.publish_feedback(feedback_msg)  # <-- 发布 Feedback
+        time.sleep(0.3)                             # 模拟耗时
 ```
 
 `MultiThreadedExecutor` + `ReentrantCallbackGroup` 的组合保证多个 Goal 可以并行处理，且 `execute_callback` 中的取消检查能及时响应。
+
+!!! warning "为什么用同步 def + time.sleep，而不是 async def + asyncio.sleep"
+    在 Humble 的 `MultiThreadedExecutor` 下，`execute_callback` 由执行器的 worker 线程直接调用，该线程中没有运行中的 asyncio 事件循环。写成 `async def` 并在其中 `await asyncio.sleep()` 会抛：
+
+    ```text
+    Error raised in execute callback: no running event loop
+    Goal state not set, assuming aborted
+    ```
+
+    目标随即被 abort（客户端收到状态码 6）。因此这里使用同步回调 + `time.sleep`；取消响应由 `cancel_callback` 在另一个 worker 线程处理，不受睡眠影响。官方 Python Action 教程的服务端同样采用同步写法。
 
 ### 客户端关键设计
 
@@ -290,7 +301,7 @@ self._send_goal_future.add_done_callback(self.goal_response_callback)  # 3. 注�
 | `chap2/ros2_pubsub_py.md`（话题 pub/sub） | Topic | Topic 只有单向数据流，没有 Goal / Result / Feedback 语义 |
 | `chap2/ros2_service_param_demo.md`（服务 + 参数） | Service + 参数 | Service 是同步调用，无法中途反馈进度，也不能安全取消 |
 | `chap2/ros2_qos_compatibility_lab.md`（QoS 实验） | Topic + QoS | 关注传输可靠性策略，不涉及 Action 状态机 |
-| `src/chap2/learning_communication`（`DoDishes.action`，C++） | Action | 同为 Action：该示例是 **C++** 实现，接口与节点分目录组织；本文档是 **Python** 实现，在 `ament_cmake` 包内同包生成自定义接口，并额外演示 `asyncio.sleep` 非阻塞执行、取消状态处理与 CLI `--feedback` |
+| `src/chap2/learning_communication`（`DoDishes.action`，C++） | Action | 同为 Action：该示例是 **C++** 实现，接口与节点分目录组织；本文档是 **Python** 实现，在 `ament_cmake` 包内同包生成自定义接口，并额外演示取消状态处理、`GoalStatus` 分支与 CLI `--feedback` |
 
 如果维护者认为 Action 示例只需要保留一个，可以改为在 `learning_communication` 中补充 Python 版本，本文档随之删除。
 
@@ -300,7 +311,9 @@ self._send_goal_future.add_done_callback(self.goal_response_callback)  # 3. 注�
 
 - 本包用 `ament_cmake` 构建（因为需要在同一个包里生成自定义 action 接口），因此不使用 `setup.py` 的 `console_scripts`；两个入口由 `CMakeLists.txt` 的 `install(PROGRAMS ... RENAME server|client)` 显式安装到 `lib/${PROJECT_NAME}/`
 - 服务端与客户端脚本首行带 `#!/usr/bin/env python3`，`ros2 run` 直接以可执行文件方式调用
-- 本文档的构建步骤按 ROS 2 Humble 编写，尚未在真实 Humble 环境完成端到端验证；首次构建请按第 3 节操作，如有报错请反馈
+- 本文档的构建步骤按 ROS 2 Humble 编写，已在 Ubuntu 22.04 + ROS 2 Humble 上验证 `colcon build --packages-select fibonacci_action` 通过（18 s 左右），`ros2 launch` 也能正常拉起服务端与客户端
+- `execute_callback` 使用同步写法，原因见第 7 节的 warning；在 `MultiThreadedExecutor` 下改用 `async def` + `asyncio.sleep` 会抛 `no running event loop`
+- 运行效果截图待补充：需要一次完整跑通后的终端截图，当前页面仅给出日志文本
 
 ---
 
