@@ -521,6 +521,8 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [PX4+ROS2+OpenCV 视觉目标追踪](./air/px4_ros2_opencv_tracking/index.md) —— 基于 PX4 Offboard 模式的 OpenCV 颜色目标追踪演示（合成图像输入）
 * [无人机机载相机视觉目标跟踪](./air/uav_camera_tracking.md) —— 神经网络感知（图像→目标像素热图）与控制网络解耦训练，与端到端策略在静止/圆周/遮挡/阵风四个场景下闭环对比
 
+* [低空起降场进离场排队与容量评估](./air/uav_vertiport_queue.md) —— 起降位占用区间建模三种排队策略（FIFO/优先级抢占/固定间隔），扫描请求率得到容量曲线与饱和点（80 架次/h），MuJoCo 闭环证明排定时刻真飞可执行
+
 * [状态识别与轨迹绘制](./air/drone_trajectory_logger.md)
 
 * [基于 ROS 2 的禁飞区（电子围栏）动态检测与安全预警系统](./air/geofence.md)
