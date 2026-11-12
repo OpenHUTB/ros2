@@ -128,7 +128,9 @@ def plot(times, positions, velocities, states, hover_target, metrics):
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
-    from matplotlib.lines import Line2D
+    # matplotlib 3.1.x 需要显式导入 Axes3D 才会注册 '3d' 投影，
+    # 否则 add_subplot(projection='3d') 会抛 Unknown projection '3d'。
+    from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
 
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 

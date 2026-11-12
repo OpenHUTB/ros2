@@ -22,7 +22,7 @@ CarlaAir/AirSim 或仓库里的 `carlair_ros_bridge` 上运行。
 | 操作系统 | Ubuntu 20.04（ROS 端）；Windows/Linux（离线仿真） |
 | ROS 发行版 | ROS Noetic（Python 3） |
 | 依赖 | rospy、geometry_msgs |
-| 离线仿真依赖 | Python 3、numpy、matplotlib |
+| 离线仿真依赖 | Python 3、numpy、matplotlib ≥ 3.1（3D 绘图依赖 mplot3d） |
 | 位姿来源 | 任意发布 `/uav/pose` 的仿真器或桥接（本实验不绑定具体仿真器） |
 
 功能包目录结构：
@@ -118,7 +118,7 @@ roslaunch uav_takeoff_hover_land main.launch
 
 ```bash
 cd <本仓库>
-python -m pip install numpy matplotlib
+python -m pip install "matplotlib>=3.1" numpy
 python src/air/uav_takeoff_hover_land/offline_sim.py
 ```
 

@@ -12,7 +12,7 @@ PX4/MAVROS 或仿真器执行。配套教程见
 | 操作系统 | Ubuntu 20.04（ROS 节点） |
 | ROS | ROS Noetic（Python 3） |
 | 依赖 | rospy、geometry_msgs |
-| 离线验证 | Windows / Linux 均可，Python 3 + numpy + matplotlib（不需要 ROS） |
+| 离线验证 | Windows / Linux 均可，Python 3 + numpy + matplotlib ≥ 3.1（3D 绘图依赖 mplot3d，不需要 ROS） |
 
 ## 运行步骤
 
@@ -41,7 +41,7 @@ roslaunch uav_takeoff_hover_land main.launch
 
 ```bash
 cd <本仓库>
-python -m pip install numpy matplotlib
+python -m pip install "matplotlib>=3.1" numpy
 python src/air/uav_takeoff_hover_land/offline_sim.py
 ```
 

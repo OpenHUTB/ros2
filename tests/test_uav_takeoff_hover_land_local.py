@@ -5,13 +5,18 @@
 A. 状态流转：IDLE -> TAKEOFF -> HOVER -> LAND -> DONE
 B. 速度限幅与悬停点偏移
 C. 工程文件：package.xml / CMakeLists.txt / main.launch / README / 文档 / 图片
+D. 离线仿真 smoke test：simulate() + compute_metrics() 不依赖绘图
+E. 3D 绘图冒烟测试（安装 matplotlib 时执行，覆盖 3.1.x 的 mplot3d 导入问题）
 
 用法: python3 tests/test_uav_takeoff_hover_land_local.py
 """
 from __future__ import annotations
 
+import importlib.util
 import os
+import shutil
 import sys
+import tempfile
 import xml.etree.ElementTree as ET
 
 PASS, FAIL = [], []
@@ -31,6 +36,11 @@ from flight_state_machine import (  # noqa: E402
     STATE_DONE, STATE_HOVER, STATE_IDLE, STATE_LAND, STATE_TAKEOFF,
     TakeoffHoverLandFSM,
 )
+
+_sim_spec = importlib.util.spec_from_file_location(
+    'uav_takeoff_hover_land_offline_sim', os.path.join(PKG, 'offline_sim.py'))
+offline_sim = importlib.util.module_from_spec(_sim_spec)
+_sim_spec.loader.exec_module(offline_sim)
 
 
 # ================================================================= A. 状态流转
@@ -144,10 +154,61 @@ def test_project_files():
         check(os.path.exists(os.path.join(ROOT, rel)), "文件存在：%s" % rel)
 
 
+# ================================================================= D. 离线仿真
+def test_offline_sim_smoke():
+    print("== D. 离线仿真 smoke test ==")
+    times, positions, velocities, states, hover_target = offline_sim.simulate()
+    metrics = offline_sim.compute_metrics(times, positions, states, hover_target)
+
+    check(len(times) > 100, "simulate() 生成了足够长的轨迹（%d 个采样点）" % len(times))
+    check(abs(metrics["takeoff_time_s"] - 4.20) < 0.1,
+          "起飞到点时间约 4.20 s（%.2f s）" % metrics["takeoff_time_s"])
+    check(abs(metrics["hover_time_measured_s"] - 5.02) < 0.1,
+          "悬停时长约 5.02 s（%.2f s）" % metrics["hover_time_measured_s"])
+    check(abs(metrics["hover_rmse_m"] - 0.038) < 0.01,
+          "悬停 RMSE 约 0.038 m（%.3f m）" % metrics["hover_rmse_m"])
+    check(abs(metrics["max_altitude_m"] - 2.0) < 0.01,
+          "最大高度约 2.000 m（%.3f m）" % metrics["max_altitude_m"])
+    check(abs(metrics["landing_time_s"] - 4.16) < 0.1,
+          "降落时间约 4.16 s（%.2f s）" % metrics["landing_time_s"])
+    check(abs(metrics["total_time_s"] - 13.38) < 0.2,
+          "总时长约 13.38 s（%.2f s）" % metrics["total_time_s"])
+    final = metrics["final_position_m"]
+    check(abs(final[0] - 1.0) < 0.05 and abs(final[1] - 0.5) < 0.05
+          and abs(final[2]) < 0.06,
+          "落地位置约 (1.000, 0.500, 0.036) m（实际 %s）" % [round(v, 3) for v in final])
+
+
+# ================================================================= E. 3D 绘图
+def test_plot_smoke():
+    print("== E. 3D 绘图冒烟测试 ==")
+    try:
+        import matplotlib  # noqa: F401
+    except ImportError:
+        check(True, "matplotlib 未安装，跳过 3D 绘图测试")
+        return
+
+    temp_dir = tempfile.mkdtemp(prefix="uav_takeoff_sim_")
+    old_output = offline_sim.OUTPUT_DIR
+    offline_sim.OUTPUT_DIR = temp_dir
+    try:
+        times, positions, velocities, states, hover_target = offline_sim.simulate()
+        metrics = offline_sim.compute_metrics(times, positions, states, hover_target)
+        offline_sim.plot(times, positions, velocities, states, hover_target, metrics)
+        files = sorted(os.listdir(temp_dir))
+        check(len(files) == 3, "plot() 生成 3 张图（实际 %s）" % files)
+        check(all(name.endswith('.png') for name in files), "输出文件均为 PNG")
+    finally:
+        offline_sim.OUTPUT_DIR = old_output
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+
 def main():
     test_state_flow()
     test_limits()
     test_project_files()
+    test_offline_sim_smoke()
+    test_plot_smoke()
     print("\n==================== 结果 ====================")
     print("通过 %d 项，失败 %d 项" % (len(PASS), len(FAIL)))
     if FAIL:
