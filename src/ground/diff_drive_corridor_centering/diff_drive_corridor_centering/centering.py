@@ -77,8 +77,11 @@ class CorridorCenteringController:
         p = self.params
 
         # 测距超时保护：超过 scan_timeout 没收到新测距时按前方受阻处理。
+        # 超时只作为临时保护：这里同步刷新时间戳，断流恢复后下一帧即可退出
+        # BLOCKED 回到巡航，不会被上一次超时时间一直锁死。
         if self._last_valid_time is not None and now - self._last_valid_time > p.scan_timeout:
             self.state = "BLOCKED"
+            self._last_valid_time = now
             return self._result(0.0, 0.0, 0.0, 0.0, d_left, d_right, d_forward)
         self._last_valid_time = now
 
