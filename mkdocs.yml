@@ -336,6 +336,7 @@ nav:
     - ROS2 差速机器人卡死检测与自动脱困: './ground/ros2_stuck_recovery/index.md'
     - 上游心跳看门狗: './ground/heartbeat_watchdog.md'
     - MuJoCo 地面无人车 SLAM 建图导航与神经网络控制: './ground/mujoco_ground_slam_nn_nav/README.md'
+    - 地面坡度估计: './ground/ground_slope_estimation.md'
 - 空域载具:
     - MuJoCo 城市屋顶光伏覆盖率测量: './air/mujoco_uav_rooftop_pv_coverage_survey.md'
     - MuJoCo 屋顶光伏覆盖率测量第二天: './air/mujoco_uav_rooftop_pv_coverage_survey_day2.md'
@@ -372,6 +373,7 @@ nav:
     - 无人机飞行轨迹类型识别与 ROS2 自动任务日志: './air/flight_pattern_recognition.md'
     - 无人机航向角 PD 稳定控制与阶跃转向仿真: './air/uav_yaw_stabilize.md'
     - 深度图端到端穿越门竞速: './air/uav_depth_gate_racing_e2e.md'
+    - 前视 CNN 行为克隆视觉导航: './air/uav_neural_perception.md'
     - 无人机深度相机神经网络避障（MuJoCo）: './air/uav_mujoco_depth_avoidance.md'
     - MuJoCo 无人机栅格激光建图与路径重规划: './air/uav_grid_navigation.md'
     - 无人机遥测异常检测与 ROS2 在线诊断: './air/telemetry_diagnostics.md'
