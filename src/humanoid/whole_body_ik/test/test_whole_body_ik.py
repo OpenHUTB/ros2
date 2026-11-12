@@ -323,6 +323,14 @@ class TestPlanarChain(unittest.TestCase):
         self.assertTrue(res.success)
 
     def test_no_null_space_for_posture(self):
+        """回归用例：2R 平面臂 + 姿态任务，主任务必须仍然收敛。
+
+        这里有一个踩过的坑：投影矩阵和步长共用同一个自适应阻尼 λ 时，
+        平面臂的 3 维位置雅可比恒奇异（z 行全 0），λ 会顶到 0.2，零空间
+        "漏"了——姿态任务把主任务拖住，误差卡在 0.02 m 下不去。
+        修法是给投影单独用 1e-6 的小阻尼（见 whole_body_ik._PROJ_DAMPING）。
+        如果以后有人把两个 λ 合并回去，这个用例会先失败。
+        """
         arm = make_planar_2r(1.0, 1.0)
         target = [1.2, 0.3, 0.0]
         q_ref = [0.0, 2.0]
