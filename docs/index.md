@@ -93,6 +93,8 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros2_qos_compatibility_lab.md)
 
+ROS 2 Action 斐波那契数列计算示例：[fibonacci_action](./fibonacci_action.md)
+
 ## 2. 人形机器人 <span id='humanoid'></span>
 * [具身人形物理仿真与平衡行走控制](./humanoid/embodied_humanoid_control.md) —— MuJoCo 双足人形：键盘遥控、激光/深度感知、参数化步态与根节点平衡控制
 * [关节 Stribeck 摩擦辨识与前馈补偿](./humanoid/joint_friction_identification.md) —— 恒速扫掠 + 网格/最小二乘辨识 Stribeck 四参数（库仑 −1.7%、静摩擦 −1.0%），前馈补偿把正弦跟踪 RMS 从 0.00703 降到 0.00310 rad（改善 55.9%）
