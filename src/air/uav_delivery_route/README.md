@@ -17,7 +17,7 @@ python main.py --no-sim        # 秒级，仅算法层
 python main.py                 # 三个 case 全跑，含 MuJoCo 闭环真飞（约 16 s 墙钟）
 python main.py --case case_farm_sparse
 python -m pytest test/ -q      # 31 项测试全过
-python tools/make_figures.py   # 从 results/*.json 生成 images/batches.png
+python tools/make_figures.py   # 从 results/*.json 生成 docs/img/air/uav_delivery_route_batches.png
 ```
 
 结果自动写入 `results/<case>_result.json`；ROS 节点入口是
@@ -96,8 +96,8 @@ launch 文件在 [launch/main.launch.py](launch/main.launch.py)，
 [test_fly_smoke.py](test/test_fly_smoke.py)（MuJoCo 小规模冒烟，墙钟 < 3 s）。
 只装 numpy/matplotlib/pyyaml/pytest 的干净环境 27 passed, 1 skipped（冒烟文件整体跳过）。
 架次划分与各架次航程对比图见
-[images/batches.png](images/batches.png)，由
-[tools/make_figures.py](tools/make_figures.py) 从 results JSON 生成。
+[uav_delivery_route_batches.png](../../docs/img/air/uav_delivery_route_batches.png)，由
+[tools/make_figures.py](tools/make_figures.py) 从 results JSON 生成（仓库内只保留这一份图）。
 
 ## Limitations
 
@@ -109,3 +109,11 @@ launch 文件在 [launch/main.launch.py](launch/main.launch.py)，
 - 闭环只复飞每个 case 的第一个架次，其余架次仍是计划层结论；
   多机协同配送、动态插单与风扰下的重规划不在本模块范围内。
 - ROS 节点按单机编排，odom 与电量话题需外部仿真或真机提供。
+
+---
+
+> 大模型使用声明：本模块的代码实现、测试用例与文档由作者在 AI 大语言模型辅助下完成，作者已逐项复核，对提交内容负责。
+
+## 大模型使用声明
+
+使用了 AI 大语言模型（WorkBuddy）辅助代码实现、测试用例编写与文档撰写，作者已逐项复核并对提交内容负责。

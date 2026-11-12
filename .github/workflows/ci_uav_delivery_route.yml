@@ -28,4 +28,4 @@ jobs:
 
       - name: Run module tests
         working-directory: src/air/uav_delivery_route
-        run: PYTHONPATH=${{ github.workspace }}/src/air python3 -m pytest test/ -q
+        run: bash tools/ci_tests.sh

@@ -9,7 +9,9 @@ import pytest
 
 # Skip the whole module when MuJoCo is unavailable, so a minimal CI image
 # (numpy/matplotlib/pyyaml/pytest only) can still run the algorithm layer.
-pytest.importorskip("mujoco")
+# exc_type=ImportError: 装了 mujoco 但加载失败（缺 DLL / 平台不兼容）也降级为 skip，
+# 而不是让整个文件 collection error。
+pytest.importorskip("mujoco", exc_type=ImportError)
 
 from uav_delivery_route.core.cases import Case, Station
 from uav_delivery_route.core.energy import EnergyModel

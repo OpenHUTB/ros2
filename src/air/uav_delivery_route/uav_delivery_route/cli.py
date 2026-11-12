@@ -23,8 +23,12 @@ _RESULTS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__fi
 
 
 def run_case(name: str, sim: bool = True, progress: bool = False,
-             cfg: RouteConfig | None = None) -> dict:
-    """Plan + check (+ closed-loop fly) one case; returns the result dict."""
+             cfg: RouteConfig | None = None, out_dir: str | None = None) -> dict:
+    """Plan + check (+ closed-loop fly) one case; returns the result dict.
+
+    ``out_dir`` 为空时写 ``results/``；指定后写到该目录，方便复跑时
+    不弄脏已提交的结果文件（结果里含机器相关的 ``wall_time_s``）。
+    """
     cfg = cfg or RouteConfig()
     case = get_case(name)
     model = EnergyModel()
@@ -44,16 +48,18 @@ def run_case(name: str, sim: bool = True, progress: bool = False,
         rep = fly_sortie(plan, 0, cfg, progress=progress)
         result["flight"] = rep.to_dict()
 
-    os.makedirs(_RESULTS_DIR, exist_ok=True)
-    path = os.path.join(_RESULTS_DIR, "%s_result.json" % name)
+    out = out_dir or _RESULTS_DIR
+    os.makedirs(out, exist_ok=True)
+    path = os.path.join(out, "%s_result.json" % name)
     with open(path, "w", encoding="utf-8") as f:
         json.dump(result, f, ensure_ascii=False, indent=2)
     print("[cli] results written to %s" % path)
     return result
 
 
-def run_all(names: List[str], sim: bool = True, progress: bool = False) -> List[dict]:
-    return [run_case(n, sim=sim, progress=progress) for n in names]
+def run_all(names: List[str], sim: bool = True, progress: bool = False,
+            out_dir: str | None = None) -> List[dict]:
+    return [run_case(n, sim=sim, progress=progress, out_dir=out_dir) for n in names]
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -63,6 +69,8 @@ def build_parser() -> argparse.ArgumentParser:
                    help="case 名（%s）或 all" % ", ".join(CASE_NAMES))
     p.add_argument("--no-sim", action="store_true", help="仅算法层（秒级，不需要 mujoco）")
     p.add_argument("--progress", action="store_true", help="打印仿真进度")
+    p.add_argument("--out-dir", default=None,
+                   help="结果输出目录（默认 results/；复跑可指向临时目录，避免改写已提交的结果）")
     return p
 
 
@@ -74,7 +82,7 @@ def main(argv=None) -> int:
         if n not in CASE_NAMES:
             print("[cli] unknown case %r, expected one of %s" % (n, ", ".join(CASE_NAMES)))
             return 2
-    results = run_all(names, sim=sim, progress=args.progress)
+    results = run_all(names, sim=sim, progress=args.progress, out_dir=args.out_dir)
 
     print()
     print("=" * 84)

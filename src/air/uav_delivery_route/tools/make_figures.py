@@ -27,7 +27,10 @@ if _PKG not in __import__("sys").path:
 from uav_delivery_route.core.cases import get_case  # noqa: E402
 
 plt.rcParams["axes.unicode_minus"] = False
-OUT_PATH = os.path.join(_PKG, "images", "batches.png")
+# 全仓库只保留一份图：docs/img/air/（文档直接引用它），避免同一张图提交两份
+_REPO = os.path.normpath(os.path.join(_PKG, "..", "..", ".."))
+OUT_PATH = os.path.join(_REPO, "docs", "img", "air",
+                        "uav_delivery_route_batches.png")
 
 
 def main(results_dir: str = os.path.join(_PKG, "results"),

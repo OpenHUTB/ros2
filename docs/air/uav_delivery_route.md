@@ -72,7 +72,8 @@ python main.py --no-sim             # 仅算法层（秒级）
 python main.py --case case_farm_heavy
 python tools/make_figures.py        # 从 results/*.json 重新生成图片
 python -m pytest test/ -q           # 31 项（含 MuJoCo 冒烟）
-bash tools/ci_tests.sh              # CI 入口：无 mujoco 时冒烟用例自动跳过
+bash tools/ci_tests.sh              # CI 入口：无 mujoco 时冒烟用例自动跳过（workflow 调用的就是它）
+python main.py --out-dir /tmp/dr_results     # 复跑时把结果写到临时目录，不弄脏已提交的 results/
 ros2 run uav_delivery_route dispatch     # 在线调度节点
 ```
 
@@ -91,3 +92,11 @@ ros2 run uav_delivery_route dispatch     # 在线调度节点
 `uav_mujoco_sim` 提供刚体底座与几何控制器；`uav_inspection_cover`（PR #802）
 解决"巡检点怎么覆盖"，本模块解决"多站点包裹怎么分批、何时换电"，两者都是
 路径规划但约束不同——前者是覆盖几何，后者是载重与电量的耦合优化。
+
+---
+
+> 大模型使用声明：本模块的代码实现、测试用例与文档由作者在 AI 大语言模型辅助下完成，作者已逐项复核，对提交内容负责。
+
+## 大模型使用声明
+
+使用了 AI 大语言模型（WorkBuddy）辅助代码实现、测试用例编写与文档撰写，作者已逐项复核并对提交内容负责。
