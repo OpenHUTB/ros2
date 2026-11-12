@@ -26,7 +26,7 @@
 ```bat
 # 下面两个路径是示例，按你的 OpenHUTB 安装位置替换（也可设 HUTB_ROOT 环境变量）
 python -m pip install %HUTB_ROOT%\PythonAPI\carla\dist\hutb-2.10.1-cp310-cp310-win_amd64.whl
-python -m pip install numpy matplotlib pyyaml pillow
+python -m pip install -r requirements.txt   # numpy / matplotlib / PyYAML / pillow
 ```
 
 ## 5. 运行

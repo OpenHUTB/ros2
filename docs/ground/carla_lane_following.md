@@ -109,8 +109,8 @@ $$
 pip install -r requirements.txt          # numpy / matplotlib / PyYAML / pillow
 # 仿真器客户端（不是 pip 包）：Windows 用 OpenHUTB 配套 hutb wheel，Linux 需自编译 libcarla
 
-# 2) 启动仿真器（示例路径，按实际安装位置替换）
-D:\hutb\CarlaUE4.exe Town10HD_Opt -windowed -carla-rpc-port=2000
+# 2) 启动仿真器（示例路径：%HUTB_ROOT% 或 ${HUTB_ROOT}，按实际安装位置替换）
+%HUTB_ROOT%\CarlaUE4.exe Town10HD_Opt -windowed -carla-rpc-port=2000
 
 # 3) 运行实验
 cd src/ground/carla_lane_following
