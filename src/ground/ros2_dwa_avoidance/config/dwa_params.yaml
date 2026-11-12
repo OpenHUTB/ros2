@@ -1,0 +1,38 @@
+dwa_avoidance:
+  ros__parameters:
+    scan_topic: /scan
+    odom_topic: /odom
+    cmd_topic: /cmd_vel
+    use_goal_pose_topic: true
+
+    # DWA sampling and kinematic limits
+    max_v: 0.80
+    max_w: 1.80
+    max_acc_v: 1.20
+    max_acc_w: 3.00
+    predict_time: 1.50
+    control_rate: 10.0
+
+    # Robot footprint and cost weights
+    robot_radius: 0.22
+    safety_margin: 0.08
+    heading_weight: 0.60
+    velocity_weight: 1.50
+    clearance_weight: 0.60
+    clearance_norm: 0.70
+    goal_tolerance: 0.25
+
+    # A* layer
+    replan_period: 1.00
+    lookahead: 1.20
+    map_half_size: 10.00
+
+    # Data validity and scan downsampling
+    data_timeout: 0.50
+    max_scan_points: 120
+
+    # Laser mounting offset in the base frame and TF ownership
+    laser_x: 0.00
+    laser_y: 0.00
+    publish_tf: true
+
