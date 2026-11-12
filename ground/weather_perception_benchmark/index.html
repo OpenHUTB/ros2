@@ -245,7 +245,7 @@
 </li>
 </ul>
 <p class="caption"><span class="caption-text">地面载具</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../../chapter/chap1/turtle_waypoint_patrol/">小海龟多航点巡航与暂停恢复</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../offline_checks/">离线测试接入 GitHub Actions</a>
@@ -670,9 +670,11 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../ros2_stuck_recovery/">ROS2 差速机器人卡死检测与自动脱困</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../heartbeat_watchdog/">上游心跳看门狗</a>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">空域载具</span></p>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_uav_rooftop_pv_coverage_survey/">MuJoCo 城市屋顶光伏覆盖率测量</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_uav_rooftop_pv_coverage_survey_day2/">MuJoCo 屋顶光伏覆盖率测量第二天</a>
@@ -947,86 +949,6 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_camera_tracking/">无人机机载相机视觉目标跟踪</a>
 </li>
-<li class="toctree-l1 current"><a class="reference internal current" href="#">恶劣雨雾天气下多传感器感知性能对比实验</a>
-<ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="#1">1. 运行环境</a>
-<ul>
-<li class="toctree-l3"><a class="reference internal" href="#11-carla">1.1 下载并启动 CARLA</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#12-python-310">1.2 安装 Python 3.10 与依赖</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#13">1.3 验证环境连通</a>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#2">2. 实验原理</a>
-<ul>
-<li class="toctree-l3"><a class="reference internal" href="#21">2.1 天气参数</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#22">2.2 感知质量指标</a>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#3">3. 代码结构</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#4">4. 运行步骤</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#5">5. 实验结果</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#6">6. 结论</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#7">7. 图像增强恢复实验</a>
-<ul>
-<li class="toctree-l3"><a class="reference internal" href="#71">7.1 增强方法</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#72">7.2 恢复率定义</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#73">7.3 增强恢复结果</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#74">7.4 分析与结论</a>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#8">8. 激光雷达感知退化评测与跨传感器对比</a>
-<ul>
-<li class="toctree-l3"><a class="reference internal" href="#81">8.1 传感器配置与采集口径</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#82">8.2 雷达指标与退化率口径</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#83">8.3 实验结果</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#84">8.4 建模口径与对照实验</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#85">8.5 分析与结论</a>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#9-">9. 相机-激光雷达融合可行性实验</a>
-<ul>
-<li class="toctree-l3"><a class="reference internal" href="#91">9.1 实验设计</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#92">9.2 融合指标</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#93">9.3 实验结果</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#94">9.4 分析与结论</a>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#10">10. 雨雾天气下的自适应感知降级策略</a>
-<ul>
-<li class="toctree-l3"><a class="reference internal" href="#101">10.1 实验设计</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#102">10.2 判据与指标</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#103">10.3 实验结果</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#104">10.4 分析与结论</a>
-</li>
-</ul>
-</li>
-</ul>
-</li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与分级制动</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
@@ -1200,7 +1122,7 @@
 <div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
 <ul class="wy-breadcrumbs">
 <li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
-<li class="breadcrumb-item">空域载具</li>
+<li class="breadcrumb-item">地面载具</li>
 <li class="breadcrumb-item active">恶劣雨雾天气下多传感器感知性能对比实验</li>
 <li class="wy-breadcrumbs-aside">
 <a href="https://github.com/OpenHUTB/ros2/edit/master/docs/ground/weather_perception_benchmark.md"> 编辑页面</a>
@@ -2280,8 +2202,8 @@ python<span class="w"> </span>main.py
 </div>
 </div><footer>
 <div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
-<a class="btn btn-neutral float-left" href="../../air/uav_camera_tracking/" title="无人机机载相机视觉目标跟踪"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
-<a class="btn btn-neutral float-right" href="../../air/mujoco_warehouse_uav_collision_braking/" title="仓储通道测距与分级制动">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+<a class="btn btn-neutral float-left" href="../carla_red_light_warning/" title="闯红灯预警（RLW）"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../weather_adaptive_perception_replay/" title="雨雾天气下自适应感知降级策略的静态帧复现">后一页 <span class="icon icon-circle-arrow-right"></span></a>
 </div>
 <hr/>
 <div role="contentinfo">
@@ -2298,8 +2220,8 @@ python<span class="w"> </span>main.py
 <span>
 <a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
 </span>
-<span><a href="../../air/uav_camera_tracking/" style="color: #fcfcfc">« 前一页</a></span>
-<span><a href="../../air/mujoco_warehouse_uav_collision_braking/" style="color: #fcfcfc">后一页 »</a></span>
+<span><a href="../carla_red_light_warning/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../weather_adaptive_perception_replay/" style="color: #fcfcfc">后一页 »</a></span>
 </span>
 </div>
 <script src="../../js/jquery-3.6.0.min.js"></script>

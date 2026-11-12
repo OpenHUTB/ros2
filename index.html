@@ -622,6 +622,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/ros2_stuck_recovery/">ROS2 差速机器人卡死检测与自动脱困</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="ground/heartbeat_watchdog/">上游心跳看门狗</a>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">空域载具</span></p>
 <ul>
@@ -898,8 +900,6 @@
 <li class="toctree-l1"><a class="reference internal" href="air/drone_trajectory_logger/">状态识别与轨迹绘制</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="air/uav_camera_tracking/">无人机机载相机视觉目标跟踪</a>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与分级制动</a>
 </li>
@@ -1465,6 +1465,7 @@
 </li>
 <li><a href="ground/torque_vectoring_yaw_control/">四轮独立驱动扭矩矢量横摆控制</a> —— 附着椭圆约束下的加权最小二乘分配 + 带前馈横摆率跟踪 + 单电机失效降级</li>
 <li><a href="ground/ros2_ekf_localization/">ROS2 差速机器人 EKF 多传感器融合定位</a> —— 轮式里程计 + IMU 航向 + 绝对位置观测的 EKF，输出 /odometry/filtered 供控制器直接使用</li>
+<li><a href="ground/heartbeat_watchdog/">上游心跳看门狗</a> —— 监视上游节点的 <code>/heartbeat</code>，超时判定失联并发布急停，与 <code>cmd_vel_guard</code> 互补</li>
 </ul>
 <h2 id="5">5. 空域载具 <span id="air_vehicle"></span></h2>
 <ul>
