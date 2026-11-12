@@ -1,0 +1,38 @@
+{
+  "os": "Windows 11 (10.0.26200)",
+  "python": "3.12.14",
+  "third_party_dependencies": "无（仅标准库；测试用 pytest，也可直接跑）",
+  "scope": "offline: test/test_diff_drive_powertrain_sizing.py 8 项 + main.py + PYTHONIOENCODING=gbk 复跑 + py_compile；不含 ROS 与模拟器",
+  "result": {
+    "tests_passed": 8,
+    "tests_failed": 0,
+    "test_command": "python test/test_diff_drive_powertrain_sizing.py",
+    "cli_outputs": ["report.json"],
+    "gbk_console_run": true,
+    "byte_compile": true,
+    "total_force_n": 36.9914,
+    "wheel_torque_nm": 1.3056,
+    "wheel_rpm": 238.732,
+    "power_per_wheel_w": 32.6395,
+    "gear_ratio": 16.7552,
+    "torque_direct_nm": 1.536,
+    "torque_direct_level": "marginal",
+    "torque_geared_nm": 0.0917,
+    "torque_geared_level": "ok",
+    "current_per_motor_a": 1.36,
+    "pass": true
+  },
+  "ci": {
+    "workflow": ".github/workflows/diff_drive_powertrain_sizing_tests.yml",
+    "jobs": [
+      "Diff drive powertrain sizing tests (ubuntu, python 3.8)",
+      "Windows smoke test (GBK stdio)"
+    ],
+    "status": "未运行（workflow 随 PR 提交，首次运行结果见 PR 的 Actions 页）"
+  },
+  "ros_validation": {
+    "checked": false,
+    "reason": "模块是纯离线核算，没有 rclpy 节点；launch 只做 ExecuteProcess 包装。colcon build / ros2 launch 需要在 Ubuntu 22.04 + Humble 上验证"
+  },
+  "independent_machine_review": false
+}

@@ -46,10 +46,39 @@ python main.py demo
 
 ```bash
 python main.py check --config scenario.json
+python main.py demo --csv results/sep.csv --plot results/separation_vs_time.png
+python main.py check --config scenario.json --csv results/sep.csv
 ```
+
+`--csv` / `--plot` 的示例输出都写进 `results/`（已进模块 `.gitignore`），直接复制命令不会
+在 `git status` 里留下生成文件。
 
 `check` 在 `status=critical` 时返回 1，`safe` / `warning` 返回 0，场景读不到或
 解析失败返回 2，便于直接接到脚本或 CI。`demo` 只要跑完就返回 0。
+
+`--csv` 写出的表头是 `time_s,uav_a,uav_b,separation_m`，每个采样时刻、每一对无人机一行。
+采样是固定步长：从公共起点按 `step_s` 采样，窗口不是步长整数倍时末尾补结束点
+（`horizon_s=1.1`、`step_s=0.4` → `0.0/0.4/0.8/1.1`，最后一格 0.3 s），冲突检测用同一套采样，
+所以表里最小的 `separation_m` 就是汇总里的 `minimum_separation_m`。`step_s` / `horizon_s`
+的零、负数、NaN、Inf 在 `parse_scenario()` 与 `separation_series()` 都会抛 `ValueError`。
+演示场景导出 486 行：
+
+```text
+time_s,uav_a,uav_b,separation_m
+0.0,uav_alpha,uav_beta,300.0
+0.0,uav_alpha,uav_delta,262.679
+0.0,uav_alpha,uav_gamma,220.454
+...
+```
+
+只有一个架次时也会写出表头（没有机对），脚本可以直接按列名读。
+
+`--plot` 用同一份 CSV 画「机间距离随时间」的曲线（Pillow 绘制，不引入 matplotlib），
+横轴秒、纵轴米，并画 30 m 告警与 10 m 临界两条参考线：
+
+![机间距离随时间变化](multi_uav_airspace_monitor/separation_vs_time.png)
+
+原有俯视空域图（`demo` 默认产物）：
 
 ![多无人机空域监测](multi_uav_airspace_monitor/demo_screenshot.png)
 
@@ -113,8 +142,8 @@ source install/setup.bash
 ros2 launch multi_uav_airspace_monitor main.launch.py
 ```
 
-ROS 2 节点在当前 Windows 开发机上未执行；离线核心、15 个单元测试和 PNG 截图
-均已实际运行。ROS 2 Humble 的启动验证需要在 Ubuntu 虚拟机中完成。
+ROS 2 节点在当前 Windows 开发机上未执行；离线核心、35 个单元测试和两张 PNG 均已实际运行。
+ROS 2 Humble 的启动验证需要在 Ubuntu 虚拟机中完成。
 
 ## 验证
 
@@ -122,10 +151,12 @@ ROS 2 节点在当前 Windows 开发机上未执行；离线核心、15 个单�
 python -m unittest discover -s tests -v
 ```
 
-15 个测试全部通过（约 0.04 s），覆盖多边形边界、高度层过滤、缓冲区、迎头冲突、
+35 个测试全部通过（约 0.2 s），覆盖多边形边界、高度层过滤、缓冲区、迎头冲突、
 平行安全航迹、时间窗内告警与窗口外更近的接近、非法 `horizon_s`、只有 warning 级
 冲突时的状态、`minimum_separation_m` 与冲突同窗口、空场景拒绝、`check` 命令的
-退出码（0/1/2），以及演示场景。
+退出码（0/1/2）、演示场景，以及逐时刻距离序列、CSV 导出与曲线绘制（固定步长与非整除
+窗口的末点、三机覆盖全部机对、`horizon_s` 截断、单机只写表头、CSV 往返与换行符、
+`step_s`/`horizon_s` 的零/负数/NaN/Inf 校验、`--csv`/`--plot`、空数据的图）。
 
 ## 已知限制
 

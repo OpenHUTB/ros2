@@ -1,0 +1,21 @@
+# ride_comfort_transmissibility 的默认参数
+# 由 launch/main.launch 载入
+
+suspension:
+  fn_hz: 1.2          # 悬架固有频率 Hz
+  damping: 0.25       # 阻尼比（必须在 (0, 0.7071) 开区间）
+
+road:
+  input_accel: 0.5    # 路面输入加速度 RMS m/s^2
+  freq_hz: 6.0        # 关心的路面激励频率 Hz
+
+check:
+  pos_tolerance: 0.02      # 峰位容差（频率比）
+  peak_tolerance: 0.05     # 峰值相对容差
+  high_freq_limit: 0.1     # r=10 时传递率上限
+  linear_tolerance: 0.02   # 输入加倍的线性容差
+
+scan:
+  low: 0.05           # 扫描下限（频率比）
+  high: 4.0           # 扫描上限
+  steps: 400          # 扫描步数

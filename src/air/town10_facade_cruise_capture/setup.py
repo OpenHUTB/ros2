@@ -25,7 +25,7 @@ setup(
     ],
     install_requires=["setuptools", "numpy>=1.21,<3", "Pillow>=9", "mujoco==3.12.0"],
     tests_require=["pytest"],
-    extras_require={"airsim": ["airsim==1.8.1"]},
+    extras_require={"test": ["pytest"], "airsim": ["airsim==1.8.1"]},
     zip_safe=False,
     entry_points={
         "console_scripts": [

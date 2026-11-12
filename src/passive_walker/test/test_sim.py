@@ -2,6 +2,7 @@
 
 import os
 import sys
+import math
 
 import pytest
 
@@ -27,6 +28,21 @@ def test_walks_downhill():
     assert info["distance_m"] > 5.0, info
     assert info["steps"] >= 20, info
     assert 0.40 < info["hub_height_m"] < 0.50, info
+
+
+def test_run_uses_requested_duration():
+    """A final partial physics step prevents run() from overshooting its duration."""
+    sim = PassiveWalker()
+    requested = sim.dt * 0.5
+    sim.run(requested)
+    assert math.isclose(sim.data.time, requested, rel_tol=1e-9, abs_tol=1e-12)
+
+
+def test_step_rejects_fractional_and_negative_counts():
+    sim = PassiveWalker()
+    for count in (-1, 1.5, float("nan")):
+        with pytest.raises(ValueError, match="non-negative integer"):
+            sim.step(count)
 
 
 if __name__ == "__main__":

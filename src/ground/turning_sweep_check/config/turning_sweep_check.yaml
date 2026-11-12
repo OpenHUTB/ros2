@@ -1,0 +1,30 @@
+# turning_sweep_check 参数默认值
+#
+# 改这里等于改模块默认行为；roslaunch 传参可以逐项覆盖。
+
+# ---- 车辆几何（米 / 弧度）----
+vehicle:
+  wheelbase: 2.70          # 轴距
+  track: 1.54              # 轮距（左右轮中心距）
+  front_overhang: 0.90     # 前悬（前轴到车头）
+  rear_overhang: 0.85      # 后悬（后轴到车尾）
+  width: 1.80              # 车宽（含后视镜时填更大值）
+  max_steer: 0.55          # 最大前轮转角（rad），0.55 约 31.5 度
+
+# ---- 转弯半径（后轴中心到转弯中心，米）----
+turning:
+  radius: 8.0
+
+# ---- 校验阈值 ----
+check:
+  channel_width: 6.0       # 通道/车道可用宽度
+  inner_clearance: 0.30    # 内侧车身到障碍物至少留多少
+  max_inner_diff: 1.00     # 内轮差上限
+
+# ---- 发布 ----
+rate:
+  publish_hz: 1.0
+
+topic:
+  report: '/turning/sweep'
+  ring: '/turning/ring'

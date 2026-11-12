@@ -1,0 +1,79 @@
+{
+  "environment": {
+    "python": "3.12",
+    "numpy": "2.x",
+    "os": "Windows 11"
+  },
+  "scenarios": [
+    {
+      "scenario": "crossing",
+      "description": "斜穿机器人前方，约 6.7 s 到原点",
+      "warning_at_s": 3.3000000000000003,
+      "collision_at_s": 5.9,
+      "warning_lead_s": 2.6,
+      "min_ttc_s": 0.0,
+      "min_distance_m": 0.0,
+      "first_track_s": 0.1,
+      "max_tracks": 1,
+      "expected_warning": true,
+      "false_positive": false,
+      "warned": true
+    },
+    {
+      "scenario": "head_on",
+      "description": "正面接近，约 6.2 s 到原点",
+      "warning_at_s": 2.7,
+      "collision_at_s": 5.5,
+      "warning_lead_s": 2.8,
+      "min_ttc_s": 0.0,
+      "min_distance_m": 0.0,
+      "first_track_s": 0.0,
+      "max_tracks": 1,
+      "expected_warning": true,
+      "false_positive": false,
+      "warned": true
+    },
+    {
+      "scenario": "parallel",
+      "description": "平行通过，横向 1.5 m，无碰撞风险",
+      "warning_at_s": null,
+      "collision_at_s": null,
+      "warning_lead_s": null,
+      "min_ttc_s": null,
+      "min_distance_m": 1.25,
+      "first_track_s": 0.0,
+      "max_tracks": 1,
+      "expected_warning": false,
+      "false_positive": false,
+      "warned": false
+    },
+    {
+      "scenario": "two",
+      "description": "正面接近 + 左侧平行通过",
+      "warning_at_s": 2.7,
+      "collision_at_s": 5.5,
+      "warning_lead_s": 2.8,
+      "min_ttc_s": 0.0,
+      "min_distance_m": 0.0,
+      "first_track_s": 0.0,
+      "max_tracks": 2,
+      "expected_warning": true,
+      "false_positive": false,
+      "warned": true
+    },
+    {
+      "scenario": "receding",
+      "description": "远离机器人，不应告警",
+      "warning_at_s": null,
+      "collision_at_s": null,
+      "warning_lead_s": null,
+      "min_ttc_s": null,
+      "min_distance_m": 1.75,
+      "first_track_s": 0.0,
+      "max_tracks": 1,
+      "expected_warning": false,
+      "false_positive": false,
+      "warned": false
+    }
+  ]
+}

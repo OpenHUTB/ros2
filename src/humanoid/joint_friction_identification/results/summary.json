@@ -1,0 +1,98 @@
+{
+  "module": "joint_friction_identification",
+  "version": "0.1.0",
+  "generated_utc": "2026-11-10T17:32:57+00:00",
+  "environment": {
+    "python": "3.12.14",
+    "numpy": "2.3.5",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "config": {
+    "inertia": 0.05,
+    "damping": 0.01,
+    "control_hz": 500.0,
+    "sweep_speeds": [
+      0.03,
+      0.05,
+      0.08,
+      0.12,
+      0.18,
+      0.25,
+      0.4,
+      0.6,
+      0.9,
+      1.2,
+      1.8,
+      2.4
+    ],
+    "sweep_time_s": 1.5,
+    "torque_noise": 0.01,
+    "sine_amplitude_rad": 0.5,
+    "sine_frequency_hz": 0.5,
+    "sine_duration_s": 6.0,
+    "seed": 0
+  },
+  "truth": {
+    "coulomb": 0.45,
+    "viscous": 0.08,
+    "static": 0.65,
+    "stribeck_velocity": 0.2
+  },
+  "identified": {
+    "coulomb": 0.4425111694191403,
+    "viscous": 0.0917117498508826,
+    "static": 0.6433798617780403,
+    "stribeck_velocity": 0.23804564895574304
+  },
+  "identification": {
+    "residual_rms": 0.006142835640419321,
+    "grid_points": 120,
+    "error_pct": {
+      "coulomb_pct": -1.6641845735243768,
+      "viscous_pct": 14.639687313603241,
+      "static_pct": -1.0184828033784195,
+      "stribeck_pct": 19.022824477871513
+    },
+    "sweeps": {
+      "speeds": [
+        0.03,
+        0.05,
+        0.08,
+        0.12,
+        0.18,
+        0.25,
+        0.4,
+        0.6,
+        0.9,
+        1.2,
+        1.8,
+        2.4
+      ],
+      "torques": [
+        0.6260988974959454,
+        0.6089391079813679,
+        0.5976682357115607,
+        0.5716113283903357,
+        0.5421572382165087,
+        0.5334169099211328,
+        0.5261070570986239,
+        0.5234282233048653,
+        0.5261844469495787,
+        0.5458415357248727,
+        0.6057919373354439,
+        0.6664144886359431
+      ]
+    }
+  },
+  "tracking": {
+    "no_compensation": {
+      "rms_error_rad": 0.007031333821453765,
+      "max_error_rad": 0.012023303161520837
+    },
+    "compensated": {
+      "rms_error_rad": 0.0031006353068271293,
+      "max_error_rad": 0.009714469778303932
+    },
+    "improvement_pct": 55.90260133338318
+  }
+}
