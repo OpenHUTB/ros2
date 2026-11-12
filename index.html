@@ -335,6 +335,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/carla_parking_lot/">停车场场景生成</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="ground/reverse_parking_planner_pytest/">reverse_parking_planner 离线回归测试（pytest）</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="ground/yolov8_target_tracking/">YOLOv8 视觉感知目标跟随</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/ros2_astar_planner/">ROS2 差速机器人栅格 A* 全局路径规划</a>
@@ -981,6 +983,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="water/usv_mujoco_nn/">水面无人艇：激光雷达建图与神经网络局部规划</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="water/usv_froude_scaling/">USV 弗劳德缩比换算与拖曳功率估算</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="water/rov_sonar_filter/">声呐数据滤波初步验证</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="water/rov_mujoco_slam_nn_nav/">ROV 水下机器人 MuJoCo 建图导航与神经网络控制</a>
@@ -1302,6 +1306,7 @@
 <li><a href="ground/mujoco_parallel_parking/">MuJoCo 侧方停车仿真</a></li>
 <li><a href="ground/mujoco_dynamic_avoidance/">MuJoCo 动态障碍局部避障仿真</a></li>
 <li><a href="ground/carla_parking_lot/">CARLA 停车场场景生成（附带不依赖 CARLA 的倒车入库规划器）</a> —— 在 CARLA 里画 6 个车位，另提供一个纯 Python 的倒车入库轨迹规划器，4 条断言可直接跑回归</li>
+<li><a href="ground/reverse_parking_planner_pytest/">reverse_parking_planner 离线回归测试接入 pytest</a> —— 把 197 项顶层检查改为 pytest 可收集入口，修复 <code>SystemExit: 0</code></li>
 <li><a href="ground/mujoco_traffic_light_stop/">MuJoCo 红绿灯启停小车仿真</a></li>
 <li><a href="ground/mujoco_car_follow/">MuJoCo 小车跟车仿真</a></li>
 <li><a href="ground/mujoco_slope_car/">MuJoCo 小车滑斜坡</a></li>
@@ -1728,6 +1733,9 @@
 </li>
 <li>
 <p><a href="water/usv_mujoco_nn/">水面无人艇：激光雷达建图与神经网络局部规划</a> —— MuJoCo 三自由度船体，射线激光雷达 + log-odds 占据栅格建图，MLP 输出局部目标点实现自主避障，封装为 ROS Noetic 节点</p>
+</li>
+<li>
+<p><a href="water/usv_froude_scaling/">USV 弗劳德缩比换算与拖曳功率估算</a> —— 弗劳德相似定模型速度、λ³ 定阻力、λ^3.5 定功率；默认 10 m 船 10 倍缩尺，模型 2.5 N 换算实船总阻力 1925 N、轴功率 17.5 kW</p>
 </li>
 <li>
 <p><a href="water/dave_underwater_sim/">DAVE 水下机器人仿真环境搭建与 REXROV/Oberon7 机械臂作业演示</a> —— 基于 Project DAVE（ROS Noetic + Gazebo 11）的 REXROV + Oberon7 机械臂水下作业仿真，附安装脚本与截图/动图</p>
