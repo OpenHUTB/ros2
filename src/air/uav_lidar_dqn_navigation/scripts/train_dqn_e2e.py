@@ -13,6 +13,7 @@
 
 import argparse
 import os
+import shutil
 import sys
 
 import numpy as np
@@ -42,12 +43,29 @@ class End2EndTrainer(DQNTrainer):
                                              seed, max_steps)
         self.agent = ImageDQNAgent(action_dim=6, extra_dim=self.EXTRA_DIM)
         self.load_checkpoint(resume)
+        self.latest_obstacle = float('inf')
+
+    def obstacle_distance(self, points):
+        return self.latest_obstacle
 
     def read_image(self):
         """取前置相机场景图，转灰度并缩放到 84x84，归一化到 0~1。"""
-        resp = self.client.simGetImages([
-            airsim.ImageRequest('front_center', airsim.ImageType.Scene, False, False)
-        ], vehicle_name=self.vehicle)[0]
+        responses = self.client.simGetImages([
+            airsim.ImageRequest('front_center', airsim.ImageType.Scene, False, False),
+            airsim.ImageRequest('front_center', airsim.ImageType.DepthPlanar, True, False),
+        ], vehicle_name=self.vehicle)
+        resp = responses[0]
+        depth = responses[1]
+        self.latest_obstacle = float('inf')
+        if depth and depth.image_data_float:
+            distances = np.asarray(depth.image_data_float, dtype=np.float32)
+            if distances.size == depth.height * depth.width:
+                frame_depth = distances.reshape(depth.height, depth.width)
+                center = frame_depth[depth.height // 3:2 * depth.height // 3,
+                                     depth.width // 3:2 * depth.width // 3]
+                valid = center[np.isfinite(center) & (center > 0.1)]
+                if valid.size:
+                    self.latest_obstacle = float(valid.min())
         if not resp or not resp.image_data_uint8:
             return np.zeros((self.IMG_SIZE, self.IMG_SIZE), dtype=np.float32)
 
@@ -123,19 +141,18 @@ class End2EndTrainer(DQNTrainer):
             # dqn_e2e.pt 永远是可部署的“当前最佳”；最后一回合另存 last
             if ep % 20 == 0:
                 self.agent.save(os.path.join(MODEL_DIR, 'dqn_e2e_last.pt'))
-            if len(successes) >= 20 and rate > best_rate:
+            if len(successes) >= 20 and (len(successes) == 20 or rate > best_rate):
                 best_rate = rate
-                self.agent.save(os.path.join(MODEL_DIR, 'dqn_e2e_best.pt'))
-                self.agent.save(os.path.join(MODEL_DIR, 'dqn_e2e.pt'))
+                best = os.path.join(MODEL_DIR, 'dqn_e2e_best.pt')
+                self.agent.save(best, include_optimizer=False)
+                shutil.copyfile(best, os.path.join(MODEL_DIR, 'dqn_e2e.pt'))
 
         self.agent.save(os.path.join(MODEL_DIR, 'dqn_e2e_last.pt'))
-        if best_rate > 0.0 and os.path.exists(
+        if os.path.exists(
                 os.path.join(MODEL_DIR, 'dqn_e2e_best.pt')):
             # 保证交付权重就是最佳权重，而不是最后一回合覆盖的结果
             best = os.path.join(MODEL_DIR, 'dqn_e2e_best.pt')
-            with open(best, 'rb') as src, open(
-                    os.path.join(MODEL_DIR, 'dqn_e2e.pt'), 'wb') as dst:
-                dst.write(src.read())
+            shutil.copyfile(best, os.path.join(MODEL_DIR, 'dqn_e2e.pt'))
         print('训练完成，最佳近 20 回合成功率 %.0f%%' % (best_rate * 100))
 
 

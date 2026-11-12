@@ -24,6 +24,18 @@ if _client_dir and _client_dir not in sys.path:
 import airsim  # noqa: E402
 
 
+def bgr_frame(response):
+    """AirSim 不同版本可能返回 BGR 或 BGRA。"""
+    img = np.frombuffer(response.image_data_uint8, dtype=np.uint8)
+    pixels = response.height * response.width
+    if img.size == pixels * 4:
+        return img.reshape(response.height, response.width, 4)[:, :, :3].copy()
+    if img.size == pixels * 3:
+        return img.reshape(response.height, response.width, 3)
+    raise ValueError('相机图像尺寸不匹配: 收到 %d 字节，期望 %d 或 %d' %
+                     (img.size, pixels * 3, pixels * 4))
+
+
 class CameraNode(object):
     def __init__(self):
         self.ip = rospy.get_param('~airsim_ip', '172.25.176.1')
@@ -53,22 +65,11 @@ class CameraNode(object):
 
                 rgb = responses[0]
                 if rgb and rgb.image_data_uint8:
-                    img = np.frombuffer(rgb.image_data_uint8, dtype=np.uint8)
-                    expected_3ch = rgb.height * rgb.width * 3
-                    expected_4ch = rgb.height * rgb.width * 4
-                    if img.size == expected_4ch:
-                        # AirSim 个别版本返回 RGBA(hw4)，截前三通道拼成 BGR
-                        frame = img.reshape(rgb.height, rgb.width, 4)[:, :, :3]
-                    elif img.size == expected_3ch:
-                        frame = img.reshape(rgb.height, rgb.width, 3)
+                    try:
+                        frame = bgr_frame(rgb)
+                    except ValueError as exc:
+                        rospy.logerr_throttle(5.0, '%s', exc)
                     else:
-                        rospy.logerr_throttle(
-                            5.0, '相机图像尺寸不匹配: 收到 %d 字节，期望 %d(RGB) '
-                            '或 %d(RGBA)；本帧跳过',
-                            img.size, expected_3ch, expected_4ch)
-                        frame = None
-
-                    if frame is not None:
                         msg = Image()
                         msg.header.stamp = rospy.Time.now()
                         msg.header.frame_id = 'camera_link'

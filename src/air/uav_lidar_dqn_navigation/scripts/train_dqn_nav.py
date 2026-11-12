@@ -191,6 +191,9 @@ class DQNTrainer(object):
         return build_state(points, st['pos'], self.goal, st['yaw'],
                            st['vel'], last_action)
 
+    def obstacle_distance(self, points):
+        return min_obstacle_distance(points, MAX_RANGE)
+
     @staticmethod
     def potential(pos, goal):
         return math.hypot(goal[0] - pos[0], goal[1] - pos[1])
@@ -226,7 +229,7 @@ class DQNTrainer(object):
             reward -= 0.03
 
             # 近障惩罚：1.2 m 内随距离线性加重，逼策略提前转向而不是贴脸直行
-            obstacle = min_obstacle_distance(points2, MAX_RANGE)
+            obstacle = self.obstacle_distance(points2)
             if obstacle < 1.2:
                 reward -= 1.2 * (1.2 - obstacle) / 1.2
 

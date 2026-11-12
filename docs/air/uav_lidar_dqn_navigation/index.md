@@ -95,7 +95,7 @@ $$
 
 实测：2.0 m/s 前进指令下位移 13.4 m，高度波动约 ±0.1 m。
 
-![键盘遥控](../../img/air/uav_lidar_dqn_navigation/gif1_teleop.gif)
+![键盘遥控](https://raw.githubusercontent.com/nanxi666521/ros2/adb5990e80b94d72f111ae45cc6be415de03ed2f/docs/img/air/uav_lidar_dqn_navigation/gif1_teleop.gif)
 
 ## 4 任务二：雷达感知 + DQN 导航
 
@@ -196,7 +196,7 @@ $$
 
 部署实测：目标 (15, 10)，从原点起飞后到达 (14.77, 9.21)，误差 0.83 m。
 
-![雷达感知与 DQN 导航](../../img/air/uav_lidar_dqn_navigation/gif2_dqn.gif)
+![雷达感知与 DQN 导航](https://raw.githubusercontent.com/nanxi666521/ros2/adb5990e80b94d72f111ae45cc6be415de03ed2f/docs/img/air/uav_lidar_dqn_navigation/gif2_dqn.gif)
 
 ### 4.6 部署安全层
 
@@ -239,7 +239,7 @@ AirSim 旋转雷达单帧只覆盖一小段方位，扫描节点先按采样位�
 | 参数 | 值 |
 | --- | --- |
 | 分辨率 | 0.05 m/格 |
-| 地图范围 | ±57 m（覆盖实测 2208×2272 @0.05 m/格，约 110.4×113.6 m） |
+| 初始地图范围 | ±50 m；gmapping 运行中可扩展网格 |
 | 粒子数 | 50 |
 | maxUrange | 39 m |
 | 更新阈值 | 0.2 m / 0.1 rad |
@@ -249,6 +249,8 @@ AirSim 旋转雷达单帧只覆盖一小段方位，扫描节点先按采样位�
 旧实验曾观察到 hector 的扫描匹配跟丢，因此目前使用 gmapping。
 2026-11-12 在 Blocks + WSL ROS Noetic 下重新运行，`map_saver` 从 `/map`
 保存的地图为 2208×2272、0.05 m/格、5472 个占用格，预览中可见连续墙体。
+`uav_map.yaml` 的原点为 (-50,-50)，保存后的边界约为 (60.4,63.6) m；
+这说明网格已从初始 ±50 m 扩展，不能用启动时的边界推算最终像素尺寸。
 旧地图的 1503 个占用格及早先描述的 5751 均不是本次结果。
 
 ### 5.4 建图航线
@@ -263,7 +265,7 @@ AirSim 旋转雷达单帧只覆盖一小段方位，扫描节点先按采样位�
 
 ![本次重新运行的 gmapping 地图，连续墙体可见](../../img/air/uav_lidar_dqn_navigation/uav_map_verified.png)
 
-![旧版 SLAM 演示录屏，需用当前配置重录](../../img/air/uav_lidar_dqn_navigation/gif3_slam.gif)
+![旧版 SLAM 演示录屏，需用当前配置重录](https://raw.githubusercontent.com/nanxi666521/ros2/adb5990e80b94d72f111ae45cc6be415de03ed2f/docs/img/air/uav_lidar_dqn_navigation/gif3_slam.gif)
 
 ## 6 任务四：图像端到端 DQN
 
@@ -277,8 +279,10 @@ AirSim 旋转雷达单帧只覆盖一小段方位，扫描节点先按采样位�
 - Dueling 头：价值 1 维 + 优势 6 维
 
 动作空间与任务 2 相同，奖励函数相同，训练流程复用同一套回合管理。端到端策略
-纯用图像与 7 维辅助量，训练回合不再读取雷达点云，避免每步无效 RPC；`--resume`
-按图像网络结构加载断点，并恢复 Adam 优化器状态与更新步数。权重与日志约定同
+用图像与 7 维辅助量决策，同次相机请求的深度图用于近障奖励；训练回合不再读取
+雷达点云。`--resume` 按图像网络结构加载断点；从本地完整的 `dqn_e2e_last.pt`
+可恢复 Adam 状态与更新步数，从半精度最佳权重续训则会重新初始化 Adam。
+权重与日志约定同
 任务 2：`dqn_e2e.pt` 为近 20 回合成功率最高的最佳权重，`dqn_e2e_best.pt`
 显式保留一份最佳，`dqn_e2e_last.pt` 为最后一回合；逐回合日志写入
 `models/train_e2e_log.csv`（含 success / collision / near_miss）。
@@ -294,11 +298,17 @@ AirSim Blocks（显式加载本模块 `config/settings.json`）与 Ubuntu 20.04 
 | (0, 12) | 1100 / 1059 | (0.48, 13.85) | 0.85 m / 1.91 m |
 
 控制节点在水平误差 1.45 m 时记录“到达目标”并持续输出悬停；由于惯性，最终稳定
-位置距目标 1.91 m。图像到控制指令的 ROS 链路与这次目标到达均已实测。此前文档中的
-“末 20 回合成功率 65%”缺少对应训练日志，不能作为当前权重的可复核训练指标；
-在不同起点和目标上复测后才能报告总体到达率。
+位置距目标 1.91 m。图像到控制指令的 ROS 链路与这次目标到达均已实测。
+这条轨迹使用续训前的原始权重；从该权重真实续训 40 回合的逐回合记录见
+`src/air/uav_lidar_dqn_navigation/models/train_e2e_log.csv`：18/40 回合到达，
+最佳连续 20 回合 12/20（第 25 回合），末 20 回合 10/20，碰撞 2 次、近失 1 次。
+交付权重为第 25 回合的最佳模型；不同场景下的部署到达率仍需另行复测。
+换用交付权重重新运行 `e2e.launch` 后，ROS 在水平误差 1.33 m 时记录到达并
+切换持续悬停；之后 110 秒仍收到图像和动作各 1100 帧，稳定位置约为
+(0.40,13.91)，距目标 (0,12) 约 1.96 m。该观测窗口从到达后开始，
+因此窗口内位移为零是预期的悬停结果。
 
-![图像端到端 DQN](../../img/air/uav_lidar_dqn_navigation/gif4_e2e.gif)
+![图像端到端 DQN](https://raw.githubusercontent.com/nanxi666521/ros2/adb5990e80b94d72f111ae45cc6be415de03ed2f/docs/img/air/uav_lidar_dqn_navigation/gif4_e2e.gif)
 视觉策略使用图像与 7 维目标、速度辅助量；到点后悬停属于部署终止条件，不参与
 到点前的 DQN 动作选择。
 
@@ -310,7 +320,7 @@ AirSim Blocks（显式加载本模块 `config/settings.json`）与 Ubuntu 20.04 
 | DQN 训练 | 末 50 / 末 20 回合成功率 94% / 100% |
 | DQN 部署 | 到达误差 0.83 m |
 | 建图 | 实机地图 2208×2272、0.05 m/格、占用格 5472 |
-| 端到端 DQN | (0,12) 实机到达，最近误差 0.85 m、110 秒终点误差 1.91 m；总体到达率待复测 |
+| 端到端 DQN | 原始权重在 (0,12) 实机到达；续训 40 回合最佳连续 20 回合成功率 60%，交付权重的多场景部署到达率待复测 |
 
 ## 8 常见问题
 

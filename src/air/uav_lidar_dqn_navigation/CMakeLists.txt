@@ -43,6 +43,7 @@ if(CATKIN_ENABLE_TESTING)
   catkin_add_nosetests(test/test_lidar_features.py)
   catkin_add_nosetests(test/test_safety_shield.py)
   catkin_add_nosetests(test/test_eval_policy.py)
+  catkin_add_nosetests(test/test_e2e_training.py)
 endif()
 
 install(DIRECTORY launch config models maps

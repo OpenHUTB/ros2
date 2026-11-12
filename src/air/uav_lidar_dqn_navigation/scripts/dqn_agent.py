@@ -218,15 +218,20 @@ class ImageDQNAgent(object):
             self.target.load_state_dict(self.online.state_dict())
         return float(loss.item())
 
-    def save(self, path):
-        torch.save({
+    def save(self, path, include_optimizer=True):
+        model = self.online.state_dict()
+        if not include_optimizer:
+            model = {name: value.half() if value.is_floating_point() else value
+                     for name, value in model.items()}
+        checkpoint = {
             'action_dim': self.action_dim,
-            'model': self.online.state_dict(),
-            # 续训需要优化器动量与步数，否则 Adam 状态归零
-            'optimizer': self.optimizer.state_dict(),
+            'model': model,
             'steps': self.steps,
             'mode': 'e2e',
-        }, path)
+        }
+        if include_optimizer:
+            checkpoint['optimizer'] = self.optimizer.state_dict()
+        torch.save(checkpoint, path)
 
     def load(self, path):
         ckpt = torch.load(path, map_location=self.device)
