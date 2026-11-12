@@ -440,22 +440,26 @@
 <li class="toctree-l2"><a class="reference internal" href="#_1">运行效果</a>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#_2">结果</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#_3">能耗分解</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_3">车辆模型</a>
+</ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_4">速度曲线</a>
+<li class="toctree-l2"><a class="reference internal" href="#_4">车辆模型</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_5">停车控制</a>
+<li class="toctree-l2"><a class="reference internal" href="#_5">速度曲线</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_6">停车控制</a>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#atp">ATP 超速监督</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_6">代码结构</a>
+<li class="toctree-l2"><a class="reference internal" href="#_7">代码结构</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_7">运行步骤</a>
+<li class="toctree-l2"><a class="reference internal" href="#_8">运行步骤</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_8">参数</a>
+<li class="toctree-l2"><a class="reference internal" href="#_9">参数</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_9">已知限制</a>
+<li class="toctree-l2"><a class="reference internal" href="#_10">已知限制</a>
 </li>
 </ul>
 </li>
@@ -948,7 +952,7 @@
 <td>147.2 s</td>
 <td>116.4 km/h</td>
 <td>+0.02 m</td>
-<td>58.2 kWh</td>
+<td>58.4 kWh</td>
 <td>0</td>
 <td>0 s</td>
 </tr>
@@ -975,7 +979,63 @@
 <p>对照组的意义：只给出"停准了"的数字，说明不了是速度曲线起了作用还是线路本来就宽裕。
 把制动点推迟到距离不足的位置，ATP 会介入施加紧急制动，但仍然停不住——这才是曲线
 真正在防的东西。</p>
-<h2 id="_3">车辆模型</h2>
+<h3 id="_3">能耗分解</h3>
+<p>离线运行还会写出 <code>energy_breakdown.csv</code> / <code>energy_breakdown.md</code>，按轨迹逐段
+积分以下物理功：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>reported_traction_energy_kwh</code></td>
+<td>仿真主循环报告的牵引能耗</td>
+</tr>
+<tr>
+<td><code>traction_work_kwh</code></td>
+<td>按需求牵引力与 <code>v·dt</code> 独立积分的结果</td>
+</tr>
+<tr>
+<td><code>traction_limit_shortfall_kwh</code></td>
+<td>需求力超过可用牵引力的积分缺口</td>
+</tr>
+<tr>
+<td><code>retarding_work_kwh</code></td>
+<td>未回收的制动/阻滞机械功</td>
+</tr>
+<tr>
+<td><code>net_inertial_work_kwh</code></td>
+<td>净惯性功（加速减减速）</td>
+</tr>
+<tr>
+<td><code>acceleration_work_kwh</code> / <code>deceleration_work_kwh</code></td>
+<td>正/负惯性功</td>
+</tr>
+<tr>
+<td><code>resistance_work_kwh</code></td>
+<td>Davis 基本阻力功</td>
+</tr>
+<tr>
+<td><code>grade_work_kwh</code></td>
+<td>坡道功，上坡为正、下坡为负</td>
+</tr>
+<tr>
+<td><code>endpoint_kinetic_energy_kwh</code></td>
+<td>结束时剩余动能</td>
+</tr>
+</tbody>
+</table>
+<p>该分解不改动力学，只解释已有能耗。<code>SimResult</code> 记录实际使用的车辆 <code>spec</code> 与
+<code>dt</code>，所以默认调用不会误用参数。各项满足：</p>
+<div class="highlight"><pre><span></span><code>W_traction - W_retarding
+  = W_net_inertial + W_resistance + W_grade - W_traction_shortfall
+</code></pre></div>
+<p>三组停车场景加速与减速功近似相等，是起止动能均为零的守恒结果；末端动能字段
+因此为 0，当前主要用于后续扩展到未完全停车场景。</p>
+<h2 id="_4">车辆模型</h2>
 <p>只算纵向。整车质量 $m$、回转质量系数 $\gamma$ 把轮对转动惯量折算进平动质量：</p>
 <p>
 <script type="math/tex; mode=display">
@@ -999,7 +1059,7 @@ R(v) = a + b v + c v^2
 Davis 系数 1500 N / 20 N·s·m⁻¹ / 6 N·s²·m⁻²。</p>
 <p>制动力不是瞬间建立的，执行机构用一阶滞后（时间常数 0.8 s）模拟空走时间和力上升过程。
 不做这个滞后，停车误差会小到不真实，规划时留的余量也看不出作用。</p>
-<h2 id="_4">速度曲线</h2>
+<h2 id="_5">速度曲线</h2>
 <p>曲线的构造分两步，顺序不能反。</p>
 <p><strong>第一步：反向推包络。</strong> 从停车点往回走，对每个位置算出"以规划减速度还能刹住的最大速度"，
 再与静态限速取小：</p>
@@ -1027,7 +1087,7 @@ v_{\text{ref}}(x+\Delta x) = \min\left(v_{\text{env}}(x+\Delta x),\ \sqrt{v_{\te
 （它是上限，不是轨迹），实际速度仍然受牵引能力约束。</p>
 <p><strong>规划减速度要打折。</strong> 规划用 0.8 m/s²，实际常用制动是 1.0 m/s²。差的那 0.2 留给
 制动力上升时间和控制周期滞后。这个余量不是随手取的经验系数。</p>
-<h2 id="_5">停车控制</h2>
+<h2 id="_6">停车控制</h2>
 <p>站台前最后 40 m、速度低于 0.8 m/s 时，从速度跟踪切到位置闭环：</p>
 <p>
 <script type="math/tex; mode=display">
@@ -1079,7 +1139,7 @@ v_{\text{target}} = \min\left(v_{\text{ref}}(x+\delta),\ \sqrt{2 a_{\text{plan}}
 <p>晚制动场景里，人工驾驶不理会曲线，跑到距站 520 m 才踩制动。从 133 km/h 刹停实际
 需要约 660 m，ATP 很快就检测到速度超过允许值并施加紧急制动，但已经来不及，最终
 冲出站台 76.78 m。</p>
-<h2 id="_6">代码结构</h2>
+<h2 id="_7">代码结构</h2>
 <div class="highlight"><pre><span></span><code>src/ground/train_ato_stop/
 ├── train_ato_stop/
 │   ├── train.py       # 车辆参数、牵引力、阻力、坡道力
@@ -1094,13 +1154,13 @@ v_{\text{target}} = \min\left(v_{\text{ref}}(x+\delta),\ \sqrt{2 a_{\text{plan}}
 ├── launch/main.launch.py
 ├── config/train_ato.yaml
 ├── rviz/train_ato_stop.rviz
-└── tests/test_train_ato.py    # 22 项
+└── tests/                     # test_train_ato.py + test_energy.py，共 28 项
 </code></pre></div>
-<h2 id="_7">运行步骤</h2>
+<h2 id="_8">运行步骤</h2>
 <p>离线模式（不需要 ROS，也不需要 numpy / matplotlib）：</p>
 <div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>src/ground/train_ato_stop
 python3<span class="w"> </span>-m<span class="w"> </span>train_ato_stop.main<span class="w"> </span>--offline<span class="w"> </span>--output<span class="w"> </span>results
-python3<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>tests<span class="w"> </span>-v<span class="w">        </span><span class="c1"># 22 项</span>
+python3<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>tests<span class="w"> </span>-v<span class="w">        </span><span class="c1"># 28 项</span>
 </code></pre></div>
 <p>ROS 2 模式：</p>
 <div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/ros2_ws/src
@@ -1111,7 +1171,7 @@ ros2<span class="w"> </span>launch<span class="w"> </span>train_ato_stop<span cl
 <span class="c1"># 换场景</span>
 ros2<span class="w"> </span>launch<span class="w"> </span>train_ato_stop<span class="w"> </span>main.launch.py<span class="w"> </span>scenario:<span class="o">=</span>grade
 </code></pre></div>
-<h2 id="_8">参数</h2>
+<h2 id="_9">参数</h2>
 <table>
 <thead>
 <tr>
@@ -1145,7 +1205,7 @@ ros2<span class="w"> </span>launch<span class="w"> </span>train_ato_stop<span cl
 </table>
 <p>ATO 内部控制参数（<code>AtoConfig</code>）：规划减速度 0.8 m/s²、速度跟踪增益 1.2、限速裕量
 2 km/h、停车容差 0.3 m、蠕动段增益 1.2 / 阻尼 1.6。</p>
-<h2 id="_9">已知限制</h2>
+<h2 id="_10">已知限制</h2>
 <ul>
 <li>只做单质点纵向运动，没有建模车钩力与纵向冲动的传递，多编组在长大下坡上的
   车钩压缩问题没有覆盖；</li>
