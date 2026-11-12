@@ -30,13 +30,13 @@
 | `W` / `S` | 前进 / 后退 | `linear.x = ±horiz_speed` |
 | `A` / `D` | 左移 / 右移 | `linear.y = ±horiz_speed` |
 | `R` / `F` | 上升 / 下降 | `linear.z = ±vert_speed` |
-| `Q` / `E` | 右转 / 左转 | `angular.z = ±yaw_rate` |
+| `Q` / `E` | 左转 / 右转 | `angular.z = ±yaw_rate` |
 | 组合键（如 `W`+`A`、`W`+`Q`） | 斜向 / 边走边转 | 各轴分量叠加 |
 | `1` / `2` / `3` | 技能宏：升到 1.5 m / 原地转 360° / 前进 3 m | 基于 `/uav/odom` 闭环，结束回悬停 |
 | 松开 | 悬停 | 按 `accel_*` 斜坡回零 |
 | `ESC` / `Ctrl-C` | 退出 | 先补发一条零速 |
 
-`Q`/`E` 的方向遵循 AirSim 机体系 `yaw_rate` 约定（`Q=+yaw_rate` 机头右转）。
+`Q`/`E` 的方向遵循 ROS REP-103 约定（`Q=+angular.z` 机头逆时针左转，`E=-angular.z` 顺时针右转）。
 
 三点补充：
 

@@ -8,7 +8,7 @@
 W / S   前进 / 后退      forward_speed m/s
 A / D   左移 / 右移      side_speed    m/s
 R / F   上升 / 下降      vert_speed    m/s
-Q / E   右转 / 左转      yaw_rate      rad/s
+Q / E   左转 / 右转      yaw_rate      rad/s
 Ctrl-C             退出
 ```
 
