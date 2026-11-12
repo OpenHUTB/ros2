@@ -1,0 +1,57 @@
+{
+  "scenes": {
+    "downtown": {
+      "path_found": true,
+      "waypoints": 2,
+      "length_m": 120.0,
+      "straight_line_m": 120.0,
+      "detour_ratio": 1.0,
+      "min_clearance_m": 4.229,
+      "plan_ms": 15.35
+    },
+    "campus": {
+      "path_found": true,
+      "waypoints": 8,
+      "length_m": 133.032,
+      "straight_line_m": 80.0,
+      "detour_ratio": 1.663,
+      "min_clearance_m": 18.226,
+      "plan_ms": 358.12
+    },
+    "construction": {
+      "path_found": true,
+      "waypoints": 5,
+      "length_m": 140.941,
+      "straight_line_m": 140.0,
+      "detour_ratio": 1.007,
+      "min_clearance_m": 1.708,
+      "plan_ms": 282.26
+    }
+  },
+  "planner_source": "GridPlanner",
+  "dwa_downtown": {
+    "scene": "downtown",
+    "source": "DWAPlanner",
+    "done": true,
+    "start_goal_distance_m": 40.0,
+    "final_distance_m": 2.939,
+    "collisions": 0,
+    "red_light_violations": 0,
+    "pedestrians_hit": 0,
+    "off_road_time": 0.0,
+    "seconds": 7.1
+  },
+  "dwa_pool": {
+    "scene": "downtown",
+    "source": "DWAPlanner",
+    "done": true,
+    "start_goal_distance_m": 40.0,
+    "final_distance_m": 2.939,
+    "collisions": 0,
+    "red_light_violations": 0,
+    "pedestrians_hit": 0,
+    "off_road_time": 0.0,
+    "seconds": 7.1
+  },
+  "generated": "2026-11-10T21:56:49"
+}
