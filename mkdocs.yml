@@ -69,6 +69,7 @@ nav:
     - 5. 机器人感知:
         - 章节首页: './chapter/chap5.md'
         - 行人隐私脱敏视觉检测节点: 'privacy_mask/README.md'
+        - 基于激光雷达扫描的神经网络障碍物分类: './chapter/chap5/lidar_obstacle_nn.md'
     - 6. 机器人 SLAM 与自主导航: './chapter/chap6.md'
     - 7. 机械臂控制: './chapter/chap7.md'
     - 8. ROS 机器人综合应用:
@@ -77,7 +78,9 @@ nav:
         - 二连杆机械臂笛卡尔阻抗力控: './chapter/two_link_impedance_control.md'
         - MuJoCo 双自由度机械臂画正方形: './chapter/mujoco_two_dof_arm_square.md'
         - MuJoCo 二连杆机械臂 IK 画圆: './chapter/mujoco_arm_ik.md'
-    - 9. ROS 2: './chapter/chap9.md'
+    - 9. ROS 2:
+        - 章节首页: './chapter/chap9.md'
+        - Gazebo 仿真相机与图像话题验证: './chapter/chap9/gazebo_camera_sim.md'
     - 10. Turtlebot3 Gazebo键盘控制: 'chapter/turtlebot3_gazebo_control.md'
 
 - 人形机器人:
