@@ -1207,8 +1207,9 @@ V = 8 d_x d_y d_z
 <thead>
 <tr>
 <th style="text-align: left;">控制动作</th>
-<th style="text-align: left;">核心推荐按键</th>
-<th style="text-align: left;">数字键/小键盘映射</th>
+<th style="text-align: left;">字母键</th>
+<th style="text-align: left;">方向键</th>
+<th style="text-align: left;">数字键/小键盘</th>
 <th style="text-align: left;">作用物理自由度</th>
 <th style="text-align: left;">物理响应说明</th>
 </tr>
@@ -1216,55 +1217,71 @@ V = 8 d_x d_y d_z
 <tbody>
 <tr>
 <td style="text-align: left;"><strong>前进 / 后退</strong></td>
-<td style="text-align: left;"><strong><code>↑</code> / <code>↓</code></strong></td>
 <td style="text-align: left;"><code>W</code> / <code>S</code></td>
+<td style="text-align: left;"><code>↑</code> / <code>↓</code></td>
+<td style="text-align: left;">—</td>
 <td style="text-align: left;">
 <script type="math/tex">X</script> 轴线速度 (<script type="math/tex">u</script>)</td>
 <td style="text-align: left;">驱动水平主推进器产生纵向位移</td>
 </tr>
 <tr>
 <td style="text-align: left;"><strong>原地左转 / 右转</strong></td>
-<td style="text-align: left;"><strong><code>←</code> / <code>→</code></strong></td>
-<td style="text-align: left;"><code>4</code> / <code>6</code> (或 <code>J</code> / <code>L</code>)</td>
+<td style="text-align: left;"><code>J</code> / <code>L</code></td>
+<td style="text-align: left;"><code>←</code> / <code>→</code></td>
+<td style="text-align: left;"><code>4</code> / <code>6</code></td>
 <td style="text-align: left;">
 <script type="math/tex">Z</script> 轴角速度 (<script type="math/tex">r</script>)</td>
 <td style="text-align: left;">偏航转向力矩，旋转调整艏向角</td>
 </tr>
 <tr>
 <td style="text-align: left;"><strong>垂直上浮 / 下潜</strong></td>
-<td style="text-align: left;"><strong><code>8</code> / <code>2</code></strong></td>
 <td style="text-align: left;"><code>Q</code> / <code>E</code></td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;"><code>8</code> / <code>2</code></td>
 <td style="text-align: left;">
 <script type="math/tex">Z</script> 轴线速度 (<script type="math/tex">w</script>)</td>
 <td style="text-align: left;">垂直推进器推力，平滑调节巡航深度</td>
 </tr>
 <tr>
 <td style="text-align: left;"><strong>左横移 / 右横移</strong></td>
-<td style="text-align: left;"><strong><code>7</code> / <code>9</code></strong></td>
 <td style="text-align: left;"><code>A</code> / <code>D</code></td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;"><code>7</code> / <code>9</code></td>
 <td style="text-align: left;">
 <script type="math/tex">Y</script> 轴线速度 (<script type="math/tex">v</script>)</td>
 <td style="text-align: left;">侧向推进器推力，实现水下横向平移</td>
 </tr>
 <tr>
-<td style="text-align: left;"><strong>俯仰角调节</strong></td>
-<td style="text-align: left;"><strong><code>1</code> / <code>3</code></strong></td>
+<td style="text-align: left;"><strong>俯仰调节（低头 / 抬头）</strong></td>
 <td style="text-align: left;"><code>I</code> / <code>K</code></td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;"><code>1</code> / <code>3</code></td>
 <td style="text-align: left;">
 <script type="math/tex">Y</script> 轴角速度 (<script type="math/tex">q</script>)</td>
-<td style="text-align: left;">纵摇俯仰力矩，调整机身抬头与低头倾角</td>
+<td style="text-align: left;">纵摇俯仰力矩，调整机身倾角</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>横滚调节（左 / 右）</strong></td>
+<td style="text-align: left;"><code>U</code> / <code>O</code></td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">
+<script type="math/tex">X</script> 轴角速度 (<script type="math/tex">p</script>)</td>
+<td style="text-align: left;">横滚力矩，用于滚转姿态修正</td>
 </tr>
 <tr>
 <td style="text-align: left;"><strong>急停悬停</strong></td>
-<td style="text-align: left;"><strong><code>空格</code> / <code>5</code> / <code>0</code></strong></td>
-<td style="text-align: left;"><code>空格</code></td>
+<td style="text-align: left;"><code>空格</code> / <code>0</code> / <code>5</code></td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;"><code>5</code></td>
 <td style="text-align: left;">全部 6 自由度</td>
-<td style="text-align: left;">立即将所有执行推力清零并锁定当前深度</td>
+<td style="text-align: left;">推力与角速度清零并锁定当前深度，日志仅在状态切换时打印一次</td>
 </tr>
 <tr>
 <td style="text-align: left;"><strong>推力比例调节</strong></td>
-<td style="text-align: left;"><strong><code>+</code> / <code>-</code></strong></td>
 <td style="text-align: left;"><code>+</code> / <code>-</code></td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">—</td>
 <td style="text-align: left;">控制增益缩放</td>
 <td style="text-align: left;">动态增加或减小单次操作推力倍率</td>
 </tr>
