@@ -4,7 +4,7 @@
   <version>0.1.0</version>
   <description>UAV power-line inspection viewpoint planner and offline preview.</description>
   <maintainer email="xxbzy727749@users.noreply.github.com">xxbzy727749</maintainer>
-  <license>MIT</license>
+  <license>Apache-2.0</license>
   <buildtool_depend>ament_python</buildtool_depend>
   <exec_depend>python3</exec_depend>
   <test_depend>python3-pytest</test_depend>
