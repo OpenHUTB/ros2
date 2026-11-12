@@ -48,6 +48,12 @@ ros2 service call /estop_latch/reset std_srvs/srv/Trigger
 ros2 launch estop_latch main.launch.py release_hold_time:=3.0
 ```
 
+上游是周期发布（如 `heartbeat_watchdog`）时可开启链路监视：
+
+```bash
+ros2 launch estop_latch main.launch.py input_timeout:=1.0
+```
+
 ## 测试
 
 ```bash
