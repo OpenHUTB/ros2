@@ -141,6 +141,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [肌肉驱动的下肢关节与步态](./musculoskeletal/muscle_leg_gait.md)
 * [膝关节肌肉骨骼仿真与轨迹跟踪](./musculoskeletal/knee_tracking.md)
 * [机械臂手眼标定仿真](./humanoid/hand_eye_calibration.md) 
+* [给定黑箱关节轨迹，反推肌肉参数](./musculoskeletal/msk_muscle_ident.md)
 
 ## 4. 地面载具  <span id='ground_vehicle'></span>
 * [离线测试接入 GitHub Actions](./ground/offline_checks.md) —— 6 个零依赖离线测试接入 CI，分别通过 208 / 270 / 242 / 41 / 271 / 204 项
@@ -469,6 +470,8 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 
 * [无人机桨故障健康度估计](./air/uav_rotor_fault_detector_nn.md) —— 用机载 IMU 与控制器指令（13 维特征）经 1D-CNN+GRU 实时回归四桨剩余推力权限，单桨完全失效 0.10 s 检出、误报率 0，同时提供 ROS2 节点与在线估计接口
 
+* [无人机桨故障下的神经容错控制](./air/uav_neural_fault_tolerant_control.md) —— 几何控制器给出期望合推力与力矩，加权最小二乘按健康度重新分配到四桨（桨彻底失效时主动放弃偏航），再用 5252 参数的 MLP 学分配残差；12 次对比飞行里把跟踪误差降到 0.188 m（相对加权分配降 29%）而生存率不变
+
 * [无人机编队飞行](./air/uav_formation_flight.md) —— 长机按航点巡航、僚机保持队形（一字/纵队/三角可动态切换），三架共用一条 AirSim RPC，依次起飞、低空展开后进入任务
 * [移动地面目标的后方等距跟随](./air/uav_moving_target_follow.md) —— 解析截获预测 + standoff 参考生成 + 偏移方向限速，MuJoCo 真飞跟随误差 0.1~4.6 m
 * [神经安全过滤器](./air/uav_neural_safety_filter.md)
@@ -607,6 +610,8 @@ ___
 ## 8. 机械臂操作 <span id='manipulation'></span>
 
 * [MuJoCo 单臂抓取与 π0 推理接口复现（CPU 演示）](./manipulation/pi0_mujoco_grasp.md) —— 基于 MuJoCo 的单臂抓取/放置仿真，含 π0 观测→动作块接口（CPU 策略替身）
+
+* [ROS2 话题桥接（二连杆机械臂肌肉骨骼仿真）](./muscle_arm_ros2_bridge.md)
 
 ## 参考文献
 * [MuJoCo 失落公园无人机端到端视觉转向](./air/mujoco_abandoned_park_uav_visual_steering.md)
