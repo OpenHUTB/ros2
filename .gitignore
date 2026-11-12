@@ -126,3 +126,9 @@ desktop.ini
 # 文档引用的是 docs/img/air/uav_camera_tracking/ 下的稳定副本，
 # results/ 只保留指标 CSV（compare_summary.csv 仍入库）。
 src/air/uav_camera_tracking/results/*.png
+
+# uav_fault_e2e_thrust_policy 的三个策略权重（合计约 700 KB）必须入库，
+# 否则 neural 模式一启动就 FileNotFoundError；DAgger 数据集约 6 MB 不入库，
+# 用 `python main.py --gen-data` 现场生成（约 1 分钟）。
+!src/air/uav_fault_e2e_thrust_policy/results/*.pt
+!src/air/uav_fault_e2e_thrust_policy/results/*.json
