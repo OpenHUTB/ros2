@@ -138,7 +138,7 @@ src/
 
 需要说明包围盒的口径：`/humanoid_reachability/reachable_bounds` 与 MarkerArray 使用的是**占用体素的外沿**（体素中心 ± 半个体素，即 ±0.015 m），不是采样点的原始极值。因此左臂 y 上限为 0.900 m，比“肩点 0.20 m + 最大伸展半径 0.680 m = 0.880 m”多出约半个体素；x 上限 0.690 m 同理。这是体素统计的离散外扩，与最大伸展半径并不矛盾。
 
-![双臂末端可达域分析动图](../../img/humanoid/humanoid_reachability/reachability_demo.gif)
+![双臂末端可达域分析动图](../img/humanoid/humanoid_reachability/reachability_demo.gif)
 
 动图中左右臂各占一个面板：青绿色为左臂可达域体素壳、橙色为右臂，灰色为躯干/骨盆/下肢静态参考骨架与头部线框球，白色为当前演示姿态的双臂骨架，黄色为关节球，青色/橙色曲线为末端轨迹。
 
