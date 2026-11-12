@@ -30,13 +30,13 @@ ROS 2 Humble 的 AirSim 磁力计桥接。模块把 AirSim 多旋翼磁力计数
 ```bash
 source /opt/ros/humble/setup.bash
 mkdir -p ~/hutb_ws/src
-ln -s /path/to/ros2/src/air/airsim_ros2_magnetometer \
+ln -sfn ~/ros2/src/air/airsim_ros2_magnetometer \
   ~/hutb_ws/src/airsim_ros2_magnetometer
+python3 -m pip install -r \
+  ~/hutb_ws/src/airsim_ros2_magnetometer/requirements.txt
 cd ~/hutb_ws
 colcon build --symlink-install --packages-select airsim_ros2_magnetometer
 source install/setup.bash
-python3 -m pip install -r \
-  src/air/airsim_ros2_magnetometer/requirements.txt
 ```
 
 ## 运行
@@ -64,8 +64,9 @@ ros2 topic echo /uav/magnetometer --once
 ## 测试
 
 ```bash
-python3 -m pytest src/air/airsim_ros2_magnetometer/test -q
+python3 -m pytest ~/hutb_ws/src/airsim_ros2_magnetometer/test -q
 colcon test --packages-select airsim_ros2_magnetometer
+colcon test-result --verbose
 ```
 
 测试覆盖 FRD→FLU、尺度换算、协方差、非法样本、后台阻塞连接和启动检查。
