@@ -152,6 +152,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [肌肉驱动的下肢关节与步态](./musculoskeletal/muscle_leg_gait.md)
 * [膝关节肌肉骨骼仿真与轨迹跟踪](./musculoskeletal/knee_tracking.md)
 * [机械臂手眼标定仿真](./humanoid/hand_eye_calibration.md) 
+* [人形上下台阶步态仿真：ZMP 预瞄控制与台阶参数扫描](./humanoid/humanoid_stair_zmp_preview.md)
 * [给定黑箱关节轨迹，反推肌肉参数](./musculoskeletal/msk_muscle_ident.md)
 
 ## 4. 地面载具  <span id='ground_vehicle'></span>
