@@ -22,7 +22,7 @@ def generate_launch_description():
     )
     simulator = Node(
         package="vehicle_gradeability_check",
-        executable="gradeability_demo_sim",
+        executable="main_sim",
         name="vehicle_gradeability_demo_sim",
         output="screen",
         parameters=[
@@ -36,7 +36,7 @@ def generate_launch_description():
     )
     checker = Node(
         package="vehicle_gradeability_check",
-        executable="gradeability_check",
+        executable="main_check",
         name="vehicle_gradeability_check",
         output="screen",
         parameters=[config],
