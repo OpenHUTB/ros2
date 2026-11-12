@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'src/air/carlair_ros_bridge/**'
+      - 'src/air/uav_bc_bench/**'
       - 'src/air/uav_landing_monitor/**'
       - 'src/air/uav_keyboard_control/**'
       - 'src/air/uav_e2e_rl/**'
@@ -11,6 +12,7 @@ on:
   pull_request:
     paths:
       - 'src/air/carlair_ros_bridge/**'
+      - 'src/air/uav_bc_bench/**'
       - 'src/air/uav_landing_monitor/**'
       - 'src/air/uav_keyboard_control/**'
       - 'src/air/uav_e2e_rl/**'
@@ -30,7 +32,7 @@ jobs:
           python-version: '3.8'
 
       - name: Install test dependencies
-        run: python3 -m pip install --upgrade pip numpy pyyaml
+        run: python3 -m pip install --upgrade pip numpy pyyaml pytest
 
       - name: Run bridge tests
         run: |
@@ -55,6 +57,14 @@ jobs:
 
       - name: Run uav_e2e_rl tests
         run: python3 src/air/uav_e2e_rl/test/test_e2e_logic_local.py
+
+      - name: Run keyboard control tests
+        run: |
+          python3 tests/test_keyboard_local.py
+          python3 -m unittest discover -s src/air/uav_keyboard_control/tests -v
+
+      - name: Run uav_bc_bench tests
+        run: python3 -m pytest src/air/uav_bc_bench/test -q
 
       - name: Byte-compile air scripts
         run: |
