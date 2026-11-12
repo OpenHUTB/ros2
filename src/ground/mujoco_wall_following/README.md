@@ -66,15 +66,20 @@ ros2 launch mujoco_wall_following main.launch.py headless:=true # 无头模式
 - 有效贴墙段侧距：均值 `0.238 m`、std `0.055 m`、最小 `0.151 m`；
 - 最小侧方墙距 `0.151 m`，最小前向距 `0.373 m`，闭环过程未接触墙壁。
 
-## 演示 GIF 复现
+## 演示 GIF
 
-文档站 GIF 由 `test/record_demo_gif.py` 离屏渲染生成，不是另外录屏。无头环境用 EGL 软件渲染即可，在包目录执行：
+`docs/img/ground/mujoco_wall_following_demo.gif` 是 MuJoCo viewer 窗口的实际运行录屏（Peek 录制）：`1244×702`、`310` 帧、每帧 `100 ms`（约 `31 s`）、无限循环，文件 `511,620` 字节。
+
+需要重新生成时可任选一条：
+
+1. **录 viewer 窗口**：在包目录 `python3 main.py` 打开交互窗口，用 Peek 等工具录窗口区域；
+2. **无头离屏渲染**：无头环境用 EGL 软件渲染即可
 
 ```bash
-python3 test/record_demo_gif.py
+MUJOCO_GL=egl python3 test/record_demo_gif.py
 ```
 
-脚本复用 `main.py` 的起点、航点、走廊、贴墙参数与控制律，输出到 `docs/img/ground/mujoco_wall_following_demo.gif`。
+脚本复用 `main.py` 的起点、航点、走廊、贴墙参数与控制律，默认输出到 `docs/img/ground/mujoco_wall_following_demo.gif`。离屏参数为 `960×720`、每 `8` 步录一帧、每帧 `40 ms`，与仓库内 viewer 录屏的尺寸和帧率不同属正常差异，只要闭环过程一致即可。
 
 ## 测试
 

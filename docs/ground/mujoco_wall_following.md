@@ -147,14 +147,15 @@ python3 test/record_demo_gif.py
 
 ![演示动图](../img/ground/mujoco_wall_following_demo.gif)
 
-`docs/img/ground/mujoco_wall_following_demo.gif` 由本包 `test/record_demo_gif.py` 离屏渲染生成，不是另外录屏：
+`docs/img/ground/mujoco_wall_following_demo.gif` 是 MuJoCo viewer 窗口的实际运行录屏（Peek 录制）：
 
-- 闭环 `8803` 步（`dt=0.005 s`），脚本复用 `main.py` 的起点、航点、走廊、贴墙参数与
-  `control_step`，每 `8` 步录一帧抽稀后写入 GIF；
-- 帧尺寸 960×720、每帧 40 ms、循环播放；
-- 复现：在包目录执行 `python3 test/record_demo_gif.py`（录帧需 Pillow；离屏后端
-  `MUJOCO_GL=egl`，mesa 软件渲染）；
-- 小车从走廊左下角出发，沿下边向东、右边向北、上边向西、左边向南，逆时针绕回起点。
+- `1244×702`、`310` 帧、每帧 `100 ms`（约 `31 s`）、无限循环，文件 `511,620` 字节；
+- 录制内容对应闭环 `8803` 步（`dt=0.005 s`）的完整运行，小车从走廊左下角出发，沿下边向东、右边向北、上边向西、左边向南，逆时针绕回起点；
+- 重新生成有两条路：① 录 viewer 窗口——在包目录 `python3 main.py` 后录窗口区域；
+  ② 无头离屏渲染——`MUJOCO_GL=egl python3 test/record_demo_gif.py`，脚本复用 `main.py` 的
+  起点、航点、走廊、贴墙参数与 `control_step`，每 `8` 步录一帧，离屏参数为 `960×720`、
+  每帧 `40 ms`（与仓库内 viewer 录屏不同属正常差异）；
+- 录帧需 Pillow；离屏后端 `MUJOCO_GL=egl`，mesa 软件渲染。
 
 ## 8. 已知限制
 
