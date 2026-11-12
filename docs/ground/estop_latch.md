@@ -61,7 +61,7 @@ src/ground/estop_latch/
 
 | 参数 | 默认值 | 说明 |
 |---|---|---|
-| `input_timeout` | 1.0 | 超过这么久没收到 `/emergency_stop` 就认为安全链路失效，以秒计；设为 0 关闭该检查 |
+| `input_timeout` | 1.0 | 收到过输入后，超过这么久没再收到就认为安全链路失效，以秒计；设为 0 关闭该检查，从未收到过输入时不触发 |
 | `release_hold_time` | 2.0 | 急停信号消失后至少保持这么久才允许复位，防止抖动导致误放行 |
 | `status_rate` | 1.0 | 状态与急停输出的发布频率，Hz |
 | `auto_release` | false | 为 true 时满足复位条件后自动解除，仅供演示，实车应保持 false |
@@ -102,8 +102,9 @@ ros2 launch estop_latch main.launch.py
 ros2 service call /estop_latch/reset std_srvs/srv/Trigger
 ```
 
-急停信号仍在触发、或消失不足 `release_hold_time`、或输入链路超时、或从未收到过输入时，
-服务返回 `success: false` 并在 `message` 里说明原因。
+急停信号仍在触发、或消失不足 `release_hold_time`、或输入链路超时（仅限收到过输入之后），
+服务返回 `success: false` 并在 `message` 里说明原因。上游如果是事件驱动（平时不发消息、
+急停才发 `true`），节点不会因为「一直没消息」而自锁，人工复位始终可用。
 
 ## 演示步骤
 
@@ -142,18 +143,21 @@ ros2 topic pub -1 /emergency_stop std_msgs/msg/Bool "{data: true}"
 
 ## 与其它安全模块级联
 
+当前仓库里 `/emergency_stop` 的发布者是 `heartbeat_watchdog`（上游失联时发 `true`），
+订阅者是 `cmd_vel_guard`（收到 `true` 立即输出零速度）：
+
 ```
-cmd_vel_guard ──/emergency_stop──┐
-odom_health_monitor ─────────────┼──> estop_latch ──/estop──> cmd_vel_guard 急停输入
-heartbeat_watchdog ──────────────┘
+heartbeat_watchdog ──/emergency_stop──> estop_latch ──/estop──> cmd_vel_guard 急停输入
 ```
 
-多个模块同时发布 `true` 时只要有一路触发就会闩锁；下游把 `cmd_vel_guard` 的急停输入
-remap 到 `/estop` 即可：
+本节点插在两者之间，把瞬时急停锁成「必须人工确认才解除」，因此下游要把
+`cmd_vel_guard` 的急停输入 remap 到 `/estop`：
 
 ```bash
 ros2 run cmd_vel_guard cmd_vel_guard --ros-args -r emergency_stop:=estop
 ```
+
+如果后续有更多安全模块发布 `/emergency_stop`，只要话题相同就会一起被闩锁，不需要改代码。
 
 ## 验收标准
 
@@ -162,7 +166,8 @@ ros2 run cmd_vel_guard cmd_vel_guard --ros-args -r emergency_stop:=estop
 | 启动 | 状态 `latched: start`，`/estop` 为 `true` |
 | 复位（条件满足） | 服务返回 `success: true`，状态 `clear`，`/estop` 为 `false` |
 | 复位（急停仍触发） | 服务返回 `success: false`，提示「急停信号仍处于触发状态」 |
-| 复位（从未收到输入） | 服务返回 `success: false`，提示「尚未收到 emergency_stop 输入」 |
+| 复位（从未收到输入） | 服务返回 `success: true`，允许人工确认后放行 |
+| 收到 `true` 的响应 | 立即发布 `/estop`，不等 `status_rate` 定时器 |
 | 闩锁后再触发 | 重新进入 `latched: input` |
 | 输入超时 | `latched: input_timeout`，不会因为「没消息」而放行 |
 | 参数非法 | `release_hold_time` / `input_timeout` 为负、`status_rate` 不为正时启动即报错退出 |
