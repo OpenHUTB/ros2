@@ -20,10 +20,13 @@ catkin_install_python(PROGRAMS
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
-install(DIRECTORY launch config models
+install(DIRECTORY launch models
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
-if (CATKIN_ENABLE_TESTING)
-  catkin_add_nosetests(tests)
-endif()
+# tests/ are plain main() scripts, not unittest.TestCase, so
+# catkin_add_nosetests(tests) collected 0 tests. Run them explicitly with
+#   PYTHONPATH=. python3 tests/run_all.py
+# or
+#   python3 main.py --mode test
+# (documented in README / docs).

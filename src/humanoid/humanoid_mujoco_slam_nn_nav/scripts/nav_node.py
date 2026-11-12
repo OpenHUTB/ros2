@@ -23,6 +23,7 @@ from std_msgs.msg import String
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from humanoid_mujoco_slam_nn_nav.constants import GOAL_TOL  # noqa: E402
 from humanoid_mujoco_slam_nn_nav.mapping import OccupancyGrid as Grid, Slam  # noqa: E402
 from humanoid_mujoco_slam_nn_nav.planning import CostMap, PurePursuit, astar, simplify  # noqa: E402
 
@@ -102,7 +103,7 @@ class NavNode:
             return
         dist = math.hypot(self.goal[0] - self.pose[0], self.goal[1] - self.pose[1])
         tw = Twist()
-        if dist < 0.35:
+        if dist < GOAL_TOL:
             self.done = True
             self.pub_status.publish(String(data="done"))
             self.pub_cmd.publish(tw)

@@ -15,6 +15,7 @@ import numpy as np
 import mujoco
 
 from . import kinematics as K
+from .constants import GOAL_TOL
 from .gait import GaitParams, Walker
 from .mapping import OccupancyGrid, Slam, local_patch
 from .planning import CostMap, PurePursuit, astar, simplify
@@ -23,7 +24,7 @@ from .sensors import DepthCamera, Lidar, Odometry
 
 @dataclass
 class NavConfig:
-    goal_tol: float = 0.35
+    goal_tol: float = GOAL_TOL
     replan_period: float = 0.8
     scan_period: float = 0.1
     inflation: float = 0.38

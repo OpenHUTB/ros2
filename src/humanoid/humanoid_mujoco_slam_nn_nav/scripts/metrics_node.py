@@ -19,6 +19,8 @@ from std_msgs.msg import String
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from humanoid_mujoco_slam_nn_nav.constants import GOAL_TOL  # noqa: E402
+
 
 class Metrics:
     def __init__(self):
@@ -74,7 +76,7 @@ class Metrics:
             dist = math.hypot(self.goal[0] - self.gt[0], self.goal[1] - self.gt[1])
         data = {
             "mode": self.mode, "scene": self.scene,
-            "success": bool(self.finished and (dist is not None) and dist < 0.45),
+            "success": bool(self.finished and (dist is not None) and dist < GOAL_TOL),
             "time_s": round((rospy.Time.now() - self.t0).to_sec(), 2),
             "travel_m": round(self.travel, 3),
             "final_dist_m": round(dist, 3) if dist is not None else None,

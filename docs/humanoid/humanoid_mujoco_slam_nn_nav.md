@@ -262,6 +262,10 @@ PYTHONPATH=. python3 tests/run_all.py    # 4 个测试模块
 PYTHONPATH=. python3 tools/evaluate.py   # 三场景 × 三策略
 ```
 
+`tests/*.py` 是 `main()` 脚本而不是 `unittest.TestCase`，因此 CMake 不再注册
+`catkin_add_nosetests`（避免 `catkin_make run_tests` 收集 0 个用例）；请用上面的
+`tests/run_all.py` 或 `python3 main.py --mode test` 显式运行。
+
 ## 7. 多场景测试与性能评价
 
 三个场景共用一副身体，只替换障碍物布局：`warehouse`（立柱 + 货架）、
