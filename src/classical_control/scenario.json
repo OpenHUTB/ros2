@@ -1,0 +1,9 @@
+{
+  "dt": 0.01,
+  "steps": 3000,
+  "disturb_at": 1500,
+  "target_roll_deg": 5,
+  "target_yaw_deg": 30,
+  "target_height": 2.0,
+  "disturbance_magnitude": 0.15
+}
