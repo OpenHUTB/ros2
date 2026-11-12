@@ -591,6 +591,8 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 
 * [同一 ROV 任务 PPO 与 SAC 强化学习算法对比](./water/mjc_rov_rl_compare.md)
 
+* [水下机器人端到端深度神经网络视觉伺服控制模型](./water/rov_end_to_end_nn.md)
+
 * [ROV 水下机器人 MuJoCo 建图导航与神经网络控制](./water/rov_mujoco_slam_nn_nav/README.md)
 
 ### 其他（环境、接口与容器）
