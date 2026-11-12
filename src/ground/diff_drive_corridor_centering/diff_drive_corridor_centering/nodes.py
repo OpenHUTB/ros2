@@ -117,6 +117,8 @@ class CenteringNode(Node):
         self._state_pub = self.create_publisher(String, "/corridor/state", 10)
         self._sub = self.create_subscription(
             String, "/corridor/scan", self._on_scan, 10)
+        self._last_scan_time: float | None = None
+        self._timeout_timer = self.create_timer(1.0 / 10.0, self._on_timeout)
 
     def _on_scan(self, msg: String) -> None:
         try:
@@ -129,6 +131,7 @@ class CenteringNode(Node):
             return
 
         now = self.get_clock().now().nanoseconds / 1e9
+        self._last_scan_time = now
         result = self._controller.step(d_left, d_right, d_forward, now)
 
         cmd = String()
@@ -149,6 +152,16 @@ class CenteringNode(Node):
             "error": round(result["e"], 4),
         })
         self._state_pub.publish(state)
+
+    def _on_timeout(self) -> None:
+        """10 Hz 看门狗：距上次测距超过 scan_timeout 时零速停车并置 BLOCKED。"""
+        now = self.get_clock().now().nanoseconds / 1e9
+        if (self._last_scan_time is not None
+                and now - self._last_scan_time > self._controller.params.scan_timeout):
+            cmd = String()
+            cmd.data = json.dumps({"linear": 0.0, "angular": 0.0})
+            self._cmd_pub.publish(cmd)
+            self._controller.state = "BLOCKED"
 
 
 def scan_main() -> None:
