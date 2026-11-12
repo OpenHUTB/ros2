@@ -87,7 +87,7 @@ def run_nav(scene: str, policy: str, viewer: bool, seconds: float = 90.0):
             last = nav.t
             sim.follow_view(480, 360)
     print(f"scene={scene} policy={policy} -> {nav.summary()}")
-    return nav.summary()
+    return 0
 
 
 def run_demo(out: str, seconds: float = 18.0):
@@ -105,6 +105,7 @@ def run_demo(out: str, seconds: float = 18.0):
     os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
     imgs[0].save(out, save_all=True, append_images=imgs[1:], duration=120, loop=0)
     print(f"saved {out} frames={len(frames)}")
+    return 0
 
 
 def main():
@@ -123,11 +124,14 @@ def main():
         import run_all
         return run_all.main()
     if args.mode == "demo":
-        return run_demo(args.out, args.seconds)
+        run_demo(args.out, args.seconds)
+        return 0
     if args.mode == "teleop":
-        return run_teleop(args.scene, viewer, args.seconds)
-    return run_nav(args.scene, args.mode, viewer, args.seconds)
+        run_teleop(args.scene, viewer, args.seconds)
+        return 0
+    run_nav(args.scene, args.mode, viewer, args.seconds)
+    return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main() or 0)
+    sys.exit(main())

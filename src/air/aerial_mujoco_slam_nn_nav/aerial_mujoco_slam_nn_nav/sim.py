@@ -110,7 +110,7 @@ class DroneSim:
     # ------------------------------------------------------------------
     def render(self, width: int = 480, height: int = 360, camera: Optional[str] = None):
         if self.renderer is None or self._render_size != (width, height):
-            from mujoco.rendering.classic.renderer import Renderer
+            from mujoco import Renderer
             self.renderer = Renderer(self.model, height, width)
             try:
                 self.renderer._scene_option.geomgroup[:] = 1
@@ -129,7 +129,7 @@ class DroneSim:
                     azimuth: float = 135.0, elevation: float = -22.0):
         st = self.state()
         if self.renderer is None or self._render_size != (width, height):
-            from mujoco.rendering.classic.renderer import Renderer
+            from mujoco import Renderer
             self.renderer = Renderer(self.model, height, width)
             try:
                 self.renderer._scene_option.geomgroup[:] = 1

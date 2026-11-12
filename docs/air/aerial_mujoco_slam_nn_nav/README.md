@@ -49,6 +49,10 @@ mkdir -p ~/aerial_ws/src && cd ~/aerial_ws
 catkin_make && source devel/setup.bash
 ```
 
+> 虚拟机提示：安装前先确认网卡已启用（`ip link` 中 `ens33` 为 `UP`）且能解析
+> `pypi.org`（例如 `ping -c1 pypi.org`）。网卡 DOWN 或 DNS 不通时，`pip3 install mujoco`
+> 会卡住/失败，这是环境问题，不是包本身的问题。
+
 ## 二、启动流程
 
 三种方式任选：`main.launch` 一键、`main.py` 无 ROS、分终端手工起节点。
