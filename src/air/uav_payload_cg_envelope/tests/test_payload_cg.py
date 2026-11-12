@@ -6,7 +6,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from uav_payload_cg_envelope.main import DEFAULT_INPUT, check_cg
+from uav_payload_cg_envelope.main import DEFAULT_INPUT, check_cg  # noqa: E402
 
 
 class CgTests(unittest.TestCase):
