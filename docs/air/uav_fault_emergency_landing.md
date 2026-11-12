@@ -174,11 +174,15 @@ def surface_height(api, quad, xy, start_z=16.0):
 ### 3.4 用例矩阵 `evaluate.py`
 
 ```python
-FLIGHT_PLANS = (("degradation@2", dict(kind="degradation", rotor=2, severity=0.5)),
-                ("degradation@1", dict(kind="degradation", rotor=1, severity=0.3)),
-                ("degradation@0", dict(kind="degradation", rotor=0, severity=0.2)))
+FLIGHT_PLANS = (("healthy", dict(kind="healthy", onset=2.0)),
+                ("degradation@2", dict(kind="degradation", rotor=2, severity=0.50)),
+                ("degradation@0", dict(kind="degradation", rotor=0, severity=0.78)))
 FLIGHT_MODES = ("vertical", "expert", "neural")
 ```
+
+三组工况刻意跨过分配层的补偿边界：悬停时每桨只要 2.33 N，而指令上限是 6.0 N，
+所以坏桨剩余推力在 2.33/6.0 ≈ 39% 以上时，加权分配靠抬高指令就能完全补回来；
+"剩余 50%"落在可补偿区间，"剩余 22%"已经补不回来，两个区间各取一组才能看出差别。
 
 ## 4. 运行步骤
 
@@ -222,8 +226,13 @@ ros2 launch uav_fault_emergency_landing landing.launch.py mode:=neural rotor:=1
 
 ![建图与评分](../img/air/uav_fault_emergency_landing/landing_map.png)
 
-左：9 个高位观测点扫出来的 2.5D 高度图（楼体与围栏清晰可见）；右：神经评分图，
-中间空地分数最高，楼顶与围栏是暗的——网络是在学规则教师，不是凭空产生安全性。
+左：`tools/gen_figures.py` 在 3×3 个高位观测点（x, y ∈ {−8, −2, 4} m、高度 12 m）各扫一帧
+合并出来的 2.5D 高度图（楼体与围栏清晰可见）；右：神经评分图，中间空地分数最高，
+楼顶与围栏是暗的——网络是在学规则教师，不是凭空产生安全性。
+
+> 这里的两套扫描不要混淆：画图用的是上面这套 3×3 固定网格（9 帧）；
+> `evaluate.pick_obstacle_spot()` 选悬停点时默认 `span=12.0 / step=6.0` → `n=2` → 5×5 = **25 个点**，
+> 是另一个函数、另一个用途。
 
 ![三种模式对比](../img/air/uav_fault_emergency_landing/mode_summary.png)
 
