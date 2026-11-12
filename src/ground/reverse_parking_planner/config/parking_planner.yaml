@@ -1,0 +1,47 @@
+# 倒车入库规划器的默认参数。
+#
+# 所有参数都可以在 launch 里用同名 arg 覆盖，例如：
+#   roslaunch reverse_parking_planner main.launch slot_width:=2.2
+# 不改任何参数时，行为与下面这组默认值完全一致。
+
+# 车位（垂直车位：宽度沿 x，长度沿 y；yaw 是停放时车头朝向，
+# 倒车入库后车头朝车道，所以默认 -pi/2）
+slot:
+  kind: perpendicular
+  width: 2.50
+  length: 5.30
+  x: 0.0
+  y: 0.0
+  yaw: -1.5707963
+
+# 车辆几何
+vehicle:
+  wheelbase: 2.70
+  length: 4.50
+  width: 1.80
+  max_steer: 0.55
+
+# 规划参数
+plan:
+  turn_radius: 5.00
+  entry_length: 3.00
+  step: 0.10
+
+# 自检阈值
+check:
+  tolerance: 0.10
+  clearance: 0.00
+  max_path: 12.00
+
+# 发布频率与坐标系
+rate:
+  publish_hz: 10.0
+
+frame:
+  id: map
+
+# 输出话题
+topic:
+  plan: /parking/plan
+  report: /parking/report
+  point: /parking/plan_point

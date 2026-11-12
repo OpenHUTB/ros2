@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<!--
+  steering_actuator_lag 标准入口：roslaunch steering_actuator_lag main.launch
+
+  所有可调项都先由 config/steering_actuator_lag.yaml 载入，
+  再用同名的 <param> 由 <arg> 覆盖，所以
+    roslaunch steering_actuator_lag main.launch time_constant:=1.0
+  就能改时间常数而不用动代码。
+-->
+<launch>
+
+  <!-- ========== 执行器特性 ========== -->
+  <arg name="time_constant" default="0.25"
+       doc="一阶惯性时间常数 (s)，越大转向跟随越慢"/>
+  <arg name="dead_band_deg" default="0.30"
+       doc="死区半宽 (度)，误差小于它就不再动作"/>
+  <arg name="max_rate_deg" default="60.0"
+       doc="打角速率上限 (度/s)"/>
+  <arg name="center_rate_deg" default="40.0"
+       doc="回正速率上限 (度/s)，与打角独立"/>
+  <arg name="max_angle_deg" default="35.0"
+       doc="机械最大转角 (度)"/>
+
+  <!-- ========== 测试工况 ========== -->
+  <arg name="step_deg" default="20.0"
+       doc="阶跃指令幅值 (度)"/>
+  <arg name="dwell_seconds" default="5.0"
+       doc="阶跃保持时长 (s)，之后指令归零回正"/>
+  <arg name="steady_tolerance_deg" default="0.50"
+       doc="稳态误差容差 (度)"/>
+  <arg name="rise_limit_seconds" default="1.00"
+       doc="上升时间上限 (s)，指到 90% 的用时"/>
+  <arg name="center_limit_seconds" default="1.50"
+       doc="回正时间上限 (s)"/>
+  <arg name="center_tolerance_deg" default="0.50"
+       doc="回正判定容差 (度)"/>
+
+  <!-- ========== 数值与频率 ========== -->
+  <arg name="sim_step" default="0.01"
+       doc="积分步长 (s)"/>
+  <arg name="publish_hz" default="10.0"
+       doc="发完报告后的保活频率 (Hz)"/>
+
+  <!-- 先载入 yaml 默认值 -->
+  <rosparam command="load"
+            file="$(find steering_actuator_lag)/config/steering_actuator_lag.yaml"/>
+
+  <!-- 再用 launch 参数覆盖 -->
+  <param name="actuator/time_constant" value="$(arg time_constant)"/>
+  <param name="actuator/dead_band_deg" value="$(arg dead_band_deg)"/>
+  <param name="actuator/max_rate_deg" value="$(arg max_rate_deg)"/>
+  <param name="actuator/center_rate_deg" value="$(arg center_rate_deg)"/>
+  <param name="actuator/max_angle_deg" value="$(arg max_angle_deg)"/>
+  <param name="test/step_deg" value="$(arg step_deg)"/>
+  <param name="test/dwell_seconds" value="$(arg dwell_seconds)"/>
+  <param name="test/steady_tolerance_deg" value="$(arg steady_tolerance_deg)"/>
+  <param name="test/rise_limit_seconds" value="$(arg rise_limit_seconds)"/>
+  <param name="test/center_limit_seconds" value="$(arg center_limit_seconds)"/>
+  <param name="test/center_tolerance_deg" value="$(arg center_tolerance_deg)"/>
+  <param name="sim/step" value="$(arg sim_step)"/>
+  <param name="rate/publish_hz" value="$(arg publish_hz)"/>
+
+  <node pkg="steering_actuator_lag" type="main.py"
+        name="steering_actuator_lag" output="screen"/>
+
+</launch>

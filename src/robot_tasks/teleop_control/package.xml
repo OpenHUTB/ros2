@@ -2,13 +2,16 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>teleop_control</name>
-  <version>0.0.0</version>
-  <description>ROS 2 Keyboard Teleop Control Module</description>
+  <version>0.1.0</version>
+  <description>ROS 2 keyboard teleoperation with a command watchdog and stop-on-exit behavior.</description>
   <maintainer email="2507417911@qq.com">1woshichenwenguang1</maintainer>
   <license>MIT</license>
 
   <depend>rclpy</depend>
   <depend>geometry_msgs</depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <test_depend>python3-pytest</test_depend>
 
   <export>
     <build_type>ament_python</build_type>

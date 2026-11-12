@@ -1,0 +1,33 @@
+name: uav_terrain_follow_agl tests
+
+on:
+  push:
+    paths:
+      - 'src/air/uav_terrain_follow_agl/**'
+      - 'docs/air/uav_terrain_follow_agl.md'
+      - '.github/workflows/ci_uav_terrain_follow_agl.yml'
+  pull_request:
+    paths:
+      - 'src/air/uav_terrain_follow_agl/**'
+      - 'docs/air/uav_terrain_follow_agl.md'
+      - '.github/workflows/ci_uav_terrain_follow_agl.yml'
+
+jobs:
+  test:
+    name: Local tests (no ROS / MuJoCo)
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install test dependencies
+        run: python3 -m pip install --upgrade pip numpy matplotlib pyyaml pytest
+
+      - name: Run module tests
+        working-directory: src/air/uav_terrain_follow_agl
+        run: PYTHONPATH=${{ github.workspace }}/src/air python3 -m pytest test/ -q

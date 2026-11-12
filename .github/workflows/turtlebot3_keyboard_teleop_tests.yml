@@ -1,0 +1,56 @@
+# TurtleBot3 Keyboard Teleop CI
+# 说明：这里跑完整 colcon build + test，即使纯逻辑测试不依赖 ROS，
+# 目的是验证 ament_python 打包规则（setup.py / setup.cfg / package.xml）
+# 能被 colcon 正确识别，避免"本地能跑、ros2 run 找不到可执行文件"这类问题。
+
+name: TurtleBot3 Keyboard Teleop Tests
+
+on:
+  push:
+    paths:
+      - 'src/ground/turtlebot3_keyboard_teleop/**'
+      - 'docs/ground/turtlebot3_keyboard_teleop.md'
+      - 'docs/index.md'
+      - '.github/workflows/turtlebot3_keyboard_teleop_tests.yml'
+  pull_request:
+    paths:
+      - 'src/ground/turtlebot3_keyboard_teleop/**'
+      - 'docs/ground/turtlebot3_keyboard_teleop.md'
+      - 'docs/index.md'
+      - '.github/workflows/turtlebot3_keyboard_teleop_tests.yml'
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装 ROS 2 Humble
+        run: |
+          sudo apt update
+          sudo apt install -y software-properties-common curl gnupg lsb-release
+          sudo add-apt-repository universe
+          sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
+          sudo apt update
+          sudo apt install -y ros-humble-ros-base python3-colcon-common-extensions python3-rosdep python3-pip
+          sudo rosdep init || true
+          rosdep update
+
+      - name: colcon build
+        run: |
+          mkdir -p ros2_ws/src
+          ln -s $GITHUB_WORKSPACE/src/ground/turtlebot3_keyboard_teleop ros2_ws/src/turtlebot3_keyboard_teleop
+          cd ros2_ws
+          source /opt/ros/humble/setup.bash
+          rosdep install --from-paths src --ignore-src -r -y
+          colcon build --packages-select turtlebot3_keyboard_teleop
+
+      - name: colcon test
+        run: |
+          cd ros2_ws
+          source /opt/ros/humble/setup.bash
+          source install/setup.bash
+          colcon test --packages-select turtlebot3_keyboard_teleop
+          colcon test-result --verbose

@@ -10,7 +10,7 @@ from landing_assessment.simulation import rotation
 class ContractTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.manifest=json.loads(Path('data/raw/manifest.json').read_text())
+        cls.manifest=json.loads(Path('data/raw/manifest.json').read_text(encoding='utf-8'))
         cls.raw=np.load(Path('data/raw')/cls.manifest[-1]['file'])['raw']
     def test_contact_and_labels_not_features(self):
         altered=self.raw.copy();altered[:,14:]=99999

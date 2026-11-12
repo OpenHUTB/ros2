@@ -1,0 +1,139 @@
+name: ROS 2 · rov_pipeline_follow
+
+on:
+  push:
+    paths:
+      - 'src/water/rov_pipeline_follow/**'
+      - '.github/workflows/ros2_rov_pipeline_follow.yml'
+  pull_request:
+    paths:
+      - 'src/water/rov_pipeline_follow/**'
+      - '.github/workflows/ros2_rov_pipeline_follow.yml'
+  workflow_dispatch:
+
+jobs:
+  build-and-run:
+    runs-on: ubuntu-22.04
+    container: ros:humble
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装 Python 依赖
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            python3-numpy python3-matplotlib python3-pil python3-pytest
+
+      # ---- 1) 纯离线测试：几何 / 渲染 / 检测 / SLAM / 建图 / 规划 / 控制 / 网络梯度
+      #      test_nodes_ros.py 在装了真 rclpy 的机器上会自动 skip
+      - name: 离线单元测试
+        working-directory: src/water/rov_pipeline_follow
+        run: python3 -m pytest test/ -q
+
+      # ---- 2) 真 colcon build
+      # 注意：上游 src/water/package.xml（#722 引入）把 src/water 整体识别成一个
+      # ament_python 包 `water`，colcon 认定该目录是包后不再向下递归，src/water 下
+      # 18 个子包（含本模块）因此全部不可见，--packages-select 会报
+      # "ignoring unknown package"，build 阶段 0 packages finished。
+      # 这里显式给出 --base-paths，把包发现限定在本模块目录，不再依赖仓库的
+      # 全局目录布局。
+      - name: colcon build
+        run: |
+          source /opt/ros/humble/setup.bash
+          colcon build --base-paths src/water/rov_pipeline_follow \
+            --packages-select rov_pipeline_follow --symlink-install
+
+      # ---- 3) install 布局硬断言：少一项就说明 data_files 又漏了
+      - name: 校验 install 布局
+        run: |
+          source /opt/ros/humble/setup.bash
+          source install/setup.bash
+          SHARE=$(ros2 pkg prefix rov_pipeline_follow)/share/rov_pipeline_follow
+          echo "share=$SHARE"
+          for f in \
+              package.xml \
+              launch/main.launch.py \
+              launch/teleop.launch.py \
+              launch/e2e.launch.py \
+              config/params.yaml \
+              models/e2e.npz \
+              models/percep.npz ; do
+            test -e "$SHARE/$f" || { echo "缺少 $f"; exit 1; }
+          done
+          for e in main sim slam control e2e ; do
+            test -x "install/rov_pipeline_follow/lib/rov_pipeline_follow/$e" \
+              || { echo "缺少可执行 $e"; exit 1; }
+          done
+          echo "install 布局检查通过"
+
+      # ---- 4) 四场景真 launch：每场景跑 180 s，看 SLAM 日志是否在推进
+      #（ros:humble 容器里首次 ros2 launch 的节点拉起+Python 导入要 60 s 以上；
+      # 另外默认 Fast DDS 走 UDP 传输、单条报文上限 64KB，而 RGB-D 图像约
+      # 100KB 会被静默丢弃导致 SLAM 收不到图像，必须换 CycloneDDS）
+      - name: 四场景 launch 冒烟
+        run: |
+          apt-get update -qq
+          apt-get install -y -qq ros-humble-rmw-cyclonedds-cpp
+          source /opt/ros/humble/setup.bash
+          export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+          source install/setup.bash
+          echo "RMW_IMPLEMENTATION=$RMW_IMPLEMENTATION"
+          for s in straight curve current turbid ; do
+            echo "=================== $s ==================="
+            timeout 180 ros2 launch rov_pipeline_follow main.launch.py \
+                scene:=$s seed:=0 > /tmp/$s.log 2>&1 || true
+            echo "--- 日志尾部 ---"
+            tail -n 12 /tmp/$s.log
+            grep -q "SLAM 节点启动" /tmp/$s.log \
+              || { echo "::error::[$s] SLAM 节点没有启动"; exit 1; }
+            grep -q "帧 " /tmp/$s.log \
+              || { echo "::error::[$s] SLAM 没有收到图像"; exit 1; }
+            grep -q "控制节点启动" /tmp/$s.log \
+              || { echo "::error::[$s] 控制节点没有启动"; exit 1; }
+            if grep -q "Traceback" /tmp/$s.log ; then
+              echo "::error::[$s] 运行中出现异常"; exit 1
+            fi
+            echo "[$s] ok"
+          done
+
+      # ---- 5) 预训练权重能被加载并推理（不起闭环，只验模型可用）
+      - name: 预训练权重冒烟
+        working-directory: src/water/rov_pipeline_follow
+        run: |
+          python3 - <<'PY'
+          import numpy as np
+          from rov_pipeline_follow.model_io import load_net
+          from rov_pipeline_follow.policies import E2EPolicy, PERCEP_IN_CH
+          e2e = load_net('models/e2e.npz')
+          percep = load_net('models/percep.npz')
+          x = np.zeros((1, E2EPolicy.IN_CH, E2EPolicy.IN_H, E2EPolicy.IN_W),
+                       dtype=np.float32)
+          out = e2e.forward(x, train=False)
+          assert out.shape == (1, 2), out.shape
+          assert np.all(np.abs(out) <= 1.0)
+          xp = np.zeros((1, PERCEP_IN_CH, E2EPolicy.IN_H, E2EPolicy.IN_W),
+                        dtype=np.float32)
+          outp = percep.forward(xp, train=False)
+          assert outp.shape == (1, 2), outp.shape
+          print('端到端 / 感知权重可用，输出', out.ravel(), outp.ravel())
+          PY
+
+      # ---- 6) 离线闭环回归：专家必须跑完直管往返，经典流水线必须完成 curve
+      - name: 离线闭环回归
+        working-directory: src/water/rov_pipeline_follow
+        run: |
+          python3 - <<'PY'
+          from rov_pipeline_follow.policies import make_policy
+          from rov_pipeline_follow.sim import rollout
+          from rov_pipeline_follow.world import make_scene
+          r = rollout('straight', make_policy('oracle', make_scene('straight', 0)), seed=0)
+          print('oracle:', {k: r[k] for k in ('success', 'time_s', 'lat_rmse')})
+          assert r['success'], '直管场景 oracle 未完成往返巡检'
+          assert r['lat_rmse'] < 0.45, '横向误差过大：%.3f' % r['lat_rmse']
+          r2 = rollout('curve', make_policy('pipe_slam', make_scene('curve', 0)), seed=0)
+          print('pipe_slam:', {k: r2[k] for k in ('success', 'time_s', 'ate_rmse')})
+          assert r2['success'], '弯管场景经典流水线未完成往返巡检'
+          PY

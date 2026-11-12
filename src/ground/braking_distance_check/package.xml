@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>braking_distance_check</name>
+  <version>1.0.0</version>
+  <description>
+    制动距离与跟车间距的物理核算：由车速、反应时间、路面附着系数与坡度，
+    算出反应距离、制动距离、停车距离与两秒法则要求的车距，并用四条断言
+    判断这次跟车/接近是否安全。纯物理计算，不依赖 CARLA。
+  </description>
+  <maintainer email="haobuhao-code@users.noreply.github.com">haobuhao-code</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+
+  <export>
+  </export>
+</package>

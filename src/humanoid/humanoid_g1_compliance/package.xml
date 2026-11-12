@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>humanoid_g1_compliance</name>
+  <version>0.1.0</version>
+  <description>
+    MuJoCo 物理仿真下 Unitree G1（23 自由度）的全身柔顺控制模块。
+    策略为 LAC（Linear and Angular Compliance）预训练网络：每 20 ms 推理一次，
+    输入 950 维本体观测与 6080 维历史窗口（含 5 个刚度通道的对数），输出 23 个
+    关节的目标角，PD 控制器再转成力矩。刚度指令越低，外力下末端让位越大、
+    力矩峰值越低；撤销外力后自动回到原位。
+    ROS 2 接口提供 /joint_states、/cmd_vel、/humanoid/stiffness_cmd、
+    /humanoid/external_force，支持终端调刚度与脚本化外力实验。
+  </description>
+
+  <maintainer email="maintainer@example.com">OpenHUTB contributor</maintainer>
+  <license>BSD-3-Clause</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <!-- 策略推理依赖 PyTorch（CPU 版即可）。Ubuntu 源没有稳定的对应 deb 包，
+       故不写成 rosdep 键，请按 README「安装」一节用 pip 安装 CPU 版。 -->
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>ament_index_python</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-yaml</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
