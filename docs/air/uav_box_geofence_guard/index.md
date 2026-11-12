@@ -2,12 +2,13 @@
 
 用保守可达距离约束三维速度指令，处理位姿和指令超时；只是 ROS 安全接口示例，未接入飞控。
 
-**开发状态：离线演示和核心测试已运行；ROS Noetic 构建、launch、在线话题和飞行/模拟器闭环尚未验证。** 本文不作为已通过课程验收的声明。
+**验证状态：已有 2026-11-04 的独立 catkin 构建、ROS Noetic 合成话题联调及退出清理日志；本轮仅复核离线测试与文档。另一位同学在独立 Noetic 环境复现尚未完成，真实飞行与飞控/模拟器闭环未验证。**
 
 ## 环境与依赖
 
-本次实测为云端 Ubuntu 24.04、Python 3.12.14，NumPy 2.3.5、matplotlib 3.10.8，未安装 ROS。离线演示使用 matplotlib，神经网络模块另需 NumPy。
-目标 ROS 环境为 Ubuntu 20.04 / Python 3.8 / ROS Noetic；该目标环境已由用户此前检查，本模块本次尚未进入其中运行。
+核心算法与 8 项单元测试仅使用 Python 标准库；离线绘图入口需要 matplotlib，不涉及神经网络训练。
+历史离线环境为 Ubuntu 24.04 / Python 3.12.14 / matplotlib 3.10.8。
+历史 ROS 记录为 VirtualBox Ubuntu 20.04.6 / Python 3.8.10 / ROS Noetic，见下方原始日志；这与本轮离线文档复核、待完成的独立复测是不同验证范围。
 
 ## 离线复现
 
@@ -18,9 +19,9 @@ python3 -m unittest discover -s src/air/uav_box_geofence_guard/tests -v
 python3 src/air/uav_box_geofence_guard/main.py --output /tmp/uav_box_geofence_guard_demo
 ```
 
-第二条生成 samples.csv、metrics.json 和 offline_demo.svg；MLP 还会重新训练并输出 model.json。不同 NumPy/BLAS 版本可能产生末位数值差异。
+第二条只生成 `samples.csv`、`metrics.json` 和 `offline_demo.svg`。`metrics.json` 的 `validation_scope` 仅描述该次离线数学演示，不代表本模块全部验证历史；图形样式可能随 matplotlib 版本变化。
 
-## ROS 构建和运行（下方附本轮实测）
+## ROS 构建和运行（下方附历史实测日志）
 
 从仓库根目录开始，在独立 catkin 工作空间中只放这个包，不把整个混合 ROS1/ROS2 仓库交给 catkin：
 
@@ -56,7 +57,7 @@ Ctrl+C 结束本模块。话题演示不要连接实机飞控，先完成受控�
 没有位姿/指令时保持零输出；任一接收间隔超过 0.3 秒则置 STALE 并停车；框架错误等同等待有效输入；非有限数值置 INVALID。
 已在围栏外时零输出，须人工复位或由独立恢复流程接管，不自动飞回。
 
-## ROS 联调操作（下方附本轮实测）
+## ROS 联调操作（下方附历史实测日志）
 
 启动后先向 `pose_world` 和 `velocity_raw` 持续发布消息。例如：
 
@@ -93,7 +94,7 @@ rostopic echo /velocity_safe
 ![离线演示](../../img/uav_box_geofence_guard/offline_demo.svg)
 
 指标文件：源码模块内 offline_metrics.json。逐点样本可用离线复现命令重新生成。
-本轮 ROS 构建与通信验证见下方实测补充；仍无真实硬件和外部复测。
+历史 ROS 构建与通信记录见下方补充；本轮未重新执行 ROS，仍无真实硬件和独立外部复测。
 
 ## 大模型使用声明
 
@@ -102,9 +103,9 @@ rostopic echo /velocity_safe
 
 ## ROS Noetic 实测补充（2026-11-04）
 
-本轮使用 VirtualBox Ubuntu 20.04.6、Python 3.8.10、ROS Noetic。工作目录为 `/home/ros/four_assignments_0yekhx11/ws_uav_box_geofence_guard`。
+历史记录使用 VirtualBox Ubuntu 20.04.6、Python 3.8.10、ROS Noetic。工作目录为 `/home/ros/four_assignments_0yekhx11/ws_uav_box_geofence_guard`。
 
-离线测试、独立 catkin 构建、真实 roslaunch/话题功能、退出清理四项分别通过；launch 返回码 0，无节点异常退出。
+已归档的历史日志报告：离线测试、独立 catkin 构建、真实 roslaunch/话题功能及退出清理通过；launch 返回码为 0，无节点异常退出。此次文档修订只核对记录与源码哈希，不把历史日志当成本轮重跑或另一位同学的独立复测。
 
 测试使用真实 ROS 通信发送合成输入，不是无人机飞行、真实传感器或 AirSim/Gazebo 验证。
 
@@ -124,8 +125,12 @@ source /path/to/workspace/devel/setup.bash
 roslaunch uav_box_geofence_guard main.launch
 ```
 
-必须检查 `devel/setup.bash` 与 `devel/lib/uav_box_geofence_guard/main.py` 存在。旧脚本曾在错误工作空间构建，旧 BUILD=PASS 无效；以上是修正版的新工作空间证据。
+必须检查 `devel/setup.bash` 与 `devel/lib/uav_box_geofence_guard/main.py` 存在。旧脚本曾在错误工作空间构建，旧 BUILD=PASS 无效；所链接历史记录来自修正版的独立工作空间。
 
-原始证据：[构建](validation/build.txt)、[launch](validation/launch.log)、[ROS 测试](validation/ros_test.txt)、[结构化结果](validation/ros_result.json)、[离线测试](validation/offline.txt)、[源码 SHA256](validation/source_sha256.json)。哈希对应运行包源码，本轮已逐项核对；README 后续文档更新会改变其哈希，程序源码未改变。
+原始证据：[构建](validation/build.txt)、[launch](validation/launch.log)、[ROS 测试](validation/ros_test.txt)、[结构化结果](validation/ros_result.json)、[离线测试](validation/offline.txt)、[源码 SHA256](validation/source_sha256.json)。历史哈希记录保留不变，用于标识当时的文件。程序源码、测试、构建及 launch 文件与记录逐项核对；README 是后续修订文档，其当前哈希不再代表历史 README。
 
-仍未验证真实硬件/飞行与另一人另一台机器复测。PR 保持 Draft，外部复测不勾选。使用 OpenAI Codex 辅助日志核验、文档与提交整理。
+仍未验证真实硬件/飞行与另一人另一台机器复测。PR 保持正式待审核状态，外部复测标为待完成，是否合并由维护者结合验证范围决定。
+
+仓库中其他模块的 `build-and-test` 绿色检查不能证明本模块的构建或 ROS 通信通过。本模块的离线复核与历史 ROS 证据分别说明，不将二者混同为模块 CI。
+
+独立复测请记录复测人、日期、Ubuntu/Python/ROS 版本、被测提交 SHA，以及独立工作空间的 `catkin_make`（或 `catkin build`）和 `roslaunch` 日志。按上方话题步骤确认中心指令、边界限速、围栏外零输出、错误 frame、超时停车及退出清理；完成前不勾选外部复测。使用 OpenAI Codex 辅助日志核验、文档与提交整理。
