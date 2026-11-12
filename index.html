@@ -84,6 +84,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="chap2/ros2_qos_compatibility_lab/">ROS 2 QoS 兼容性检查实验</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="chap2/fibonacci_action/">ROS 2 Action 斐波那契数列计算示例</a>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">ROS 教程</span></p>
 <ul>
@@ -306,6 +308,12 @@
 </ul>
 <p class="caption"><span class="caption-text">地面载具</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="ground/dubins_path/">Dubins 曲线轨迹生成与可视化</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ground/rrt_path_planning/">RRT 快速随机扩展树路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ground/bezier_trajectory/">Bezier 曲线轨迹生成与可视化</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="chapter/chap1/turtle_waypoint_patrol/">小海龟多航点巡航与暂停恢复</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/offline_checks/">离线测试接入 GitHub Actions</a>
@@ -676,9 +684,17 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/estop_latch/">急停闩锁与人工复位</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="ground/road_numpy_nn_slam/">城市道路地面载具二维动力学、激光 SLAM 与神经网络导航</a>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">空域载具</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="air/uav_yaw_frame_validation/">无人机航向坐标变换与往返误差验证</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="air/uav_range_denoising_mlp/">无人机测距序列轻量 MLP 去噪</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="air/uav_box_geofence_guard/">无人机空间围栏与速度门控</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="air/mujoco_uav_rooftop_pv_coverage_survey/">MuJoCo 城市屋顶光伏覆盖率测量</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="air/mujoco_uav_rooftop_pv_coverage_survey_day2/">MuJoCo 屋顶光伏覆盖率测量第二天</a>
@@ -688,8 +704,6 @@
 <li class="toctree-l1"><a class="reference internal" href="air/airsim_rl_planner_ros1/">AirSim ROS 1 Noetic PPO 联调</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/mujoco_drone_distance_stop/">无人机制动旧入口</a>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="ground/road_numpy_nn_slam/">城市道路地面载具二维动力学、激光 SLAM 与神经网络导航</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="air/mujoco_uav_range_neural_braking/">无人机测距制动与神经控制</a>
 </li>
@@ -1057,6 +1071,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="air/aerial_mujoco_slam_nn_nav/">四旋翼无人机 MuJoCo 建图导航与神经网络控制</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="air/uav_numpy_nn_slam/">四旋翼无人机物理仿真、激光 SLAM 与禁飞区规避</a>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">水域载具</span></p>
 <ul>
@@ -1077,6 +1093,8 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="water/holoocean_examples/">水域载具示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="water/usv_colregs_avoidance/">USV 会遇局面判定与 COLREGs 避让</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="water/rov_gazebo_sim/">水下ROV仿真键盘控制与摄像头目标追踪</a>
 </li>
@@ -1278,6 +1296,7 @@
 </ul>
 <p>ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：<a href="chap2/ros2_service_param_demo/">chap2/ros2_service_param_demo</a></p>
 <p>ROS 2 QoS 兼容性检查实验：<a href="chap2/ros2_qos_compatibility_lab/">chap2/ros2_qos_compatibility_lab</a></p>
+<p>ROS 2 Action 斐波那契数列计算示例：<a href="chap2/fibonacci_action/">chap2/fibonacci_action</a></p>
 <h2 id="2">2. 人形机器人 <span id="humanoid"></span></h2>
 <ul>
 <li><a href="humanoid/humanoid_kws_command/">人形机器人离线语音指令控制：端到端关键词识别（KWS）</a></li>
@@ -1350,6 +1369,9 @@
 </ul>
 <h2 id="4">4. 地面载具  <span id="ground_vehicle"></span></h2>
 <ul>
+<li><a href="ground/dubins_path/">Dubins 曲线轨迹生成与可视化</a> —— 6 种基本组合（LSL/LSR/RSL/RSR/RLR/LRL）枚举最短带运动学约束路径，纯 pygame 2D 可视化</li>
+<li><a href="ground/rrt_path_planning/">RRT 快速随机扩展树路径规划</a> —— 矩形障碍空间下的 RRT 采样规划：随机树扩展、目标偏置、Liang-Barsky 碰撞检测与路径回溯，pygame 2D 可视化</li>
+<li><a href="ground/bezier_trajectory/">Bezier 曲线轨迹生成与可视化</a> —— de Casteljau 算法与 Bernstein 多项式生成 Bezier 曲线，附 B 样条对比、曲率分析与弧长计算，纯 pygame 2D 可视化</li>
 <li><a href="chapter/chap1/turtle_waypoint_patrol/">小海龟多航点巡航与暂停恢复</a></li>
 <li><a href="ground/offline_checks/">离线测试接入 GitHub Actions</a> —— 6 个零依赖离线测试接入 CI，分别通过 208 / 270 / 242 / 41 / 271 / 204 项</li>
 <li><a href="ground/encoder_quantization_velocity/">编码器量化误差与速度估计滤波对比</a> —— 1 kHz 差分把量化误差放大千倍；1024/4096/16384 CPR 下原始差分 1.371→0.404→0.133 rad/s，α-β 与卡尔曼把误差压到 0.198/0.047</li>
@@ -1590,6 +1612,8 @@
 </ul>
 <h2 id="5">5. 空域载具 <span id="air_vehicle"></span></h2>
 <ul>
+<li><a href="air/uav_yaw_frame_validation/">无人机航向坐标变换与往返误差验证</a></li>
+<li><a href="air/uav_range_denoising_mlp/">无人机测距序列轻量 MLP 去噪</a></li>
 <li>
 <p><a href="air/mujoco_warehouse_uav_collision_braking/">仓储通道巡检无人机测距与分级制动</a></p>
 </li>
@@ -1610,6 +1634,9 @@
 <li><a href="ground/mujoco_drone_distance_stop/">无人机制动旧入口</a></li>
 <li>
 <p><a href="ground/road_numpy_nn_slam/">城市道路地面载具：二维自行车动力学、激光 SLAM 与纯 NumPy 神经网络导航</a></p>
+</li>
+<li>
+<p><a href="air/uav_box_geofence_guard/">无人机空间围栏与速度门控</a></p>
 </li>
 <li>
 <p><a href="air/town10_facade_cruise_capture/">Town10 立面自主巡航与图像采集</a></p>
@@ -2013,8 +2040,9 @@
 </ul>
 <h3 id="_3">控制</h3>
 <ul>
+<li><a href="water/holoocean_examples/">水域载具示例（手柄 / 航点 / 深度航向指令）</a> —— 多代理手柄控制、相机 HUD 与配置文件结构</li>
 <li>
-<p><a href="water/holoocean_examples/">水域载具示例（手柄 / 航点 / 深度航向指令）</a> —— 多代理手柄控制、相机 HUD 与配置文件结构</p>
+<p><a href="water/usv_colregs_avoidance/">USV 会遇局面判定与 COLREGs 避让</a></p>
 </li>
 <li>
 <p><a href="water/rov_physical_simulation/">水下机器人物理仿真与 6-DOF 键盘运动控制</a></p>
@@ -2097,6 +2125,7 @@
 <h2 id="_5">参考文献</h2>
 <ul>
 <li><a href="air/mujoco_abandoned_park_uav_visual_steering/">MuJoCo 失落公园无人机端到端视觉转向</a></li>
+<li><a href="air/uav_numpy_nn_slam/">四旋翼无人机物理仿真、激光 SLAM 与禁飞区规避</a> —— 城市/峡谷/机场三场景、72 波束激光 SLAM、A* 绕禁飞区、纯 NumPy 神经网络与端到端 CNN</li>
 </ul>
 <div class="footnote">
 <hr/>
