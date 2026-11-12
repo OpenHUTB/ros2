@@ -172,11 +172,14 @@ near_miss），随仓库一起提交。权重约定：
 用同样的 Double DQN 流程训练：
 
 ```bash
-rosrun uav_lidar_dqn_navigation train_dqn_e2e.py --episodes 120
-rosrun uav_lidar_dqn_navigation main.py --mode e2e_train --episodes 120
+rosrun uav_lidar_dqn_navigation train_dqn_e2e.py --episodes 200
+rosrun uav_lidar_dqn_navigation main.py --mode e2e_train --episodes 200
 ```
 
-权重保存为 `models/dqn_e2e.pt`。部署节点在水平误差不超过 1.5 m 时记录到达并
+权重约定与任务 2 一致：`dqn_e2e.pt` 是近 20 回合成功率最高的最佳权重（部署默认
+加载），`dqn_e2e_best.pt` 显式保留一份最佳，`dqn_e2e_last.pt` 是最后一回合权重；
+逐回合日志写入 `models/train_e2e_log.csv`（含 success / collision / near_miss）。
+部署节点在水平误差不超过 1.5 m 时记录到达并
 持续悬停。2026-11-12 的实机复测中，目标 (0,12) 的最近误差为 0.85 m，
 110 秒终点误差为 1.91 m，轨迹见模块文档第 6.2 节。本仓库没有与该权重对应的逐回合
 训练日志，因此不宣称可复核的总体到达率。

@@ -36,12 +36,12 @@ class End2EndTrainer(DQNTrainer):
 
     def __init__(self, ip, vehicle, episodes, resume=None, seed=0,
                  max_steps=200):
-        super(End2EndTrainer, self).__init__(ip, vehicle, episodes, resume,
+        # 父类构造时 resume 置空、不加载权重；先把 self.agent 换成图像网络，
+        # 再调用 load_checkpoint 按图像结构加载，避免 MLP 网络读图像权重崩掉。
+        super(End2EndTrainer, self).__init__(ip, vehicle, episodes, None,
                                              seed, max_steps)
         self.agent = ImageDQNAgent(action_dim=6, extra_dim=self.EXTRA_DIM)
-        if resume and os.path.exists(resume):
-            self.agent.load(resume)
-            print('已加载端到端模型 %s' % resume)
+        self.load_checkpoint(resume)
 
     def read_image(self):
         """取前置相机场景图，转灰度并缩放到 84x84，归一化到 0~1。"""
@@ -73,15 +73,20 @@ class End2EndTrainer(DQNTrainer):
         return img, extra
 
     def train(self):
-        # 日志文件与任务 2 分开，避免覆盖
-        self.log_path = os.path.join(MODEL_DIR, 'train_e2e_log.csv')
         import csv
+        # 日志文件与任务 2 分开，避免覆盖；表头与任务 2 对齐（含 near_miss）
+        self.log_path = os.path.join(MODEL_DIR, 'train_e2e_log.csv')
+        self.log_header = ['episode', 'steps', 'reward', 'distance', 'success',
+                           'collision', 'near_miss', 'epsilon', 'loss']
         os.makedirs(MODEL_DIR, exist_ok=True)
+        if os.path.exists(self.log_path):
+            with open(self.log_path) as f:
+                first = f.readline().strip().split(',')
+            if first != self.log_header:
+                os.replace(self.log_path, self.log_path + '.bak')
         if not os.path.exists(self.log_path):
             with open(self.log_path, 'w', newline='') as f:
-                csv.writer(f).writerow(
-                    ['episode', 'steps', 'reward', 'distance', 'success',
-                     'collision', 'epsilon', 'loss'])
+                csv.writer(f).writerow(self.log_header)
 
         rewards, successes = [], []
         best_rate = 0.0
@@ -91,7 +96,9 @@ class End2EndTrainer(DQNTrainer):
             frac = min(1.0, (ep - 1) / float(decay_episodes))
             epsilon = 1.0 + (0.05 - 1.0) * frac
             try:
-                result = self.run_episode(epsilon)
+                # 端到端策略纯用图像，不需要雷达点云：关掉每步 read_lidar
+                # 的冗余 RPC，避免 200 回合 × 200 步的无效往返把训练时长翻倍。
+                result = self.run_episode(epsilon, use_lidar=False)
             except Exception as exc:  # pragma: no cover
                 print('回合 %d 异常: %s' % (ep, exc))
                 continue
@@ -107,22 +114,28 @@ class End2EndTrainer(DQNTrainer):
                      epsilon, result['loss'], rate * 100))
 
             with open(self.log_path, 'a', newline='') as f:
-                import csv as _csv
-                _csv.writer(f).writerow([ep, result['steps'],
-                                         round(result['reward'], 3),
-                                         round(result['distance'], 3),
-                                         int(result['success']),
-                                         int(result['collision']),
-                                         round(epsilon, 4),
-                                         round(result['loss'], 5)])
+                csv.writer(f).writerow(
+                    [ep, result['steps'], round(result['reward'], 3),
+                     round(result['distance'], 3), int(result['success']),
+                     int(result['collision']), int(result['near_miss']),
+                     round(epsilon, 4), round(result['loss'], 5)])
 
-            if ep % 10 == 0:
-                self.agent.save(os.path.join(MODEL_DIR, 'dqn_e2e.pt'))
+            # dqn_e2e.pt 永远是可部署的“当前最佳”；最后一回合另存 last
+            if ep % 20 == 0:
+                self.agent.save(os.path.join(MODEL_DIR, 'dqn_e2e_last.pt'))
             if len(successes) >= 20 and rate > best_rate:
                 best_rate = rate
                 self.agent.save(os.path.join(MODEL_DIR, 'dqn_e2e_best.pt'))
+                self.agent.save(os.path.join(MODEL_DIR, 'dqn_e2e.pt'))
 
-        self.agent.save(os.path.join(MODEL_DIR, 'dqn_e2e.pt'))
+        self.agent.save(os.path.join(MODEL_DIR, 'dqn_e2e_last.pt'))
+        if best_rate > 0.0 and os.path.exists(
+                os.path.join(MODEL_DIR, 'dqn_e2e_best.pt')):
+            # 保证交付权重就是最佳权重，而不是最后一回合覆盖的结果
+            best = os.path.join(MODEL_DIR, 'dqn_e2e_best.pt')
+            with open(best, 'rb') as src, open(
+                    os.path.join(MODEL_DIR, 'dqn_e2e.pt'), 'wb') as dst:
+                dst.write(src.read())
         print('训练完成，最佳近 20 回合成功率 %.0f%%' % (best_rate * 100))
 
 

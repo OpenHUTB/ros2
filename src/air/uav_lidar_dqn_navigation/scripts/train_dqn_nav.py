@@ -64,9 +64,10 @@ class DQNTrainer(object):
         self.vehicle = vehicle
 
         self.agent = DQNAgent(state_dim=32, action_dim=NUM_ACTIONS)
-        if resume and os.path.exists(resume):
-            self.agent.load(resume)
-            print('已加载模型 %s' % resume)
+        # 断点加载延后到 load_checkpoint()：子类（端到端）要先把 self.agent
+        # 替换成图像网络再加载，若在这里按雷达网络先 load，state_dict 的 key
+        # 对不上会直接崩。
+        self.resume = resume
 
         self.episodes = episodes
         self.max_steps = max_steps
@@ -84,6 +85,18 @@ class DQNTrainer(object):
         if not os.path.exists(self.log_path):
             with open(self.log_path, 'w', newline='') as f:
                 csv.writer(f).writerow(self.log_header)
+
+    def load_checkpoint(self, resume_path):
+        """按当前 self.agent 的结构加载断点（含优化器状态与步数）。
+
+        必须在 self.agent 确定为最终网络（雷达 MLP 或端到端图像网络）之后调用。
+        """
+        if resume_path and os.path.exists(resume_path):
+            ckpt = self.agent.load(resume_path)
+            self.resume = resume_path
+            print('已加载模型 %s' % resume_path)
+            return ckpt
+        return None
 
     @staticmethod
     def _load_free_points(path):
@@ -182,9 +195,9 @@ class DQNTrainer(object):
     def potential(pos, goal):
         return math.hypot(goal[0] - pos[0], goal[1] - pos[1])
 
-    def run_episode(self, epsilon):
+    def run_episode(self, epsilon, use_lidar=True):
         st = self.reset_episode()
-        points = self.read_lidar()
+        points = self.read_lidar() if use_lidar else np.zeros((0, 3), np.float32)
         last_action = 0
         state = self.build(st, points, last_action)
         prev_dist = self.potential(st['pos'], self.goal)
@@ -200,7 +213,8 @@ class DQNTrainer(object):
             self.send_action(action)
 
             st2 = self.read_state()
-            points2 = self.read_lidar()
+            points2 = (self.read_lidar() if use_lidar
+                       else np.zeros((0, 3), np.float32))
             next_state = self.build(st2, points2, action)
 
             dist = self.potential(st2['pos'], self.goal)
@@ -335,6 +349,7 @@ def main():
 
     trainer = DQNTrainer(args.ip, args.vehicle, args.episodes, args.resume,
                          args.seed, args.max_steps, args.free_points)
+    trainer.load_checkpoint(args.resume)
     trainer.train()
 
 

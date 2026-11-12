@@ -54,7 +54,21 @@ class CameraNode(object):
                 rgb = responses[0]
                 if rgb and rgb.image_data_uint8:
                     img = np.frombuffer(rgb.image_data_uint8, dtype=np.uint8)
-                    if img.size == rgb.height * rgb.width * 3:
+                    expected_3ch = rgb.height * rgb.width * 3
+                    expected_4ch = rgb.height * rgb.width * 4
+                    if img.size == expected_4ch:
+                        # AirSim 个别版本返回 RGBA(hw4)，截前三通道拼成 BGR
+                        frame = img.reshape(rgb.height, rgb.width, 4)[:, :, :3]
+                    elif img.size == expected_3ch:
+                        frame = img.reshape(rgb.height, rgb.width, 3)
+                    else:
+                        rospy.logerr_throttle(
+                            5.0, '相机图像尺寸不匹配: 收到 %d 字节，期望 %d(RGB) '
+                            '或 %d(RGBA)；本帧跳过',
+                            img.size, expected_3ch, expected_4ch)
+                        frame = None
+
+                    if frame is not None:
                         msg = Image()
                         msg.header.stamp = rospy.Time.now()
                         msg.header.frame_id = 'camera_link'
@@ -62,7 +76,7 @@ class CameraNode(object):
                         msg.width = rgb.width
                         msg.encoding = 'bgr8'
                         msg.step = rgb.width * 3
-                        msg.data = img.tobytes()
+                        msg.data = frame.tobytes()
                         self.rgb_pub.publish(msg)
 
                 depth = responses[1]
