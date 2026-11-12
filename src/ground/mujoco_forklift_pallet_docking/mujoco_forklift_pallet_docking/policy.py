@@ -58,6 +58,6 @@ class ImagePolicy:
 def teacher_action(distance: float, speed: float) -> np.ndarray:
     """Supervisory braking target from stopping distance and current speed."""
     required = speed * speed / 8.0 - 0.40
-    brake = float(distance <= required)
+    brake = float(distance <= required + 1e-12 * max(1.0, abs(required)))
     throttle = float(brake == 0.0 and speed < 2.8)
     return np.array([throttle, brake], dtype=np.float64)
