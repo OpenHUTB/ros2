@@ -322,29 +322,31 @@
 </li>
 <li class="toctree-l1 current"><a class="reference internal current" href="#">基于MuJoCo的AEB自动紧急制动仿真</a>
 <ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="#1">1 项目简介</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#2">2 原理介绍</a>
+<li class="toctree-l2"><a class="reference internal" href="#1">1. 原理</a>
 <ul>
-<li class="toctree-l3"><a class="reference internal" href="#21-ttc">2.1 TTC碰撞时间公式</a>
+<li class="toctree-l3"><a class="reference internal" href="#11-ttc">1.1 TTC 碰撞时间</a>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#22-aeb">2.2 AEB比例制动控制逻辑</a>
+<li class="toctree-l3"><a class="reference internal" href="#12">1.2 比例制动 + 制动保持</a>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#23-mujoco">2.3 MuJoCo模型说明</a>
+<li class="toctree-l3"><a class="reference internal" href="#13">1.3 模型与两个必须注意的细节</a>
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#3">3 环境依赖</a>
+<li class="toctree-l2"><a class="reference internal" href="#2">2. 运行环境</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#4">4 编译与运行</a>
+<li class="toctree-l2"><a class="reference internal" href="#3">3. 编译与运行</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#5">5 运行效果</a>
+<li class="toctree-l2"><a class="reference internal" href="#4">4. 运行效果</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#6">6 实验结果</a>
+<li class="toctree-l2"><a class="reference internal" href="#5-csv">5. 实验结果（本机实测，可由 CSV 逐点复算）</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#7">7 文件结构</a>
+<li class="toctree-l2"><a class="reference internal" href="#6">6. 常见问题</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#8">8 大模型声明</a>
+<li class="toctree-l2"><a class="reference internal" href="#7">7. 文件结构</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#8">8. 已知限制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#9">9. 大模型声明</a>
 </li>
 </ul>
 </li>
@@ -1074,94 +1076,265 @@
 </div>
 <div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
 <div class="section" itemprop="articleBody">
-<div><h1 id="mujocoaebttc">基于MuJoCo的自动紧急制动（AEB）TTC仿真</h1>
-<h2 id="1">1 项目简介</h2>
-<p>本项目基于MuJoCo物理引擎搭建车辆动力学模型，实现<strong>TTC碰撞时间型自动紧急制动AEB</strong>仿真验证。
-AEB核心目标是实时计算碰撞风险，当TTC低于安全阈值时输出比例制动力，对自车进行减速干预，避免与前车发生追尾碰撞。
-项目采用Python实现控制逻辑，适配 Ubuntu20.04 + ROS Noetic，可输出自车速度、TTC、制动控制信号时序曲线。</p>
-<h2 id="2">2 原理介绍</h2>
-<h3 id="21-ttc">2.1 TTC碰撞时间公式</h3>
-<p>TTC=\frac{d}{v_{ego}-v_{lead}}</p>
+<div><h1 id="mujoco-aebttc">基于 MuJoCo 的自动紧急制动（AEB）TTC 仿真</h1>
+<p>两车纵向场景下的 <strong>TTC（Time-To-Collision）型自动紧急制动</strong>：实时由间距与相对速度
+算碰撞时间，低于阈值时输出比例制动力，把自车在撞上前车之前停住。本文重点不是
+"看它刹住了"，而是给出<strong>可复算的安全指标</strong>：最小净间距、是否碰撞、碰撞瞬间速度、
+制动距离、最小 TTC，以及"初速度 × 增益"的覆盖范围。</p>
+<p>源码位于 <a href="https://github.com/OpenHUTB/ros2/tree/master/src/ground/mujoco_vehicle_aeb"><code>src/ground/mujoco_vehicle_aeb</code></a>，
+完整说明（参数、调参记录、常见问题）见该目录的
+<a href="https://github.com/OpenHUTB/ros2/blob/master/src/ground/mujoco_vehicle_aeb/README.md"><code>README.md</code></a>。</p>
+<h2 id="1">1. 原理</h2>
+<h3 id="11-ttc">1.1 TTC 碰撞时间</h3>
+<p>
+<script type="math/tex; mode=display">
+\text{TTC} = \frac{d}{v_{\text{ego}} - v_{\text{lead}}}
+</script>
+</p>
+<p>其中 <script type="math/tex">d</script> 为两车间距、<script type="math/tex">v_{\text{ego}}</script> 为自车纵向速度、<script type="math/tex">v_{\text{lead}}</script> 为前车速度。
+相对速度 <script type="math/tex">\le 0</script>（不再接近）时不存在碰撞风险，TTC 取一个<strong>明显不可达</strong>的值
+（代码里是 99 s），而不是 0 或负数——否则下游很容易把"安全"当成"马上要撞"。</p>
+<h3 id="12">1.2 比例制动 + 制动保持</h3>
+<p>
+<script type="math/tex; mode=display">
+\text{brake} = \mathrm{clip}\Big(g \cdot \big(1 - \frac{\text{TTC}}{\text{TTC}_{\text{th}}}\big),\, 0,\, 1\Big),
+\qquad \text{TTC} < \text{TTC}_{\text{th}} \text{ 时介入}
+</script>
+</p>
+<p>制动力再乘以力上限（默认 6000 N ≈ 0.6 g）施加到车身。</p>
+<p><strong>为什么还需要"制动保持"</strong>：只按上面的比例律算，制动会抬高 TTC，TTC 抬高又把制动力
+压回去，形成负反馈——实测 5 m/s、32.6 m 间距工况下制动力长期只有 0.15，车以约
+0.9 m/s² 缓慢逼近，12 s 仍未停住，本质上退化成"贴脸才刹"。AEB 的工程做法是
+<strong>触发后保持一个制动下限</strong>（默认 0.35），直到自车停住、或前车加速拉开距离
+（相对速度 ≤ 0 且 TTC 恢复到 1.5 倍阈值）才解除。可用 <code>--no-latch</code> 复现纯比例律做对照。</p>
+<h3 id="13">1.3 模型与两个必须注意的细节</h3>
+<p>模型里自车是 <code>freejoint</code>（可平移可转）、前车是沿 x 的滑移关节，通过 <code>qfrc_applied</code>
+施加纵向力。两个细节是实测踩出来的：</p>
 <ul>
-<li>d：自车与前车纵向距离(m)</li>
-<li>v_{ego}：自车纵向速度(m/s)</li>
-<li>v_{lead}：前车纵向速度(m/s)</li>
+<li><strong>制动方向必须逆着运动方向</strong>。模型没有滚动阻力，若恒定沿 −x 施力，车停下后会
+  继续反向加速（实测 12 s 时 v = −19.5 m/s，等于倒着开）。<code>apply_brake</code> 按速度符号取方向；
+  低速段用"驻车保持"把速度清零（近似真实车辆的停车保持），否则自车会以零点几 m/s 一直滑。</li>
+<li><strong>必须按关节名取下标</strong>。原实现用 <code>qpos[11]</code> / <code>qvel[10]</code> 读前车，而该模型只有
+  11 个 qpos、10 个 qvel（前车当时没有关节），一进循环就 <code>IndexError</code>，脚本根本跑不起来。</li>
 </ul>
+<h2 id="2">2. 运行环境</h2>
+<table>
+<thead>
+<tr>
+<th>组件</th>
+<th>实测版本 / 说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>操作系统</td>
+<td>Windows 11 原生（Linux/macOS 同样可用）</td>
+</tr>
+<tr>
+<td>Python</td>
+<td>3.12.14</td>
+</tr>
+<tr>
+<td>MuJoCo</td>
+<td><strong>3.2.7</strong>（3.17.0 的 DLL 在本机被 Windows Smart App Control 拦截，见 §6 FAQ）</td>
+</tr>
+<tr>
+<td>numpy</td>
+<td>2.3.5</td>
+</tr>
+<tr>
+<td>matplotlib</td>
+<td>3.11.2（可选，仅出图用；缺失时只写 CSV，退出码仍为 0）</td>
+</tr>
+<tr>
+<td>ROS / 图形界面</td>
+<td><strong>都不需要</strong>（默认离线批跑；<code>--gui</code> 才开窗口）</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>src/ground/mujoco_vehicle_aeb
+pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt<span class="w">      </span><span class="c1"># mujoco + numpy</span>
+pip<span class="w"> </span>install<span class="w"> </span>matplotlib<span class="w">               </span><span class="c1"># 可选</span>
+</code></pre></div>
+<h2 id="3">3. 编译与运行</h2>
+<div class="highlight"><pre><span></span><code><span class="c1"># 方式 1：直接跑（推荐，无需 ROS）</span>
+python3<span class="w"> </span>main.py<span class="w">                       </span><span class="c1"># 三场景 + 工况扫描，产物写到 ./shots</span>
+bash<span class="w"> </span>scripts/main.sh<span class="w">                  </span><span class="c1"># Linux/macOS 包装脚本</span>
+main.bat<span class="w">                              </span><span class="c1"># Windows 包装脚本</span>
+
+<span class="c1"># 方式 2：rosrun / roslaunch（需要 catkin 工作空间）</span>
+catkin_make<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">source</span><span class="w"> </span>devel/setup.bash
+rosrun<span class="w">   </span>mujoco_vehicle_aeb<span class="w"> </span>main.py
+roslaunch<span class="w"> </span>mujoco_vehicle_aeb<span class="w"> </span>main.launch<span class="w"> </span>gui:<span class="o">=</span><span class="nb">false</span><span class="w"> </span>v_ego:<span class="o">=</span><span class="m">8</span>
+
+<span class="c1"># 方式 3：可视化窗口（需要图形界面）</span>
+python3<span class="w"> </span>main.py<span class="w"> </span>--gui
+
+<span class="c1"># 方式 4：单元测试</span>
+python3<span class="w"> </span>main.py<span class="w"> </span>--selftest<span class="w">            </span><span class="c1"># 28 项</span>
+</code></pre></div>
+<p>常用参数：<code>--ttc</code>（阈值 s）、<code>--gain</code>、<code>--v-ego</code>、<code>--v-lead</code>、<code>--lead-x</code>、<code>--sim-time</code>、
+<code>--max-force</code>、<code>--no-latch</code>、<code>--no-sweep</code>、<code>--save-dir</code>。</p>
+<h2 id="4">4. 运行效果</h2>
+<p><img alt="AEB 闭环曲线" src="../../img/ground/mujoco_vehicle_aeb_curves.png"/></p>
+<p>四张子图自上而下：自车速度、与前车的净间距、TTC（虚线为阈值）、制动量。
+蓝线（基线）在 TTC 降到 5 s 时开始制动，制动力保持 0.35，约 4.2 s 停住，
+停住时距前车还有 18.7 m；红线（关闭 AEB）保持 5 m/s 一路撞过去。</p>
+<p><img alt="覆盖范围扫描" src="../../img/ground/mujoco_vehicle_aeb_sweep.png"/></p>
+<p>最小净间距随初速度变化，按增益分组。红色虚线是碰撞边界：曲线落在它下面就是撞了。
+增益 0（相当于关闭 AEB）在 5 m/s 以上全部失守；增益 1.4 / 2.1 能覆盖到 16 m/s。</p>
+<h2 id="5-csv">5. 实验结果（本机实测，可由 CSV 逐点复算）</h2>
+<p>工况：自车 5 m/s、前车静止在 35 m 处、TTC 阈值 5 s、增益 1.4、制动力上限 6000 N。</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>最小净间距</th>
+<th>是否碰撞</th>
+<th>碰撞速度</th>
+<th>最小 TTC</th>
+<th>制动介入</th>
+<th>制动距离</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>baseline</code>（AEB 开）</td>
+<td><strong>18.72 m</strong></td>
+<td>否</td>
+<td>—</td>
+<td>4.99 s</td>
+<td>1.59 s</td>
+<td><strong>13.88 m</strong></td>
+</tr>
+<tr>
+<td><code>no_aeb</code>（增益 0，对照组）</td>
+<td>−35.04 m</td>
+<td><strong>是</strong></td>
+<td><strong>4.95 m/s</strong></td>
+<td>−86.29 s</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>high_speed</code>（12 m/s）</td>
+<td>10.69 m</td>
+<td>否</td>
+<td>—</td>
+<td>2.71 s</td>
+<td>0.00 s</td>
+<td>21.91 m</td>
+</tr>
+</tbody>
+</table>
+<p>"初速度 × 增益"覆盖扫描（数字为最小净间距 m，<code>撞</code> = 发生碰撞）：</p>
+<table>
+<thead>
+<tr>
+<th>v (m/s) \ gain</th>
+<th>0（关闭）</th>
+<th>0.7</th>
+<th>1.4</th>
+<th>2.1</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>3</td>
+<td>−11.96 撞</td>
+<td>12.67</td>
+<td>12.67</td>
+<td>12.67</td>
+</tr>
+<tr>
+<td>5</td>
+<td>−35.04 撞</td>
+<td>18.72</td>
+<td>18.72</td>
+<td>18.72</td>
+</tr>
+<tr>
+<td>8</td>
+<td>−35.06 撞</td>
+<td>17.21</td>
+<td>17.21</td>
+<td>17.30</td>
+</tr>
+<tr>
+<td>12</td>
+<td>−35.09 撞</td>
+<td>3.10</td>
+<td>10.69</td>
+<td>13.82</td>
+</tr>
+<tr>
+<td>16</td>
+<td>−35.12 撞</td>
+<td><strong>−12.15 撞</strong></td>
+<td>6.70</td>
+<td>9.33</td>
+</tr>
+</tbody>
+</table>
+<p>读法：增益 0 时每一档都撞，这正是 AEB 的价值；增益 0.7 在 16 m/s 已经失守；
+1.4 与 2.1 能覆盖到 16 m/s，且间距随增益增大。</p>
 <blockquote>
-<p>当相对速度 v_{ego}-v_{lead}\le0，两车距离不会继续缩小，无碰撞风险，TTC置为无穷大。</p>
+<p>口径说明：<code>no_aeb</code> 的"最小间距 −35 m"表示自车<strong>穿过</strong>了静止前车（模型只做纵向、
+碰撞没有响应），用于对照"没刹车会怎样"；碰撞速度取首次接触瞬间的自车速度。
+全部指标由 <code>shots/aeb_metrics.csv</code> 与 <code>*_series.csv</code> 复算，仿真为定步长 0.001 s。</p>
 </blockquote>
-<h3 id="22-aeb">2.2 AEB比例制动控制逻辑</h3>
-<ol>
-<li>若自车速度接近0，不输出制动；</li>
-<li>计算相对速度，无靠近风险则制动力置0；</li>
-<li>当 TTC &lt; TTC_{threshold} 触发制动，采用比例制动：</li>
-</ol>
-<p>brake = gain \cdot \left(1-\frac{TTC}{TTC_{threshold}}\right)</p>
-<ol>
-<li>制动输出限幅 brake\in[0,1]，映射为广义制动力施加至车身；</li>
-<li>制动降低自车速度，抬高TTC，抑制碰撞风险。</li>
-</ol>
-<h3 id="23-mujoco">2.3 MuJoCo模型说明</h3>
-<p>车辆包含自车与前车两个刚体，使用自由关节实现纵向运动；通过<code>qfrc_applied</code>施加纵向制动力，viewer可视化整车运动场景。</p>
-<h2 id="3">3 环境依赖</h2>
-<p>Ubuntu 20.04 + ROS Noetic
-依赖版本：
-- mujoco==2.3.7
-- numpy==1.21.6
-- matplotlib==3.4.3</p>
-<p>依赖安装：
-</p><div class="highlight"><pre><span></span><code>pip3<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
-</code></pre></div>
-<h2 id="4">4 编译与运行</h2>
-<div class="highlight"><pre><span></span><code># catkin工作空间编译
-catkin_make
-source devel/setup.bash
-
-# 方式1：脚本启动
-bash src/ground/mujoco_vehicle_aeb/scripts/main.sh
-
-# 方式2：rosrun启动
-rosrun mujoco_vehicle_aeb main.py
-
-# 方式3：直接python调试运行
-python3 scripts/main.py
-</code></pre></div>
-<h2 id="5">5 运行效果</h2>
-<p>仿真现象：
-https://github.com/yi-lu-ping-an/ros2/blob/add-mujoco-aeb/docs/img/aeb_demo.gif</p>
-<ul>
-<li>仿真初期自车匀速向前行驶，前车保持静止，TTC 数值持续下降；</li>
-<li>TTC 下降至设定安全阈值后 AEB 系统触发，输出平滑增大的制动力，自车开始减速；</li>
-<li>制动介入后 TTC 被抬升，有效规避追尾事故。</li>
-</ul>
-<h2 id="6">6 实验结果</h2>
-<p>程序运行结束自动生成 <code>result.png</code>，包含 3 组时序曲线：
-1. 自车行驶速度
-2. TTC 碰撞时间以及安全阈值虚线
-3. AEB 制动输出信号（0~1）</p>
-<h2 id="7">7 文件结构</h2>
+<p><img alt="AEB 演示动图（由仿真状态序列重绘）" src="../../img/ground/mujoco_vehicle_aeb_demo.gif"/></p>
+<blockquote>
+<p>上图<strong>不是 GUI 录屏</strong>，而是用同一次仿真的状态序列（<code>*_series.csv</code>）逐帧重绘的示意图：
+上排 AEB 开启、下排关闭 AEB，右侧实时显示 <code>t / v / gap / brake</code>。
+之所以这样做：本机验证环境没有图形界面，用真实数据重绘比"贴一张来源不明的录屏"更可复算。</p>
+</blockquote>
+<h2 id="6">6. 常见问题</h2>
+<p><strong>Q1：<code>import mujoco</code> 报 <code>OSError: [WinError 4551] 应用程序控制策略阻止了此文件</code>？</strong>
+Windows Smart App Control 拦截了该版本 DLL。换 <code>pip install "mujoco==3.2.7"</code> 即可
+（本机实测通过）；或自行关闭智能应用控制（该开关不可逆，请评估后再动）。</p>
+<p><strong>Q2：<code>--gui</code> 打不开窗口？</strong>
+GUI 需要图形界面与 GLFW；无显示环境直接用默认的离线批跑，指标与 CSV 完全一样。</p>
+<p><strong>Q3：为什么"无 AEB"场景 TTC 会出现负数、间距 −35 m？</strong>
+碰撞后两车重叠、相对速度仍为正，按定义算出的 TTC 就是负的；间距 −35 表示自车
+已经穿过前车。这些值只用于对照"没刹车"的后果。</p>
+<p><strong>Q4：为什么刹车后车不会倒着走？</strong>
+真实制动器的力始终与运动方向相反。早期实现恒定沿 −x 施力，而模型没有滚动阻力，
+车停下后会继续反向加速，所以现在按速度符号取方向。</p>
+<h2 id="7">7. 文件结构</h2>
 <div class="highlight"><pre><span></span><code>docs/
-└── ground/
-    └── mujoco_vehicle_aeb.md
-└── img/
-    └── aeb_result.png
-    └── aeb_demo.gif
-src/
-└── ground/
-    └── mujoco_vehicle_aeb/
-        ├── models/
-        │   └── aeb_car.xml
-        ├── scripts/
-        │   ├── main.py
-        │   ├── aeb_controller.py
-        │   └── main.sh
-        ├── CMakeLists.txt
-        ├── package.xml
-        └── requirements.txt
+├── ground/mujoco_vehicle_aeb.md
+└── img/ground/
+    ├── mujoco_vehicle_aeb_curves.png
+    └── mujoco_vehicle_aeb_sweep.png
+src/ground/mujoco_vehicle_aeb/
+├── main.py                     # 入口（转发 scripts/cli.py）
+├── main.bat
+├── models/aeb_car.xml
+├── scripts/
+│   ├── main.py / main.sh       # rosrun 兼容入口 / Linux 包装脚本
+│   ├── cli.py                  # headless（默认）/ --gui / --selftest
+│   ├── aeb_controller.py       # TTC + 比例制动 + 制动保持
+│   ├── aeb_env.py              # MuJoCo 封装（按关节名取地址）
+│   ├── aeb_metrics.py          # 指标（纯函数）
+│   ├── runner.py               # 场景 + 扫描 + CSV
+│   └── plotting.py             # 可选出图
+├── launch/main.launch
+├── test/test_aeb_logic.py      # 28 项
+├── CMakeLists.txt / package.xml / requirements.txt
+└── README.md
 </code></pre></div>
-<h2 id="8">8 大模型声明</h2>
-<pre><code>deepseek,豆包
-</code></pre></div>
+<h2 id="8">8. 已知限制</h2>
+<ul>
+<li>模型是<strong>纵向一维简化</strong>：没有转向、没有悬架与轮胎滑移模型，碰撞也没有物理响应。</li>
+<li>没有滚动阻力与静摩擦，低速段用"驻车保持"把速度清零（近似真实车辆停车保持）。</li>
+<li>前车匀速、不减速，不覆盖"前车急刹"这类更难的工况。</li>
+<li>制动力上限 6000 N（≈0.6 g）按乘用车量级取值，未做实车标定。</li>
+<li>本机未安装 ROS，<code>catkin_make</code> / <code>roslaunch</code> 路径尚未实测。</li>
+</ul>
+<h2 id="9">9. 大模型声明</h2>
+<p>本文档及配套代码在编写过程中使用了 AI 大模型辅助（需求分析、代码重构、参数调试、文档撰写）。
+所有数字均由本机命令实际跑出（<code>python3 main.py</code> 会重新生成 CSV/PNG）。作者对提交内容负全部责任。</p></div>
 </div>
 </div><footer>
 <div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
