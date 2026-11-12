@@ -228,7 +228,7 @@
 </li>
 </ul>
 <p class="caption"><span class="caption-text">地面载具</span></p>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../offline_checks/">离线测试接入 GitHub Actions</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../encoder_quantization_velocity/">编码器量化误差与速度估计滤波对比</a>
@@ -357,47 +357,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../mujoco_obstacle_avoidance/">MuJoCo 差速小车射线绕行避障</a>
 </li>
-<li class="toctree-l1 current"><a class="reference internal current" href="#">MuJoCo 差速小车沿墙巡线</a>
-<ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="#1">1. 问题描述</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#2">2. 运行环境（实际验证）</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#3">3. 算法</a>
-<ul>
-<li class="toctree-l3"><a class="reference internal" href="#31">3.1 差速运动学</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#32">3.2 偏航角解算</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#33">3.3 航点闭环状态机</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#34-pd">3.4 贴墙侧距 PD 与防撞限速</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#35">3.5 碰撞与到达判定</a>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#4-modelswall_followingxml">4. 模型参数（models/wall_following.xml）</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#5">5. 运行步骤</a>
-<ul>
-<li class="toctree-l3"><a class="reference internal" href="#51">5.1 安装依赖</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#52">5.2 运行</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#53">5.3 测试与录帧</a>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#6-mujoco-3170">6. 实测结果（本机 mujoco 3.17.0 实测）</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#7">7. 运行效果</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#8">8. 已知限制</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#9">9. 大模型使用声明</a>
-</li>
-</ul>
+<li class="toctree-l1"><a class="reference internal" href="../diff_drive_maze/">MuJoCo 差速小车走迷宫</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../mujoco_car_avoidance/">MuJoCo 地面小车射线感知与分级减速避障</a>
 </li>
@@ -1029,7 +989,6 @@
 <div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
 <ul class="wy-breadcrumbs">
 <li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
-<li class="breadcrumb-item">地面载具</li>
 <li class="breadcrumb-item active">MuJoCo 差速小车沿墙巡线</li>
 <li class="wy-breadcrumbs-aside">
 <a href="https://github.com/OpenHUTB/ros2/edit/master/docs/ground/mujoco_wall_following.md"> 编辑页面</a>
@@ -1229,10 +1188,6 @@ ros2<span class="w"> </span>launch<span class="w"> </span>mujoco_wall_following<
 <p>本作业的代码与文档在编写过程中使用了<strong>豆包（Doubao）</strong> AI 大模型辅助，本人已核对并确认提交内容，对提交内容负责。</p></div>
 </div>
 </div><footer>
-<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
-<a class="btn btn-neutral float-left" href="../mujoco_obstacle_avoidance/" title="MuJoCo 差速小车射线绕行避障"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
-<a class="btn btn-neutral float-right" href="../mujoco_car_avoidance/" title="MuJoCo 地面小车射线感知与分级减速避障">后一页 <span class="icon icon-circle-arrow-right"></span></a>
-</div>
 <hr/>
 <div role="contentinfo">
 <!-- Copyright etc -->
@@ -1248,8 +1203,6 @@ ros2<span class="w"> </span>launch<span class="w"> </span>mujoco_wall_following<
 <span>
 <a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
 </span>
-<span><a href="../mujoco_obstacle_avoidance/" style="color: #fcfcfc">« 前一页</a></span>
-<span><a href="../mujoco_car_avoidance/" style="color: #fcfcfc">后一页 »</a></span>
 </span>
 </div>
 <script src="../../js/jquery-3.6.0.min.js"></script>
