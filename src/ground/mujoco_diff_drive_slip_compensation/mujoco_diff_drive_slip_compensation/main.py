@@ -74,6 +74,7 @@ def _build_node_class(deps: dict[str, Any]) -> type:
             self.declare_parameter('accelerometer_noise_std', 0.02)
             self.declare_parameter('gyroscope_noise_std', 0.002)
 
+
             package_share = Path(
                 get_package_share_directory(
                     'mujoco_diff_drive_slip_compensation'
@@ -124,7 +125,6 @@ def _build_node_class(deps: dict[str, Any]) -> type:
                 Odometry, 'ground_truth/odom', 10
             )
             self._clock_publisher = self.create_publisher(Clock, '/clock', 10)
-            self._tf_broadcaster = TransformBroadcaster(self)
             self._encoder_publisher = self.create_publisher(
                 JointState, 'wheel/encoders', 10
             )
@@ -135,6 +135,7 @@ def _build_node_class(deps: dict[str, Any]) -> type:
             self._episode_publisher = self.create_publisher(
                 String, 'scenario/episode_id', 10
             )
+            self._tf_broadcaster = TransformBroadcaster(self)
             self.create_subscription(Twist, 'cmd_vel', self._on_command, 10)
             self.create_timer(self._simulation.timestep, self._on_timer)
             self.get_logger().info(
@@ -200,8 +201,6 @@ def _build_node_class(deps: dict[str, Any]) -> type:
             clock.clock.sec = seconds
             clock.clock.nanosec = int((state.time - seconds) * 1_000_000_000)
             self._clock_publisher.publish(clock)
-
-
             positions, velocities = self._simulation.wheel_state()
             noisy_positions, noisy_velocities = self._sensor_noise.encoders(
                 positions, velocities
@@ -237,7 +236,6 @@ def _build_node_class(deps: dict[str, Any]) -> type:
                 imu.linear_acceleration_covariance[index] = acceleration_variance
                 imu.angular_velocity_covariance[index] = angular_variance
             self._imu_publisher.publish(imu)
-
 
             if self._publish_tf:
                 transform = TransformStamped()

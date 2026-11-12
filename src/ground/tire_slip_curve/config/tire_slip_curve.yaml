@@ -1,0 +1,35 @@
+# 轮胎滑移率-附着曲线核算 —— 默认参数
+# 所有值都可以在 roslaunch 命令行用同名 <arg> 覆盖，例如：
+#   roslaunch tire_slip_curve main.launch peak_slip:=0.15 peak_friction:=0.75
+
+tire:
+  # 峰值附着对应的滑移率（干路 0.10~0.15，湿路 0.12~0.20，冰雪 0.20~0.40）
+  peak_slip: 0.12
+  # 峰值附着系数
+  peak_friction: 0.90
+  # ABS 目标带宽（相对峰值滑移率的比例），目标带 = peak_slip * (1 ± abs_band)
+  abs_band: 0.20
+
+road:
+  # 路面类型，仅用于报告标注：dry_asphalt / wet_asphalt / snow / ice
+  surface: dry_asphalt
+
+curve:
+  # 曲线采样点数（s 从 0 到 1 均匀采样）
+  samples: 51
+
+check:
+  # 锁死附着相对峰值的上限比例，越小要求越严
+  lock_friction_ratio: 0.85
+  # 初段线性度允许的相对误差
+  linear_tolerance: 0.02
+  # 峰值位置/大小的允许偏差
+  peak_tolerance: 0.01
+
+rate:
+  publish_hz: 10.0
+
+topic:
+  report: /tire/report
+  curve: /tire/curve
+  peak_slip: /tire/peak_slip

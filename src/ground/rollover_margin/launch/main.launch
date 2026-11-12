@@ -1,0 +1,33 @@
+<launch>
+  <!-- 横向载荷转移与侧翻裕度：所有参数都可用同名 arg 覆盖 -->
+
+  <arg name="track" default="1.54" doc="轮距（m）"/>
+  <arg name="cg_height" default="0.55" doc="质心高度（m）"/>
+  <arg name="mass" default="1500.0" doc="整车质量（kg）"/>
+  <arg name="gravity" default="9.81" doc="重力加速度（m/s²）"/>
+  <arg name="radius" default="30.0" doc="弯道半径（m）"/>
+  <arg name="speed_kmh" default="60.0" doc="过弯车速（km/h）"/>
+  <arg name="rollover_margin" default="0.70" doc="允许的 a_y / a_crit 上限"/>
+  <arg name="transfer_tolerance" default="0.02" doc="载荷转移自洽性容差"/>
+  <arg name="publish_hz" default="10.0" doc="保持挂起时的循环频率（Hz）"/>
+  <arg name="report_topic" default="/rollover/report" doc="文本报告话题"/>
+  <arg name="loads_topic" default="/rollover/loads" doc="车速扫描表话题（CSV 文本）"/>
+  <arg name="critical_speed_topic" default="/rollover/critical_speed" doc="极限车速话题（Float64，km/h）"/>
+
+  <rosparam command="load" file="$(find rollover_margin)/config/rollover_margin.yaml"/>
+
+  <param name="vehicle/track" value="$(arg track)"/>
+  <param name="vehicle/cg_height" value="$(arg cg_height)"/>
+  <param name="vehicle/mass" value="$(arg mass)"/>
+  <param name="vehicle/gravity" value="$(arg gravity)"/>
+  <param name="corner/radius" value="$(arg radius)"/>
+  <param name="corner/speed_kmh" value="$(arg speed_kmh)"/>
+  <param name="check/rollover_margin" value="$(arg rollover_margin)"/>
+  <param name="check/transfer_tolerance" value="$(arg transfer_tolerance)"/>
+  <param name="rate/publish_hz" value="$(arg publish_hz)"/>
+  <param name="topic/report" value="$(arg report_topic)"/>
+  <param name="topic/loads" value="$(arg loads_topic)"/>
+  <param name="topic/critical_speed" value="$(arg critical_speed_topic)"/>
+
+  <node pkg="rollover_margin" type="main.py" name="rollover_margin" output="screen"/>
+</launch>
