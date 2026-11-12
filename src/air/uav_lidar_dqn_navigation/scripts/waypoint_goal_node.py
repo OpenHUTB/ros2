@@ -1,9 +1,17 @@
 #!/usr/bin/env python3
 """Publish successive NED goals for the mapping flight."""
 
+import os
+import sys
+
 import rospy
 from geometry_msgs.msg import PointStamped
 from std_msgs.msg import Float32MultiArray
+
+_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+if _SCRIPT_DIR not in sys.path:
+    sys.path.insert(0, _SCRIPT_DIR)
+
 from lidar_features import advance_waypoint
 
 
