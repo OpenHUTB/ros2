@@ -163,7 +163,6 @@ nav:
         - Windows + Ubuntu 20.04 实测: './control/carla_manual_control.md'
     - 基于里程计反馈与 A* 算法的差速底盘静态全局路径规划: './ground/diff_drive_astar_odom_nav.md'
     - 视觉-惯性时间偏移互相关估计: './ground/vio_time_offset_estimation.md'
-    - ROS2 差速机器人 EKF 多传感器融合定位: './ground/ros2_ekf_localization/index.md'
     - 手动控制: './set_up_and_connect_to_carla.md'
     - 动态障碍物避让：激光雷达帧间差分与神经网络时机决策: './ground/dyn_avoid_nn.md'
     - MNIST 手写数字视觉感知与机器人运动控制: './ground/mnist_digit_control.md'
@@ -329,7 +328,6 @@ nav:
     - ROS2 差速机器人卡死检测与自动脱困: './ground/ros2_stuck_recovery/index.md'
     - 上游心跳看门狗: './ground/heartbeat_watchdog.md'
     - MuJoCo 地面无人车 SLAM 建图导航与神经网络控制: './ground/mujoco_ground_slam_nn_nav/README.md'
-    -强化学习算法对比:'./ground/rl_algorithm_compare/index.md'
 - 空域载具:
     - MuJoCo 城市屋顶光伏覆盖率测量: './air/mujoco_uav_rooftop_pv_coverage_survey.md'
     - MuJoCo 屋顶光伏覆盖率测量第二天: './air/mujoco_uav_rooftop_pv_coverage_survey_day2.md'
