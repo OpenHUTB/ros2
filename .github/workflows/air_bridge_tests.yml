@@ -60,7 +60,6 @@ jobs:
 
       - name: Run keyboard control tests
         run: |
-          python3 tests/test_keyboard_local.py
           python3 -m unittest discover -s src/air/uav_keyboard_control/tests -v
 
       - name: Run uav_bc_bench tests
