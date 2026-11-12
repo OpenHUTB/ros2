@@ -11,7 +11,6 @@ from dataclasses import dataclass
 
 from .params import (
     ControlInput,
-    G,
     TireSpec,
     VehicleSpec,
     VehicleState,

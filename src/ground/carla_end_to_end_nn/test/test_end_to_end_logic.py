@@ -757,6 +757,180 @@ def test_e2e_frame_layout_and_indicator():
     assert abs(rmix - wmix) > 100, f"预测与标签差异很大时应明显分开: {rmix} vs {wmix}"
 
 
+# ---------------------------------------------------------------- 留出集与数据增强
+def test_split_dataset_is_disjoint_and_deterministic():
+    """训练/留出必须互不重叠，且同一 seed 切分结果可复现。
+
+    若切分有重叠，留出指标会被"背过的题"污染——比不做留出集更糟，因为它会
+    给出一个虚假的泛化能力。
+    """
+    X, Y = main_mod.synth_dataset(n=40, seed=0)
+    a = main_mod.split_dataset(X, Y, val_ratio=0.25, seed=7)
+    b = main_mod.split_dataset(X, Y, val_ratio=0.25, seed=7)
+    X_tr, Y_tr, X_val, Y_val = a
+
+    assert len(X_tr) + len(X_val) == 40, f"切分后样本数不守恒: {len(X_tr)}+{len(X_val)}"
+    assert len(X_val) == 10, f"val_ratio=0.25 应留出 10 个，实际 {len(X_val)}"
+    assert Y_tr.shape == (len(X_tr), 1) and Y_val.shape == (len(X_val), 1), "标签形状应保持 (N,1)"
+
+    # 同一 seed 两次切分必须完全一致
+    for p, q in zip(a, b):
+        assert np.array_equal(p, q), "同一 seed 的切分结果不可复现"
+
+    # 互不重叠：用图像原始字节判断，避免"值相同但位置不同"的误判
+    tr_keys = {X_tr[i].tobytes() for i in range(len(X_tr))}
+    va_keys = {X_val[i].tobytes() for i in range(len(X_val))}
+    assert not (tr_keys & va_keys), f"训练集与留出集有重叠样本：{len(tr_keys & va_keys)} 个"
+
+
+def test_split_dataset_disabled_returns_none():
+    """val_ratio=0 时不切分，返回 None（调用方据此跳过留出指标）。"""
+    X, Y = main_mod.synth_dataset(n=8, seed=0)
+    X_tr, Y_tr, X_val, Y_val = main_mod.split_dataset(X, Y, val_ratio=0.0)
+    assert len(X_tr) == 8 and X_val is None and Y_val is None, "val_ratio=0 应整份当训练集"
+
+
+def test_mirror_augmentation_negates_label():
+    """水平镜像增强必须同时把转向标签取负。
+
+    镜像后左弯变右弯，若沿用原标签就是在教网络打反方向——这类错误不会报错，
+    只会让模型"越训练越差"，因此用测试卡住。
+    """
+    X, Y = main_mod.synth_dataset(n=6, seed=3)
+    Xa, Ya = main_mod.augment_dataset(X, Y, copies=1, seed=0, mirror_prob=1.0,
+                                      gain_range=(1.0, 1.0), noise=0.0)
+    assert len(Xa) == len(X), f"copies=1 应生成同样数量的增强样本，实际 {len(Xa)}"
+    for i in range(len(X)):
+        assert np.array_equal(Xa[i], X[i][:, ::-1, :]), f"第 {i} 张图像没有被水平镜像"
+        assert abs(float(Ya[i, 0]) + float(Y[i, 0])) < 1e-6, \
+            f"镜像后标签应取负：原 {float(Y[i, 0]):+.3f} → 实际 {float(Ya[i, 0]):+.3f}"
+
+
+def test_photometric_augmentation_keeps_label():
+    """纯光度扰动（无镜像、无噪声、增益=1）必须逐像素等于原图且标签不变。"""
+    X, Y = main_mod.synth_dataset(n=6, seed=4)
+    Xa, Ya = main_mod.augment_dataset(X, Y, copies=1, seed=0, mirror_prob=0.0,
+                                      gain_range=(1.0, 1.0), noise=0.0)
+    assert np.array_equal(Xa, X), "增益=1、噪声=0 时图像应保持不变"
+    assert np.allclose(Ya, Y), "光度扰动不应改变转向标签"
+
+
+def test_augmentation_output_is_valid_uint8():
+    """增强结果必须是 uint8 且落在 [0,255]：网络内部按 /255 归一化，越界会失真。"""
+    X, Y = main_mod.synth_dataset(n=5, seed=5)
+    Xa, Ya = main_mod.augment_dataset(X, Y, copies=2, seed=1, mirror_prob=0.5)
+    assert Xa.dtype == np.uint8, f"增强图像应为 uint8，实际 {Xa.dtype}"
+    assert Xa.min() >= 0 and Xa.max() <= 255, f"像素越界: [{Xa.min()}, {Xa.max()}]"
+    assert len(Xa) == 2 * len(X), f"copies=2 应生成 2 倍样本，实际 {len(Xa)}"
+    assert Ya.shape == (len(Xa), 1), f"标签形状应为 (N,1)，实际 {Ya.shape}"
+
+
+def test_evaluate_steer_metrics():
+    """指标函数：完美预测 MAE=0/相关=1；常数预测的相关应为 0 而不是 NaN。"""
+    y = np.array([-0.6, -0.2, 0.0, 0.4, 0.8], dtype=np.float32)
+    perfect = main_mod.evaluate_steer(y, y)
+    assert perfect["mae"] < 1e-9 and perfect["sign_acc"] == 1.0, f"完美预测指标不对: {perfect}"
+    assert abs(perfect["corr"] - 1.0) < 1e-6, f"完美预测相关系数应为 1，实际 {perfect['corr']}"
+
+    const = main_mod.evaluate_steer(np.zeros_like(y), y)
+    assert const["corr"] == 0.0, f"常数预测（网络塌缩）相关系数应为 0，实际 {const['corr']}"
+    assert abs(const["mae"] - const["base_mae"]) < 1e-9, "恒输出 0 的 MAE 应等于零输出基线"
+
+
+def test_train_cnn_records_holdout_curve():
+    """传了留出集时：逐 epoch 记录 val MSE，训练结束给出留出集指标。"""
+    X, Y = main_mod.synth_dataset(n=12, seed=0)
+    X_tr, Y_tr, X_val, Y_val = main_mod.split_dataset(X, Y, val_ratio=0.25)
+    with tempfile.TemporaryDirectory() as d:
+        _net, hist = main_mod.train_cnn(
+            X_tr, Y_tr, os.path.join(d, "cnn.json"), epochs=2,
+            X_val=X_val, Y_val=Y_val)
+    assert len(hist["val"]) == 2, f"应有 2 个 epoch 的验证曲线，实际 {len(hist['val'])}"
+    assert hist["val_metrics"] is not None, "缺少留出集指标"
+    assert hist["val_metrics"]["n"] == len(X_val), "留出集指标样本数与切分不一致"
+
+
+def test_augment_ablation_table():
+    """消融实验：三组配置 × 三档光度条件，落盘柱状图与指标表（3×3=9 行）。"""
+    X, Y = main_mod.synth_dataset(n=12, seed=0)
+    X_tr, Y_tr, X_val, Y_val = main_mod.split_dataset(X, Y, val_ratio=0.25)
+    with tempfile.TemporaryDirectory() as d:
+        rows, png, csv_path = main_mod.run_augment_ablation(
+            X_tr, Y_tr, X_val, Y_val, epochs=1, save_dir=d, seed=0)
+        assert [r["label"] for r in rows] == ["base", "copy x2", "aug"], \
+            f"消融配置不对: {[r['label'] for r in rows]}"
+        for r in rows:
+            assert set(r["mae"]) == {"clean", "mild", "strong"}, \
+                f"{r['label']} 缺少光度条件: {sorted(r['mae'])}"
+        assert os.path.isfile(png) and os.path.getsize(png) > 0, "没有导出消融柱状图"
+        lines = [ln for ln in open(csv_path, encoding="utf-8").read().splitlines() if ln]
+        assert len(lines) == 10, f"指标表应为表头+9 行，实际 {len(lines)} 行"
+        assert lines[0].startswith("config,shift,"), f"表头不对: {lines[0]}"
+
+
+def test_photometric_shift_keeps_labels_and_is_deterministic():
+    """光度偏移是评测条件：同一 seed 结果一致，且不改变像素值域/类型。"""
+    X, _Y = main_mod.synth_dataset(n=4, seed=0)
+    a = main_mod.photometric_shift(X, gain=0.6, noise=18.0, seed=5)
+    b = main_mod.photometric_shift(X, gain=0.6, noise=18.0, seed=5)
+    assert np.array_equal(a, b), "同一 seed 的光度偏移不可复现"
+    assert a.dtype == np.uint8 and a.min() >= 0 and a.max() <= 255, "偏移后像素越界"
+    # 压暗后整体均值应明显下降
+    assert a.mean() < X.astype(np.float32).mean() * 0.8, "gain=0.6 应让图像整体变暗"
+    # gain=1 且无噪声时应逐像素不变
+    same = main_mod.photometric_shift(X, gain=1.0, noise=0.0)
+    assert np.array_equal(same, X), "无偏移时应与原图一致"
+
+
+def test_parse_gain_flag():
+    """`--aug_gain` 解析：支持 "0.45,1.45" 与单值，非法输入报错。"""
+    assert main_mod.parse_gain("0.45,1.45") == (0.45, 1.45)
+    assert main_mod.parse_gain("0.5") == (0.5, 0.5)
+    assert main_mod.parse_gain("0.5~1.2") == (0.5, 1.2)
+    for bad in ("1.5,0.5", "0,1", "abc"):
+        try:
+            main_mod.parse_gain(bad)
+        except Exception:
+            continue
+        raise AssertionError(f"非法增益区间应报错：{bad}")
+
+
+def test_aug_gain_flag_reaches_demo():
+    """命令行新参数必须真的被解析并传进 run_offline_demo（防止"文档里有、代码没用"）。"""
+    args = main_mod.build_parser().parse_args(
+        ["--headless", "--augment", "--aug_gain", "0.5,1.3", "--aug_noise", "9"])
+    assert tuple(args.aug_gain) == (0.5, 1.3), f"增益区间解析错误: {args.aug_gain}"
+    assert args.aug_noise == 9.0, f"噪声参数解析错误: {args.aug_noise}"
+    assert args.augment is True
+
+
+def test_demo_holdout_mode_runs():
+    """`--val_ratio` / `--augment` 组合应在无 CARLA 环境跑通并导出留出集证据。"""
+    with tempfile.TemporaryDirectory() as d:
+        rc = main_mod.run_offline_demo(d, epochs=2, n_samples=24,
+                                       val_ratio=0.25, augment=True)
+        assert rc == 0
+        produced = sorted(os.listdir(d))
+        for need in ("cnn_loss.png", "steer_pred_vs_true.png", "road_samples.png",
+                     "steer_pred_vs_true.csv"):
+            assert need in produced, f"缺少产物 {need}: {produced}"
+        # 留出集只有 6 个样本：CSV 行数应等于留出集样本数（证明指标来自留出集）
+        rows = [ln for ln in open(os.path.join(d, "steer_pred_vs_true.csv"),
+                                  encoding="utf-8").read().splitlines() if ln]
+        assert len(rows) == 7, f"CSV 应为表头+6 行留出样本，实际 {len(rows)}"
+
+
+def test_evidence_figures_include_holdout_and_ablation():
+    """新增的两张证据图同样必须带标题/坐标轴/图例文字（图要能自证）。"""
+    src = open(_IMPL, encoding="utf-8").read()
+    for fn in ("def render_train_val_png", "def render_ablation_png"):
+        seg = src[src.index(fn):]
+        seg = seg[:seg.index("\ndef ", 1)]
+        assert "draw_text(" in seg, f"{fn} 没有画标题/轴标签"
+    assert "hold-out val" in src, "训练/留出曲线图的标题里应说明留出集"
+    assert "hold-out MAE" in src, "消融柱状图的标题里应说明是留出集 MAE"
+
+
 def _run_all():
     fns = sorted(k for k in list(globals()) if k.startswith("test_"))
     passed, failed = 0, []

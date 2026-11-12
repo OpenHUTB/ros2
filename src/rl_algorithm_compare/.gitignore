@@ -1,0 +1,5 @@
+# 基准评测的默认输出目录（results/ 下的训练曲线/模型是仓库的一部分，不要忽略）
+results/benchmark/
+
+__pycache__/
+*.pyc
