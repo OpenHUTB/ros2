@@ -56,7 +56,7 @@ ros2 topic echo /uav/magnetometer --once
 发布端使用可靠 QoS，因此默认的 `ros2 topic hz` 和 `ros2 topic echo` 可直接
 匹配。AirSim 没有提供协方差时，消息协方差保持全零，表示未知，不填入假设精度。
 
-![磁力计桥接验证成功](../../../docs/img/air/airsim_ros2_magnetometer/preview.png)
+![磁力计桥接代码级验证输出（非真实 AirSim 数据）](../../../docs/img/air/airsim_ros2_magnetometer/preview.png)
 
 默认坐标系为 `base_link`，`publish_rate` 为 `20.0` Hz，
 `connection_timeout` 为 `1.0` 秒，`reconnect_period` 为 `2.0` 秒。
@@ -64,7 +64,7 @@ ros2 topic echo /uav/magnetometer --once
 ## 测试
 
 ```bash
-python3 -m pytest src/air/airsim_ros2_magnetometer/tests -q
+python3 -m pytest src/air/airsim_ros2_magnetometer/test -q
 colcon test --packages-select airsim_ros2_magnetometer
 ```
 

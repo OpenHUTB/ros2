@@ -21,7 +21,7 @@ z_flu = -z_frd
 下游需要 Tesla，应显式设置 `field_scale:=0.0001`。使用前必须确认场景单位。
 发布端使用可靠 QoS；AirSim 未提供协方差时，消息协方差保持全零，表示未知。
 
-![磁力计桥接验证成功](../img/air/airsim_ros2_magnetometer/preview.png)
+![磁力计桥接代码级验证输出（非真实 AirSim 数据）](../img/air/airsim_ros2_magnetometer/preview.png)
 
 ## 2. 构建与运行
 
@@ -33,6 +33,8 @@ ln -s /path/to/ros2/src/air/airsim_ros2_magnetometer \
 cd ~/hutb_ws
 colcon build --symlink-install --packages-select airsim_ros2_magnetometer
 source install/setup.bash
+python3 -m pip install -r \
+  src/air/airsim_ros2_magnetometer/requirements.txt
 ros2 launch airsim_ros2_magnetometer bringup.launch.py \
   host:=<Windows_IP> port:=41451 vehicle_name:=""
 ```
@@ -48,7 +50,7 @@ ros2 topic echo /uav/magnetometer --once
 ## 3. 测试
 
 ```bash
-python3 -m pytest src/air/airsim_ros2_magnetometer/tests -q
+python3 -m pytest src/air/airsim_ros2_magnetometer/test -q
 colcon test --packages-select airsim_ros2_magnetometer
 ```
 

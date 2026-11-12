@@ -6,6 +6,7 @@
   <maintainer email="dmjtr@users.noreply.github.com">dmjtr</maintainer>
   <license>MIT</license>
   <buildtool_depend>python3-setuptools</buildtool_depend>
+  <depend>builtin_interfaces</depend>
   <depend>rclpy</depend>
   <depend>sensor_msgs</depend>
   <exec_depend>ament_index_python</exec_depend>

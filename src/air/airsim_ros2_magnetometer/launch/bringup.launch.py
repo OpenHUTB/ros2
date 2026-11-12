@@ -56,7 +56,10 @@ def generate_launch_description() -> LaunchDescription:
                         "connection_timeout": ParameterValue(
                             connection_timeout, value_type=float
                         ),
-                        "use_sim_time": use_sim_time,
+                        "use_sim_time": ParameterValue(
+                            use_sim_time,
+                            value_type=bool,
+                        ),
                     },
                 ],
             ),
