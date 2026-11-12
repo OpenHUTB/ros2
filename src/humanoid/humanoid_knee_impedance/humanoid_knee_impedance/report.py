@@ -112,7 +112,7 @@ def save_figure(runs, table, figure_path):
                 linewidth=1.3, label='kd = {:.2f}'.format(kd))
     ax.axhline(table[0]['q_cmd'], color='0.4', linestyle='--',
                linewidth=0.9, label='目标角')
-    ax.set_xlim(0.0, 1.2)
+    ax.set_xlim(0.0, 3.0)
     ax.set_title('膝关节阶跃响应（kp = {:.1f}）'.format(kp_mid))
     ax.set_xlabel('阶跃后时间 (s)')
     ax.set_ylabel('膝关节角 (rad)')

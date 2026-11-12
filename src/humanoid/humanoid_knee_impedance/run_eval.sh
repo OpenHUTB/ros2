@@ -3,7 +3,9 @@
 # 在包目录下执行：./run_eval.sh
 set -euo pipefail
 
-DURATION=${DURATION:-2.0}
+# 5 s 覆盖 ζ 最低（≈0.09）那一组的收敛时间 4/(ζ·ω_n) ≈ 2.4 s，
+# 否则尾段平均取到的还不是稳态，稳态误差会被振荡污染。
+DURATION=${DURATION:-5.0}
 OUT_DIR=${OUT_DIR:-results}
 KP_LIST=${KP_LIST:-"2.0 5.0 10.0"}
 KD_LIST=${KD_LIST:-"0.10 0.50 1.00"}
