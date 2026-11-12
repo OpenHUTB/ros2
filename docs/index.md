@@ -196,6 +196,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [车辆键盘遥操作与二维模拟](./ground/vehicle_pygame_teleop.md)
 * [地面车 PID 巡航速度跟踪仿真](./ground/ugv_cruise_pid.md)
 * [差速小车电机温度与电流观测记录](./ground/mujoco_motor_sensor_recorder.md)
+* [ROS2 差速机器人卡死检测与自动脱困](./ground/ros2_stuck_recovery/index.md) —— 用指令/里程计/IMU/测距的一致性区分顶住、打滑、单轮悬空，分级执行倒车-转向-试探脱困，3 级失败停车上报；7 个场景 × 10 种子可离线复现
 
 * [任务1：机器人键盘控制模块](./robot_tasks/teleop_control/README.md)
 * [任务2: 模拟传感器数据源](./robot_tasks/sensor_perception/README.md)
