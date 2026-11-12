@@ -285,6 +285,8 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [不足转向梯度与侧向稳定裕度](./ground/lateral_stability_margin.md) —— 用不足转向梯度与临界车速算「快点打方向会不会失控」，纯代数、可离线断言
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
+* [无人机多传感器感知与给定轨迹跟踪控制](./air/uav_perception_trajectory.md) —— 任务(2)：激光雷达/深度相机感知 + 前馈+PID 轨迹跟踪
+* [无人机物理仿真与键盘运动控制](./air/uav_physical_simulation.md) —— 任务(1)：多旋翼物理仿真 + 机体系速度指令的键盘操控
 * [仓储通道巡检无人机测距与分级制动](./air/mujoco_warehouse_uav_collision_braking.md)
 
 * [多无人机空域监测（多边形禁飞区与机间冲突）](./air/multi_uav_airspace_monitor.md) —— 面向多机轨迹的电子围栏、最近接近距离和冲突解脱建议

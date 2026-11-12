@@ -1,0 +1,14 @@
+# 无人机键盘控制参数
+#
+# 这些参数同时被 launch/main.launch 与 main.py 的命令行参数覆盖。
+# 优先级：命令行 > launch arg > 本文件默认值。
+
+horiz_speed: 2.0    # 水平速度上限 (m/s)，W/S/A/D 生效
+vert_speed:  1.0    # 垂直速度上限 (m/s)，R/F 生效
+yaw_rate:    1.0    # 偏航角速度上限 (rad/s)，Q/E 生效
+
+dt:          0.1    # 控制周期 (s)
+                    # 必须与 carlair_ros_bridge 的 control/cmd_duration 一致，
+                    # 否则指令作用时间与预期不符，会造成过冲或响应迟钝。
+
+cmd_topic:   /uav/cmd_vel

@@ -1,0 +1,58 @@
+<launch>
+  <!--
+    无人机多传感器感知与给定轨迹跟踪控制 —— 课程约定主入口。
+
+    前置条件：桥接必须以 body_frame:=false 启动（本模块输出世界系速度）：
+      roslaunch carlair_ros_bridge main.launch publish_image:=false body_frame:=false
+
+    用法：
+      roslaunch uav_perception_trajectory main.launch
+      roslaunch uav_perception_trajectory main.launch traj:=helix radius:=3.0
+  -->
+
+  <arg name="traj"   default="figure8" doc="轨迹类型: line / helix / figure8"/>
+  <arg name="radius" default="5.0"     doc="轨迹半径 (m)"/>
+  <arg name="omega"  default="0.4"     doc="角频率 (rad/s)"/>
+  <arg name="z"      default="-5.0"    doc="飞行高度 (NED，负值向上)"/>
+  <arg name="cycles" default="3"       doc="轨迹周期数，到达后降落"/>
+
+  <arg name="kp" default="0.8"  doc="比例增益"/>
+  <arg name="ki" default="0.05" doc="积分增益"/>
+  <arg name="kd" default="0.25" doc="微分增益"/>
+
+  <arg name="v_max"  default="3.0"  doc="速度饱和上限 (m/s)"/>
+  <arg name="dt"     default="0.1"  doc="控制周期 (s)，须与桥接 cmd_duration 一致"/>
+
+  <arg name="s_safe" default="0.6"  doc="安全阈值：直方图值高于此则全速"/>
+  <arg name="s_min"  default="0.25" doc="停车阈值：直方图值低于此则停止"/>
+
+  <arg name="cmd_topic"  default="/uav/cmd_vel"    doc="速度指令话题"/>
+  <arg name="lidar_topic" default="/lidar/points"  doc="激光雷达点云话题"/>
+  <arg name="odom_topic"  default="/uav/odom"      doc="里程计话题"/>
+
+  <node pkg="uav_perception_trajectory"
+        type="main.py"
+        name="uav_perception_trajectory"
+        output="screen"
+        required="true">
+    <param name="traj"        value="$(arg traj)"/>
+    <param name="radius"      value="$(arg radius)"/>
+    <param name="omega"       value="$(arg omega)"/>
+    <param name="z"           value="$(arg z)"/>
+    <param name="cycles"      value="$(arg cycles)"/>
+
+    <param name="kp"          value="$(arg kp)"/>
+    <param name="ki"          value="$(arg ki)"/>
+    <param name="kd"          value="$(arg kd)"/>
+
+    <param name="v_max"       value="$(arg v_max)"/>
+    <param name="dt"          value="$(arg dt)"/>
+
+    <param name="s_safe"      value="$(arg s_safe)"/>
+    <param name="s_min"       value="$(arg s_min)"/>
+
+    <param name="cmd_topic"   value="$(arg cmd_topic)"/>
+    <param name="lidar_topic" value="$(arg lidar_topic)"/>
+    <param name="odom_topic"  value="$(arg odom_topic)"/>
+  </node>
+</launch>

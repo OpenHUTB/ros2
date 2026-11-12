@@ -1,0 +1,30 @@
+<launch>
+  <!--
+    无人机物理仿真与键盘运动控制 —— 课程约定主入口。
+
+    前置条件：桥接已启动（终端 1）：
+      roslaunch carlair_ros_bridge main.launch publish_image:=false
+
+    用法：
+      roslaunch uav_physical_simulation main.launch
+      roslaunch uav_physical_simulation main.launch horiz:=1.5 vert:=0.8
+  -->
+
+  <arg name="horiz" default="2.0"  doc="水平速度上限 (m/s)"/>
+  <arg name="vert"  default="1.0"  doc="垂直速度上限 (m/s)"/>
+  <arg name="yaw"   default="1.0"  doc="偏航角速度上限 (rad/s)"/>
+  <arg name="dt"    default="0.1"  doc="控制周期 (s)，须与桥接 cmd_duration 一致"/>
+  <arg name="cmd_topic" default="/uav/cmd_vel" doc="速度指令话题"/>
+
+  <node pkg="uav_physical_simulation"
+        type="main.py"
+        name="uav_keyboard_control"
+        output="screen"
+        required="true">
+    <param name="horiz_speed"  value="$(arg horiz)"/>
+    <param name="vert_speed"   value="$(arg vert)"/>
+    <param name="yaw_rate"     value="$(arg yaw)"/>
+    <param name="dt"           value="$(arg dt)"/>
+    <param name="cmd_topic"    value="$(arg cmd_topic)"/>
+  </node>
+</launch>

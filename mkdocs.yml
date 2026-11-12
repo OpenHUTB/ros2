@@ -272,6 +272,8 @@ nav:
     - 乘坐舒适性传递率: './ground/ride_comfort_transmissibility.md'
     - 不足转向梯度与侧向稳定裕度: './ground/lateral_stability_margin.md'
 - 空域载具:
+    - 无人机多传感器感知与给定轨迹跟踪控制: './air/uav_perception_trajectory.md'
+    - 无人机物理仿真与键盘运动控制: './air/uav_physical_simulation.md'
     - MuJoCo 城市屋顶光伏覆盖率测量: './air/mujoco_uav_rooftop_pv_coverage_survey.md'
     - MuJoCo 屋顶光伏覆盖率测量第二天: './air/mujoco_uav_rooftop_pv_coverage_survey_day2.md'
     - winter 场景无人机圆周飞行: './air/winter_circle.md'
