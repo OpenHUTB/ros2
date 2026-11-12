@@ -52,7 +52,10 @@ def main(argv=None):
     parser.add_argument("--benchmark", action="store_true", help="运行三场景对照 / Run scenario benchmark")
     args = parser.parse_args(argv)
     if args.output is None:
-        args.output = args.dataset if args.collect else Path("results")
+        if args.benchmark or not args.collect:
+            args.output = Path("results")
+        else:
+            args.output = args.dataset
     standalone_task = args.benchmark or args.train or args.evaluate or args.collect
     if not standalone_task and not (0 < args.speed <= 3 and 0 < args.duration <= 120):
         parser.error("速度须在 (0,3]，时长须在 (0,120]。 / Invalid speed or duration.")
