@@ -7,6 +7,8 @@ rclpy 在节点构造时才导入，离线单元测试与离屏截图脚本不�
 
 from __future__ import annotations
 
+import math
+
 from .runner import E2ERunner
 
 
@@ -37,6 +39,10 @@ def main() -> None:  # pragma: no cover - 需 ROS 环境
             odom.header.frame_id = "odom"
             odom.pose.pose.position.x = float(status["x"])
             odom.pose.pose.position.y = float(status["y"])
+            yaw = float(status["yaw"])
+            # 绕 z 轴的偏航四元数，保证 /odom 的 orientation 是有效单位四元数
+            odom.pose.pose.orientation.z = math.sin(yaw / 2.0)
+            odom.pose.pose.orientation.w = math.cos(yaw / 2.0)
             self.pub_odom.publish(odom)
 
             msg = Float32MultiArray()
