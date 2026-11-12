@@ -1,4 +1,6 @@
 """ESC 模块的离线测试：轮胎力、载荷转移、控制律与四个工况的闭环结果。"""
+from __future__ import annotations
+
 import math
 import struct
 
