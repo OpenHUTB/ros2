@@ -293,6 +293,8 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#9">9. 局限与展望</a>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#10-ament_python">10. ament_python 资源索引</a>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../diff_drive_astar_odom_nav/">基于里程计反馈与 A* 算法的差速底盘静态全局路径规划</a>
@@ -733,6 +735,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_ppo_nav_local_test/">uav_ppo_nav 本地测试（pytest）</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_hover_log_eval/">无人机定高日志误差与抗扰恢复时间评估</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_ppo_nav_node_test/">uav_ppo_nav 部署节点本地测试</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_hover_throttle/">四旋翼悬停油门求解（推力曲线/海拔/电压）</a>
 </li>
@@ -1532,7 +1536,19 @@ ros2<span class="w"> </span>launch<span class="w"> </span>ros2_pure_pursuit<span
 <li>未做全局重规划，绕行后仍沿原路径回归，可能与静态地图产生冲突；</li>
 <li>仿真使用合成激光，尚未在 Gazebo / CARLA 中接入真实话题验证；</li>
 <li>未考虑车辆动力学（轮胎侧滑、电机力矩饱和），真车部署前需补充 PID 速度环。</li>
-</ul></div>
+</ul>
+<h2 id="10-ament_python">10. ament_python 资源索引</h2>
+<p>本包是 <code>ament_python</code> 包，<code>setup.py</code> 的 <code>data_files</code> 声明了：</p>
+<div class="highlight"><pre><span></span><code><span class="p">(</span><span class="s2">"share/ament_index/resource_index/packages"</span><span class="p">,</span> <span class="p">[</span><span class="s2">"resource/"</span> <span class="o">+</span> <span class="n">package_name</span><span class="p">]),</span>
+</code></pre></div>
+<p><code>resource/ros2_pure_pursuit</code> 必须是普通文件（空文件即可）。缺少它时，安装阶段会失败：</p>
+<div class="highlight"><pre><span></span><code>error: can't copy 'resource/ros2_pure_pursuit': doesn't exist or not a regular file
+</code></pre></div>
+<p>补齐后的验证方式：</p>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>setup.py<span class="w"> </span>install<span class="w"> </span>--root<span class="o">=</span>/tmp/pp_after<span class="w"> </span>--prefix<span class="o">=</span>/usr
+ls<span class="w"> </span>/tmp/pp_after/usr/local/share/ament_index/resource_index/packages/ros2_pure_pursuit
+</code></pre></div>
+<p>安装返回 0，索引文件出现在 <code>share/ament_index/resource_index/packages/</code> 下。</p></div>
 </div>
 </div><footer>
 <div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
