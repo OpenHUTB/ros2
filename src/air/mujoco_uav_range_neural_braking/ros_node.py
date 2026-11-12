@@ -22,6 +22,7 @@ class UavRangeNode(Node):
         super().__init__("uav_range_braking")
         self.scenario = Scenario()
         self.simulation = Simulation(self.scenario, controller=controller, model_path=model_path)
+        self.finished = False
         self.range_pub = self.create_publisher(Float32, TOPIC_FRONT_RANGE, 10)
         self.control_pub = self.create_publisher(Float32, TOPIC_BRAKING_ACCEL, 10)
         self.state_pub = self.create_publisher(Float64MultiArray, TOPIC_STATE, 10)
@@ -41,8 +42,8 @@ class UavRangeNode(Node):
         self.state_pub.publish(state_msg)
         if self.simulation.data.time >= self.scenario.duration:
             self.timer.cancel()
+            self.finished = True
             self.get_logger().info("仿真时长已结束 / Simulation duration reached")
-            rclpy.shutdown()
 
 
 def main():
@@ -53,7 +54,9 @@ def main():
     rclpy.init(args=ros_args)
     node = UavRangeNode(args.controller, args.model)
     try:
-        rclpy.spin(node)
+        # 回调返回后再关闭 ROS，避免 shutdown 等待当前回调完成而相互阻塞。
+        while rclpy.ok() and not node.finished:
+            rclpy.spin_once(node, timeout_sec=0.1)
     finally:
         node.destroy_node()
         if rclpy.ok():
