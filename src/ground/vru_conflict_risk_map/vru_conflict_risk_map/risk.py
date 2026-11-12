@@ -65,8 +65,8 @@ def load_vru_tracks(path: Path) -> list[VruPoint]:
 SUPPORTED_CLASSES = frozenset({"pedestrian", "child", "cyclist"})
 
 
-def _nearest_index(timestamps: list[float], timestamp: float,
-                   tolerance: float) -> int | None:
+def nearest_index(timestamps: list[float], timestamp: float,
+                  tolerance: float) -> int | None:
     right = bisect_left(timestamps, timestamp)
     candidates = []
     if right < len(timestamps):
@@ -79,7 +79,7 @@ def _nearest_index(timestamps: list[float], timestamp: float,
     return index
 
 
-def _velocity_at(points, index: int) -> tuple[float, float]:
+def estimate_velocity(points, index: int) -> tuple[float, float]:
     """Estimate planar velocity from adjacent trajectory samples."""
     before = index - 1 if index > 0 else None
     after = index + 1 if index + 1 < len(points) else None
@@ -127,7 +127,7 @@ def evaluate_conflicts(
     allowed = {name.strip().lower() for name in allowed_classes}
     ego_timestamps = [point.timestamp for point in ego_points]
     ego_velocities = [
-        _velocity_at(ego_points, index) for index in range(len(ego_points))
+        estimate_velocity(ego_points, index) for index in range(len(ego_points))
     ]
     tracks: dict[str, dict] = {}
     point_counts = {"critical": 0, "caution": 0, "safe": 0}
@@ -142,14 +142,14 @@ def evaluate_conflicts(
     for track_id, track_points in grouped.items():
         matched = False
         vru_velocities = [
-            _velocity_at(track_points, index)
+            estimate_velocity(track_points, index)
             for index in range(len(track_points))
         ]
         for point_index, vru in enumerate(track_points):
             if vru.vru_class not in allowed:
                 invalid_class_points += 1
                 continue
-            ego_index = _nearest_index(
+            ego_index = nearest_index(
                 ego_timestamps, vru.timestamp, timestamp_tolerance)
             if ego_index is None:
                 skipped_points += 1
