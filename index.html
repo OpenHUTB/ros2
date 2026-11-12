@@ -264,6 +264,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="humanoid/humanoid_passage_width_sweep/">人形足迹下的局部避障算法对比：MPPI 与斥力法的窄通道宽度扫描</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="humanoid/cartpole_lqr/">倒立摆（Cart-Pole）的 LQR 最优平衡控制</a>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">四足机器人</span></p>
 <ul>
@@ -700,6 +702,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/road_numpy_nn_slam/">城市道路地面载具二维动力学、激光 SLAM 与神经网络导航</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="ground/idm_car_following/">智能驾驶员模型（IDM）跟车与车队减速波仿真</a>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">空域载具</span></p>
 <ul>
@@ -1087,6 +1091,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="air/aerial_mujoco_slam_nn_nav/">四旋翼无人机 MuJoCo 建图导航与神经网络控制</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="air/quad_eso_hover/">四旋翼高度 PD + 扩张状态观测器（ESO/ADRC）抗扰控制</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="air/uav_numpy_nn_slam/">四旋翼无人机物理仿真、激光 SLAM 与禁飞区规避</a>
 </li>
 </ul>
@@ -1364,6 +1370,7 @@
 <li><a href="humanoid/humanoid_newton_running/">人形机器人跑步牛顿第二定律理论计算与演示</a></li>
 <li><a href="humanoid/humanoid_g1_compliance/">人形机器人全身柔顺控制</a></li>
 <li><a href="humanoid/humanoid_mujoco_slam_nn_nav/">人形机器人 MuJoCo 建图导航与神经网络控制</a></li>
+<li><a href="humanoid/cartpole_lqr/">倒立摆（Cart-Pole）的 LQR 最优平衡控制</a> —— 手写线性代数解 Riccati 方程得 K=[-0.954, -2.186, -35.768, -5.839]，终态摆角 2.8e-4 rad，10 项单测</li>
 </ul>
 <h2 id="3">3. 肌肉骨骼人 <span id="musculoskeletal"></span></h2>
 <ul>
@@ -1631,6 +1638,7 @@
 <li><a href="ground/mujoco_ground_slam_nn_nav/">MuJoCo 地面无人车 SLAM 建图导航与神经网络控制</a></li>
 <li><a href="ground/ground_slope_estimation/">地面坡度估计</a></li>
 <li><a href="ground/estop_latch/">急停闩锁与人工复位</a> —— 把 <code>/emergency_stop</code> 锁住，必须调用 <code>/estop_latch/reset</code> 人工确认才放行，默认上电即闩锁</li>
+<li><a href="ground/idm_car_following/">智能驾驶员模型（IDM）跟车与车队减速波仿真</a> —— 五车纵列跟驰，最低速/下潜/时刻与解析一致，9 项单测</li>
 </ul>
 <h2 id="5">5. 空域载具 <span id="air_vehicle"></span></h2>
 <ul>
@@ -2007,6 +2015,7 @@
 <li>
 <p><a href="air/uav_airsim_attitude_estimator/">AirSim 无人机 IMU 姿态估计（MLP）</a> —— IMU 5 帧 30 维进单隐层 MLP 回归 roll/pitch，平均 MAE 0.9°</p>
 </li>
+<li><a href="air/quad_eso_hover/">四旋翼高度 PD + 扩张状态观测器（ESO/ADRC）抗扰控制</a> —— PD 稳态偏差 0.640 m、PD+ESO 近似 0，扰动估计收敛至 -5.810，9 项单测</li>
 </ul>
 <h2 id="6">6. 水域载具  <span id="water_vehicle"></span></h2>
 <h3 id="_1">感知</h3>
