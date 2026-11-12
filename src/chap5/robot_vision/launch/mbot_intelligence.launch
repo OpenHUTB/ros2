@@ -1,0 +1,22 @@
+<launch>
+    <!-- 一键拉起第五章视觉追踪 + 语音控制两个节点。
+         注意：两者都发布 /cmd_vel，实际运行请二选一，避免速度指令互相冲突。
+         若需同时启动仅用于演示，可先停掉其中一个节点。 -->
+
+    <arg name="cam_image_topic" default="/camera/rgb/image_raw" />
+    <arg name="show_image" default="true" />
+    <arg name="tts_backend" default="log" />
+    <arg name="enable_terminal" default="true" />
+
+    <!-- 第一部分：视觉追踪（人脸识别 + 比例控制） -->
+    <include file="$(find robot_vision)/launch/face_follower.launch">
+        <arg name="cam_image_topic" value="$(arg cam_image_topic)" />
+        <arg name="show_image" value="$(arg show_image)" />
+    </include>
+
+    <!-- 第二部分：语音控制 + 语音合成反馈 -->
+    <include file="$(find robot_voice)/launch/voice_control.launch">
+        <arg name="tts_backend" value="$(arg tts_backend)" />
+        <arg name="enable_terminal" value="$(arg enable_terminal)" />
+    </include>
+</launch>

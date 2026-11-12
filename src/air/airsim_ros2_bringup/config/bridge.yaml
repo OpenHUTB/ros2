@@ -1,0 +1,17 @@
+airsim_ros2_bridge:
+  ros__parameters:
+    host: 127.0.0.1
+    port: 41451
+    vehicle_name: ""
+    world_frame: world
+    base_frame: base_link
+    odom_topic: /uav/odom
+    cmd_vel_topic: /uav/cmd_vel
+    cmd_vel_frame: body_flu
+    command_timeout: 0.5
+    command_duration: 0.2
+    publish_rate: 20.0
+    reconnect_period: 2.0
+    takeoff_timeout: 20.0
+    land_timeout: 20.0
+    use_sim_time: false

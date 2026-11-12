@@ -1,0 +1,5 @@
+uav_mission_safety_manager:
+  ros__parameters:
+    max_altitude: 50.0
+    telemetry_timeout: 2.0
+    operation_timeout: 120.0
