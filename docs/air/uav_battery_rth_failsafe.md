@@ -27,6 +27,7 @@ flowchart TD
 ## 构建与运行
 
 ```bash
+# 在 ROS2 工作区根目录（含 src/ 的那一层）
 colcon build --packages-select uav_battery_rth_failsafe
 source install/setup.bash
 ros2 run uav_battery_rth_failsafe battery_rth_node
