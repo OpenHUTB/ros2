@@ -12,6 +12,8 @@
 python main.py --assets /path/to/unitree_rl_gym --record --output results
 ```
 
+默认 `end2end` 模式直接读取模块自带的 `models/end2end.pt`（1,637,701 字节），拿到仓库和固定版本的 Unitree 仿真资产后即可运行。该模式只加载图像速度模型。`models/mask_controller.pt`（61,173 字节）提供给 `vision.py` 的感知分支复用。
+
 闭环默认使用留出种子 7。运行 `python scripts/evaluate_near_obstacle.py --help` 查看近墙评估参数。策略输出高层速度，由预训练步态执行。
 
 ## ROS launch
