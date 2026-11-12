@@ -1,0 +1,34 @@
+{
+  "os": "Windows 11 (10.0.26200)",
+  "python": "3.12.14",
+  "third_party_dependencies": "无（仅标准库；测试用 pytest，也可直接跑）",
+  "scope": "offline: test/test_humanoid_support_margin.py 11 项 + main.py + PYTHONIOENCODING=gbk 复跑 + py_compile；不含 ROS 与模拟器",
+  "result": {
+    "tests_passed": 11,
+    "tests_failed": 0,
+    "test_command": "python test/test_humanoid_support_margin.py",
+    "cli_outputs": ["report.json"],
+    "gbk_console_run": true,
+    "byte_compile": true,
+    "margin_m": 0.125,
+    "inside_polygon": true,
+    "level": "ok",
+    "static_force_n": 61.29,
+    "impulse_ns": 17.46,
+    "foot_loads": {"fraction_left": 0.45, "fraction_right": 0.55},
+    "pass": true
+  },
+  "ci": {
+    "workflow": ".github/workflows/humanoid_support_margin_tests.yml",
+    "jobs": [
+      "Humanoid support margin tests (ubuntu, python 3.8)",
+      "Windows smoke test (GBK stdio)"
+    ],
+    "status": "未运行（workflow 随 PR 提交，首次运行结果见 PR 的 Actions 页）"
+  },
+  "ros_validation": {
+    "checked": false,
+    "reason": "模块是纯离线核算，没有 rclpy 节点；launch 只做 ExecuteProcess 包装。colcon build / ros2 launch 需要在 Ubuntu 22.04 + Humble 上验证"
+  },
+  "independent_machine_review": false
+}

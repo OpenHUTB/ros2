@@ -1,0 +1,796 @@
+{
+  "plant": "mujoco",
+  "python": "3.13.14",
+  "elapsed_s": 67.97,
+  "cases": [
+    {
+      "case": {
+        "name": "ridge_8ms",
+        "title": "单道山脊（30 m）· 8 m/s",
+        "terrain": {
+          "name": "ridge_crossing",
+          "base_m": 0.0,
+          "slope_deg": 0.0,
+          "ridges": 2,
+          "min_elevation_m": 1.8996248323642996e-13,
+          "max_elevation_m": 30.05798880209209,
+          "max_slope_deg": 36.07952779265584,
+          "max_slope_y_deg": 0.0
+        },
+        "speed_mps": 8.0,
+        "agl_set_m": 15.0,
+        "safety_m": 5.0,
+        "length_m": 600.0,
+        "ramp_s": 4.0,
+        "seed": 20261111,
+        "dem": {
+          "grid_m": 2.0,
+          "bias_m": 0.8,
+          "shift_x_m": 3.0,
+          "shift_y_m": 0.0
+        },
+        "altimeter": {
+          "rate_hz": 20.0,
+          "latency_s": 0.12,
+          "sigma_m": 0.25,
+          "bias_m": 0.15,
+          "quant_m": 0.05,
+          "dropout_p": 0.01
+        },
+        "limits": {
+          "climb_rate_mps": 3.0,
+          "climb_accel_mps2": 2.0
+        },
+        "required_climb_rate_mps": 5.829323030543293,
+        "max_speed_for_climb_mps": 4.117116151266574
+      },
+      "flights": [
+        {
+          "strategy": "constant_msl",
+          "plant": "mujoco",
+          "metrics": {
+            "samples": 7701,
+            "distance_m": 600.0799999999932,
+            "duration_s": 77.0,
+            "min_clearance_m": -15.058093452297651,
+            "min_clearance_x_m": 280.0799999999987,
+            "intrusion_m": 15.058093452297651,
+            "first_intrusion_x_m": 250.56000000000083,
+            "mean_clearance_m": 8.369555494751875,
+            "max_clearance_m": 15.000452153636406,
+            "rms_agl_error_m": 10.63160539411226,
+            "max_agl_error_m": 30.05809345229765,
+            "time_below_safety_s": 22.86,
+            "time_below_zero_s": 7.42,
+            "max_climb_rate_mps": 8.303578498607585e-05,
+            "crashed": true
+          },
+          "wall_s": 1.51
+        },
+        {
+          "strategy": "reactive_agl",
+          "plant": "mujoco",
+          "metrics": {
+            "samples": 7701,
+            "distance_m": 600.0799999999955,
+            "duration_s": 77.0,
+            "min_clearance_m": 4.167590459023451,
+            "min_clearance_x_m": 271.839999999999,
+            "intrusion_m": 0.0,
+            "first_intrusion_x_m": null,
+            "mean_clearance_m": 15.77564091065292,
+            "max_clearance_m": 35.86601271715364,
+            "rms_agl_error_m": 6.6258938440006965,
+            "max_agl_error_m": 20.866012717153637,
+            "time_below_safety_s": 1.62,
+            "time_below_zero_s": 0.0,
+            "max_climb_rate_mps": 3.1738961829421513,
+            "crashed": false
+          },
+          "wall_s": 1.37
+        },
+        {
+          "strategy": "dem_preview",
+          "plant": "mujoco",
+          "metrics": {
+            "samples": 7701,
+            "distance_m": 600.0799999999929,
+            "duration_s": 77.0,
+            "min_clearance_m": 12.153811961113954,
+            "min_clearance_x_m": 379.7599999999977,
+            "intrusion_m": 0.0,
+            "first_intrusion_x_m": null,
+            "mean_clearance_m": 16.198729217290587,
+            "max_clearance_m": 26.439453051860216,
+            "rms_agl_error_m": 3.6772541628647124,
+            "max_agl_error_m": 11.439453051860216,
+            "time_below_safety_s": 0.0,
+            "time_below_zero_s": 0.0,
+            "max_climb_rate_mps": 3.173896375574319,
+            "crashed": false
+          },
+          "wall_s": 1.9
+        }
+      ]
+    },
+    {
+      "case": {
+        "name": "ridge_12ms",
+        "title": "单道山脊（30 m）· 12 m/s",
+        "terrain": {
+          "name": "ridge_crossing",
+          "base_m": 0.0,
+          "slope_deg": 0.0,
+          "ridges": 2,
+          "min_elevation_m": 1.8996248323642996e-13,
+          "max_elevation_m": 30.05798880209209,
+          "max_slope_deg": 36.07952779265584,
+          "max_slope_y_deg": 0.0
+        },
+        "speed_mps": 12.0,
+        "agl_set_m": 15.0,
+        "safety_m": 5.0,
+        "length_m": 600.0,
+        "ramp_s": 4.0,
+        "seed": 20261111,
+        "dem": {
+          "grid_m": 2.0,
+          "bias_m": 0.8,
+          "shift_x_m": 3.0,
+          "shift_y_m": 0.0
+        },
+        "altimeter": {
+          "rate_hz": 20.0,
+          "latency_s": 0.12,
+          "sigma_m": 0.25,
+          "bias_m": 0.15,
+          "quant_m": 0.05,
+          "dropout_p": 0.01
+        },
+        "limits": {
+          "climb_rate_mps": 3.0,
+          "climb_accel_mps2": 2.0
+        },
+        "required_climb_rate_mps": 8.74398454581494,
+        "max_speed_for_climb_mps": 4.117116151266574
+      },
+      "flights": [
+        {
+          "strategy": "constant_msl",
+          "plant": "mujoco",
+          "metrics": {
+            "samples": 5201,
+            "distance_m": 600.1199999999955,
+            "duration_s": 52.0,
+            "min_clearance_m": -15.05809345229765,
+            "min_clearance_x_m": 280.0800000000001,
+            "intrusion_m": 15.05809345229765,
+            "first_intrusion_x_m": 250.56000000000188,
+            "mean_clearance_m": 8.454677883635721,
+            "max_clearance_m": 15.001002195276767,
+            "rms_agl_error_m": 10.78419388196224,
+            "max_agl_error_m": 30.058093452297648,
+            "time_below_safety_s": 15.24,
+            "time_below_zero_s": 4.95,
+            "max_climb_rate_mps": 0.00017519807557305042,
+            "crashed": true
+          },
+          "wall_s": 0.97
+        },
+        {
+          "strategy": "reactive_agl",
+          "plant": "mujoco",
+          "metrics": {
+            "samples": 5201,
+            "distance_m": 600.1199999999953,
+            "duration_s": 52.0,
+            "min_clearance_m": -1.5879093302894844,
+            "min_clearance_x_m": 274.67999999999927,
+            "intrusion_m": 1.5879093302894844,
+            "first_intrusion_x_m": 265.9199999999998,
+            "mean_clearance_m": 15.20340619564579,
+            "max_clearance_m": 34.713417359709666,
+            "rms_agl_error_m": 7.741941528469979,
+            "max_agl_error_m": 19.713417359709666,
+            "time_below_safety_s": 4.34,
+            "time_below_zero_s": 1.43,
+            "max_climb_rate_mps": 3.173896375574335,
+            "crashed": true
+          },
+          "wall_s": 1.04
+        },
+        {
+          "strategy": "dem_preview",
+          "plant": "mujoco",
+          "metrics": {
+            "samples": 5201,
+            "distance_m": 600.1199999999952,
+            "duration_s": 52.0,
+            "min_clearance_m": 10.166718493045126,
+            "min_clearance_x_m": 421.55999999999875,
+            "intrusion_m": 0.0,
+            "first_intrusion_x_m": null,
+            "mean_clearance_m": 17.67209594956293,
+            "max_clearance_m": 32.03431150876893,
+            "rms_agl_error_m": 6.851942698460513,
+            "max_agl_error_m": 17.03431150876893,
+            "time_below_safety_s": 0.0,
+            "time_below_zero_s": 0.0,
+            "max_climb_rate_mps": 3.1738702149730726,
+            "crashed": false
+          },
+          "wall_s": 1.16
+        }
+      ]
+    },
+    {
+      "case": {
+        "name": "mixed_10ms",
+        "title": "混合地形（缓坡 + 双脊 + 沟谷）· 10 m/s",
+        "terrain": {
+          "name": "mixed",
+          "base_m": 0.0,
+          "slope_deg": 4.0,
+          "ridges": 3,
+          "min_elevation_m": 3.959794733625284e-07,
+          "max_elevation_m": 66.1109584864678,
+          "max_slope_deg": 36.912796700297754,
+          "max_slope_y_deg": 0.0
+        },
+        "speed_mps": 10.0,
+        "agl_set_m": 15.0,
+        "safety_m": 5.0,
+        "length_m": 600.0,
+        "ramp_s": 4.0,
+        "seed": 20261111,
+        "dem": {
+          "grid_m": 2.0,
+          "bias_m": 0.8,
+          "shift_x_m": 3.0,
+          "shift_y_m": 0.0
+        },
+        "altimeter": {
+          "rate_hz": 20.0,
+          "latency_s": 0.12,
+          "sigma_m": 0.25,
+          "bias_m": 0.15,
+          "quant_m": 0.05,
+          "dropout_p": 0.01
+        },
+        "limits": {
+          "climb_rate_mps": 3.0,
+          "climb_accel_mps2": 2.0
+        },
+        "required_climb_rate_mps": 7.511705477651363,
+        "max_speed_for_climb_mps": 3.99376680691958
+      },
+      "flights": [
+        {
+          "strategy": "constant_msl",
+          "plant": "mujoco",
+          "metrics": {
+            "samples": 6201,
+            "distance_m": 600.0999999999945,
+            "duration_s": 62.0,
+            "min_clearance_m": -51.111112525657774,
+            "min_clearance_x_m": 431.8999999999998,
+            "intrusion_m": 51.111112525657774,
+            "first_intrusion_x_m": 161.20000000000164,
+            "mean_clearance_m": -12.442367172849458,
+            "max_clearance_m": 15.00027504760219,
+            "rms_agl_error_m": 34.38421616779435,
+            "max_agl_error_m": 66.11111252565777,
+            "time_below_safety_s": 46.74,
+            "time_below_zero_s": 43.9,
+            "max_climb_rate_mps": 0.00012596182184318477,
+            "crashed": true
+          },
+          "wall_s": 1.1
+        },
+        {
+          "strategy": "reactive_agl",
+          "plant": "mujoco",
+          "metrics": {
+            "samples": 6201,
+            "distance_m": 600.0999999999949,
+            "duration_s": 62.0,
+            "min_clearance_m": -16.582899530207065,
+            "min_clearance_x_m": 423.29999999999865,
+            "intrusion_m": 16.582899530207065,
+            "first_intrusion_x_m": 378.99999999999915,
+            "mean_clearance_m": 13.699475169792573,
+            "max_clearance_m": 33.86289899606113,
+            "rms_agl_error_m": 12.525236482527946,
+            "max_agl_error_m": 31.582899530207065,
+            "time_below_safety_s": 10.23,
+            "time_below_zero_s": 7.640000000000001,
+            "max_climb_rate_mps": 3.1738963755743193,
+            "crashed": true
+          },
+          "wall_s": 1.21
+        },
+        {
+          "strategy": "dem_preview",
+          "plant": "mujoco",
+          "metrics": {
+            "samples": 6201,
+            "distance_m": 600.0999999999951,
+            "duration_s": 62.0,
+            "min_clearance_m": 6.834352352292932,
+            "min_clearance_x_m": 598.9999999999961,
+            "intrusion_m": 0.0,
+            "first_intrusion_x_m": null,
+            "mean_clearance_m": 19.031214152436927,
+            "max_clearance_m": 35.14790671101245,
+            "rms_agl_error_m": 8.21028539861492,
+            "max_agl_error_m": 20.147906711012453,
+            "time_below_safety_s": 0.0,
+            "time_below_zero_s": 0.0,
+            "max_climb_rate_mps": 3.173896375574399,
+            "crashed": false
+          },
+          "wall_s": 1.51
+        }
+      ]
+    },
+    {
+      "case": {
+        "name": "slope6_10ms",
+        "title": "恒定 6° 缓坡 · 10 m/s",
+        "terrain": {
+          "name": "slope_6deg",
+          "base_m": 0.0,
+          "slope_deg": 6.0,
+          "ridges": 0,
+          "min_elevation_m": 0.0,
+          "max_elevation_m": 63.06254115940588,
+          "max_slope_deg": 6.000000000000001,
+          "max_slope_y_deg": 0.0
+        },
+        "speed_mps": 10.0,
+        "agl_set_m": 15.0,
+        "safety_m": 5.0,
+        "length_m": 600.0,
+        "ramp_s": 4.0,
+        "seed": 20261111,
+        "dem": {
+          "grid_m": 2.0,
+          "bias_m": 0.8,
+          "shift_x_m": 3.0,
+          "shift_y_m": 0.0
+        },
+        "altimeter": {
+          "rate_hz": 20.0,
+          "latency_s": 0.12,
+          "sigma_m": 0.25,
+          "bias_m": 0.15,
+          "quant_m": 0.05,
+          "dropout_p": 0.01
+        },
+        "limits": {
+          "climb_rate_mps": 3.0,
+          "climb_accel_mps2": 2.0
+        },
+        "required_climb_rate_mps": 1.0510423526567647,
+        "max_speed_for_climb_mps": 28.54309336266775
+      },
+      "flights": [
+        {
+          "strategy": "constant_msl",
+          "plant": "mujoco",
+          "metrics": {
+            "samples": 6201,
+            "distance_m": 600.0999999999945,
+            "duration_s": 62.0,
+            "min_clearance_m": -48.07305158293194,
+            "min_clearance_x_m": 600.0999999999945,
+            "intrusion_m": 48.07305158293194,
+            "first_intrusion_x_m": 142.80000000000186,
+            "mean_clearance_m": -15.535849383904687,
+            "max_clearance_m": 15.000165940804271,
+            "rms_agl_error_m": 37.69224234563403,
+            "max_agl_error_m": 63.07305158293194,
+            "time_below_safety_s": 50.5,
+            "time_below_zero_s": 45.74,
+            "max_climb_rate_mps": 0.00012596182184299932,
+            "crashed": true
+          },
+          "wall_s": 1.02
+        },
+        {
+          "strategy": "reactive_agl",
+          "plant": "mujoco",
+          "metrics": {
+            "samples": 6201,
+            "distance_m": 600.0999999999947,
+            "duration_s": 62.0,
+            "min_clearance_m": 14.144836454878554,
+            "min_clearance_x_m": 24.40515120590866,
+            "intrusion_m": 0.0,
+            "first_intrusion_x_m": null,
+            "mean_clearance_m": 14.790012881647598,
+            "max_clearance_m": 15.000165940804271,
+            "rms_agl_error_m": 0.204131644221586,
+            "max_agl_error_m": 0.6239015269486483,
+            "time_below_safety_s": 0.0,
+            "time_below_zero_s": 0.0,
+            "max_climb_rate_mps": 1.472342970238238,
+            "crashed": false
+          },
+          "wall_s": 1.14
+        },
+        {
+          "strategy": "dem_preview",
+          "plant": "mujoco",
+          "metrics": {
+            "samples": 6201,
+            "distance_m": 600.0999999999947,
+            "duration_s": 62.0,
+            "min_clearance_m": 15.000009200000001,
+            "min_clearance_x_m": 0.0,
+            "intrusion_m": 0.0,
+            "first_intrusion_x_m": null,
+            "mean_clearance_m": 15.609381844126373,
+            "max_clearance_m": 16.10753744324242,
+            "rms_agl_error_m": 0.6380223416873818,
+            "max_agl_error_m": 1.0787209176926709,
+            "time_below_safety_s": 0.0,
+            "time_below_zero_s": 0.0,
+            "max_climb_rate_mps": 1.0485581152814407,
+            "crashed": false
+          },
+          "wall_s": 1.4
+        }
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "case": "ridge_8ms",
+      "strategy": "constant_msl",
+      "min_clearance_m": -15.058093452297651,
+      "rms_agl_error_m": 10.63160539411226,
+      "max_agl_error_m": 30.05809345229765,
+      "time_below_safety_s": 22.86,
+      "max_climb_rate_mps": 8.303578498607585e-05,
+      "crashed": true
+    },
+    {
+      "case": "ridge_8ms",
+      "strategy": "reactive_agl",
+      "min_clearance_m": 4.167590459023451,
+      "rms_agl_error_m": 6.6258938440006965,
+      "max_agl_error_m": 20.866012717153637,
+      "time_below_safety_s": 1.62,
+      "max_climb_rate_mps": 3.1738961829421513,
+      "crashed": false
+    },
+    {
+      "case": "ridge_8ms",
+      "strategy": "dem_preview",
+      "min_clearance_m": 12.153811961113954,
+      "rms_agl_error_m": 3.6772541628647124,
+      "max_agl_error_m": 11.439453051860216,
+      "time_below_safety_s": 0.0,
+      "max_climb_rate_mps": 3.173896375574319,
+      "crashed": false
+    },
+    {
+      "case": "ridge_12ms",
+      "strategy": "constant_msl",
+      "min_clearance_m": -15.05809345229765,
+      "rms_agl_error_m": 10.78419388196224,
+      "max_agl_error_m": 30.058093452297648,
+      "time_below_safety_s": 15.24,
+      "max_climb_rate_mps": 0.00017519807557305042,
+      "crashed": true
+    },
+    {
+      "case": "ridge_12ms",
+      "strategy": "reactive_agl",
+      "min_clearance_m": -1.5879093302894844,
+      "rms_agl_error_m": 7.741941528469979,
+      "max_agl_error_m": 19.713417359709666,
+      "time_below_safety_s": 4.34,
+      "max_climb_rate_mps": 3.173896375574335,
+      "crashed": true
+    },
+    {
+      "case": "ridge_12ms",
+      "strategy": "dem_preview",
+      "min_clearance_m": 10.166718493045126,
+      "rms_agl_error_m": 6.851942698460513,
+      "max_agl_error_m": 17.03431150876893,
+      "time_below_safety_s": 0.0,
+      "max_climb_rate_mps": 3.1738702149730726,
+      "crashed": false
+    },
+    {
+      "case": "mixed_10ms",
+      "strategy": "constant_msl",
+      "min_clearance_m": -51.111112525657774,
+      "rms_agl_error_m": 34.38421616779435,
+      "max_agl_error_m": 66.11111252565777,
+      "time_below_safety_s": 46.74,
+      "max_climb_rate_mps": 0.00012596182184318477,
+      "crashed": true
+    },
+    {
+      "case": "mixed_10ms",
+      "strategy": "reactive_agl",
+      "min_clearance_m": -16.582899530207065,
+      "rms_agl_error_m": 12.525236482527946,
+      "max_agl_error_m": 31.582899530207065,
+      "time_below_safety_s": 10.23,
+      "max_climb_rate_mps": 3.1738963755743193,
+      "crashed": true
+    },
+    {
+      "case": "mixed_10ms",
+      "strategy": "dem_preview",
+      "min_clearance_m": 6.834352352292932,
+      "rms_agl_error_m": 8.21028539861492,
+      "max_agl_error_m": 20.147906711012453,
+      "time_below_safety_s": 0.0,
+      "max_climb_rate_mps": 3.173896375574399,
+      "crashed": false
+    },
+    {
+      "case": "slope6_10ms",
+      "strategy": "constant_msl",
+      "min_clearance_m": -48.07305158293194,
+      "rms_agl_error_m": 37.69224234563403,
+      "max_agl_error_m": 63.07305158293194,
+      "time_below_safety_s": 50.5,
+      "max_climb_rate_mps": 0.00012596182184299932,
+      "crashed": true
+    },
+    {
+      "case": "slope6_10ms",
+      "strategy": "reactive_agl",
+      "min_clearance_m": 14.144836454878554,
+      "rms_agl_error_m": 0.204131644221586,
+      "max_agl_error_m": 0.6239015269486483,
+      "time_below_safety_s": 0.0,
+      "max_climb_rate_mps": 1.472342970238238,
+      "crashed": false
+    },
+    {
+      "case": "slope6_10ms",
+      "strategy": "dem_preview",
+      "min_clearance_m": 15.000009200000001,
+      "rms_agl_error_m": 0.6380223416873818,
+      "max_agl_error_m": 1.0787209176926709,
+      "time_below_safety_s": 0.0,
+      "max_climb_rate_mps": 1.0485581152814407,
+      "crashed": false
+    }
+  ],
+  "dem_levels": [
+    {
+      "dem": "ideal",
+      "label": "理想 DEM（即真值）",
+      "min_clearance_m": 12.267357459026698,
+      "rms_agl_error_m": 3.3148650539652746,
+      "crashed": false
+    },
+    {
+      "dem": "practical",
+      "label": "实用 DEM（2 m 网格 / 0.8 m 偏置 / 3 m 前移）",
+      "min_clearance_m": 12.153811961113954,
+      "rms_agl_error_m": 3.6772541628647124,
+      "crashed": false
+    },
+    {
+      "dem": "degraded",
+      "label": "劣化 DEM（8 m 网格 / 4 m 偏置 / 12 m 前移）",
+      "min_clearance_m": 12.28737807581886,
+      "rms_agl_error_m": 5.352422684233341,
+      "crashed": false
+    }
+  ],
+  "sweep": [
+    {
+      "speed_mps": 4.0,
+      "strategy": "constant_msl",
+      "required_climb_rate_mps": 2.9146615152716464,
+      "min_clearance_m": -15.058093452297651,
+      "rms_agl_error_m": 10.485314735759964,
+      "crashed": true
+    },
+    {
+      "speed_mps": 4.0,
+      "strategy": "reactive_agl",
+      "required_climb_rate_mps": 2.9146615152716464,
+      "min_clearance_m": 13.689402704150869,
+      "rms_agl_error_m": 0.6116974401531878,
+      "crashed": false
+    },
+    {
+      "speed_mps": 4.0,
+      "strategy": "dem_preview",
+      "required_climb_rate_mps": 2.9146615152716464,
+      "min_clearance_m": 14.63147822350712,
+      "rms_agl_error_m": 0.5439554612736176,
+      "crashed": false
+    },
+    {
+      "speed_mps": 6.0,
+      "strategy": "constant_msl",
+      "required_climb_rate_mps": 4.37199227290747,
+      "min_clearance_m": -15.058093452297651,
+      "rms_agl_error_m": 10.557700147961746,
+      "crashed": true
+    },
+    {
+      "speed_mps": 6.0,
+      "strategy": "reactive_agl",
+      "required_climb_rate_mps": 4.37199227290747,
+      "min_clearance_m": 7.128241257995083,
+      "rms_agl_error_m": 5.143184011602002,
+      "crashed": false
+    },
+    {
+      "speed_mps": 6.0,
+      "strategy": "dem_preview",
+      "required_climb_rate_mps": 4.37199227290747,
+      "min_clearance_m": 14.078107806557606,
+      "rms_agl_error_m": 1.504341479971148,
+      "crashed": false
+    },
+    {
+      "speed_mps": 8.0,
+      "strategy": "constant_msl",
+      "required_climb_rate_mps": 5.829323030543293,
+      "min_clearance_m": -15.058093452297651,
+      "rms_agl_error_m": 10.63160539411226,
+      "crashed": true
+    },
+    {
+      "speed_mps": 8.0,
+      "strategy": "reactive_agl",
+      "required_climb_rate_mps": 5.829323030543293,
+      "min_clearance_m": 4.167590459023451,
+      "rms_agl_error_m": 6.6258938440006965,
+      "crashed": false
+    },
+    {
+      "speed_mps": 8.0,
+      "strategy": "dem_preview",
+      "required_climb_rate_mps": 5.829323030543293,
+      "min_clearance_m": 12.153811961113954,
+      "rms_agl_error_m": 3.6772541628647124,
+      "crashed": false
+    },
+    {
+      "speed_mps": 10.0,
+      "strategy": "constant_msl",
+      "required_climb_rate_mps": 7.286653788179116,
+      "min_clearance_m": -15.058071778623388,
+      "rms_agl_error_m": 10.707084417860194,
+      "crashed": true
+    },
+    {
+      "speed_mps": 10.0,
+      "strategy": "reactive_agl",
+      "required_climb_rate_mps": 7.286653788179116,
+      "min_clearance_m": 0.7611198383510995,
+      "rms_agl_error_m": 7.266561539600685,
+      "crashed": false
+    },
+    {
+      "speed_mps": 10.0,
+      "strategy": "dem_preview",
+      "required_climb_rate_mps": 7.286653788179116,
+      "min_clearance_m": 11.035921976499896,
+      "rms_agl_error_m": 5.354200788559182,
+      "crashed": false
+    },
+    {
+      "speed_mps": 12.0,
+      "strategy": "constant_msl",
+      "required_climb_rate_mps": 8.74398454581494,
+      "min_clearance_m": -15.05809345229765,
+      "rms_agl_error_m": 10.78419388196224,
+      "crashed": true
+    },
+    {
+      "speed_mps": 12.0,
+      "strategy": "reactive_agl",
+      "required_climb_rate_mps": 8.74398454581494,
+      "min_clearance_m": -1.5879093302894844,
+      "rms_agl_error_m": 7.741941528469979,
+      "crashed": true
+    },
+    {
+      "speed_mps": 12.0,
+      "strategy": "dem_preview",
+      "required_climb_rate_mps": 8.74398454581494,
+      "min_clearance_m": 10.166718493045126,
+      "rms_agl_error_m": 6.851942698460513,
+      "crashed": false
+    },
+    {
+      "speed_mps": 14.0,
+      "strategy": "constant_msl",
+      "required_climb_rate_mps": 10.201315303450762,
+      "min_clearance_m": -15.057988802091971,
+      "rms_agl_error_m": 10.863957172654244,
+      "crashed": true
+    },
+    {
+      "speed_mps": 14.0,
+      "strategy": "reactive_agl",
+      "required_climb_rate_mps": 10.201315303450762,
+      "min_clearance_m": -3.2904136408923286,
+      "rms_agl_error_m": 8.213988980390384,
+      "crashed": true
+    },
+    {
+      "speed_mps": 14.0,
+      "strategy": "dem_preview",
+      "required_climb_rate_mps": 10.201315303450762,
+      "min_clearance_m": 9.664910686730872,
+      "rms_agl_error_m": 8.315279724447377,
+      "crashed": false
+    }
+  ],
+  "theory_lag": [
+    {
+      "speed_mps": 4.0,
+      "theory_m": 0.42181833086624826
+    },
+    {
+      "speed_mps": 8.0,
+      "theory_m": 0.8436366617324965
+    },
+    {
+      "speed_mps": 10.0,
+      "theory_m": 1.0545458271656207
+    }
+  ],
+  "ablation": {
+    "lag": [
+      {
+        "ki": 0.0,
+        "rms_agl_error_m": 1.0212942408832428,
+        "min_clearance_m": 13.808733052337352,
+        "theory_m": 1.0545458271656207
+      },
+      {
+        "ki": 0.05,
+        "rms_agl_error_m": 0.4812453462962813,
+        "min_clearance_m": 13.951481154567986,
+        "theory_m": 1.0545458271656207
+      },
+      {
+        "ki": 0.25,
+        "rms_agl_error_m": 0.204131644221586,
+        "min_clearance_m": 14.144836454878554,
+        "theory_m": 1.0545458271656207
+      }
+    ],
+    "trim": [
+      {
+        "ki": 0.005,
+        "ridge_min_clearance_m": 14.150972863232006,
+        "slope_rms_agl_m": 0.9965834525343911
+      },
+      {
+        "ki": 0.02,
+        "ridge_min_clearance_m": 12.153811961113954,
+        "slope_rms_agl_m": 0.6380223416873818
+      },
+      {
+        "ki": 0.05,
+        "ridge_min_clearance_m": 9.911936015650712,
+        "slope_rms_agl_m": 0.352050068284146
+      },
+      {
+        "ki": 0.1,
+        "ridge_min_clearance_m": 7.497571397316799,
+        "slope_rms_agl_m": 0.20941692942054865
+      }
+    ]
+  }
+}

@@ -1,0 +1,8 @@
+<launch>
+  <arg name="trace_path" default=""/>
+  <node pkg="turtlesim" type="turtlesim_node" name="turtlesim"/>
+  <node pkg="turtle_waypoint_patrol" type="main.py" name="waypoint_patrol" output="screen" clear_params="true">
+    <rosparam param="waypoints">[[7, 5.5], [7, 7], [5.5, 7]]</rosparam>
+    <param name="trace_path" value="$(arg trace_path)"/>
+  </node>
+</launch>

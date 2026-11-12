@@ -1,0 +1,56 @@
+<mujoco model="panda pick place demo">
+  <include file="panda_pick.xml"/>
+
+  <visual>
+    <headlight diffuse="0.55 0.55 0.55" ambient="0.35 0.35 0.35" specular="0.1 0.1 0.1"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+    <global azimuth="120" elevation="-20" offwidth="1280" offheight="720"/>
+  </visual>
+
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1="0.30 0.45 0.65" rgb2="0.02 0.02 0.04"
+             width="512" height="3072"/>
+    <texture type="2d" name="floor_tex" builtin="checker" mark="edge"
+             rgb1="0.22 0.24 0.28" rgb2="0.14 0.15 0.18" markrgb="0.55 0.55 0.55"
+             width="300" height="300"/>
+    <material name="floor_mat" texture="floor_tex" texuniform="true" texrepeat="6 6" reflectance="0.15"/>
+    <material name="table_mat" rgba="0.52 0.34 0.20 1" specular="0.2" shininess="0.15"/>
+    <material name="leg_mat"   rgba="0.38 0.24 0.13 1"/>
+    <material name="plate_mat" rgba="0.96 0.96 0.96 1" specular="0.4" shininess="0.3"/>
+    <material name="cube_mat"  rgba="0.88 0.10 0.08 1" specular="0.5" shininess="0.4"/>
+  </asset>
+
+  <worldbody>
+    <light pos="0.4 -0.2 2.2" dir="0 0 -1" directional="true" diffuse="0.7 0.7 0.7"/>
+    <light pos="0.8 -0.8 1.1" diffuse="0.5 0.5 0.5"/>
+
+    <geom name="floor" type="plane" size="0 0 0.05" material="floor_mat" pos="0 0 -0.75"/>
+
+    <body name="table" pos="0 0 0">
+      <geom name="table_top" type="box" size="0.62 0.48 0.025" pos="0.45 0 -0.025" material="table_mat"/>
+      <geom name="leg_fl" type="box" size="0.025 0.025 0.36" pos="0.06 -0.42 -0.385" material="leg_mat"/>
+      <geom name="leg_fr" type="box" size="0.025 0.025 0.36" pos="0.84 -0.42 -0.385" material="leg_mat"/>
+      <geom name="leg_bl" type="box" size="0.025 0.025 0.36" pos="0.06 0.42 -0.385" material="leg_mat"/>
+      <geom name="leg_br" type="box" size="0.025 0.025 0.36" pos="0.84 0.42 -0.385" material="leg_mat"/>
+    </body>
+
+    <body name="plate" pos="0.45 0.12 0.005">
+      <geom name="plate_geom" type="cylinder" size="0.095 0.005" material="plate_mat"/>
+    </body>
+
+    <body name="cube" pos="0.45 -0.12 0.022">
+      <freejoint name="cube_free"/>
+      <geom name="cube_geom" type="box" size="0.021 0.021 0.021" material="cube_mat"
+            friction="1.2 0.02 0.002" solimp="0.95 0.99 0.001" solref="0.004 1"/>
+    </body>
+
+    <camera name="front" pos="1.0000 -0.9500 0.6200" xyaxes="0.853504 0.521087 -0.000000 -0.220559 0.361261 0.906004" fovy="46"/>
+    <camera name="side"  pos="0.95 0.85 0.55" xyaxes="-0.62 0.78 0 0.36 0.28 0.89" fovy="50"/>
+  </worldbody>
+
+  <keyframe>
+    <key name="home"
+         qpos="0 0 0 -1.57079 0 1.57079 -0.7853 0.04 0.04 0.45 -0.12 0.022 1 0 0 0"
+         ctrl="0 0 0 -1.57079 0 1.57079 -0.7853 255"/>
+  </keyframe>
+</mujoco>

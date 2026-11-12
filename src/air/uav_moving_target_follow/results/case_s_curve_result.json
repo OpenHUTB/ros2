@@ -1,0 +1,162 @@
+{
+  "case": "s_curve",
+  "outcome": "ok",
+  "algorithm": {
+    "path_waypoints": [
+      [
+        20.0,
+        0.0
+      ],
+      [
+        120.0,
+        0.0
+      ],
+      [
+        170.0,
+        86.6
+      ],
+      [
+        270.0,
+        86.6
+      ],
+      [
+        320.0,
+        173.2
+      ]
+    ],
+    "target_speed_mps": 5.0,
+    "path_length_m": 400.0,
+    "duration_s": 80.0,
+    "standoff_m": 12.0,
+    "alt_m": 10.0,
+    "intercept": {
+      "feasible": true,
+      "t_intercept_s": 11.1,
+      "intercept_xy": [
+        63.51,
+        0.0
+      ],
+      "climb_s": 4.0
+    },
+    "reference_samples": [
+      {
+        "t_s": 0.0,
+        "target_xy": [
+          20.0,
+          0.0
+        ],
+        "ref_xy": [
+          8.0,
+          0.0
+        ],
+        "behind_m": 12.0,
+        "ref_alt_m": 10.0
+      },
+      {
+        "t_s": 1.0,
+        "target_xy": [
+          25.0,
+          0.0
+        ],
+        "ref_xy": [
+          13.0,
+          0.0
+        ],
+        "behind_m": 12.0,
+        "ref_alt_m": 10.0
+      },
+      {
+        "t_s": 2.0,
+        "target_xy": [
+          30.0,
+          0.0
+        ],
+        "ref_xy": [
+          18.0,
+          0.0
+        ],
+        "behind_m": 12.0,
+        "ref_alt_m": 10.0
+      },
+      {
+        "t_s": 3.0,
+        "target_xy": [
+          35.0,
+          0.0
+        ],
+        "ref_xy": [
+          23.0,
+          0.0
+        ],
+        "behind_m": 12.0,
+        "ref_alt_m": 10.0
+      },
+      {
+        "t_s": 4.0,
+        "target_xy": [
+          40.0,
+          0.0
+        ],
+        "ref_xy": [
+          28.0,
+          0.0
+        ],
+        "behind_m": 12.0,
+        "ref_alt_m": 10.0
+      },
+      {
+        "t_s": 5.0,
+        "target_xy": [
+          45.0,
+          0.0
+        ],
+        "ref_xy": [
+          33.0,
+          0.0
+        ],
+        "behind_m": 12.0,
+        "ref_alt_m": 10.0
+      },
+      {
+        "t_s": 6.0,
+        "target_xy": [
+          50.0,
+          0.0
+        ],
+        "ref_xy": [
+          38.0,
+          0.0
+        ],
+        "behind_m": 12.0,
+        "ref_alt_m": 10.0
+      },
+      {
+        "t_s": 7.0,
+        "target_xy": [
+          55.0,
+          0.0
+        ],
+        "ref_xy": [
+          43.0,
+          0.0
+        ],
+        "behind_m": 12.0,
+        "ref_alt_m": 10.0
+      }
+    ],
+    "standoff_geometry_ok": true
+  },
+  "closed_loop": {
+    "simulated": true,
+    "intercept_s": 11.1,
+    "follow_error_mean_m": 0.13,
+    "follow_error_max_m": 1.0,
+    "turn_error_max_m": 0.78,
+    "stop_transient_max_m": 0.0,
+    "final_error_m": 0.28,
+    "sim_duration_s": 92.0,
+    "wall_time_s": 1.7,
+    "naive_above_turn_max_m": 12.19,
+    "case": "s_curve"
+  }
+}

@@ -1,0 +1,7 @@
+transition_corridor_node:
+  ros__parameters:
+    altitude_ref: 30.0        # 目标海拔高度，m
+    airspeed_ref: 0.0         # 目标空速，m/s；0 表示悬停
+    corridor_altitude: 0.0    # 走廊建表用的密度高度，必须与机场一致
+    assumed_cl: 0.9           # 无姿态输入时假定的升力系数
+    rate_hz: 50.0
