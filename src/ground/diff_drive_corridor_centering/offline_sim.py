@@ -47,7 +47,7 @@ def run_sim() -> dict:
     pose = [0.3, 0.55, -0.18]  # x, y, yaw
     t = 0.0
     records = {"t": [], "x": [], "y": [], "yaw": [],
-               "d_left": [], "d_right": [], "v": [], "w": [], "e": []}
+               "d_left": [], "d_right": [], "d_forward": [], "v": [], "w": [], "e": []}
     path_length = 0.0
     prev_xy = (pose[0], pose[1])
 
@@ -73,6 +73,7 @@ def run_sim() -> dict:
         records["yaw"].append(pose[2])
         records["d_left"].append(d_left)
         records["d_right"].append(d_right)
+        records["d_forward"].append(d_forward)
         records["v"].append(v)
         records["w"].append(w)
         records["e"].append(result["e"])
@@ -84,7 +85,7 @@ def run_sim() -> dict:
         "final_lateral_error_m": round(float(records["e"][-1]), 4),
         "mean_abs_error_m": round(float(np.mean(np.abs(records["e"]))), 4),
         "max_abs_error_m": round(float(np.max(np.abs(records["e"]))), 4),
-        "min_forward_clearance_m": round(float(np.min(records["d_right"])), 3),
+        "min_forward_clearance_m": round(float(np.min(records["d_forward"])), 3),
         "samples": int(len(records["t"])),
     }
     return {"records": records, "metrics": metrics}
