@@ -5,6 +5,7 @@ setup(
     packages=find_packages(),
     data_files=[
         ("share/potential_field_navigation", ["package.xml"]),
+        ("share/potential_field_navigation/launch", ["launch/main.launch.py"]),
         ("share/ament_index/resource_index/packages", ["resource/potential_field_navigation"]),
     ],
     install_requires=["pygame>=2.0"],
