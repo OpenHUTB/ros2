@@ -1,0 +1,9 @@
+START pid=220 source=/work/src/chap1/turtle_waypoint_patrol/main.py sha256=ca4ebe41a970f0c912ab034f089e94721ce3e3f963468de14617707286a836b2
+Traceback (most recent call last):
+  File "/work/src/chap1/turtle_waypoint_patrol/main.py", line 202, in <module>
+    main()
+  File "/work/src/chap1/turtle_waypoint_patrol/main.py", line 197, in main
+    patrol = Patrol(lambda: requested[0])
+  File "/work/src/chap1/turtle_waypoint_patrol/main.py", line 69, in __init__
+    raise ValueError('each waypoint must contain two finite coordinates in [0.5,10.5]')
+ValueError: each waypoint must contain two finite coordinates in [0.5,10.5]

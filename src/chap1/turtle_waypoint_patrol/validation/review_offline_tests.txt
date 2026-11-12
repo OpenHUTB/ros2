@@ -1,0 +1,27 @@
+test_arrival_advances_one_waypoint (test_control.Control.test_arrival_advances_one_waypoint) ... ok
+test_exact_arrival_threshold_completes (test_control.Control.test_exact_arrival_threshold_completes) ... ok
+test_heading_both_signs_saturate_and_stop_translation (test_control.Control.test_heading_both_signs_saturate_and_stop_translation) ... ok
+test_heading_proportional_gain (test_control.Control.test_heading_proportional_gain) ... ok
+test_heading_wraps_across_pi (test_control.Control.test_heading_wraps_across_pi) ... ok
+test_initial_pose_timeout_boundary (test_control.Control.test_initial_pose_timeout_boundary) ... ok
+test_just_outside_threshold_keeps_moving (test_control.Control.test_just_outside_threshold_keeps_moving) ... ok
+test_linear_velocity_limit_and_distance_scaling (test_control.Control.test_linear_velocity_limit_and_distance_scaling) ... ok
+test_paused_and_terminal_states_do_not_navigate (test_control.Control.test_paused_and_terminal_states_do_not_navigate) ... ok
+test_pose_timeout_boundary (test_control.Control.test_pose_timeout_boundary) ... ok
+test_task_timeout_boundary_with_fresh_pose (test_control.Control.test_task_timeout_boundary_with_fresh_pose) ... ok
+test_task_timeout_includes_paused_duration (test_control.Control.test_task_timeout_includes_paused_duration) ... ok
+test_turn_in_place_boundary (test_control.Control.test_turn_in_place_boundary) ... ok
+test_blocked_ros_shutdown_fails_fast (test_lifecycle.Lifecycle.test_blocked_ros_shutdown_fails_fast) ... ok
+test_diagnostic_signal_preserves_process (test_lifecycle.Lifecycle.test_diagnostic_signal_preserves_process) ... ok
+test_invalid_goal_creates_no_trace (test_lifecycle.Lifecycle.test_invalid_goal_creates_no_trace) ... ok
+test_ros_shutdown_exception_is_failure (test_lifecycle.Lifecycle.test_ros_shutdown_exception_is_failure) ... ok
+test_sigint_running (test_lifecycle.Lifecycle.test_sigint_running) ... ok
+test_signal_during_init (test_lifecycle.Lifecycle.test_signal_during_init) ... ok
+test_sigterm_completed (test_lifecycle.Lifecycle.test_sigterm_completed) ... ok
+test_sigterm_paused (test_lifecycle.Lifecycle.test_sigterm_paused) ... ok
+test_sigterm_running (test_lifecycle.Lifecycle.test_sigterm_running) ... ok
+
+----------------------------------------------------------------------
+Ran 22 tests in 2.801s
+
+OK
