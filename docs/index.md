@@ -619,5 +619,7 @@ ___
 
 * [MuJoCo 单臂抓取与 π0 推理接口复现（CPU 演示）](./manipulation/pi0_mujoco_grasp.md) —— 基于 MuJoCo 的单臂抓取/放置仿真，含 π0 观测→动作块接口（CPU 策略替身）
 
+* [二连杆机械臂 OpenSim 建模与 PD 控制仿真](./two_link_arm_opensim_simulation.md)
+
 ## 参考文献
 * [MuJoCo 失落公园无人机端到端视觉转向](./air/mujoco_abandoned_park_uav_visual_steering.md)
