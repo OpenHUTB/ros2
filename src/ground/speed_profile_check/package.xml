@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>speed_profile_check</name>
+  <version>1.0.0</version>
+  <description>
+    速度曲线规划：给定行驶距离、巡航速度与加减速度上限，规划加速 → 匀速 → 减速
+    三段曲线，并判断是否满足限速、加速度、距离与时间预算四条要求。纯标准库实现，
+    不依赖 CARLA，也不需要显示器。
+  </description>
+
+  <maintainer email="haobuhao-code@users.noreply.github.com">haobuhao-code</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+</package>

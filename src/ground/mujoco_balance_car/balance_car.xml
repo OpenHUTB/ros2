@@ -1,42 +1,86 @@
 <mujoco model="balance_car">
-    <option gravity="0 0 -9.81" timestep="0.002"/>
+    <option gravity="0 0 -9.81" timestep="0.002" />
     <default>
-        <geom condim="3" friction="1 0.05 0.01" solimp="0.9 0.95 0.01" solref="0.02 1"/>
+        <geom condim="3" friction="1 0.05 0.01" solimp="0.9 0.95 0.01" solref="0.02 1" />
     </default>
+    <asset>
+        <material name="carbon" rgba="0.15 0.15 0.15 1" specular="0.5" shininess="0.8" />
+        <material name="metal" rgba="0.7 0.7 0.8 1" specular="1.0" shininess="0.9" />
+        <material name="pcb" rgba="0.1 0.4 0.8 1" specular="0.3" shininess="0.5" />
+        <material name="rubber" rgba="0.05 0.05 0.05 1" specular="0.1" shininess="0.1" />
+        <texture name="grid" type="2d" builtin="checker" rgb1="0.85 0.9 0.85" rgb2="0.7 0.75 0.7"
+            width="300" height="300" />
+        <material name="grid_mat" texture="grid" texrepeat="6 6" texuniform="true" />
+    </asset>
     <worldbody>
-        <light pos="0 0 3" dir="0 0 -1"/>
-        <geom type="plane" size="10 10 0.1" rgba="0.8 0.9 0.8 1"/>
+        <light pos="2 2 4" dir="-1 -1 -2" diffuse="0.7 0.7 0.7" specular="0.4 0.4 0.4"
+            castshadow="true" cutoff="80" />
+        <geom type="plane" size="10 10 0.1" material="grid_mat" />
+
+        <!-- 增加一个顶光，开启阴影，质感立刻拉满 -->
+
 
         <!-- 车体底盘 -->
         <body name="chassis" pos="0 0 0.15">
-            <joint name="chassis_slide" type="slide" axis="1 0 0"/>
-            <!-- 尺寸调整为宽0.3长0.6高0.1，离地间隙留足 -->
-            <geom type="box" size="0.3 0.15 0.05" mass="1" rgba="0.2 0.5 0.8 1"/>
+            <joint name="chassis_slide" type="slide" axis="1 0 0" />
+            <inertial pos="0 0 -0.02" mass="1.0" diaginertia="0.015 0.015 0.015" />
 
-            <!-- 左轮：用 fromto 语法确保绝对是一个沿着 Y 轴的圆柱体（真正的车轮） -->
+            <!-- 1. 底板（碳纤维黑） -->
+            <geom type="box" size="0.3 0.15 0.01" pos="0 0 -0.03" mass="0.8" material="carbon" />
+
+            <!-- 2. 上层主板（电路板蓝） -->
+            <geom type="box" size="0.25 0.12 0.01" pos="0 0 0.01" mass="0.2" material="pcb" />
+
+            <!-- 3. 四个连接支柱（纯视觉，无碰撞） -->
+            <geom type="cylinder" size="0.005 0.04" pos="0.2 0.1 0" material="metal" contype="0"
+                conaffinity="0" />
+            <geom type="cylinder" size="0.005 0.04" pos="-0.2 0.1 0" material="metal" contype="0"
+                conaffinity="0" />
+            <geom type="cylinder" size="0.005 0.04" pos="0.2 -0.1 0" material="metal" contype="0"
+                conaffinity="0" />
+            <geom type="cylinder" size="0.005 0.04" pos="-0.2 -0.1 0" material="metal" contype="0"
+                conaffinity="0" />
+
+            <!-- 4. 倒立摆的金属底座 -->
+            <geom type="box" size="0.04 0.04 0.02" pos="0 0 0.04" material="metal" contype="0"
+                conaffinity="0" />
+
+            <!-- 左轮 -->
             <body name="left_wheel" pos="0 0.18 -0.07">
-                <joint name="left_wheel_joint" type="hinge" axis="0 1 0"/>
-                <!-- 起点在y=0.15，终点在y=0.21，半径0.08 -->
-                <geom type="cylinder" fromto="0 -0.03 0  0 0.03 0" size="0.08" mass="0.2" rgba="0.1 0.1 0.1 1"/>
+                <joint name="left_wheel_joint" type="hinge" axis="0 1 0" />
+                <!-- 轮胎 -->
+                <geom type="cylinder" fromto="0 -0.03 0 0 0.03 0" size="0.08" mass="0.2"
+                    material="rubber" />
+                <!-- 轮毂（纯视觉） -->
+                <geom type="cylinder" fromto="0 -0.031 0 0 0.031 0" size="0.04" mass="0.01"
+                    material="metal" contype="0" conaffinity="0" />
             </body>
 
             <!-- 右轮 -->
             <body name="right_wheel" pos="0 -0.18 -0.07">
-                <joint name="right_wheel_joint" type="hinge" axis="0 1 0"/>
-                <geom type="cylinder" fromto="0 -0.03 0  0 0.03 0" size="0.08" mass="0.2" rgba="0.1 0.1 0.1 1"/>
+                <joint name="right_wheel_joint" type="hinge" axis="0 1 0" />
+                <!-- 轮胎 -->
+                <geom type="cylinder" fromto="0 -0.03 0 0 0.03 0" size="0.08" mass="0.2"
+                    material="rubber" />
+                <!-- 轮毂（纯视觉） -->
+                <geom type="cylinder" fromto="0 -0.031 0 0 0.031 0" size="0.04" mass="0.01"
+                    material="metal" contype="0" conaffinity="0" />
             </body>
 
-            <!-- 倒立摆杆：确保初始是在正中间竖直的 -->
+            <!-- 倒立摆杆 -->
             <body name="pole" pos="0 0 0.05">
-                <joint name="pole_joint" type="hinge" axis="0 1 0" damping="0.01"/>
-                <geom type="cylinder" fromto="0 0 0  0 0 0.5" size="0.02" mass="0.3" rgba="0.8 0.2 0.2 1"/>
-                <geom type="sphere" pos="0 0 0.5" size="0.04" mass="0.1" rgba="0.8 0.2 0.2 1"/>
+                <joint name="pole_joint" type="hinge" axis="0 1 0" damping="0.01" />
+                <!-- 杆子（金属） -->
+                <geom type="cylinder" fromto="0 0 0 0 0 0.5" size="0.02" mass="0.3" material="metal" />
+                <!-- 顶端配重球 -->
+                <geom type="sphere" pos="0 0 0.5" size="0.04" mass="0.1" rgba="0.8 0.2 0.2 1" />
             </body>
+
         </body>
     </worldbody>
 
     <actuator>
-        <motor name="left_motor" joint="left_wheel_joint" ctrlrange="-5 5"/>
-        <motor name="right_motor" joint="right_wheel_joint" ctrlrange="-5 5"/>
+        <motor name="left_motor" joint="left_wheel_joint" ctrlrange="-5 5" />
+        <motor name="right_motor" joint="right_wheel_joint" ctrlrange="-5 5" />
     </actuator>
 </mujoco>

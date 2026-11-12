@@ -1,18 +1,27 @@
+import os
 import mujoco
 import mujoco.viewer
 import numpy as np
 import time
 
-model = mujoco.MjModel.from_xml_path(
-    "/home/virtuosa/mujoco_menagerie/booster_t1/scene.xml"
+scene_xml = os.environ.get(
+    "T1_SCENE_XML",
+    os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                 "models", "booster_t1", "scene.xml"),
 )
+if not os.path.isfile(scene_xml):
+    raise FileNotFoundError(
+        f"未找到 T1 场景模型：{scene_xml}。请克隆 mujoco_menagerie 后设置环境变量 "
+        "T1_SCENE_XML 指向 booster_t1/scene.xml。"
+    )
+model = mujoco.MjModel.from_xml_path(scene_xml)
 data = mujoco.MjData(model)
 
 total_mass = model.body_mass.sum()
 g = 9.81
 
 print("=" * 50)
-print("牛顿第二定律 F=ma 验证")
+print("牛顿第二定律 F=ma 理论计算")
 print("=" * 50)
 print(f"m = {total_mass:.3f} kg, G = {total_mass*g:.2f} N")
 print(f"匀速: a=0, F=0 (平衡)")
@@ -84,7 +93,7 @@ step = 0
 with mujoco.viewer.launch_passive(model, data) as viewer:
     while viewer.is_running():
         data.qpos[7:30] = traj[step % len(traj)]
-        # 前进速度加快：0.002 → 0.0035
+        # 前进位移每帧增量 0.0035 m（恒定；×1.3 只加快步频，位移不加速）
         data.qpos[0] = step * 0.0035
         data.qpos[2] = z_base + 0.04 * np.sin(step * 0.15)
         data.qvel[6:29] = 0
