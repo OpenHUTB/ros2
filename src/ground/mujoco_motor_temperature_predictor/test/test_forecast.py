@@ -1,4 +1,5 @@
 import csv
+import json
 import os
 import subprocess
 import sys
@@ -59,3 +60,27 @@ def test_sample_generator_creates_cli_compatible_csv(tmp_path):
     assert write_sample(path, samples=100, seed=3) == 100
     times, features, targets = load_samples(path, horizon_s=0.5)
     assert len(times) == len(features) == len(targets)
+
+
+def test_default_cli_predicts_five_seconds_ahead(tmp_path):
+    source = tmp_path / "sample.csv"
+    write_sample(source, samples=500)
+    model = tmp_path / "model.json"
+    results = tmp_path / "results.json"
+    package_root = Path(__file__).resolve().parents[1]
+    process = subprocess.run([
+        sys.executable, str(package_root / "main.py"),
+        "--csv", str(source), "--model", str(model), "--results", str(results),
+    ], check=True, capture_output=True, text=True)
+    payload = json.loads(results.read_text(encoding="utf-8"))
+    assert payload["horizon_s"] == 5.0
+    assert json.loads(model.read_text(encoding="utf-8"))["horizon_s"] == 5.0
+    assert "horizon=5.0 s" in process.stdout
+    with source.open(newline="", encoding="utf-8") as stream:
+        rows = list(csv.DictReader(stream))
+    times = np.asarray([float(row["time_s"]) for row in rows])
+    expected = [
+        float(rows[np.searchsorted(times, time + 5.0)]["left_temperature_c"])
+        for time in payload["times_s"]
+    ]
+    np.testing.assert_allclose(payload["actual_c"], expected)

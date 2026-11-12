@@ -13,7 +13,7 @@ def generate_launch_description() -> LaunchDescription:
     executable = Path(get_package_prefix("mujoco_motor_temperature_predictor")) / "lib" / "mujoco_motor_temperature_predictor" / "motor_temperature_forecast"
     return LaunchDescription([
         DeclareLaunchArgument("csv"),
-        DeclareLaunchArgument("horizon", default_value="5.0"),
+        DeclareLaunchArgument("horizon", default_value="5.0", description="预测时域，单位秒，默认 5.0"),
         DeclareLaunchArgument("model", default_value="output/temperature_model.json"),
         DeclareLaunchArgument("results", default_value="output/forecast_results.json"),
         ExecuteProcess(

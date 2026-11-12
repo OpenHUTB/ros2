@@ -14,7 +14,7 @@ setup(
         ("share/" + package_name + "/launch", glob("launch/*.launch.py")),
         ("share/" + package_name + "/hook", ["hook/ament_prefix_path.dsv"]),
     ],
-    install_requires=["setuptools", "numpy>=1.24"],
+    install_requires=["setuptools", "numpy>=1.21"],
     zip_safe=True,
     maintainer="sirius185",
     description="Standalone time-series motor temperature predictor",
