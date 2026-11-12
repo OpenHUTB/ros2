@@ -1,0 +1,38 @@
+<launch>
+  <!-- 一键启动：Gazebo 世界 -> 生成 Mbot -> 里程计/TF -> 避障节点 -->
+
+  <arg name="world" default="$(find mbot_gazebo_lidar_avoid)/worlds/lidar_avoid_world.world"/>
+  <arg name="x" default="0.0"/>
+  <arg name="y" default="0.0"/>
+  <arg name="z" default="0.02"/>
+  <arg name="yaw" default="0.0"/>
+  <arg name="gui" default="true"/>
+
+  <!-- 1. Gazebo 仿真 -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(arg world)"/>
+    <arg name="paused" value="false"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="gui" value="$(arg gui)"/>
+    <arg name="headless" value="false"/>
+    <arg name="debug" value="false"/>
+    <arg name="recording" value="false"/>
+  </include>
+
+  <!-- 2. 机器人模型与 TF -->
+  <param name="robot_description"
+         textfile="$(find mbot_gazebo_lidar_avoid)/urdf/mbot_lidar.urdf"/>
+  <node pkg="robot_state_publisher" type="robot_state_publisher"
+        name="robot_state_publisher" output="screen"/>
+
+  <!-- 3. 生成 Mbot -->
+  <node pkg="gazebo_ros" type="spawn_model" name="spawn_mbot" output="screen"
+        args="-urdf -param robot_description -model mbot
+              -x $(arg x) -y $(arg y) -z $(arg z) -Y $(arg yaw)"/>
+
+  <!-- 4. 避障参数 + 节点 -->
+  <rosparam command="load"
+            file="$(find mbot_gazebo_lidar_avoid)/config/lidar_avoid.yaml"/>
+  <node pkg="mbot_gazebo_lidar_avoid" type="main.py"
+        name="mbot_lidar_avoid_node" output="screen"/>
+</launch>

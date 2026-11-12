@@ -1,0 +1,33 @@
+<launch>
+  <!-- 轮胎滑移率-附着曲线核算：所有参数都可用同名 arg 覆盖 -->
+
+  <arg name="peak_slip" default="0.12" doc="峰值附着对应的滑移率"/>
+  <arg name="peak_friction" default="0.90" doc="峰值附着系数"/>
+  <arg name="abs_band" default="0.20" doc="ABS 目标带宽比例，目标带 = peak_slip * (1 ± abs_band)"/>
+  <arg name="surface" default="dry_asphalt" doc="路面类型：dry_asphalt / wet_asphalt / snow / ice"/>
+  <arg name="samples" default="51" doc="曲线采样点数，至少 5"/>
+  <arg name="lock_friction_ratio" default="0.85" doc="锁死附着相对峰值的上限比例"/>
+  <arg name="linear_tolerance" default="0.02" doc="初段线性度允许的相对误差"/>
+  <arg name="peak_tolerance" default="0.01" doc="峰值位置/大小的允许偏差"/>
+  <arg name="publish_hz" default="10.0" doc="保持挂起时的循环频率（Hz）"/>
+  <arg name="report_topic" default="/tire/report" doc="文本报告话题"/>
+  <arg name="curve_topic" default="/tire/curve" doc="曲线表话题（CSV 文本）"/>
+  <arg name="peak_slip_topic" default="/tire/peak_slip" doc="峰值滑移率数值话题（Float64）"/>
+
+  <rosparam command="load" file="$(find tire_slip_curve)/config/tire_slip_curve.yaml"/>
+
+  <param name="tire/peak_slip" value="$(arg peak_slip)"/>
+  <param name="tire/peak_friction" value="$(arg peak_friction)"/>
+  <param name="tire/abs_band" value="$(arg abs_band)"/>
+  <param name="road/surface" value="$(arg surface)"/>
+  <param name="curve/samples" value="$(arg samples)"/>
+  <param name="check/lock_friction_ratio" value="$(arg lock_friction_ratio)"/>
+  <param name="check/linear_tolerance" value="$(arg linear_tolerance)"/>
+  <param name="check/peak_tolerance" value="$(arg peak_tolerance)"/>
+  <param name="rate/publish_hz" value="$(arg publish_hz)"/>
+  <param name="topic/report" value="$(arg report_topic)"/>
+  <param name="topic/curve" value="$(arg curve_topic)"/>
+  <param name="topic/peak_slip" value="$(arg peak_slip_topic)"/>
+
+  <node pkg="tire_slip_curve" type="main.py" name="tire_slip_curve" output="screen"/>
+</launch>

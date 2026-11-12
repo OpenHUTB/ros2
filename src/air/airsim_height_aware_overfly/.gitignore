@@ -1,0 +1,6 @@
+__pycache__/
+artifacts/
+.venv/
+
+# 根 .gitignore 的 *.TXT 会忽略依赖清单；本模块的 requirements.txt 必须入库。
+!requirements.txt
