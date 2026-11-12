@@ -99,8 +99,13 @@ class FaultPlan:
             b[self.rotor] = hover_thrust * self.alpha(t)
         return b
 
-    def onset_time(self) -> float | None:
-        return None if self.kind == "healthy" else float(self.onset)
+    def onset_time(self) -> float:
+        """任务段结束、开始迫降的时刻。
+
+        ``healthy`` 也返回 ``onset``：那时没有故障要注入，但这个时刻仍然是
+        "从悬停转到迫降"的分界点（节点和评测都用它切两个阶段）。
+        """
+        return float(self.onset)
 
     def label(self) -> str:
         if self.kind == "healthy":
@@ -108,6 +113,11 @@ class FaultPlan:
         text = f"{FAULT_CN[self.kind]}@桨{self.rotor}"
         if self.kind == "dual_loss":
             text += f"+桨{self.rotor2}"
+        # 表格里同名工况容易看着像重复行，把剩余推力一起写进标签
+        if self.kind in ("loss", "degradation", "stuck"):
+            text += f"（剩余推力{100.0 * (1.0 - self.severity):.0f}%）"
+        elif self.kind == "progressive":
+            text += f"（每秒衰减{self.severity:.2f}）"
         return text
 
 

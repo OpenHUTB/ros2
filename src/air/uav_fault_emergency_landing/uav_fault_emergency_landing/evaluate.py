@@ -20,12 +20,19 @@ from . import controller as C
 from . import landing as L
 from . import mapping as M
 
-#: 默认评测的故障工况。选的都是"还能飞、但任务已经不该继续"的情形：
-#: 推力衰减到一半、桨卡死，以及一个物理上救不回来的单桨全失效（用来划边界）。
+#: 默认评测的故障工况：健康基线 + 两组不同严重度的单桨衰减。
+#:
+#: 悬停时单桨要出 2.33 N，桨的指令上限是 6.0 N，所以坏桨增益低于
+#: ``2.33 / 6.0 ≈ 0.39``（即 severity > 0.61）时，分配层再怎么加大坏桨指令
+#: 也补不回来——这时才会出现倾斜与饱和。
+#:
+#: * ``healthy``：没有故障，用来证明"选点"本身带来的差别，而不是故障带来的；
+#: * ``degradation@2`` severity 0.5（剩余 50%）：仍可被分配层完全补偿；
+#: * ``degradation@0`` severity 0.78（剩余 22%）：越过补偿边界，指令饱和。
 FLIGHT_PLANS = (
-    ("degradation@2", dict(kind="degradation", rotor=2, severity=0.5)),
-    ("degradation@1", dict(kind="degradation", rotor=1, severity=0.3)),
-    ("degradation@0", dict(kind="degradation", rotor=0, severity=0.2)),
+    ("healthy", dict(kind="healthy", onset=2.0)),
+    ("degradation@2", dict(kind="degradation", rotor=2, severity=0.50)),
+    ("degradation@0", dict(kind="degradation", rotor=0, severity=0.78)),
 )
 
 #: 姿态超过这个角度就算失控
@@ -71,6 +78,9 @@ class LandingResult:
     target_error: float = float("nan")
     steps: int = 0
     min_clearance: float = float("inf")
+    #: 全程最大的单桨指令占满量程的比例。> 1.0 说明分配层已经在硬顶，
+    #: 这一列是用来解释"为什么有的工况轨迹一样、有的不一样"的。
+    max_command_ratio: float = 0.0
     times: List[float] = field(default_factory=list)
     altitudes: List[float] = field(default_factory=list)
     targets: List[Optional[np.ndarray]] = field(default_factory=list)
@@ -102,6 +112,7 @@ class LandingResult:
             "触地倾角deg": round(self.touchdown_tilt, 1),
             "落点误差m": None if np.isnan(self.target_error) else round(self.target_error, 2),
             "最大倾角deg": round(self.max_tilt, 1),
+            "最大指令比例": round(self.max_command_ratio, 2),
         }
 
 
@@ -239,6 +250,9 @@ def run_landing(api, mode: str = "expert", plan_spec: Optional[Dict[str, Any]] =
         # 指令 → 真实推力（故障后的桨只能给出 g·u + b），再交给 MuJoCo
         actual = np.clip(commands * gains + (0.0 if bias is None else bias),
                          0.0, params.max_thrust)
+        if float(np.max(commands)) > 0.0:
+            result.max_command_ratio = max(
+                result.max_command_ratio, float(np.max(commands)) / float(params.max_thrust))
         quad.apply_rotor_thrust(actual)
         quad.step(1)
         state = quad.state()
@@ -337,6 +351,7 @@ def aggregate(results: List[LandingResult]) -> List[Dict[str, Any]]:
             "平均落点误差m": round(float(np.mean(errors)), 2) if errors else None,
             "平均迫降耗时s": round(float(np.mean([r.touchdown_time or 0.0 for r in group])), 1),
             "最大倾角deg": round(float(np.max([r.max_tilt for r in group])), 1),
+            "平均最大指令比例": round(float(np.mean([r.max_command_ratio for r in group])), 2),
         })
     return out
 

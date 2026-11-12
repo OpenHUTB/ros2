@@ -213,21 +213,34 @@ def make_summary_png(results: Iterable[E.LandingResult], out_path: str, dpi: int
             plans.append(r.plan)
     success = []
     vz = []
+    n_safe = []
     for mode in modes:
         sel = [r for r in rows if r.mode == mode]
-        ok = [0 if (not r.landed or r.landed_on_obstacle) else 1 for r in sel]
+        # 用 LandingResult.safe 判"安全迫降"：包含触地速度与倾角包线，
+        # 否则"以 9.8 m/s 砸在空地上"也算成功，看不出策略差别。
+        ok = [1 if r.safe else 0 for r in sel]
         success.append(np.mean(ok) if ok else 0.0)
-        safe = [abs(r.touchdown_vz) for r in sel if r.landed]
-        vz.append(float(np.mean(safe)) if safe else 0.0)
+        # 只统计"真的安全落地"的那几次：越界工况会以 9.8 m/s 砸地，
+        # 混进平均里会把两种策略之间 0.56 vs 0.05 的差别冲掉。
+        good = [abs(r.touchdown_vz) for r in sel if r.safe]
+        n_safe.append(len(good))
+        vz.append(float(np.mean(good)) if good else 0.0)
 
     fig, axes = plt.subplots(1, 2, figsize=(8.6, 3.2), dpi=dpi)
     axes[0].bar(modes, success, color=[MODE_COLORS.get(m, "#4C72B0") for m in modes])
     axes[0].set_ylim(0.0, 1.05)
     axes[0].set_ylabel("safe landing rate")
-    axes[0].set_title(f"safe landing rate ({len(plans)} fault cases)", fontsize=9)
+    axes[0].set_title(f"safe landing rate ({len(plans)} cases per mode)", fontsize=9)
     axes[1].bar(modes, vz, color=[MODE_COLORS.get(m, "#4C72B0") for m in modes])
     axes[1].set_ylabel("touchdown |vz| (m/s)")
-    axes[1].set_title("touchdown vertical speed", fontsize=9)
+    axes[1].set_title("touchdown vertical speed (safe landings only)", fontsize=9)
+    axes[1].set_ylim(0.0, max(vz + [0.1]) * 1.35)
+    for ax, values in ((axes[0], success), (axes[1], vz)):
+        for index, value in enumerate(values):
+            label = f"{value:.2f}"
+            if ax is axes[1]:
+                label += f" (n={n_safe[index]})"
+            ax.text(index, value, label, ha="center", va="bottom", fontsize=8)
     for ax in axes:
         ax.grid(alpha=0.25, axis="y")
     fig.tight_layout()

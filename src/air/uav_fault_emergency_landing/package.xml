@@ -23,7 +23,6 @@
   <!-- Mujoco / torch / numpy 走 pip（见 requirements.txt），不在 ROS 依赖里 -->
   <exec_depend>python3-numpy</exec_depend>
 
-  <test_depend>ament_pytest</test_depend>
   <test_depend>python3-pytest</test_depend>
 
   <export>
