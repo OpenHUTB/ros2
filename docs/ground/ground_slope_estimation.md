@@ -31,7 +31,7 @@ ros2 launch ground_slope_estimation main.launch.py
 
 ```bash
 cd src/ground/ground_slope_estimation
-./run_eval.sh
+bash run_eval.sh
 ```
 
 ## 结果
