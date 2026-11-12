@@ -1,0 +1,23 @@
+uav_emergency_drop_node:
+  ros__parameters:
+    # uav_emergency_drop 关键参数
+
+    # 投放弹道
+    drop_h: 30.0        # 默认投放高度 m
+    drop_speed: 8.0     # 默认巡航速度 m/s
+    wind_coeff: 0.8     # 风偏系数
+    sigma_factor: 0.15  # 落点散布 sigma = factor * h
+    accept_radius: 6.0  # 投放区间判定半径 m
+
+    # 载货与架次
+    capacity: 12        # 单架次载货份数
+    reload_s: 60.0      # 回补给点装载时间 s
+    cruise_speed: 8.0   # 架次航程估算速度 m/s
+
+    # ROS 节点
+    odom_topic: "/uav/odom"
+    drop_topic: "/uav_emergency_drop/drop"
+    seg_a: [0.0, 0.0]
+    seg_b: [200.0, 0.0]
+    target: [200.0, 0.0]
+    wind: [0.0, 0.0]

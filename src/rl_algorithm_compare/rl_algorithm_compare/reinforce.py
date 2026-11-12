@@ -20,7 +20,7 @@ from .nn import MLP
 class REINFORCE:
     """REINFORCE 智能体。layers 为策略网络隐藏层大小列表。"""
 
-    def __init__(self, obs_dim, act_dim, layers, lr=1e-3, gamma=0.99,
+    def __init__(self, obs_dim, act_dim, layers, lr=1e-3, gamma=0.99, seed=None,
                  baseline_rate=0.05):
         self.obs_dim = obs_dim
         self.act_dim = act_dim
@@ -30,7 +30,7 @@ class REINFORCE:
         self.baseline = 0.0                 # 跨回合回报移动平均基线
         self.n_episodes = 0
         size = [obs_dim] + list(layers) + [act_dim]
-        self.policy = MLP(size, out='softmax', lr=lr)
+        self.policy = MLP(size, out='softmax', lr=lr, seed=seed)
 
     def act(self, s, greedy=False):
         """按策略概率采样动作；greedy=True 时取概率最大动作。"""
