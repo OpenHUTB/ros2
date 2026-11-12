@@ -407,6 +407,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/ugv_visual_slam_nav/">视觉 SLAM 建图与自主导航（EKF-SLAM + 端到端对照）</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="ground/dvs_event_motion_tracking/">DVS 事件相机背景活动抑制与运动目标跟踪</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="ground/diff_drive_odom_calib/">差速机器人里程计标定与神经网络滑移补偿</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/imu_allan_noise_identification/">IMU 噪声 Allan 方差辨识与倾角滤波整定</a>
@@ -1127,6 +1129,7 @@
 <li><a href="ground/uwb_baseline_geometry_eval/">UWB 多基站测距定位布站几何精度对比评测</a> —— 四种布站构型的 GDOP 与蒙特卡洛定位精度对比</li>
 <li><a href="ground/turtlebot3_auto_nav/">TurtleBot3 仿真自主导航与避障参数优化</a></li>
 <li><a href="ground/ugv_visual_slam_nav/">地面无人车视觉 SLAM 建图与自主导航</a> —— 单目 RGB-D 做 EKF-SLAM 与占据栅格，A* 规划 + 纯追踪执行，并排训练端到端 CNN 做对照</li>
+<li><a href="ground/dvs_event_motion_tracking/">DVS 事件相机背景活动抑制与运动目标跟踪</a> —— 直接解析 CARLA 13 字节事件流，用 BAF 学习静态树冠噪声、残差连通域分割运动车辆，实测抑制 79.7% 背景事件、检出率 100%、质心 MAE 2.35 px，事件量仅为等价整帧像素的 3.21%</li>
 <li><a href="ground/rl_mujoco_locomotion/">MuJoCo Locomotion 强化学习对比实验</a></li>
 <li><a href="ground/image_recorder/">图像录制 ROS 2 封装模块</a></li>
 <li><a href="ground/mujoco_car_parking/">MuJoCo小车倒车入库仿真</a></li>
