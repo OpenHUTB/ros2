@@ -1,8 +1,16 @@
+import signal
+
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 import cv2
+
+try:  # Humble 及更新的 rclpy 在 SIGINT 关闭 context 时会抛这个异常
+    from rclpy.executors import ExternalShutdownException
+except ImportError:  # 更老的 rclpy 版本可能没有该异常类，用占位类保证 import 不失败
+    class ExternalShutdownException(Exception):
+        pass
 
 from image_recorder.capture import make_capture_path, normalize_topic
 
@@ -53,9 +61,11 @@ class ImageRecorder(Node):
                 path = make_capture_path(self.output_dir,
                                          extension=self.image_format,
                                          index=self._save_index)
-                self._save_index += 1
-                cv2.imwrite(str(path), cv_image)
-                self.get_logger().info(f'Saved as {path}')
+                if cv2.imwrite(str(path), cv_image):
+                    self._save_index += 1
+                    self.get_logger().info(f'Saved as {path}')
+                else:
+                    self.get_logger().error(f'Failed to write image: {path}')
         except Exception as e:
             self.get_logger().error(f'Error: {e}')
 
@@ -73,12 +83,20 @@ def main(args=None):
     image_recorder = ImageRecorder()
     try:
         rclpy.spin(image_recorder)
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, ExternalShutdownException):
+        # Humble 及以上：SIGINT 关闭 context 时 spin 抛 ExternalShutdownException；
+        # Foxy：抛 KeyboardInterrupt。两种都按正常退出处理。
         pass
     finally:
+        # ros2 launch 退出时 SIGINT 会同时发给 launch 和节点，清理阶段再收到一次
+        # KeyboardInterrupt 会打印 traceback 并以 -2 退出；这里屏蔽掉。
+        signal.signal(signal.SIGINT, signal.SIG_IGN)
         image_recorder.destroy_node()
-        if rclpy.ok():
-            rclpy.shutdown()
+        try:
+            rclpy.try_shutdown()
+        except AttributeError:          # 老版本 rclpy 没有 try_shutdown
+            if rclpy.ok():
+                rclpy.shutdown()
 
 
 if __name__ == '__main__':
