@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 ROS 2 Action 客户端：发送斐波那契计算请求并接收反馈与结果
 
