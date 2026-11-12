@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>mujoco_balance_car</name>
+  <version>1.0.0</version>
+  <description>
+    MuJoCo 两轮自平衡小车：双环 PID（位置外环 → 目标倾角，倾角内环 → 力矩），
+    带离线指标评测（稳定时间 / 超调 / 稳态误差 / 抗扰恢复 / 初始倾角扫描）。
+  </description>
+  <maintainer email="openhutb@example.com">OpenHUTB</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_copyright</buildtool_depend>
+  <buildtool_depend>ament_flake8</buildtool_depend>
+  <buildtool_depend>ament_pep257</buildtool_depend>
+  <buildtool_depend>python3-setuptools</buildtool_depend>
+
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>rclpy</exec_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
