@@ -84,6 +84,8 @@ ROS每章节运行代码:
 * [第 9 章](./chapter/chap9.md) - ROS 2
     * [Gazebo 仿真相机与图像话题验证](./chapter/chap9/gazebo_camera_sim.md)
     * [ROV 六自由度推力分配](./chapter/chap9/rov_thruster_allocation_ls.md)
+    * [无人机禁飞区膨胀绕行](./chapter/chap9/uav_geofence_bypass.md)
+    * [无人机 LOS 航点制导](./chapter/chap9/uav_los_waypoint_guidance.md)
 * [第 10 章](./chapter/turtlebot3_gazebo_control.md) - Turtlebot3 Gazebo键盘控制
 
 
@@ -235,6 +237,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [MuJoCo 差速小车走迷宫](./ground/diff_drive_maze.md)
 * [MuJoCo 地面小车射线感知与分级减速避障](./ground/mujoco_car_avoidance.md)
 * [MuJoCo 地面小车神经网络端到端避障](./ground/mujoco_car_nn_avoidance.md)
+* [MuJoCo 无人车端到端驾驶与栅格 SLAM（BC/DAgger + ROS 1/2）](./ground/mujoco_car_nn/index.md) —— 227 m 闭环赛道、64×64 相机 + 64 束雷达，行为克隆与 DAgger 闭环 0 碰撞，栅格建图单圈 ATE 2.37 m
 * [MuJoCo 两轮自平衡小车](./ground/mujoco_balance_car.md)
 * [MuJoCo 差速小车电机温升模型](./ground/mujoco_motor_thermal_model.md)
 * [MuJoCo 地面差速小车侧倾/翻车风险预测与主动限速](./ground/mujoco_car_rollover_guard.md)
@@ -396,6 +399,8 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 
 * [建立虚拟机和空域载具之间的连接](./air/setup_and_connect.md)
 * [无人机目标高度限幅、变化率约束与超时保持](./air/uav_altitude_command_guard.md)
+* [无人机 GNSS 定位完整性监测与位置跳变失效保护](./air/uav_gnss_integrity_monitor.md) —— 定位输入侧的运动学合理性门控，位置突跳或失锁时冻结最后可信位姿并请求悬停
+
 * [无人机偏航指令最短路径与角速度限幅](./air/uav_yaw_command_guard.md) —— 将偏航误差映射到 `[-pi, pi)`，避免跨 180° 时绕远路，并限制 `Twist.angular.z`
 
 * [多旋翼重心偏移配平与饱和包线核算](./air/uav_cg_trim_envelope.md) —— 四电机悬停拉力分配、配平倾角与饱和包线；默认 1.2 kg 样机重心偏 3 mm 即俯仰 5.7°，6 N 电机上限对应 ±0.13 m 配平包线
@@ -489,6 +494,8 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [无人机桨故障健康度估计](./air/uav_rotor_fault_detector_nn.md) —— 用机载 IMU 与控制器指令（13 维特征）经 1D-CNN+GRU 实时回归四桨剩余推力权限，单桨完全失效 0.10 s 检出、误报率 0，同时提供 ROS2 节点与在线估计接口
 * [桨故障下的端到端推力策略](./air/uav_fault_e2e_thrust_policy.md) —— 前视深度图 32×32 + 16 维本体量（含四桨健康度与三轴角速率）直接输出四个桨的归一化推力，用 DAgger 从几何控制器蒸馏；healthy/t1e0.3–0.5 工况下约 1/3 成功，诚实记录了"端到端推力输出对回归精度过于敏感"这一限制
 
+* [无人机桨故障后的自主迫降](./air/uav_fault_emergency_landing.md) —— 下视深度相机在线建 2.5D 高度图，全卷积网络给"能不能落"打分选点，另一神经网络输出速度指令闭环飞过去；实测垂直下降穿楼、选点迫降安全着陆（触地垂直速度 0.05 m/s）
+
 * [无人机桨故障下的神经容错控制](./air/uav_neural_fault_tolerant_control.md) —— 几何控制器给出期望合推力与力矩，加权最小二乘按健康度重新分配到四桨（桨彻底失效时主动放弃偏航），再用 5252 参数的 MLP 学分配残差；12 次对比飞行里把跟踪误差降到 0.188 m（相对加权分配降 29%）而生存率不变
 
 * [无人机编队飞行](./air/uav_formation_flight.md) —— 长机按航点巡航、僚机保持队形（一字/纵队/三角可动态切换），三架共用一条 AirSim RPC，依次起飞、低空展开后进入任务
@@ -512,6 +519,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [语义分割建图与语义路径规划](./air/uav_semantic_mapping_nav.md)
 
 * [AllocNet 四旋翼避障规划与键盘遥操作](./air/allocnet_teleop.md) —— 在学习型时间分配的避障轨迹规划基础上，补齐键盘航点下发、地图常驻转发与轨迹记录的人机交互层
+* [PX4+ROS2+OpenCV 视觉目标追踪](./air/px4_ros2_opencv_tracking/index.md) —— 基于 PX4 Offboard 模式的 OpenCV 颜色目标追踪演示（合成图像输入）
 * [无人机机载相机视觉目标跟踪](./air/uav_camera_tracking.md) —— 神经网络感知（图像→目标像素热图）与控制网络解耦训练，与端到端策略在静止/圆周/遮挡/阵风四个场景下闭环对比
 
 * [状态识别与轨迹绘制](./air/drone_trajectory_logger.md)
@@ -621,6 +629,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [HoloOcean ROS2 运行时容器](./water/docker_runtime.md) —— 用 `build_container.sh` 构建运行时镜像
 
 * [声呐数据滤波初步验证](./water/rov_sonar_filter.md)
+* [水下机器人 MuJoCo 仿真、声呐 SLAM 与纯 NumPy 神经网络导航](./water/rov_numpy_nn_slam.md) —— 6-DOF ROV 物理仿真、键盘遥控、声呐建图定位、A* 导航与端到端 CNN
 
 如果对文档中的任何问题可以在 [本文档的源码仓库](https://github.com/OpenHUTB/ros2) 中的 [问题](https://github.com/OpenHUTB/ros2/issues) 页面讨论或者提交 [拉取请求](https://github.com/OpenHUTB/.github/blob/master/CONTRIBUTING.md) 直接修改文档。
 
