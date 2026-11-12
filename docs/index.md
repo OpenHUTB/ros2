@@ -354,6 +354,8 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [MuJoCo 地面无人车 SLAM 建图导航与神经网络控制](./ground/mujoco_ground_slam_nn_nav/README.md)
 * [地面坡度估计](./ground/ground_slope_estimation.md)
 * [急停闩锁与人工复位](./ground/estop_latch.md) —— 把 `/emergency_stop` 锁住，必须调用 `/estop_latch/reset` 人工确认才放行，默认上电即闩锁
+* [倒车（反向）纯追踪路径跟踪](./chapter/chap9/pure_pursuit_reverse.md) —— 倒车时前视点外推到车尾后方、按航向误差反号给角速度，8.4 m 反向路径横向误差 0.11 m，`--no-ros` 可离线复现
+* [激光雷达回波强度辅助可通行性判断](./chapter/chap9/lidar_intensity_traversability.md) —— 用 `/scan` 的 intensities 折算回波置信度与有效距离，避免玻璃、黑色泡棉等低反射率障碍被 `min(ranges)` 误判为“前方空旷”
 
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
@@ -594,6 +596,8 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [倾转旋翼过渡走廊与倾转角调度](./air/uav_tiltrotor_transition_corridor/index.md) —— 平飞平衡方程 + 功率/前进比双约束二分求走廊，按走廊调度倾转角并做掉高保护
 
 * [AirSim 无人机 IMU 姿态估计（MLP）](./air/uav_airsim_attitude_estimator.md) —— IMU 5 帧 30 维进单隐层 MLP 回归 roll/pitch，平均 MAE 0.9°
+* [无人机禁飞区膨胀与可见图最短绕行](./chapter/chap9/uav_geofence_bypass.md) —— 多边形禁飞区按安全裕度外扩，在可见图上跑最短路选出安全目标点，无解时原地悬停
+* [无人机 LOS 视线制导航点跟踪](./chapter/chap9/uav_los_waypoint_guidance.md) —— 前视点加视线角速率制导跟踪航点序列，偏航角速率限幅，含到达判据与逐帧日志
 
 ## 6. 水域载具  <span id='water_vehicle'></span>
 
@@ -641,6 +645,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 
 * [ROV 浮力-压载配平与初稳性核算](./water/rov_ballast_trim.md) —— 全潜状态按 GM = z_B - z_G（不含水面船 BM = I/V 项）算中性浮力、重心/浮心偏心与横摇周期；默认样机缺 38.5 kg 压载，配平后 GM 42 mm、2° 倾角只对应 1.5 mm 横向偏心
 * [ROV 深度保持 PID 控制与扰动恢复仿真](./water/rov_depth_hold.md) —— 负载上浮扰动与波浪扰动下的定深精度、扰动恢复时间，附实现动图
+* [ROV 六自由度推力分配（最小二乘 + 饱和处理）](./chapter/chap9/rov_thruster_allocation_ls.md) —— 6×8 推进器配置矩阵最小二乘分配，逐推进器饱和后回代补偿，附饱和前后对照
 * [ROV 推进器配置矩阵与饱和感知推力分配](./water/rov_thruster_allocation.md) —— 8 推进器 6×8 配置矩阵（秩 6、条件数 10.9），箱约束 QP 分配；超包络时力旋量残差比先伪逆再限幅低 36%（20.00 vs 31.41）
 
 * [动态洋流 ROV 键盘遥操与 MLP 巡航控制](./water/mjc_rov_current_teleop.md)
