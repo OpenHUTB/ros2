@@ -132,6 +132,36 @@ def extract_scan(points, bins=180, fov_deg=FOV_DEG, max_range=MAX_RANGE):
     return ranges
 
 
+def compensate_scan_points(points, sample_pose, current_pose):
+    """Move an older sensor-local sweep into the current sensor frame.
+
+    Poses are (north_m, east_m, yaw_ned_rad). The configured lidar has zero
+    horizontal offset from the vehicle, so vehicle and sensor XY coincide.
+    """
+    pts = np.asarray(points, dtype=np.float32).reshape(-1, 3).copy()
+    if not len(pts):
+        return pts
+    sx, sy, sa = sample_pose
+    cx, cy, ca = current_pose
+    c, s = math.cos(sa), math.sin(sa)
+    world_x = sx + c * pts[:, 0] - s * pts[:, 1]
+    world_y = sy + s * pts[:, 0] + c * pts[:, 1]
+    dx, dy = world_x - cx, world_y - cy
+    c, s = math.cos(ca), math.sin(ca)
+    pts[:, 0] = c * dx + s * dy
+    pts[:, 1] = -s * dx + c * dy
+    return pts
+
+
+def advance_waypoint(index, position, waypoints, tolerance_m):
+    """Advance to the next NED waypoint only after reaching the current one."""
+    if index >= len(waypoints) - 1:
+        return index
+    x, y = position
+    gx, gy = waypoints[index]
+    return index + 1 if math.hypot(gx - x, gy - y) <= tolerance_m else index
+
+
 def scan_angle_max(angle_min, angle_increment, bins):
     """LaserScan 的 angle_max：bins 个采样点里最后一个点的角度。
 

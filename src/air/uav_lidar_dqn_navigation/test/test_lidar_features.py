@@ -13,7 +13,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                 '..', 'scripts'))
 
 from lidar_features import (  # noqa: E402
-    FOV_DEG, MAX_RANGE, NUM_SECTORS, STATE_DIM, build_state, extract_scan,
+    FOV_DEG, MAX_RANGE, NUM_SECTORS, STATE_DIM, advance_waypoint, build_state,
+    compensate_scan_points, extract_scan,
     goal_state, min_obstacle_distance, scan_angle_max, sector_distances,
     velocity_state,
 )
@@ -68,6 +69,25 @@ class TestGoalAndVelocity(unittest.TestCase):
 
 
 class TestScanAndState(unittest.TestCase):
+    def test_mapping_route_changes_goal_only_after_arrival(self):
+        waypoints = [(0, 20), (16, 20)]
+        self.assertEqual(advance_waypoint(0, (0, 10), waypoints, 1.5), 0)
+        self.assertEqual(advance_waypoint(0, (0, 19), waypoints, 1.5), 1)
+        self.assertEqual(advance_waypoint(1, (16, 20), waypoints, 1.5), 1)
+
+    def test_motion_compensation_keeps_static_wall_at_current_range(self):
+        # A fixed wall is 10 m ahead at the old pose, 8 m at the new pose.
+        old = np.array([[10.0, 0.0, 0.0]], dtype=np.float32)
+        current = compensate_scan_points(old, (0, 0, 0), (2, 0, 0))
+        self.assertAlmostEqual(float(current[0, 0]), 8.0)
+        self.assertAlmostEqual(float(extract_scan(current)[90]), 8.0)
+
+    def test_motion_compensation_accounts_for_turn(self):
+        old = np.array([[10.0, 0.0, 0.0]], dtype=np.float32)
+        current = compensate_scan_points(old, (0, 0, 0), (0, 0, math.pi / 2))
+        self.assertAlmostEqual(float(current[0, 0]), 0.0, places=4)
+        self.assertAlmostEqual(float(current[0, 1]), -10.0, places=4)
+
     def test_scan_length_and_range(self):
         pts = np.array([[5.0, 0.0, 0.0]], dtype=np.float32)
         ranges = extract_scan(pts, bins=180)

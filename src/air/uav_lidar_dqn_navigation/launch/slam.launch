@@ -3,8 +3,8 @@
   <arg name="airsim_ip" default="172.25.176.1"/>
   <arg name="vehicle_name" default="Drone_1"/>
   <arg name="altitude" default="4.0"/>
-  <arg name="goal_x" default="20.0"/>
-  <arg name="goal_y" default="0.0"/>
+  <arg name="goal_x" default="0.0"/>
+  <arg name="goal_y" default="20.0"/>
 
   <!-- 桥接、180° 累积扫描与 odom->base_link->laser TF；
        建图时打开 publish_tf，gmapping 才能把 map->odom 接上 -->
@@ -51,8 +51,10 @@
     <param name="speed_scale" value="0.5"/>
   </node>
 
-  <node name="goal_publisher" pkg="rostopic" type="rostopic"
-        args="pub -r 1 /drone/goal geometry_msgs/PointStamped
-              '{header: {frame_id: map}, point: {x: $(arg goal_x), y: $(arg goal_y), z: -$(arg altitude)}}'"
-        output="log"/>
+  <!-- First leg goes north of the wall; the second leg runs east along it. -->
+  <node name="waypoint_goal" pkg="uav_lidar_dqn_navigation"
+        type="waypoint_goal_node.py" output="screen">
+    <param name="altitude" value="$(arg altitude)"/>
+    <rosparam param="waypoints">[[0.0, 20.0], [16.0, 20.0]]</rosparam>
+  </node>
 </launch>

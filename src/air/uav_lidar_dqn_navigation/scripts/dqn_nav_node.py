@@ -41,8 +41,8 @@ def _package_path():
 
 from dqn_agent import DQNAgent  # noqa: E402
 from dqn_network import ACTIONS, ACTION_NAMES, NUM_ACTIONS  # noqa: E402
-from lidar_features import MAX_RANGE, goal_state, velocity_state  # noqa: E402
-from safety_shield import select_action  # noqa: E402
+from lidar_features import goal_state, velocity_state  # noqa: E402
+from safety_shield import front_distance_m, recovery_turn, select_action  # noqa: E402
 
 
 class DQNNavNode(object):
@@ -61,9 +61,13 @@ class DQNNavNode(object):
         self.state = None
         self.sectors = None
         self.last_action = 0
+        self.recovery_forward_ticks = 0
+        self.stagnant_ticks = 0
+        self.last_position = None
 
         self.agent = DQNAgent(state_dim=32, action_dim=NUM_ACTIONS)
-        if os.path.exists(self.model_path):
+        self.model_loaded = os.path.exists(self.model_path)
+        if self.model_loaded:
             self.agent.load(self.model_path)
             rospy.loginfo('已加载 DQN 策略 %s', self.model_path)
         else:
@@ -106,14 +110,40 @@ class DQNNavNode(object):
 
             state = self._build_state()
             action = 0
-            if os.path.exists(self.model_path):
+            if self.model_loaded:
                 # 安全层先把会撞的动作屏蔽，再在剩余动作里取 Q 最大
                 action = select_action(self.agent.q_values(state), self.sectors)
 
-            # 硬兜底：已经贴到 0.35 m 就悬停，交给下一拍重新决策
-            nearest = float(np.min(self.sectors)) * MAX_RANGE
-            if nearest < self.safety_dist:
+            # Only the forward field can stop forward flight. A wall at the
+            # side must not freeze a clear forward path.
+            nearest = front_distance_m(self.sectors)
+            position = np.asarray(self.state[:2], dtype=np.float32)
+            if self.last_position is not None and np.linalg.norm(
+                    position - self.last_position) < 0.01:
+                self.stagnant_ticks += 1
+            else:
+                self.stagnant_ticks = 0
+            self.last_position = position
+
+            goal_distance = math.hypot(float(self.state[0]) - float(self.goal[0]),
+                                       float(self.state[1]) - float(self.goal[1]))
+            if goal_distance <= 1.5:
                 action = 0
+                self.recovery_forward_ticks = 0
+            elif self.model_loaded and nearest < max(1.0, self.safety_dist):
+                # A masked forward action alone can leave the vehicle hovering
+                # forever. Rotate toward open space, then advance once clear.
+                action = recovery_turn(self.sectors)
+                self.recovery_forward_ticks = 10
+            elif self.model_loaded and self.recovery_forward_ticks:
+                action = 1  # forward, rechecked against the live scan each tick
+                self.recovery_forward_ticks -= 1
+            elif (self.model_loaded and
+                  abs(float(self.state[2]) - float(self.goal[2])) < 1.0 and
+                  self.stagnant_ticks > int(2.0 * self.rate_hz)):
+                # Break a policy that keeps choosing hover/turn on a clear path.
+                action = 1
+                self.stagnant_ticks = 0
 
             vx, yaw_rate = ACTIONS[action]
             cmd = Twist()

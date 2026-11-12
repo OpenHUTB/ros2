@@ -152,8 +152,8 @@ rosrun uav_lidar_dqn_navigation train_dqn_nav.py --episodes 200
 安全层（`safety_shield.py`）：DQN 学的是“朝目标飞”，障碍进入训练分布外的
 近距范围时 Q 值区分度会变小。部署时先用 24 扇区距离屏蔽会撞的动作——
 正前方 1.0 m 内有障碍时禁用直行/左前/右前，单侧 0.9 m 内有障碍时禁用该侧
-斜向动作，再在剩余动作里取 Q 最大；贴到 0.35 m 时强制悬停。这样既保留
-学习到的导航偏好，又不会贴着墙直行。
+斜向动作，再在剩余动作里取 Q 最大。近障时向空旷一侧转向，前方通畅后
+短暂前进；0.35 m 兜底只检查前向扇区。整条近障行为仍需 AirSim 实机验证。
 
 速度按 `speed_scale` 缩放，建图时用 0.5 兼顾扫描重叠。
 
@@ -179,13 +179,16 @@ roslaunch uav_lidar_dqn_navigation dqn.launch goal_x:=10 goal_y:=15
 | `maxRange` | 40 m | 与 `lidar_features.MAX_RANGE` 保持一致 |
 | `particles` | 50 | 稀疏雷达下比默认 30 稳定 |
 | `linearUpdate` / `angularUpdate` | 0.2 m / 0.1 rad | 位姿增量触发更新 |
-| `delta` | 0.05 m | 栅格分辨率 |
+| `delta` | 0.05 m | 新运行的分辨率；仓库旧地图为 0.1 m，不能作为本配置的结果 |
 
 选择 gmapping 而不是 hector_slam 的原因：hector 不做里程计融合、依赖扫描匹配
 初值，在 180° 稀疏雷达 + 快速偏航下实测会跟丢，地图呈扇形；gmapping 用里程计
-做运动先验、粒子滤波修正，本场景建出 1136×1104 栅格、5751 个占用格。
+做运动先验、粒子滤波修正。仓库现有 `uav_map.pgm` 的实际尺寸是
+1104×1136，只有 1503 个占用格，未形成可辨认的连续墙体；它是旧运行
+诊断文件，不能当成当前 `slam.launch` 的建图成果。需要实机重采并复核。
 
-建图演示沿 (0,0) → (0,20) → (16,20) 绕行，全程约 3 分钟：
+`waypoint_goal_node.py` 配置为先到 (0,20)，达到 1.5 m 容差后再到
+(16,20)。这是启动配置，不代表已实测完成绕行：
 
 ```bash
 roslaunch uav_lidar_dqn_navigation main.launch mode:=slam
