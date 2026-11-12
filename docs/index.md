@@ -249,6 +249,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [MuJoCo 地面差速小车侧倾/翻车风险预测与主动限速](./ground/mujoco_car_rollover_guard.md)
 * [ROS 2 电机温度保护节点](./ground/mujoco_motor_thermal_guard.md)
 * [MuJoCo 地面差速小车单侧驱动失效检测与差速补偿](./ground/mujoco_car_drive_fault.md)
+* [MuJoCo 四轮差速车自动泊车](./ground/mujoco_auto_parking/index.md)
 * [MuJoCo 四轮独立悬架越野小车仿真](./ground/mujoco_offroad_suspension.md)
 * [2D 小车目标追踪仿真](./ground/car_2d_target_tracker.md)
 * [电机热场景对比评价](./ground/motor_thermal_scenario_evaluator.md)
