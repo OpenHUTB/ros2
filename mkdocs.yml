@@ -271,6 +271,7 @@ nav:
     - 工况能耗与续航核算: './ground/drive_cycle_energy.md'
     - 乘坐舒适性传递率: './ground/ride_comfort_transmissibility.md'
     - 不足转向梯度与侧向稳定裕度: './ground/lateral_stability_margin.md'
+    - 端到端驾驶（图像到控制指令）: './ground/end2end_cnn.md'
 - 空域载具:
     - MuJoCo 城市屋顶光伏覆盖率测量: './air/mujoco_uav_rooftop_pv_coverage_survey.md'
     - MuJoCo 屋顶光伏覆盖率测量第二天: './air/mujoco_uav_rooftop_pv_coverage_survey_day2.md'
