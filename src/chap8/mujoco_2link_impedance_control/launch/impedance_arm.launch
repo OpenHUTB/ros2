@@ -1,0 +1,8 @@
+<launch>
+  <node name="impedance_arm_node"
+        pkg="mujoco_2link_impedance_control"
+        type="mujoco_arm_impedance_node.py"
+        output="screen">
+    <param name="x_des" value="0.62 0.0"/>
+  </node>
+</launch>

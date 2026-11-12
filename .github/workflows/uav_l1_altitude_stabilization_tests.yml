@@ -1,0 +1,46 @@
+name: uav_l1_altitude_stabilization tests
+
+on:
+  push:
+    paths:
+      - "src/air/uav_l1_altitude_stabilization/**"
+      - ".github/workflows/uav_l1_altitude_stabilization_tests.yml"
+  pull_request:
+    paths:
+      - "src/air/uav_l1_altitude_stabilization/**"
+      - ".github/workflows/uav_l1_altitude_stabilization_tests.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r src/air/uav_l1_altitude_stabilization/requirements.txt pytest
+      - name: Run tests
+        working-directory: src/air/uav_l1_altitude_stabilization
+        run: python -m pytest tests -v
+      - name: Run simulation
+        working-directory: src/air/uav_l1_altitude_stabilization
+        run: python main.py --out-dir results
+      - name: Check artifacts
+        working-directory: src/air/uav_l1_altitude_stabilization
+        run: |
+          test -s results/altitude_response.png
+          test -s results/altitude_demo.gif
+          test -s results/summary.json
+          python - <<'PY'
+          import json
+          d = json.load(open("results/summary.json", encoding="utf-8"))
+          m = d["metrics"]
+          assert m["rise_time"] is not None, m
+          assert m["gust_peak"] < 0.2, m
+          assert m["gust_peak"] < 0.5 * d["baseline_pd"]["gust_peak"], m
+          assert abs(m["final_alt"] - 3.5) < 0.1, m
+          print("metrics ok:", m)
+          PY

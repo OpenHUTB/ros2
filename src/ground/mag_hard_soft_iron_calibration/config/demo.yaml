@@ -1,0 +1,9 @@
+mag_sim:
+  ros__parameters:
+    rate_hz: 20.0
+    seed: 0
+    interval_s: 1.0
+mag_calibrator:
+  ros__parameters:
+    samples: 600
+    field_norm_ut: 48.0

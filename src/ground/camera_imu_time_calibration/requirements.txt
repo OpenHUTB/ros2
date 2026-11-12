@@ -1,0 +1,10 @@
+# 离线部分（core / main / sweep_* / compare_attitude / test）只需要 NumPy；
+# Matplotlib 仅用于生成文档图片。
+#
+# ROS 2 节点额外依赖 rclpy、sensor_msgs、geometry_msgs、std_msgs，随 Humble 一起安装，
+# 不要用 pip 装。
+#
+# 版本上界与 ROS 2 Humble 自带的 numpy 1.21.x 对齐，避免 --user 安装的高版本
+# 遮蔽系统 numpy（在 Humble 上会引起 ament / vision 相关包告警）。
+numpy>=1.21,<2.0
+matplotlib>=3.5
