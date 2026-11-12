@@ -50,6 +50,29 @@ class TestConfigAndCheck(unittest.TestCase):
         with self.assertRaises(ValueError):
             Config(stale_timeout=-1.0)
 
+    def test_config_rejects_nan_and_inf(self):
+        """NaN 与任何数比较都为 False，能绕过 `v <= 0` 检查，必须在构造时拒绝。
+
+        若放行 max_speed=NaN，allowed_displacement 返回 NaN，`位移 > NaN`
+        恒为 False，位置跳变判据被静默关闭；accuracy_limit=Inf 则直接
+        把精度检查关掉。
+        """
+        fields = (
+            "max_speed", "max_vertical_speed", "position_margin",
+            "accuracy_limit", "stale_timeout", "max_extrapolate_dt",
+            "reacquisition_radius",
+        )
+        for field in fields:
+            for bad in (float("nan"), float("inf"), float("-inf")):
+                with self.assertRaises(ValueError, msg=f"{field}={bad}"):
+                    Config(**{field: bad})
+
+    def test_nan_threshold_would_be_silently_accepted(self):
+        """反证：不挡 NaN 的话，跳变判据会失效。"""
+        nan = float("nan")
+        self.assertFalse(nan <= 0)          # 旧检查漏掉 NaN 的原因
+        self.assertFalse(25.0 > (nan * 0.1 + 1.5))  # 跳变判据被静默关闭
+
     def test_allowed_displacement_is_capped(self):
         cfg = Config(max_speed=12.0, max_extrapolate_dt=0.5,
                      position_margin=1.5)
@@ -204,6 +227,50 @@ class TestStateMachine(unittest.TestCase):
         out = monitor.update(good(0.0, x=7.0))
         self.assertEqual(out.state, State.TRACKING)
         self.assertEqual(out.x, 7.0)
+
+    def test_out_of_order_frame_rejected(self):
+        """坏帧之后紧跟一帧延迟到达的旧数据，不能把门控拉回 TRACKING。
+
+        旧帧的时间戳比 last_good 只大一点点、位移几乎为 0，旧实现下会被判成
+        合法帧；判据必须对时间严格单调递增。
+        """
+        monitor = Monitor(Config(suspect_limit=2))
+        monitor.update(good(1.00, x=0.0))          # 可信帧
+        out = monitor.update(good(1.10, x=25.0))   # 跳变，进入 SUSPECT
+        self.assertEqual(out.state, State.SUSPECT)
+        self.assertEqual(out.consecutive_bad, 1)
+
+        out = monitor.update(good(1.05, x=0.01))   # 乱序旧帧
+        self.assertFalse(out.valid)
+        self.assertEqual(out.reason, "out_of_order")
+        self.assertEqual(out.state, State.SUSPECT)   # 没有被洗白
+        self.assertEqual(out.x, 0.0)                 # 仍冻结在可信位姿
+        self.assertEqual(out.consecutive_bad, 1)     # 旧帧不推进坏帧计数
+        self.assertEqual(monitor.last_good.t, 1.00)
+
+    def test_out_of_order_frame_does_not_trigger_hold(self):
+        """轻微乱序不该被当成坏数据：连续旧帧只丢弃，不累计到 HOLD。"""
+        monitor = Monitor(Config(suspect_limit=2))
+        monitor.update(good(1.0, x=0.0))
+        monitor.update(good(1.2, x=0.0))
+        for t in (1.1, 1.15, 1.05, 0.9):
+            out = monitor.update(good(t, x=0.0))
+            self.assertEqual(out.reason, "out_of_order")
+            self.assertFalse(out.valid)
+        self.assertEqual(out.state, State.TRACKING)
+        self.assertEqual(out.consecutive_bad, 0)
+        # 新帧到达后照常跟踪
+        out = monitor.update(good(1.3, x=0.0))
+        self.assertEqual(out.state, State.TRACKING)
+        self.assertTrue(out.valid)
+
+    def test_monotonic_time_still_tracks(self):
+        """加了单调性检查之后，正常递增的时间戳不受影响。"""
+        monitor = Monitor()
+        for i in range(5):
+            out = monitor.update(good(i * 0.1, x=0.5 * i * 0.1))
+        self.assertEqual(out.state, State.TRACKING)
+        self.assertTrue(out.valid)
 
 
 class TestOfflineReplay(unittest.TestCase):

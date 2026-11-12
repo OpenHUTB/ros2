@@ -484,6 +484,37 @@ class TestMessageToTopic(unittest.TestCase):
         feed(node, navigation_fix(1.0, frame_id=""))
         self.assertEqual(last_pose(node).header.frame_id, "world")
 
+    def test_hold_keeps_frame_of_last_good_fix(self):
+        """冻结位姿必须沿用可信帧的坐标系，不能跟着坏帧的 header 走。
+
+        冻结下来的是 last_good 的 x/y/z（在该帧坐标系下算出的米制偏移）。
+        如果 HOLD 时改用当前坏帧的 frame_id 或参数默认值，同一组数值会被
+        解释到另一个坐标系，下游看到的位姿会整体平移。
+        """
+        node = make_node(frame_id="world", suspect_limit=1)
+        feed(node, navigation_fix(1.0, frame_id="map"))
+        self.assertEqual(last_pose(node).header.frame_id, "map")
+
+        # 跳变帧换了坐标系
+        feed(node, navigation_fix(1.1, latitude=0.001, frame_id="gps/other"))
+        self.assertFalse(last_valid(node))
+        self.assertEqual(last_status(node)["state"], "HOLD")
+        self.assertEqual(last_pose(node).header.frame_id, "map")
+
+        # 跳变帧连坐标系都没填
+        feed(node, navigation_fix(1.2, latitude=0.002, frame_id=""))
+        self.assertEqual(last_pose(node).header.frame_id, "map")
+
+    def test_watchdog_keeps_frame_of_last_good_fix(self):
+        node = make_node(frame_id="world", stale_timeout=1.0)
+        feed(node, navigation_fix(1.0, frame_id="drone/map"))
+        CLOCK.advance(5.0)
+        timer(node).fire()
+        self.assertEqual(last_status(node)["state"], "HOLD")
+        self.assertEqual(last_status(node)["reason"], "stream_timeout")
+        # 看门狗手里没有当前消息，只能沿用上一次可信帧的坐标系
+        self.assertEqual(last_pose(node).header.frame_id, "drone/map")
+
     def test_local_xy_uses_origin_parameters(self):
         node = make_node(origin_lat=0.0, origin_lon=0.0, origin_alt=10.0)
         # 纬度 +0.0001° ≈ 北向 11.054 m；经度 +0.0002° ≈ 东向 22.264 m（赤道）

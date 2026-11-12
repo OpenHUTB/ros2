@@ -51,7 +51,18 @@ $\Delta t_{cap}=0.5\ \mathrm{s}$、$T_{stale}=1.5\ \mathrm{s}$。
 
 质量问题与突跳分别给出原因码（`fix_type`、`low_sats`、`accuracy`、
 `non_finite`、`position_jump`、`altitude_jump`、`time_reversal`、`stale`、
-`stream_gap`），便于在 `/drone/gnss_status` 里定位问题。
+`stream_gap`、`out_of_order`），便于在 `/drone/gnss_status` 里定位问题。
+
+其中 `out_of_order` 是时间戳比「已见过的最大时间戳」还早的延迟/乱序帧。
+这类帧必须直接丢弃：它与最后可信帧的时间差很小、位移也小，若按普通帧处理
+会被判成合法帧，于是「一帧跳变 + 一帧旧数据」就能把门控从 SUSPECT 拉回
+TRACKING。它不算坏数据，所以不推进坏帧计数，避免轻微乱序误触发 HOLD。
+
+阈值本身要求是有限正数：`Config` 在构造时拒绝 `NaN` 与 `Inf`。
+这不是洁癖——`NaN` 与任何数比较都为 `False`，`nan <= 0` 不成立，
+因此它能在「必须为正」的检查下蒙混过关，之后
+`allowance = v·Δt + m` 变成 `NaN`，`位移 > NaN` 恒为 `False`，
+位置跳变判据被静默关闭；`accuracy_limit = Inf` 则直接把精度检查关掉。
 
 ## 3. 状态机
 
@@ -183,14 +194,14 @@ ros2 launch uav_gnss_integrity_monitor uav_gnss_integrity_monitor.launch.py
 实际执行 `python -m unittest -v test_gnss_integrity_monitor.py` 的结果：
 
 ```text
-Ran 22 tests in 0.062s
+Ran 27 tests in 0.036s
 OK
 ```
 
-22 项覆盖：配置校验、位移上限截断、五类质量检查、位置/高度突跳、
-时间倒退、超时、零时间差、SUSPECT 消抖、HOLD 冻结位姿、
-恢复需要满连续帧数、远处重新捕获被拒、数据流中断、看门狗超时、
-重置、回放误差上界、三次恢复、SVG/CSV 生成。
+27 项覆盖：配置校验（含 NaN/Inf 拒绝）、位移上限截断、五类质量检查、
+位置/高度突跳、时间倒退、乱序旧帧被丢弃且不推进坏帧计数、超时、零时间差、
+SUSPECT 消抖、HOLD 冻结位姿、恢复需要满连续帧数、远处重新捕获被拒、
+数据流中断、看门狗超时、重置、回放误差上界、三次恢复、SVG/CSV 生成。
 
 ### 7.1 节点闭环（进程内 rclpy 兼容层）
 
@@ -204,14 +215,14 @@ OK
 实际执行 `python -m unittest -v test_gnss_integrity_node_loop.py`：
 
 ```text
-Ran 29 tests in 0.015s
+Ran 31 tests in 0.012s
 OK
 ```
 
 | 组 | 项数 | 覆盖 |
 | --- | --- | --- |
 | 节点装配 | 5 | 节点名、3 个发布者的话题与消息类型、2 个订阅、10 Hz 定时器、launch 参数进 `Config` |
-| 消息到话题 | 4 | 一帧定位 → 位姿/Bool/JSON 三个话题、`header.stamp` 与 `frame_id` 透传、空 `frame_id` 回退、`origin_*` 决定经纬高换算 |
+| 消息到话题 | 6 | 一帧定位 → 位姿/Bool/JSON 三个话题、`header.stamp` 与 `frame_id` 透传、空 `frame_id` 回退、`origin_*` 决定经纬高换算、HOLD 冻结位姿沿用可信帧坐标系、看门狗超时同样沿用 |
 | 质量映射 | 6 | 协方差 → 精度、协方差类型未知回退 `default_accuracy`、`NO_FIX` 被拒、`GBAS_FIX` 接受、卫星数话题覆盖与恢复 |
 | 故障注入 | 5 | 25 m 突跳不透传、两帧坏点进 HOLD、恢复需满连续帧、断流 2 s 进 HOLD、非有限数值下输出仍有限 |
 | 看门狗 | 4 | 首帧前不动作、用收到时刻而非消息时间戳判超时、超时只发一次并打 warn、超时后新帧能恢复 |

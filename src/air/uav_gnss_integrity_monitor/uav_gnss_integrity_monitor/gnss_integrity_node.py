@@ -71,6 +71,9 @@ class GnssIntegrityNode(Node):
         # 不能用消息里的 header.stamp：GPS 周内秒、仿真时钟与节点时钟
         # 常常不同源，混着减会把「刚收到」误判成「早已超时」。
         self._last_fix_wall: Optional[float] = None
+        # 上一次「可信帧」所用的坐标系。冻结位姿必须按这个坐标系发布，
+        # 不能在 HOLD/看门狗时退回参数里的默认值。
+        self._last_good_frame: Optional[str] = None
 
         self._pub_pose = self.create_publisher(
             PoseStamped, "/drone/pose_validated", 10
@@ -162,8 +165,20 @@ class GnssIntegrityNode(Node):
         out = self._monitor.update(fix)
         self._publish(out, msg.header.stamp, msg.header.frame_id)
 
-    def _publish(self, out: Output, stamp, frame_id: str) -> None:
-        fid = frame_id or str(self.get_parameter("frame_id").value)
+    def _publish(self, out: Output, stamp, frame_id: str = "") -> None:
+        """发布一帧输出。
+
+        冻结位姿（SUSPECT / HOLD / 看门狗超时）必须沿用「产生该位姿的那一帧」
+        的坐标系：冻结下来的是 last_good 的 x/y/z，如果这时改用当前坏帧的
+        header.frame_id（或参数默认值），同一组数值会被解释到另一个坐标系下，
+        下游看到的位姿会整体平移。所以 valid 帧才更新坐标系记忆，其余沿用。
+        """
+        current = frame_id or str(self.get_parameter("frame_id").value)
+        if out.valid:
+            self._last_good_frame = current
+            fid = current
+        else:
+            fid = self._last_good_frame or current
 
         pose = PoseStamped()
         pose.header.stamp = stamp

@@ -24,8 +24,8 @@
 ```
 src/air/uav_gnss_integrity_monitor/
 ├── main.py                        # 离线回放入口（零第三方依赖，main.* 入口）
-├── test_gnss_integrity_monitor.py # 22 项判据/状态机单元测试（unittest / pytest 均可）
-├── test_gnss_integrity_node_loop.py # 29 项节点闭环测试（进程内 rclpy 兼容层，无需装 ROS）
+├── test_gnss_integrity_monitor.py # 27 项判据/状态机单元测试（unittest / pytest 均可）
+├── test_gnss_integrity_node_loop.py # 31 项节点闭环测试（进程内 rclpy 兼容层，无需装 ROS）
 ├── package.xml / setup.py / setup.cfg / resource/
 ├── launch/uav_gnss_integrity_monitor.launch.py
 └── uav_gnss_integrity_monitor/
@@ -150,8 +150,8 @@ launch 中的参数与 `Config` 一一对应，详见
 
 ## 验证范围与已知限制
 
-- 已验证：22 项判据/状态机单元测试、离线回放中的输出冻结与恢复、SVG 与 CSV 生成；
-  29 项节点闭环测试（消息进 → 判据 → 三个话题出、卫星数话题覆盖、HOLD 冻结位姿、
+- 已验证：27 项判据/状态机单元测试、离线回放中的输出冻结与恢复、SVG 与 CSV 生成；
+  31 项节点闭环测试（消息进 → 判据 → 三个话题出、卫星数话题覆盖、HOLD 冻结位姿、
   恢复需满连续帧、10 Hz 看门狗超时、打包配置与 launch 目标一致性）。
 - **未验证**：真实 DDS 收发、`colcon build` / `ros2 launch`、AirSim / MuJoCo 仿真飞行、
   真实 GNSS 硬件故障、实机悬停效果。节点闭环测试用的是进程内兼容层，不是真实 ROS 图，
@@ -160,6 +160,12 @@ launch 中的参数与 `Config` 一一对应，详见
   两套时钟不同源时（GPS 周内秒、仿真时钟、bag 回放）第一拍就会被判成「早已超时」
   并一直停在 HOLD；现在改成用「本机收到这一帧的时刻」判超时，
   由 `test_receive_time_used_instead_of_message_stamp` 锁定。
+- 按 @Qinfy-fly 的复审意见又修掉四处：① `Config` 拒绝 `NaN` / `Inf` 阈值，
+  否则 `NaN` 会绕过 `<= 0` 检查并把位置跳变判据静默关掉；② 时间戳必须严格单调，
+  乱序旧帧直接丢弃且不推进坏帧计数，否则「一帧跳变 + 一帧旧数据」就能把
+  SUSPECT 洗回 TRACKING；③ 冻结位姿沿用产生它的那一帧的 `frame_id`，
+  HOLD 与看门狗都不再退回参数默认值；④ `package.xml` 补 `launch` / `launch_ros`
+  的 `exec_depend`，launch 文件不会再缺依赖。
 - 合成轨迹是 0.8 m/s 匀速直线，注入的是**软件层**的定位异常，
   不是真实多路径或欺骗干扰。
 - 经纬高换算用等距近似，只适用于小范围；大范围或高精度场景应换成正式投影。

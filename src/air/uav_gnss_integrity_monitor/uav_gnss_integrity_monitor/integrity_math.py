@@ -90,6 +90,23 @@ class Config:
             self.max_extrapolate_dt,
             self.reacquisition_radius,
         )
+        # NaN / Inf 必须在这里挡掉：NaN 与任何数比较都为 False，
+        # `nan <= 0` 不成立，于是 NaN 能顺利通过「必须为正」的检查，
+        # 之后 allowed_displacement 返回 NaN，`位移 > NaN` 恒为 False，
+        # 位置跳变判据被静默关闭；Inf 更是直接把门限放大到无穷。
+        # 这两类值都只能来自参数文件或 YAML 漏填，属于配置错误，直接拒绝。
+        for name in (
+            "max_speed",
+            "max_vertical_speed",
+            "position_margin",
+            "accuracy_limit",
+            "stale_timeout",
+            "max_extrapolate_dt",
+            "reacquisition_radius",
+        ):
+            value = float(getattr(self, name))
+            if not math.isfinite(value):
+                raise ValueError(f"{name} 必须是有限数值（拒绝 NaN/Inf）")
         if any(v <= 0 for v in positive):
             raise ValueError("速度、裕度、超时与门限必须为正数")
         if self.suspect_limit < 1 or self.recovery_streak < 1:
@@ -194,7 +211,34 @@ class Monitor:
         self._good = 0
         return self._emit(State.HOLD, self.last_good, False, reason)
 
+    def _reject(self, fix: Fix, reason: str, count_bad: bool = True) -> Output:
+        """把一帧判为不可信，输出保持在上一个可信位姿。
+
+        count_bad=False 用于「旧帧/乱序帧」：这类帧不是坏数据，只是信息过时，
+        直接丢弃即可，不该推进坏帧计数（否则网络轻微乱序就会误触发 HOLD）。
+        """
+        if self.state == State.INIT:
+            return self._emit(State.INIT, None, False, reason)
+        if count_bad:
+            self._bad += 1
+            self._good = 0
+            self.state = (
+                State.HOLD if self._bad >= self.cfg.suspect_limit else State.SUSPECT
+            )
+        return self._emit(self.state, self.last_good, False, reason)
+
     def update(self, fix: Fix) -> Output:
+        # 0) 乱序旧帧：时间戳比「见过的最大时间戳」还早，说明它是延迟或乱序
+        #    到达的旧样本。这类帧与 last_good 的时间差很小、位移也小，若放进去
+        #    会被判成合法帧，于是「一帧坏点 + 一帧旧数据」就能把门控从 SUSPECT
+        #    拉回 TRACKING。判据必须对时间严格要求单调递增，这里直接拒绝。
+        if (
+            math.isfinite(fix.t)
+            and self.last_seen_t is not None
+            and fix.t < self.last_seen_t
+        ):
+            return self._reject(fix, "out_of_order", count_bad=False)
+
         # 1) 数据流中断：即使本帧本身合法，也要先判定失锁
         gap_reason: Optional[str] = None
         if self.last_seen_t is not None and math.isfinite(fix.t):
@@ -256,9 +300,4 @@ class Monitor:
             self._bad = 0
             return self._emit(State.TRACKING, fix, True, reason)
 
-        self._bad += 1
-        self._good = 0
-        self.state = (
-            State.HOLD if self._bad >= self.cfg.suspect_limit else State.SUSPECT
-        )
-        return self._emit(self.state, self.last_good, False, reason)
+        return self._reject(fix, reason)
