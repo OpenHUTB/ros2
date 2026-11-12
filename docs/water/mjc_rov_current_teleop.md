@@ -144,6 +144,15 @@ ros2 run mjc_rov_current_teleop cruise_node --ros-args \
 
 ### 实测结果
 
+两张表的复现命令（注意 `dagger` 的 `--iterations` 默认是 4，下表用的是 6 轮）：
+
+```bash
+python3 main.py collect
+python3 main.py train                              # 默认 --seed 0
+python3 main.py dagger --iterations 6 --epochs 300 # 24 s / 圈时两张表都是这条
+python3 main.py test --lap
+```
+
 固定 24 s 评估窗口（12000 步 × 0.002 s，与 `main.py test` 一致），训练固定 `--seed 0`：
 
 | 策略 | 航点到达 | MAE 位置误差 |
