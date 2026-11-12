@@ -32,6 +32,7 @@ title: 主页
   - [空域载具](#air_vehicle)
   - [水域载具](#water_vehicle)
   - [机械臂操作](#manipulation)
+  - [路径规划与跟踪](#motion_planning)
 
 ---
 
@@ -654,6 +655,25 @@ ___
 * [二连杆机械臂 OpenSim 建模与 PD 控制仿真](./two_link_arm_opensim_simulation.md)
 
 * [二连杆机械臂肌肉骨骼建模与 MuJoCo 仿真](./muscle_arm_mujoco_simulation.md)
+
+## 9. 路径规划与跟踪 <span id='motion_planning'></span>
+
+从「几何上找到一条路」到「沿这条路走得又稳又舒服」，这三个模块按 RRT → 速度规划 →
+跟踪的顺序串起一条完整的运动链路，全部用 Python 标准库实现，不依赖 numpy / matplotlib。
+
+* [RRT 采样式二维路径规划与平滑](./motion_planning/rrt_path_planning.md) —— 单一快速扩展随机树，配合目标偏置、步长限制与碰撞检测，再用随机捷径平滑削掉锯齿；含 12 项离线单测
+* [梯形与 S 曲线速度规划](./motion_planning/trapezoidal_profile.md) —— 以加加速度（jerk）为约束把加速度也做成梯形，与梯形曲线对比速度、加速度的突变；含 11 项离线单测
+* [Stanley 前视路径跟踪（含曲率前馈）](./motion_planning/stanley_tracking.md) —— 航向误差与横向误差的比例控制，叠加曲率前馈消除弯道稳态偏差；含 15 项离线单测
+
+三个包都提供 launch：`sim_node` 发布 `/odom`，`plan_control_node` 订阅 `/odom` 并发布
+`/cmd_vel` 与 `/planning/path`，可直接在 RViz 中观察规划路径与跟踪效果。不启动 ROS 也能
+单独核对算法，离线单测共 38 项：
+
+```bash
+cd src/motion_planning/rrt_path_planning   && python3 tests/test_rrt.py        # 12 项
+cd src/motion_planning/trapezoidal_profile && python3 tests/test_profile.py    # 11 项
+cd src/motion_planning/stanley_tracking    && python3 tests/test_stanley.py    # 15 项
+```
 
 ## 参考文献
 * [MuJoCo 失落公园无人机端到端视觉转向](./air/mujoco_abandoned_park_uav_visual_steering.md)

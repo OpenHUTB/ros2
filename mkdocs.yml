@@ -548,6 +548,10 @@ nav:
 
 
     - 欠驱动无人艇低速定点保持与横漂补偿: './water/ros2_usv_station_keeping/index.md'
+- 路径规划与跟踪:
+    - RRT 采样式二维路径规划与平滑: 'motion_planning/rrt_path_planning.md'
+    - 梯形与 S 曲线速度规划: 'motion_planning/trapezoidal_profile.md'
+    - Stanley 前视路径跟踪（含曲率前馈）: 'motion_planning/stanley_tracking.md'
 - 经典控制:
     - 倒立摆平衡小车 (cart-pole, LQR): './classical_control/cartpole_balance.md'
 
