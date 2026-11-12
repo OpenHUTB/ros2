@@ -1,42 +1,61 @@
 #!/usr/bin/env python3
 """急停闩锁节点。
 
-订阅 /emergency_stop（std_msgs/Bool，可同时接多个安全模块），一旦收到 true
-就把急停闩锁下来：即使信号随后消失，输出仍然保持 true，必须通过 /estop_latch/reset
-服务人工确认后才放行。默认上电即闩锁，避免「上游还没起来，底盘先动」。
+订阅 /emergency_stop（std_msgs/Bool，当前仓库里由 heartbeat_watchdog 发布），
+一旦收到 true 就把急停闩锁下来：即使信号随后消失，输出仍然保持 true，必须通过
+/estop_latch/reset 服务人工确认后才放行。默认上电即闩锁，避免「上游还没起来，
+底盘先动」。
 
-与 heartbeat_watchdog 的区别：那个判断上游节点是否存活，本节点负责把已经发生的
-安全事件锁住，交给人工确认，防止瞬态故障自我恢复后底盘在无人察觉时重新运动。
+与 heartbeat_watchdog 的区别：那个判断上游节点是否存活并发出急停，本节点负责把
+已经发生的安全事件锁住，交给人工确认，防止瞬态故障自我恢复后底盘在无人察觉时
+重新运动。下游把 cmd_vel_guard 的急停输入接到本节点的 /estop 即可。
 """
 import math
 
 import rclpy
-from rcl_interfaces.msg import ParameterDescriptor
 from rclpy.node import Node
 from std_msgs.msg import Bool, String
 from std_srvs.srv import Trigger
 
 
+def declare_float(node, name, default):
+    """声明浮点参数，兼容 Foxy 与 Humble。
+
+    Humble 起 ``ParameterDescriptor`` 支持 ``dynamic_typing``，命令行传整数
+    （``-p release_hold_time:=2``）也能被接受；Foxy 的 ``ParameterDescriptor``
+    没有这个字段，构造时会直接断言失败，因此退回普通声明。
+    """
+    try:
+        from rcl_interfaces.msg import ParameterDescriptor
+        descriptor = ParameterDescriptor(dynamic_typing=True)
+        value = node.declare_parameter(name, default, descriptor=descriptor)
+    except (AttributeError, TypeError, AssertionError):
+        value = node.declare_parameter(name, default)
+    return float(value.value)
+
+
 def evaluate_release(now_seconds, last_input_time, last_active_time,
                      input_active, input_timeout, release_hold_time):
     """判断能否复位，返回 (是否可以, 原因)。"""
-    if last_input_time is None:
-        return False, '尚未收到 emergency_stop 输入'
     if input_active:
         return False, '急停信号仍处于触发状态'
-    if input_timeout > 0.0 and now_seconds - last_input_time > input_timeout:
-        return False, '输入链路 %.1f s 未更新' % input_timeout
-    if now_seconds - last_active_time < release_hold_time:
-        return False, '急停信号消失不足 %.1f s' % release_hold_time
+    if last_input_time is not None:
+        if (input_timeout > 0.0
+                and now_seconds - last_input_time > input_timeout):
+            return False, '输入链路 %.1f s 未更新' % input_timeout
+        if now_seconds - last_active_time < release_hold_time:
+            return False, '急停信号消失不足 %.1f s' % release_hold_time
     return True, ''
 
 
 def input_stale(now_seconds, last_input_time, input_timeout):
-    """输入链路是否已经超时；超时视为无法确认安全。"""
-    if input_timeout <= 0.0:
+    """输入链路是否已经超时。
+
+    只在收到过输入之后才判断：上游是事件驱动（平时不发、急停才发 true）时，
+    「从未收到消息」不等于链路失效，否则节点会一启动就自锁、而且永远无法复位。
+    """
+    if input_timeout <= 0.0 or last_input_time is None:
         return False
-    if last_input_time is None:
-        return True
     return now_seconds - last_input_time > input_timeout
 
 
@@ -45,15 +64,10 @@ class EstopLatch(Node):
 
     def __init__(self, **kwargs):
         super().__init__('estop_latch', **kwargs)
-        self.input_timeout = float(self.declare_parameter(
-            'input_timeout', 1.0,
-            descriptor=ParameterDescriptor(dynamic_typing=True)).value)
-        self.release_hold_time = float(self.declare_parameter(
-            'release_hold_time', 2.0,
-            descriptor=ParameterDescriptor(dynamic_typing=True)).value)
-        self.status_rate = float(self.declare_parameter(
-            'status_rate', 1.0,
-            descriptor=ParameterDescriptor(dynamic_typing=True)).value)
+        self.input_timeout = declare_float(self, 'input_timeout', 1.0)
+        self.release_hold_time = declare_float(
+            self, 'release_hold_time', 2.0)
+        self.status_rate = declare_float(self, 'status_rate', 1.0)
         self.auto_release = self.declare_parameter(
             'auto_release', False).value
         self.start_latched = self.declare_parameter(
@@ -117,11 +131,15 @@ class EstopLatch(Node):
                 self.latched = True
                 self.latch_reason = 'input'
                 self.get_logger().warn('收到急停信号，进入闩锁')
+                # 安全链路不能等定时器：收到即刻输出急停
+                self.publish_result()
 
     def release(self):
         self.latched = False
         self.latch_reason = ''
         self.get_logger().info('急停解除，允许运动')
+        # 复位后立即让下游看到放行，不必等下一个定时器周期
+        self.publish_result()
 
     def handle_reset(self, request, response):
         ok, reason = evaluate_release(
@@ -163,6 +181,7 @@ class EstopLatch(Node):
                 self.release_hold_time)
             if ok:
                 self.release()
+                return
         self.publish_result()
 
 
