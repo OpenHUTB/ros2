@@ -222,9 +222,9 @@ FRD(x,y,z) ──▶ FLU(x,-y,-z)
 | `test/test_node_startup.py:16-48` | `test_launch_starts_without_airsim` | AirSim 离线时 launch 仍能启动节点和话题 |
 | `test/test_node_startup.py:51-91` | `test_connection_is_nonblocking` | 后台连接不阻塞、超时值生效、发布 QoS 为 reliable |
 
-`.github/workflows/air_bridge_tests.yml:12,22,78-111` 中新增包专属路径过滤和
+`.github/workflows/air_bridge_tests.yml:12,22,78-113` 中新增包专属路径过滤和
 `ROS 2 Humble magnetometer build + tests` 作业。CI 使用
-`ros-tooling/setup-ros@v0.7` 安装 Humble，再执行
+官方 `ros:humble-ros-base` 容器，再执行
 `colcon build --packages-select airsim_ros2_magnetometer`、
 `colcon test --packages-select airsim_ros2_magnetometer` 和
 `colcon test-result --verbose`。因此 `test/` 下的 8 个用例会在仓库流水线中执行。
