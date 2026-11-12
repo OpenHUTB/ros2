@@ -531,6 +531,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/cmd_vel_guard/">速度指令安全监督</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="ground/diff_drive_corridor_centering/">差速小车双侧墙通道居中 PD 巡航仿真</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="ground/line_follower_car/">巡线小车仿真（色带中线 PD 跟踪）</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/narrow_giveway_passing/">窄道会车让行仿真（避让龛规则）</a>
@@ -1260,6 +1262,7 @@
 </li>
 <li><a href="ground/hill_start_assist/">差速 AGV 坡道起步辅助（防溜车）</a> —— MuJoCo 12° 斜坡，四轮轮角保持 PD + 坡度前馈，松刹车 3 s 后溜 2.18 m 降到 0.008 m</li>
 <li><a href="ground/cmd_vel_guard/">地面移动底盘速度指令安全监督</a> —— 对 <code>/cmd_vel</code> 做限幅、急停、超时与非法值拦截，无需仿真环境</li>
+<li><a href="ground/diff_drive_corridor_centering/">差速小车双侧墙通道居中 PD 巡航仿真</a> —— 纯 Python PD 控制器只用左右墙与前方三路测距把差速底盘保持在直通道中线，配套 2D 运动学虚拟测距节点，离线仿真给出轨迹、墙距与速度指令曲线</li>
 <li><a href="ground/line_follower_car/">巡线小车仿真（色带中线 PD 跟踪）</a> —— 一排虚拟光电传感器读取线偏差，pure pursuit 预瞄 + PD 转向闭环引导沿黑线巡线</li>
 <li><a href="ground/narrow_giveway_passing/">窄道会车让行仿真（避让龛规则）</a> —— 双向共用窄路两侧设避让龛，对向小车按距离远近决定进龛等待，交汇后驶出，纯 NumPy 二维仿真</li>
 <li><a href="ground/vru_conflict_risk_map/">VRU 冲突风险图</a> —— 按时间对齐自车与行人、儿童和骑行者轨迹，输出最小距离、TTC 和风险等级</li>
