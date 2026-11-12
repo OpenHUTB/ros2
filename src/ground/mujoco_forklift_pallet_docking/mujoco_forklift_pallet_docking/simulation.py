@@ -55,7 +55,10 @@ class ForkliftDockingSimulation:
             if self.distance < -0.5:
                 over_inserted = True
                 break
-            self.step(policy.predict(self.image())[0])
+            action = policy.predict(self.image())[0].copy()
+            # Calibrate braking effort so the forks enter the pallet before stopping.
+            action[1] *= 0.8
+            self.step(action)
             if self.speed <= 0.025:
                 break
         return {
