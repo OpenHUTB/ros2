@@ -40,9 +40,10 @@ class E2EPredictorNode(Node):
             weights = _weights_path()
 
         self.predictor = E2EPredictor(weights)
-        # 双帧时序输入需要一个"仿真时间轴"：sim 节点每 tick 步进 5×0.002 s = 0.01 s
-        # 仿真时间并发一帧图，所以这里按每条图像累加 0.01 s 即可对齐 sim 时钟。
-        self.image_dt = float(self.declare_parameter('image_dt', 0.01).value)
+        # 双帧时序输入需要一个"仿真时间轴"：sim 节点每 tick 步进 2×0.002 s = 0.004 s
+        # 仿真时间并发一帧图，所以这里按每条图像累加 0.004 s 即可对齐 sim 时钟。
+        # 该值必须与 e2e_sim_node 的 TICK_SEC 一致，否则 102 ms 历史会错位。
+        self.image_dt = float(self.declare_parameter('image_dt', 0.004).value)
         self._t = 0.0
         self.tau_pub = self.create_publisher(Float64MultiArray, 'torque_delta', 10)
 

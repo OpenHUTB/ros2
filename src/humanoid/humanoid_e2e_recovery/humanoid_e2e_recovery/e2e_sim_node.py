@@ -18,8 +18,13 @@ from ament_index_python.packages import get_package_share_directory
 
 from humanoid_e2e_recovery.sim import E2ESim, DEFAULT_STAND_TARGET
 
-# 模型步长 0.002s；ROS 定时器 0.01s → 每 tick 步进 5 次，保持实时
-SIM_STEPS_PER_TICK = 5
+# 模型步长 0.002s；ROS 定时器 0.004s → 每 tick 步进 2 次。
+# 为什么不是 0.01s/5 步：双帧权重按 102 ms 历史当速度线索，训练与 --check
+# 都是在 4 ms 控制周期下验证的（每 2 步刷新一次）。10 ms 周期（100 Hz）会让
+# 策略在空站时就于 4.3 s 失稳（见 diag/18_ros_node_contract.py 的 B 组反例）。
+# 代价是 64×64 渲染约 65 ms/帧，墙钟远慢于实时；物理周期仍是 4 ms 仿真时间。
+SIM_STEPS_PER_TICK = 2
+TICK_SEC = SIM_STEPS_PER_TICK * 0.002
 
 
 def _model_path() -> str:
@@ -51,7 +56,7 @@ class E2ESimNode(Node):
         self.create_subscription(
             Float64MultiArray, 'torque_delta', self._tau_cb, 10)
 
-        self.timer = self.create_timer(0.01, self._step)
+        self.timer = self.create_timer(TICK_SEC, self._step)
         self.get_logger().info(
             f'e2e_sim_node 启动, model={model_path}, '
             f'steps_per_tick={SIM_STEPS_PER_TICK}')
