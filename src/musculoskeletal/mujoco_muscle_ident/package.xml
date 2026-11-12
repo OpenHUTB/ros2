@@ -5,14 +5,23 @@
   <version>0.1.0</version>
   <description>
     肌肉参数辨识：用关节轨迹反演 F_max / l_opt / tau_act / 矩臂 / 阻尼，
-    并给出噪声敏感性、参数相关性与初值敏感性。纯 Python，无需 MuJoCo 运行。
+    并给出噪声敏感性、参数相关性与初值敏感性。依赖 MuJoCo 正模型。
   </description>
-  <maintainer email="lyzzzz0921@users.noreply.github.com">lyzzzz0921</maintainer>
+  <maintainer email="VirtuosaHutb@users.noreply.github.com">VirtuosaHutb</maintainer>
   <license>MIT</license>
 
+  <buildtool_depend>ament_python</buildtool_depend>
+  <buildtool_depend>ament_index_python</buildtool_depend>
+
   <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>mujoco</exec_depend>
+
+  <test_depend>pytest</test_depend>
 
   <export>
     <build_type>ament_python</build_type>
   </export>
 </package>
+

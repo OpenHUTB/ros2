@@ -58,3 +58,6 @@ def main(argv=None):
     p.set_defaults(func=cmd_bench)
     args = ap.parse_args(argv)
     args.func(args)
+
+if __name__ == "__main__":
+    main()

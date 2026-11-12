@@ -22,6 +22,6 @@ def _run(context):
 def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument("scene", default_value="i1",
-                              description="实验编号：i1 / i2 / i3 / i4"),
+                              description="实验编号：i1 / i2 / i3 / i4 / i5"),
         OpaqueFunction(function=_run),
     ])

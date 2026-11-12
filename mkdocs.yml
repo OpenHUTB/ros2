@@ -133,6 +133,7 @@ nav:
     - 肌肉驱动的夹爪抓取: './musculoskeletal/msk_gripper.md'
     - 肌肉驱动的下肢关节与步态: './musculoskeletal/muscle_leg_gait.md'
     - 膝关节肌肉骨骼仿真与轨迹跟踪: './musculoskeletal/knee_tracking.md'
+    - 给定黑箱关节轨迹，反推肌肉参数: './musculoskeletal/msk_muscle_ident.md'
 - 地面载具:
     - 编码器量化误差与速度估计滤波对比: './ground/encoder_quantization_velocity.md'
     - CAN 报文信号解码与 CRC/计数器校验: './ground/can_signal_decode.md'
