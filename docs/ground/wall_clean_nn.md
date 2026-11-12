@@ -162,6 +162,7 @@ graph TD
 | `scripts/main.py` | 可视化与 GIF 导出 |
 | `scripts/make_figures.py` | 生成文档配图 |
 | `test/test_wall_clean.py` | 7 项 smoke test（未装 MuJoCo 时跳过） |
+| `scripts/probe.py` | 诊断脚本：打印路径长度、覆盖率与贴墙误差随时间变化 |
 | `nodes/wall_clean_node.py` | ROS Noetic 节点 |
 | `launch/main.launch` | 启动文件 |
 
