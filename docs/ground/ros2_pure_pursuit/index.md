@@ -253,3 +253,26 @@ $$\psi = \operatorname{atan2}\left(2(wz+xy),\ 1-2(y^2+z^2)\right)$$
 - 未做全局重规划，绕行后仍沿原路径回归，可能与静态地图产生冲突；
 - 仿真使用合成激光，尚未在 Gazebo / CARLA 中接入真实话题验证；
 - 未考虑车辆动力学（轮胎侧滑、电机力矩饱和），真车部署前需补充 PID 速度环。
+
+## 10. ament_python 资源索引
+
+本包是 `ament_python` 包，`setup.py` 的 `data_files` 声明了：
+
+```python
+("share/ament_index/resource_index/packages", ["resource/" + package_name]),
+```
+
+`resource/ros2_pure_pursuit` 必须是普通文件（空文件即可）。缺少它时，安装阶段会失败：
+
+```text
+error: can't copy 'resource/ros2_pure_pursuit': doesn't exist or not a regular file
+```
+
+补齐后的验证方式：
+
+```bash
+python3 setup.py install --root=/tmp/pp_after --prefix=/usr
+ls /tmp/pp_after/usr/local/share/ament_index/resource_index/packages/ros2_pure_pursuit
+```
+
+安装返回 0，索引文件出现在 `share/ament_index/resource_index/packages/` 下。
