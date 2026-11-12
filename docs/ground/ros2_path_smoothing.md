@@ -4,6 +4,7 @@ A\* 路径是栅格折线，直接给差速底盘跟踪会有角速度跳变。�
 视线简化 + Catmull-Rom，并在**逐段碰撞检查**、**精确间隙**约束下选择最大曲率
 最低的安全候选。节点依赖 `/map`，校验不过则退回输入路径。
 
+
 ## 1. 方法
 
 ### 1.1 A\* 与逐段视线简化
@@ -42,7 +43,29 @@ $$
 没有候选满足间隙时，返回仍通过 `path_free()` 的简化/原始路径并置
 `safe=False`；节点收到 `safe=False` 时不发布平滑结果，原样转发输入。
 
+## 文件结构
+
+```text
+src/ground/ros2_path_smoothing/
+├── ros2_path_smoothing/  # planner.py / sim.py / main_smooth.py
+├── config/smoothing_params.yaml
+├── launch/main_launch.py
+├── results/benchmark.json
+├── test/                 # 7 项单元测试
+└── README.md
+```
+
 ## 2. 运行
+
+### 运行环境
+
+| 项目 | 版本 |
+| --- | --- |
+| ROS 2 | Ubuntu 20.04.6 + Foxy 0.9.2 |
+| Python | 3.8.10 |
+| 离线基准 | Windows 11 + Python 3.12 + NumPy 2.x |
+
+
 
 ```bash
 cd ~/hutb_ws
@@ -59,6 +82,15 @@ ros2 launch ros2_path_smoothing main_launch.py
 
 节点先等 `/map`；没有地图时原样转发输入并告警。参数在
 `config/smoothing_params.yaml`：`map_topic`、`min_clearance`。
+
+## 参数说明
+
+| 参数 | 含义 | 默认 |
+| --- | --- | --- |
+| `input_topic` / `output_topic` | 输入/输出路径话题 | `/plan` / `/plan_smoothed` |
+| `map_topic` | 碰撞/间隙检查用地图 | `/map` |
+| `min_clearance` | 最小安全间隙 | 0.10 m |
+
 
 ## 3. 离线复现
 
@@ -79,17 +111,24 @@ python3 -m ros2_path_smoothing.sim
 doorway 的起终点连线正好穿过门洞，简化后就是直线；corridor/clutter 的简化
 直线段也是低曲率候选，最终按“满足间隙 + 最小曲率”选中。
 
-![A* 与平滑路径对比](../img/ground/ros2_path_smoothing/path_compare.png)
 
 > 指标在 Windows 11 + Python 3.12 + NumPy 2.x 上离线复现；ROS 包在
 > Ubuntu 20.04 + Foxy 下构建。`results/benchmark.json` 的 `environment`
 > 记录的是离线环境，不是 ROS 构建环境。
+
+## 运行效果
+
+corridor 最大曲率 5.685 → **0.016 1/m**、间隙 0.15 m；clutter 5.685 → **0.014 1/m**、
+间隙 0.45 m；doorway 直线通过、曲率 0：
+
+![A* 与平滑路径对比](../img/ground/ros2_path_smoothing/path_compare.png)
 
 ## 5. 与控制器/规划器的关系
 
 * 输入任意 `nav_msgs/Path`，可接 #1077 的 A\* 或 Nav2；
 * 输出仍是 `nav_msgs/Path`，下游可用 Pure Pursuit/Stanley 跟踪；
 * 节点需要 `/map` 才能做碰撞/间隙校验；无地图时只原样转发。
+
 
 ## 6. 局限
 
@@ -99,7 +138,7 @@ doorway 的起终点连线正好穿过门洞，简化后就是直线；corridor/
 * Catmull-Rom 在急弯处会切角，靠逐段检查和精确间隙兜底；
 * 2D 路径，不处理高度/坡度。
 
-## 7. 大模型声明
+## 合规说明
 
 代码与文档在编写过程中使用了 AI 大模型辅助。作者已实际运行 7 项单元测试和
 3 张离线地图，并在 Ubuntu 20.04 + Foxy 下完成 `colcon build`；对提交内容的
