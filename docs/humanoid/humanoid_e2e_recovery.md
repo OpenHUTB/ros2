@@ -77,7 +77,7 @@ roll 方向配小增益（`K_ROLL=200`、`K_ROLL_RATE=20`）抑制侧向漂移�
 
 | 指标 | 数值 |
 |---|---|
-| 数据集规模 | 4 272 帧样本 / 8 回合（云主机 Ubuntu 22.04.5 + MuJoCo 4.0.0 采集；`data/` 被 `.gitignore` 排除，**未入库**，用 `--collect` 可重新生成） |
+| 数据集规模 | 4 272 帧样本 / 8 回合（云主机 Ubuntu 22.04.5 + MuJoCo 4.0.0 采集；`data/` 被 `.gitignore` 排除，**已发布到 Release `e2e-dataset-v2`**，4 652 064 B，含 `ep`/`sample_dt`，可离线复算） |
 | 双帧配对后样本 | 4 136 对（`lag=17` 个采样 ≈ 102 ms） |
 | 输入维度 | 512（当前帧 256 + 102 ms 前那一帧 256） |
 | 输出维度 | 15（力矩增量 N·m） |
@@ -234,7 +234,7 @@ python3 main.py --demo --force 20 --direction 0
 
 ```bash
 python3 generate_gif.py
-# 默认输出：本模块目录下的 demo_test.gif（834 帧 / 480×360 / 30 fps，7 464 691 B）
+# 默认输出：docs/img/humanoid/e2e_recovery_demo.gif（834 帧 / 480×360 / 30 fps，7 464 691 B）
 # 场景为「空站 2 s → 20 N 推 0.08 s → 网络接管 8 s」，全程站稳
 # 用 overview 机位逐帧离屏渲染，非合成示意
 ```
@@ -296,7 +296,7 @@ python3 -m pytest test -q
 
 ### 5.9 诊断脚本（diag/）
 
-第 4 节的每个实测数字都能用 `diag/` 里的 15 个脚本重跑出来。它们按证据链编号，
+第 4 节的每个实测数字都能用 `diag/` 里的 16 个脚本重跑出来。它们按证据链编号，
 各自只回答一个问题，不参与主流程；清单与逐条命令见
 [`src/humanoid/humanoid_e2e_recovery/diag/README.md`](../../src/humanoid/humanoid_e2e_recovery/diag/README.md)。
 
@@ -309,6 +309,7 @@ python3 diag/03_correlation_ceiling.py --dataset data/diag_probe.npz   # 信息�
 python3 diag/04_std_floor_scan.py --dataset data/diag_probe.npz        # 兜底扫描：0.02 最优
 python3 diag/09_blend_sweep.py --betas 0 0.3 --seconds 10     # 混合控制：β=0 3.53 s 倒，β=0.3 站满 10 s
 python3 diag/15_pool_temporal_ablation.py --episodes 8        # 四档对照：16 格/32 格/6 ms/102 ms
+python3 diag/16_offline_metrics.py                            # 纯 NumPy 复算留出集（不需要 MuJoCo）
 ```
 
 对应关系：
@@ -323,10 +324,12 @@ python3 diag/15_pool_temporal_ablation.py --episodes 8        # 四档对照：1
 | 32 格 / 6 ms 双帧 / 加量都不行，102 ms 双帧才站满 | **15**（A 2.63 s、B 1.72 s、C 2.85 s、D 站满） |
 | 排除延迟 / 帧间差分 / 零偏 / DAgger | 10、11、12、13 |
 | 入库权重的生成过程（4 272 条 → 4 136 对） | 14 |
+| 无 MuJoCo 也能复算留出集：R²=+0.982、第一层 128/128 存活、跨样本极差 425.99 N·m | **16**（读 Release `e2e-dataset-v2` + 随包权重） |
 
 三点使用注意：
 
-- `data/` 被 `.gitignore` 排除，数据集要先 `python3 main.py --collect --episodes 8` 采；
+- `data/` 被 `.gitignore` 排除，数据集要么 `python3 main.py --collect --episodes 8` 自己采，要么下载
+  Release `e2e-dataset-v2` 的 `e2e_dataset.npz`（4 652 064 B，sha256 `903839dc…5958e`）；
 - 闭环类脚本的 `--seconds` 必须长于预期失稳时间，否则会把"还没倒"读成"站稳"；
 - 探针数据与 `X_mean/X_std` 绑定当前渲染后端，换后端（EGL → Windows 原生）必须重采重训，
   否则会重现"输入整体偏移 → 第一层 ReLU 全死 → 输出恒定"的故障；

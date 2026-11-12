@@ -69,7 +69,7 @@
 ```
 humanoid_e2e_recovery/
 ├── main.py                              # 入口（--collect/--train/--demo/--check）
-├── generate_gif.py                      # 演示 gif 生成（默认 demo_test.gif）
+├── generate_gif.py                      # 演示 gif 生成（直接写 docs/img/humanoid/e2e_recovery_demo.gif）
 ├── models/humanoid_camera.xml           # 人形模型（含前视相机）
 ├── launch/main.launch.py                # ROS2 launch
 ├── humanoid_e2e_recovery/
@@ -79,12 +79,12 @@ humanoid_e2e_recovery/
 │   ├── dataset.py                       # 专家数据采集
 │   ├── train.py                         # 训练（输出逐维标准化）
 │   └── predictor.py                     # 端到端推理
-├── diag/                                # 诊断脚本（15 个，复现文档里的实测数值）
+├── diag/                                # 诊断脚本（16 个，复现文档里的实测数值）
 │   ├── README.md                        # 每个脚本回答什么问题 / 命令 / 期望输出
 │   ├── _common.py                       # 路径与策略封装
-│   └── 01…15_*.py                       # 按证据链顺序编号（15 = 池化/时序消融）
+│   └── 01…16_*.py                       # 按证据链顺序编号（15 = 池化/时序消融，16 = 纯 NumPy 离线复算）
 ├── test/test_e2e.py                     # 单元测试（含判别力回归测试）
-├── data/e2e_dataset.npz                 # 采集数据集（.gitignore 排除，需自行采集）
+├── data/e2e_dataset.npz                 # 采集数据集（.gitignore 排除；可从 Release e2e-dataset-v2 下载）
 └── models_trained/e2e_policy.npz        # 训练权重
 ```
 
@@ -114,7 +114,7 @@ python3 -m pytest test -q                # 单元测试
 
 | 指标 | 数值 |
 |---|---|
-| 数据集规模 | 4 272 帧样本 / 8 回合（云主机 Ubuntu 22.04.5 + MuJoCo 4.0.0 采集；`data/` 被 `.gitignore` 排除，**未入库**，用 `--collect` 可重新生成） |
+| 数据集规模 | 4 272 帧样本 / 8 回合（云主机 Ubuntu 22.04.5 + MuJoCo 4.0.0 采集；`data/` 被 `.gitignore` 排除，**已发布到 Release 供复算**：`e2e-dataset-v2/e2e_dataset.npz`，4 652 064 B，内含 `ep`/`sample_dt`） |
 | 双帧配对后样本 | 4 136 对（`lag=17` 个采样 ≈ 102 ms，只在同一回合内配对） |
 | 输入维度 | 512（当前帧 256 + 102 ms 前那一帧 256，均由 64×64 平均池化） |
 | 输出维度 | 15（关节力矩增量 N·m） |
@@ -126,6 +126,44 @@ python3 -m pytest test -q                # 单元测试
 | 跨样本输出平均 L1 变化 | 1.8859 N·m/样本 |
 | 单帧推理 | < 1 ms（双帧拼接与历史查找同样 < 1 ms） |
 | 权重文件 | 610 514 B，`sha256 550b4ba7…cf05f`（双帧）；旧单帧权重 343 766 B，`sha256 a57baa79…8d563` |
+
+## 无 MuJoCo 环境怎么复算上表（评审用）
+
+评审机器不装 MuJoCo 也能独立复算离线指标，只需 NumPy：
+
+```bash
+# 1) 取双帧数据集（4 272 帧，含 ep / sample_dt）与权重
+curl -LO https://github.com/WZJ6666wudu/ros2/releases/download/e2e-dataset-v2/e2e_dataset.npz
+mkdir -p data && mv e2e_dataset.npz data/
+# 权重随仓库提供 models_trained/e2e_policy.npz，同一 Release 也有同名文件可对照哈希
+
+# 2) 纯 NumPy 复算（不 import sim/dataset，因此不依赖 mujoco）
+python3 diag/16_offline_metrics.py
+```
+
+`diag/16_offline_metrics.py` 的口径与 `train.py` 完全一致（`lag=17` 同回合配对、`seed=0`、`val_ratio=0.2`），并额外核对"权重里存的标准化参数"与"数据集现算值"是否逐元素一致，以排除训练/推理口径错配。实跑输出：
+
+```
+[配对] lag_sec=0.102 → lag=17 个采样 | 配成 4136 对 | X=(4136, 512)
+[标准化] 维度核对: X_mean(512) X_std(512) Y_mean(15) Y_scale(15)
+[标准化] 权重 vs 数据现算: max|ΔX_mean|=0.000e+00  max|ΔX_std|=0.000e+00
+[留出集] 827 对（val_ratio=0.20, seed=0）
+  val MSE（标准化）    = 0.01798
+  val MSE（物理 N·m²） = 2.0918   RMSE = 1.4463 N·m
+  R²（物理，全部维度）  = +0.9822   （常数基线 RMSE = 10.8526 N·m，R²=0）
+  第一层 ReLU：存活 128/128（激活率 40.83%）
+  第二层 ReLU：存活 58/64（激活率 7.00%）
+  输出跨样本逐维 std（物理）：最大 29.3784 N·m（第 3 维），目标同维 29.7210 N·m
+  输出跨样本极差（物理）：最大 425.9947 N·m（第 8 维）
+  踝 pitch 两维（idx 3 / 8）：std 预测 29.3784 / 29.3057，目标 29.7210 / 29.7210
+[判定] PASS：网络受输入驱动且优于常数基线
+```
+
+这组数直接回应两件事：**第一层不是整片死亡**（128/128 单元有激活，激活率 40.83%）；**输出不是常数**（跨样本极差 425.99 N·m、R²=+0.9822 明显优于"直接输出均值"的常数基线）。
+
+> 与上表 `--check` 的「跨样本 std 36.50 N·m」有差异是样本口径不同：这里只取 827 对留出集，`--check` 用 2 898 条真样本全量前向。两者都远大于 0，结论一致。
+>
+> 闭环站姿与抗推**必须**跑 MuJoCo（`python3 main.py --check`），本脚本只覆盖离线部分——这一点无法用纯 NumPy 替代。
 
 ### 输入/输出标准化（本轮修复的关键）
 
@@ -169,7 +207,7 @@ python3 -m pytest test -q                # 单元测试
 | 端到端网络 50 N 推扰 0.08 s（4 s 起推）后 6 s | 推后 2.08 s 跌倒，最大倾角 61.6°（**超出网络推力上限**，专家可恢复） |
 | 全零权重对照 10 s | 1.31 s 跌倒（证明判据有判别力） |
 
-> 演示动图 `demo_test.gif` 的口径是"空站 2 s → 20 N 推 0.08 s → 网络接管 8 s"，全程站稳（834 帧、最大倾角 6.9°）。**2 s 相位比 4 s 相位脆**：同样 0.08 s，25 N/30 N 在 2 s 相位会失稳（推后 1.2~1.8 s 跌倒），20 N 可站满——这是行为克隆策略在极限环相位上的真实脆弱性，如实记录。
+> 演示动图 `docs/img/humanoid/e2e_recovery_demo.gif` 的录制口径是"空站 2 s → 20 N 推 0.08 s → 网络接管 8 s"，全程站稳（834 帧、最大倾角 6.9°）。**2 s 相位比 4 s 相位脆**：同样 0.08 s，25 N/30 N 在 2 s 相位会失稳（推后 1.2~1.8 s 跌倒），20 N 可站满——这是行为克隆策略在极限环相位上的真实脆弱性，如实记录。
 
 ### 单帧为什么只能站 3.53 s：当时的结论与证据
 
