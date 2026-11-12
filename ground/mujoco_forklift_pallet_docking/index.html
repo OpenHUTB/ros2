@@ -448,6 +448,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../mujoco_car_project/">基于Mujoco的键盘遥控小车</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../forklift_slam_nav/">MuJoCo 叉车同步建图与自主导航</a>
+</li>
 <li class="toctree-l1 current"><a class="reference internal current" href="#">MuJoCo 叉车相机引导的托盘接近与低速插入</a>
 <ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="#_1">场景与目标</a>
@@ -1126,6 +1128,10 @@ ros2<span class="w"> </span>launch<span class="w"> </span>mujoco_forklift_pallet
 python3<span class="w"> </span>main.py<span class="w"> </span>--mode<span class="w"> </span>run<span class="w"> </span>--start-x<span class="w"> </span>-4<span class="w"> </span>--speed<span class="w"> </span><span class="m">2</span>
 python3<span class="w"> </span>main.py<span class="w"> </span>--mode<span class="w"> </span>evaluate
 </code></pre></div>
+<p>键盘手动控制在交互式终端中运行：</p>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>main.py<span class="w"> </span>--mode<span class="w"> </span>manual<span class="w"> </span>--start-x<span class="w"> </span>-4
+</code></pre></div>
+<p>按 <code>W</code> 前进、<code>S</code> 制动、空格滑行、<code>Q</code> 退出；终端持续显示位置和速度。模型提供纵向驱动，不含转向控制。自动化或非 TTY 环境可传入 <code>--manual-keys 'wws q'</code>，按序列逐步执行同一控制映射。</p>
 <h2 id="_3">算法</h2>
 <p>前视相机灰度帧缩放为 $16\times16$ 像素向量 $\mathbf{x}$。两层感知机计算连续驱动与制动输出：</p>
 <p>
@@ -1190,7 +1196,7 @@ d_b=\frac{v^2}{8}-0.40
 </div>
 </div><footer>
 <div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
-<a class="btn btn-neutral float-left" href="../mujoco_car_project/" title="基于Mujoco的键盘遥控小车"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-left" href="../forklift_slam_nav/" title="MuJoCo 叉车同步建图与自主导航"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
 <a class="btn btn-neutral float-right" href="../lateral_control_benchmark/" title="地面载具横向控制算法对比（纯跟踪/Stanley/LQR）">后一页 <span class="icon icon-circle-arrow-right"></span></a>
 </div>
 <hr/>
@@ -1208,7 +1214,7 @@ d_b=\frac{v^2}{8}-0.40
 <span>
 <a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
 </span>
-<span><a href="../mujoco_car_project/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../forklift_slam_nav/" style="color: #fcfcfc">« 前一页</a></span>
 <span><a href="../lateral_control_benchmark/" style="color: #fcfcfc">后一页 »</a></span>
 </span>
 </div>
