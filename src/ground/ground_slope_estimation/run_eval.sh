@@ -4,7 +4,7 @@
 set -e
 
 OUT_DIR="${1:-results}"
-SLOPES="${SLOPES:-0 5 10 15 20}"
+SLOPES="${SLOPES:-0.0 5.0 10.0 15.0 20.0}"
 NOISES="${NOISES:-0.0 0.005 0.010}"
 
 mkdir -p "$OUT_DIR"
