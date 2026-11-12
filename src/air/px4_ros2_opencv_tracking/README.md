@@ -28,7 +28,9 @@ px4_ros2_opencv_tracking/
 
 - Ubuntu 22.04 + ROS 2 Humble
 - PX4-Autopilot `release/1.18`（含 Gazebo Sim 8 / gz_x500）
-- `px4_msgs`（release/1.18）已在本工作空间构建
+- `px4_msgs`（release/1.18）已在本工作空间构建。**注意：`px4_msgs` 不是 rosdep 二进制包**
+  （PX4 未发布 release，`rosdep install` 无法解析），必须按下方「构建」步骤从 PX4 源码 clone 后
+  与工作空间一起 `colcon build`；因此 `package.xml` 中不声明该 `exec_depend`。
 - `Micro-XRCE-DDS-Agent`（`udp4 -p 8888`）
 - Python 3.10、OpenCV、numpy、cv_bridge、pymavlink（GCS 心跳用）
 
@@ -113,4 +115,7 @@ ros2 run rqt_image_view rqt_image_view                             # 选 /vision
 
 1. 图像为合成输入（开环），不能证明"无人机看到并追踪了仿真世界中的目标"；
 2. 高度/位置依赖 PX4 EKF 估计，实机测试前务必做 SITL 参数与 failsafe 检查；
-3. 安全收尾：节点退出时会发送 LAND，但仍建议在 QGC/MAVLink 端监控。
+3. 安全收尾：节点退出时会发送 LAND，但仍建议在 QGC/MAVLink 端监控；
+4. 本模块按 **PX4 `release/1.18`** 的 `vehicle_status_v4` / `vehicle_local_position_v1` 等话题名实现
+   （话题后缀来自 px4_msgs 的 `MESSAGE_VERSION`）。**其他 PX4 版本需先核对实际话题名**，
+   必要时修改 `offboard_control.py` 中的订阅话题。

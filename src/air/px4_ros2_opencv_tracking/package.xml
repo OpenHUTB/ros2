@@ -15,7 +15,9 @@
   <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>cv_bridge</exec_depend>
-  <exec_depend>px4_msgs</exec_depend>
+  <!-- px4_msgs 不是合法 rosdep key（PX4 未发布二进制包，humble/distribution.yaml 中只有 source/doc 段），
+       因此不声明 exec_depend：请在构建前从 PX4/PX4-Autopilot 源码 clone 并 colcon build，
+       详见 README「依赖 / 构建」。 -->
   <exec_depend>python3-opencv</exec_depend>
   <exec_depend>python3-numpy</exec_depend>
 
