@@ -32,6 +32,7 @@ title: 主页
   - [空域载具](#air_vehicle)
   - [水域载具](#water_vehicle)
   - [机械臂操作](#manipulation)
+  - [路径规划与跟踪](#motion_planning)
 
 ---
 
@@ -680,7 +681,7 @@ ___
 * [ROS2 话题桥接（二连杆机械臂肌肉骨骼仿真）](./muscle_arm_ros2_bridge.md)
 * [二连杆机械臂肌肉骨骼建模与 MuJoCo 仿真](./muscle_arm_mujoco_simulation.md)
 
-* [拮抗共激活分析（二连杆机械臂肌肉骨骼仿真）](./muscle_arm_cocontraction_simulation.md)
+
 
 ## 参考文献
 * [MuJoCo 失落公园无人机端到端视觉转向](./air/mujoco_abandoned_park_uav_visual_steering.md)
