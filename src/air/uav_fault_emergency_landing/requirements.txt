@@ -1,0 +1,10 @@
+# 训练与推理依赖（CPU 版 torch 即可，不需要显卡）
+torch>=2.0
+numpy>=1.21
+
+# 数据生成需要 MuJoCo 底座（uav_mujoco_sim 的 pip 依赖）
+mujoco>=3.0.0
+
+# 演示动图与曲线（缺了只会跳过对应产物，不影响 --selftest / --train / --eval）
+matplotlib>=3.5
+pillow>=10.0
