@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 ROS 2 Action 服务端：斐波那契数列计算
 
