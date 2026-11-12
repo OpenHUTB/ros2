@@ -4,9 +4,9 @@
 
 本例使用 MuJoCo 3.12.0 模拟叉车沿直线接近木托盘。叉车前视相机持续观察托盘及叉孔，神经网络将灰度图映射为驱动与制动指令；评估统计叉齿插入深度、最终速度和过度插入状态。
 
-![MuJoCo叉车前视相机观察托盘并完成低速插入](../img/ground/mujoco_forklift_pallet_docking.gif)
+![MuJoCo叉车前视相机记录](../evidence/forklift_pallet_docking/docking.gif)
 
-[多起点评估 JSON 运行记录](../img/ground/mujoco_forklift_pallet_docking_results.json)
+[同次录制终态与多起点评估记录](../evidence/forklift_pallet_docking/results.json)
 
 ## 运行流程
 
@@ -56,10 +56,10 @@ $$
 训练监督标签由仿真中的叉齿至托盘入口距离 $d$ 与当前速度 $v$ 生成。制动距离近似为：
 
 $$
-d_b=\frac{v^2}{2a_b}+m
+d_b=\frac{v^2}{8}-0.40
 $$
 
-当距离进入制动区间时策略从驱动切换到制动。训练数据由 MuJoCo 模拟不同起始位置与速度后逐帧渲染采集，网络采用均方误差训练。相机帧作为推理输入；仿真状态仅用于生成训练标签和计算评估结果，不进入策略预测。
+其中距离以米、速度以米/秒计；分母 8 对应 $2a_b$，取 $a_b=4$ 米/秒²，减去的 0.40 米用于使叉齿进入托盘。距离不大于阈值时生成制动标签。自动运行时，网络制动输出乘以 0.8 后施加至执行器。训练数据由 MuJoCo 模拟不同起始位置与速度后逐帧渲染采集，网络采用均方误差训练。相机帧作为推理输入；仿真状态仅用于生成训练标签和计算评估结果，不进入策略预测。
 
 ## 多场景运行结果
 
@@ -67,17 +67,25 @@ MuJoCo 3.12.0 下，初速度 2 m/s，不同起始位置的运行记录：
 
 | 起始位置（米） | 叉齿插入深度（米） | 最终速度（米/秒） | 过度插入 |
 | ---: | ---: | ---: | :--- |
-| -5.0 | 0.2706 | 0.0162 | 否 |
-| -4.0 | 0.2646 | 0.0222 | 否 |
-| -3.0 | 0.3090 | 0.0192 | 否 |
+| -5.0 | 0.0987 | 0.0226 | 否 |
+| -4.0 | 0.0939 | 0.0156 | 否 |
+| -3.0 | 0.1901 | 0.0207 | 否 |
 
-插入深度按托盘入口面到叉齿尖端的纵向距离计算。以上数据和 JSON 记录来自 Ubuntu 22.04、ROS 2 Humble 容器内的 MuJoCo 3.12.0 运行；动图由闭环运行期间的前视相机帧组成，三组场景均完成低速插入且未发生过插。
+插入深度按托盘入口面到叉齿尖端的纵向距离计算。以上数据和动图来自 Windows 上 MuJoCo 3.12.0 的同次记录；动图展示起始位置 -4.0 米的闭环回合，其终态与 JSON 记录一致。三组场景均完成低速插入且未发生过插。加载已有权重的评估不重新计算留出集误差。
+
+从仓库根目录复现相机记录及评估：
+
+```bash
+python3 src/ground/mujoco_forklift_pallet_docking/tools/record_demo.py --output docs/evidence/forklift_pallet_docking/docking.gif --json-output docs/evidence/forklift_pallet_docking/results.json --seed 17
+```
+
+动图不使用字体；相机灰度帧经对比度增强和最近邻缩放展示，数值保存在 JSON 中。每个仿真步为 0.01 秒，动图每帧播放 0.08 秒以便观察。
 
 ## 源码位置
 
 核心文件位于 `src/ground/mujoco_forklift_pallet_docking/`：
 
-- `model.xml`：叉车、叉齿、托盘、相机和执行器。
+- `mujoco_forklift_pallet_docking/model.xml`：叉车、叉齿、托盘、相机和执行器。
 - `mujoco_forklift_pallet_docking/policy.py`：图像策略与训练标签。
 - `mujoco_forklift_pallet_docking/simulation.py`：MuJoCo 场景、相机渲染和多起点评估。
 - `main.py`：训练、运行和评估入口。

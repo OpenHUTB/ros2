@@ -1,4 +1,4 @@
-# MuJoCo 平面小车同步建图与导航
+# MuJoCo 叉车同步建图与导航
 
 本包在 MuJoCo 中运行采用平面运动学积分的移动底盘，并通过 MuJoCo 射线查询生成 360 束激光扫描。单一 launch 同时启动仿真、`slam_toolbox` 同步建图节点和 Nav2。仿真器发布 `odom -> base_link` 与 `base_link -> laser` TF；SLAM 根据 `/scan` 和 `/odom` 发布 `/map` 与 `map -> odom`。Nav2 使用在线地图和激光扫描规划并避障。
 
@@ -6,18 +6,18 @@
 
 在仓库根目录先构建本项目现有 MuJoCo/Humble 基础镜像，再构建导航镜像：
 
-```powershell
+```bash
 docker build -t mujoco-forklift-pallet-docking:latest src/ground/mujoco_forklift_pallet_docking
 docker build -f src/ground/forklift_slam_nav/Dockerfile -t forklift-slam-nav:humble .
 docker run --rm -it --name forklift-slam-nav forklift-slam-nav:humble
 ```
 
-基础镜像需包含 ROS 2 Humble；导航镜像按 `requirements.txt` 安装 MuJoCo 3.12.0 和 NumPy，并安装 Humble `slam_toolbox`、Nav2 与 `colcon`。在本地 Humble 工作区安装相同依赖并执行 `colcon build --symlink-install` 后，可用 `ros2 launch forklift_slam_nav bringup.launch.py` 启动。
+基础镜像需包含 ROS 2 Humble；导航镜像按 `requirements.txt` 安装 MuJoCo 3.12.0 和 NumPy，并安装 Humble `slam_toolbox`、Nav2 与 `colcon`。在本地 Humble 工作区安装相同依赖并执行 `colcon build --symlink-install` 后，可用 `ros2 launch forklift_slam_nav main.launch.py` 启动。
 
 地图建立后可通过 Nav2 的 `NavigateToPose` action 下发目标：
 
 ```bash
-ros2 action send_goal /navigate_to_pose nav2_msgs/action/NavigateToPose "{pose: {header: {frame_id: map}, pose: {position: {x: 2.5, y: 2.5}, orientation: {w: 1.0}}}}"
+ros2 action send_goal /navigate_to_pose nav2_msgs/action/NavigateToPose "{pose: {header: {frame_id: map}, pose: {position: {x: 0.0, y: 2.0}, orientation: {w: 1.0}}}}"
 ```
 
 ## 离线单元测试
@@ -36,3 +36,9 @@ python3 -m unittest discover -s test -v
 - `/tf`：仿真器发布 `odom -> base_link`；SLAM 发布 `map -> odom`；静态变换为 `base_link -> laser`。
 - `/map`：同步 `slam_toolbox` 发布的占据栅格地图。
 - `/navigate_to_pose`：Nav2 导航 action。
+
+## 启动入口与模型高度
+
+规范启动文件为 `launch/main.launch.py`（包含原 `launch/bringup.launch.py`，原命令仍可使用），通过 `ros2 launch forklift_slam_nav main.launch.py` 调用。仿真可执行入口 `mujoco_robot` 对应 `forklift_slam_nav.simulator:main`。`odom -> base_link` 的高度为 0.22 m；`base_link -> laser` 的相对高度为 0.04 m，激光在模型中的绝对高度为 0.26 m。
+
+规范 Python 入口为 `main.py`，调用 `forklift_slam_nav.simulator:main`；安装后可用 `ros2 run forklift_slam_nav main` 启动仿真节点，原 `mujoco_robot` 可执行入口继续兼容。

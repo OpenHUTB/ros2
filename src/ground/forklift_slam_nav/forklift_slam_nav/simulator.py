@@ -61,11 +61,13 @@ class MujocoRobot(Node):
         tf = TransformStamped()
         tf.header.stamp, tf.header.frame_id, tf.child_frame_id = stamp, 'odom', 'base_link'
         tf.transform.translation.x, tf.transform.translation.y = float(x), float(y)
+        tf.transform.translation.z = float(self.data.qpos[self.qpos + 2])
         tf.transform.rotation.z, tf.transform.rotation.w = math.sin(yaw / 2), math.cos(yaw / 2)
         self.tf_pub.sendTransform(tf)
         od = Odometry()
         od.header.stamp, od.header.frame_id, od.child_frame_id = stamp, 'odom', 'base_link'
         od.pose.pose.position.x, od.pose.pose.position.y = float(x), float(y)
+        od.pose.pose.position.z = tf.transform.translation.z
         od.pose.pose.orientation = tf.transform.rotation
         od.twist.twist.linear.x, od.twist.twist.angular.z = self.speed, self.yaw_rate
         self.odom_pub.publish(od)

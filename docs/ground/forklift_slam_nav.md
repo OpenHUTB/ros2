@@ -10,7 +10,7 @@
 
 从仓库根目录先构建 ROS 2 Humble 基础镜像，再构建按依赖清单安装 MuJoCo 3.12.0、NumPy、SLAM 与 Nav2 的运行镜像：
 
-```powershell
+```bash
 docker build -t mujoco-forklift-pallet-docking:latest src/ground/mujoco_forklift_pallet_docking
 docker build -f src/ground/forklift_slam_nav/Dockerfile -t forklift-slam-nav:humble .
 ```
@@ -38,9 +38,15 @@ ros2 run tf2_ros tf2_echo map base_link
 在地图已有观测后，通过 `NavigateToPose` action 指定地图坐标系下的目标：
 
 ```bash
-ros2 action send_goal /navigate_to_pose nav2_msgs/action/NavigateToPose "{pose: {header: {frame_id: map}, pose: {position: {x: 2.5, y: 2.5}, orientation: {w: 1.0}}}}"
+ros2 action send_goal /navigate_to_pose nav2_msgs/action/NavigateToPose "{pose: {header: {frame_id: map}, pose: {position: {x: 0.0, y: 2.0}, orientation: {w: 1.0}}}}"
 ```
 
 容器验收时，地图尺寸为 157×156；向 `(0, 2)` 下发的 `NavigateToPose` 目标返回 `SUCCEEDED`。
 
 Nav2 会通过 `/cmd_vel` 控制底盘；局部代价地图使用 `/scan` 标记障碍物并清除空闲区域。
+
+## 启动入口与模型高度
+
+规范启动文件为 `launch/main.launch.py`（包含原 `launch/bringup.launch.py`，原命令仍可使用），通过 `ros2 launch forklift_slam_nav main.launch.py` 调用。仿真可执行入口 `mujoco_robot` 对应 `forklift_slam_nav.simulator:main`。`odom -> base_link` 的高度为 0.22 m；`base_link -> laser` 的相对高度为 0.04 m，激光在模型中的绝对高度为 0.26 m。
+
+规范 Python 入口为 `main.py`，调用 `forklift_slam_nav.simulator:main`；安装后可用 `ros2 run forklift_slam_nav main` 启动仿真节点，原 `mujoco_robot` 可执行入口继续兼容。
