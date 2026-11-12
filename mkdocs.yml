@@ -94,6 +94,7 @@ nav:
     - 人形机器人键盘运动控制: './humanoid/humanoid_keyboard_control.md'
     - 关节轨迹重定时：约束饱和下的最快时间缩放: './humanoid/joint_traj_retime.md'
     - 键盘操控仿真机械臂: './humanoid/panda_keyboard_control.md'
+    - G1 RGB 地面分割巡检: './humanoid/g1_rgb_floor_patrol/index.md'
     - 机械臂手眼标定仿真: './humanoid/hand_eye_calibration.md'
     - 人形机器人平衡控制与外力抗扰恢复: './humanoid/humanoid_push_recovery.md'
     - 人形机器人 PPO 神经网络平衡控制: './humanoid/humanoid_ppo_locomotion.md'
