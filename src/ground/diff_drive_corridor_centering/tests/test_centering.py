@@ -58,6 +58,18 @@ class TestCenteringController(unittest.TestCase):
         self.assertEqual(recovered["state"], "CENTER")
         self.assertGreater(recovered["v"], 0.0)
 
+    def test_scan_timeout_recovers_after_stream_resumes(self) -> None:
+        # 测距超时进入 BLOCKED 后，恢复收到测距应能回到巡航，不会被永久锁死。
+        self.ctrl.step(d_left=1.0, d_right=1.0, d_forward=6.0, now=0.0)
+        # 断流超过 scan_timeout，进入 BLOCKED。
+        blocked = self.ctrl.step(d_left=1.0, d_right=1.0, d_forward=6.0, now=1.0)
+        self.assertEqual(blocked["state"], "BLOCKED")
+        self.assertEqual(blocked["v"], 0.0)
+        # 恢复测距后下一帧应退出 BLOCKED 继续巡航。
+        recovered = self.ctrl.step(d_left=1.0, d_right=1.0, d_forward=6.0, now=1.1)
+        self.assertEqual(recovered["state"], "CENTER")
+        self.assertGreater(recovered["v"], 0.0)
+
     def test_derivative_zero_on_first_sample(self) -> None:
         r = self.ctrl.step(d_left=1.2, d_right=0.8, d_forward=6.0, now=0.0)
         self.assertAlmostEqual(r["de"], 0.0, places=6)
