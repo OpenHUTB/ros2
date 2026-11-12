@@ -281,6 +281,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [高精度定位与重定位（AMCL 式粒子滤波）](./ground/turtlebot3_relocalization.md)
 
 * [两轮自平衡机器人（倾角PD + 神经网络策略克隆）](./ground/balance_bot.md) —— MuJoCo 两轮倒立摆，倾角 PD 站稳（20 s 最大倾角 0.96°），被推 2 N·s 后 3.22 s 回正，并用 MLP 克隆控制律
+* [车辆 ESC 电子稳定控制](./ground/vehicle_esc_stability.md) —— 双轨车辆 + 魔术公式轮胎，横摆角速度跟踪与单侧差动制动；双移线侧偏角 89.2° → 3.8°、偏移 17.02 m → 0.59 m，附对开路面 select-low 的制动距离代价
 * [基于里程计反馈与 A* 算法的差速底盘静态全局路径规划](./ground/diff_drive_astar_odom_nav.md) —— Gazebo 差速底盘在静态栅格上用 A* 规划全局路径，仅凭 `/odom` 里程计做 30 Hz 纯追踪闭环，并用真值量化跟踪误差与里程计漂移
 * [视觉-惯性时间偏移互相关估计](./ground/vio_time_offset_estimation.md) —— 陀螺与视觉角速率归一化互相关 + 抛物线插值；200 次试验偏移误差 RMSE 0.89 ms，补偿后残差 0.1911 → 0.0907（改善 52.5%）
 * [ROS2 差速机器人 A* 全局规划与 DWA 局部避障](ground/ros2_dwa_avoidance.md) —— A* 全局路线 + DWA 局部跟踪，5 场景 3 控制器对比，窄走廊与 U 形陷阱通过

@@ -240,6 +240,7 @@ nav:
     - IMU 噪声 Allan 方差辨识与倾角滤波整定: './ground/imu_allan_noise_identification.md'
     - 基于 IMU 的路面异常检测（坑洼 / 减速带 / 粗糙路面）: './ground/imu_road_anomaly_detection.md'
     - 两轮自平衡机器人（倾角PD + 神经网络策略克隆）: './ground/balance_bot.md'
+    - 车辆 ESC 电子稳定控制: './ground/vehicle_esc_stability.md'
     - 差速 AGV 坡道起步辅助（防溜车）: './ground/hill_start_assist.md'
     - 悬崖边缘紧急制动仿真: './ground/cliff_brake.md'
     - 线性 MPC 路径跟踪与纯追踪对比: './ground/mpc_path_tracking.md'
