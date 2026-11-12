@@ -5,7 +5,6 @@
 用碰撞时间（TTC）在真正接触前发出 `/collision_warning`，可以独立运行，也可以
 作为**静止/低速底盘**的安全输入；移动底盘需先做 odom 补偿。
 
-
 ## 1. 方法
 
 ### 1.1 扫描聚类
@@ -69,7 +68,6 @@ src/ground/ros2_dynamic_obstacle_ttc/
 | Python | 3.8.10 |
 | 离线基准 | Windows 11 + Python 3.12 + NumPy 2.x |
 
-
 ```bash
 cd ~/hutb_ws
 colcon build --packages-select ros2_dynamic_obstacle_ttc
@@ -96,7 +94,6 @@ ros2 launch ros2_dynamic_obstacle_ttc main_launch.py
 | `on_ttc` / `off_ttc` | 告警迟滞阈值 | 2.5 s / 3.5 s |
 | `robot_radius` / `safety_margin` | 自车半径/安全裕度 | 0.25 m / 0.10 m |
 
-
 ## 3. 离线复现
 
 ```bash
@@ -119,10 +116,8 @@ python3 -m ros2_dynamic_obstacle_ttc.sim    # 5 个场景
 - 2 个无威胁场景（平行通过、远离）**0 误报**；
 - parallel 场景的 TTC 为 `null`：多帧最小二乘速度拟合后横向速度接近 0，不再出现 3.97 s 的数值伪值。
 
-
 节点实跑日志（headless 环境，用合成 `/scan` 让障碍从 5 m 处正面接近；
 2.49 s 时触发 WARN，障碍通过后恢复 clear）：
-
 
 图中红色竖带是告警区间：head_on 的 TTC 在约 2.7 s 跌破 2.5 s 后保持告警，
 parallel 的 TTC 始终高于阈值。
@@ -143,7 +138,6 @@ parallel 的 TTC 始终高于阈值。
   `/moving_obstacles` 把动态目标加入局部代价地图；
 * 与 #1077 的 A\*+DWA 完全解耦，可单独合并。
 
-
 ## 6. 局限
 
 * **仅适用于自车静止/低速**：TTC 按自车静止计算。移动底盘必须先把激光点变换到 odom 系、扣除自车速度，再计算相对 TTC；原地转向同样需要 odom 补偿（当前未接，实测移动底盘会把静止墙面误判为接近目标）；
@@ -152,7 +146,7 @@ parallel 的 TTC 始终高于阈值。
 * 稀疏点云会把一个障碍拆成多个簇，跟踪门限需按雷达分辨率调；
 * 只在合成数据上验证，尚未接真实雷达。
 
-## 合规说明
+## 大模型使用声明
 
 代码与文档在编写过程中使用了 AI 大模型辅助。作者已实际运行 11 项单元测试、
 5 个离线场景，并对提交内容的正确性与完整性负全部责任。

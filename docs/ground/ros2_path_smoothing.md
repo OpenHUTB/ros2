@@ -4,7 +4,6 @@ A\* 路径是栅格折线，直接给差速底盘跟踪会有角速度跳变。�
 视线简化 + Catmull-Rom，并在**逐段碰撞检查**、**精确间隙**约束下选择最大曲率
 最低的安全候选。节点依赖 `/map`，校验不过则退回输入路径。
 
-
 ## 1. 方法
 
 ### 1.1 A\* 与逐段视线简化
@@ -65,8 +64,6 @@ src/ground/ros2_path_smoothing/
 | Python | 3.8.10 |
 | 离线基准 | Windows 11 + Python 3.12 + NumPy 2.x |
 
-
-
 ```bash
 cd ~/hutb_ws
 colcon build --packages-select ros2_path_smoothing
@@ -91,7 +88,6 @@ ros2 launch ros2_path_smoothing main_launch.py
 | `map_topic` | 碰撞/间隙检查用地图 | `/map` |
 | `min_clearance` | 最小安全间隙 | 0.10 m |
 
-
 ## 3. 离线复现
 
 ```bash
@@ -111,7 +107,6 @@ python3 -m ros2_path_smoothing.sim
 doorway 的起终点连线正好穿过门洞，简化后就是直线；corridor/clutter 的简化
 直线段也是低曲率候选，最终按“满足间隙 + 最小曲率”选中。
 
-
 > 指标在 Windows 11 + Python 3.12 + NumPy 2.x 上离线复现；ROS 包在
 > Ubuntu 20.04 + Foxy 下构建。`results/benchmark.json` 的 `environment`
 > 记录的是离线环境，不是 ROS 构建环境。
@@ -129,7 +124,6 @@ corridor 最大曲率 5.685 → **0.016 1/m**、间隙 0.15 m；clutter 5.685 �
 * 输出仍是 `nav_msgs/Path`，下游可用 Pure Pursuit/Stanley 跟踪；
 * 节点需要 `/map` 才能做碰撞/间隙校验；无地图时只原样转发。
 
-
 ## 6. 局限
 
 * 只处理几何路径，不重新规划；
@@ -138,7 +132,7 @@ corridor 最大曲率 5.685 → **0.016 1/m**、间隙 0.15 m；clutter 5.685 �
 * Catmull-Rom 在急弯处会切角，靠逐段检查和精确间隙兜底；
 * 2D 路径，不处理高度/坡度。
 
-## 合规说明
+## 大模型使用声明
 
 代码与文档在编写过程中使用了 AI 大模型辅助。作者已实际运行 7 项单元测试和
 3 张离线地图，并在 Ubuntu 20.04 + Foxy 下完成 `colcon build`；对提交内容的

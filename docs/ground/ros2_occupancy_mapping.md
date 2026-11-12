@@ -4,7 +4,6 @@
 用 `/scan` + `/odom` 维护一个 log-odds 占据栅格，发布 `nav_msgs/OccupancyGrid`，
 并用真值栅格量化地图质量。
 
-
 ## 1. 方法
 
 ### 1.1 栅格与 log-odds
@@ -47,7 +46,6 @@ src/ground/ros2_occupancy_mapping/
 | Python | 3.8.10 |
 | 离线基准 | Windows 11 + Python 3.12 + NumPy 2.x |
 
-
 ```bash
 cd ~/hutb_ws
 colcon build --packages-select ros2_occupancy_mapping
@@ -74,7 +72,6 @@ ros2 launch ros2_occupancy_mapping main_launch.py
 | `x_min` / `x_max` | x 范围 | -10.0 / 10.0 |
 | `y_min` / `y_max` | y 范围 | -10.0 / 10.0 |
 
-
 ## 3. 离线复现
 
 ```bash
@@ -99,7 +96,6 @@ python3 -m ros2_occupancy_mapping.sim     # 60 帧、180 束
 
 > 不同 NumPy/平台会有约 ±0.02 的 IoU 和 ±3% 的格数差异；在 Ubuntu 22.04 + NumPy 1.24 上复现为 0.722 / 0.959 / 0.745 / 1229，结论不变。
 
-
 precision 0.953 说明“标成占据的格子几乎都是真障碍”；recall 0.725 的损失主要来自：
 
 * 部分墙面只被斜视扫到，端点落在墙内；
@@ -120,7 +116,6 @@ precision **0.953**、recall 0.725：
 * 本模块不做定位，假设 `/odom` 可用；里程计漂移会直接反映为地图重影；
 * 与 #1077 的 A\* 栅格是两套东西：那边是滚动局部栅格，这里是持久全局地图。
 
-
 ## 6. 局限
 
 * 2D 单线激光，只有一层高度，低矮/悬空障碍会漏；
@@ -129,7 +124,7 @@ precision **0.953**、recall 0.725：
 * 只输出占据/自由/未知，没有语义或可通行性分析；
 * 固定 20 m × 20 m 栅格，大场景需分块或稀疏存储。
 
-## 合规说明
+## 大模型使用声明
 
 代码与文档在编写过程中使用了 AI 大模型辅助。作者已实际运行 5 项单元测试和
 60 帧离线建图，并对提交内容的正确性与完整性负全部责任。

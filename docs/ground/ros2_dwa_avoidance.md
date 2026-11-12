@@ -20,7 +20,6 @@
 * 一键离线复现：`cd src/ground/ros2_dwa_avoidance && python3 -m ros2_dwa_avoidance.sim --no-figures`
 * 一键测试：`python3 -m unittest discover -s test -v`（18 项，全部通过）
 
-
 ## 1. 目标与系统架构
 
 任务是在未知/部分已知的平面环境中，让差速机器人从起点自主到达目标：
@@ -163,10 +162,9 @@ src/ground/ros2_dwa_avoidance/
 | Python | 3.8.10 |
 | 离线基准 | Windows 11 + Python 3.12 + NumPy 2.5.4 |
 
-
 ### 6.1 编译
 
-实测环境：Ubuntu 20.04.6、ROS 2 Foxy 0.9.2、Python 3.8.10；
+环境同上文「运行环境」表（Ubuntu 20.04.6 + Foxy 0.9.2 + Python 3.8.10）；
 代码只使用 Foxy/Humble 共有的接口，在 Humble 下同样可编译。
 
 ```bash
@@ -218,7 +216,6 @@ python3 -m unittest discover -s test -v      # 18 项单元测试
 | `map_half_size` | 局部栅格半边长 | 10.0 m |
 | `publish_tf` | 是否发布 `odom→base_link` | true |
 
-
 ## 7. 实验设置
 
 仿真器为纯 NumPy 的二维平面仿真，不依赖 Gazebo/CARLA：
@@ -264,7 +261,6 @@ python3 -m unittest discover -s test -v      # 18 项单元测试
 > 表中的数字在 Windows 11 + Python 3.12 + NumPy 2.5.4 上生成。Linux + NumPy 1.24
 > 复现时 utrap/A\*+DWA 为 22.3 s / 12.63 m / 0.303 m（本表 23.3 s / 12.64 m / 0.32 m），
 > 属平台/数值库差异；其余回合一致。不同环境不要求逐位相同。
-
 
 ### 8.2 分析
 
@@ -383,8 +379,6 @@ RViz2 里可以直接显示 RobotModel。
 连续两次都正常通过。`ros2 launch ... goal_x:=11.5 goal_y:=0.0` 也已验证：
 launch 参数能正确覆盖节点默认目标（日志中 `goal=(11.50, 0.00)`）。
 
-
-
 ## 11. 局限与展望
 
 * 二维圆形机器人模型，未考虑轮子打滑、电机力矩饱和；真车部署需在 `/cmd_vel`
@@ -400,7 +394,7 @@ launch 参数能正确覆盖节点默认目标（日志中 `goal=(11.50, 0.00)`�
   false，避免 RViz 报重复 TF；
 * 尚未接入 Gazebo/TurtleBot3 做三维仿真验证，这是下一步工作（另见 #1134）。
 
-## 合规说明
+## 大模型使用声明
 
 本模块的代码、实验脚本与文档在编写过程中使用了 AI 大模型辅助。
 作者已在离线仿真中实际运行全部基准与单元测试，并在 Ubuntu 20.04 + ROS 2 Foxy
