@@ -80,7 +80,8 @@ class ROVEKF:
     def __init__(self, p0, v0, q0, P0_diag=None,
                  sigma_acc=0.05, sigma_gyro=0.01,
                  sigma_ba=1e-4, sigma_bg=1e-5,
-                 max_dvl_jump=0.0, max_dvl_speed=0.0):
+                 max_dvl_jump=0.0, max_dvl_speed=0.0,
+                 max_dvl_gap=2.0, dvl_jump_reset_count=10):
         self.p = np.array(p0, dtype=float)
         self.v = np.array(v0, dtype=float)
         self.q = quat_normalize(np.array(q0, dtype=float))
@@ -100,9 +101,17 @@ class ROVEKF:
         #   量测速度模长超过 max_dvl_speed 也视为野值。
         self.max_dvl_jump = float(max_dvl_jump)
         self.max_dvl_speed = float(max_dvl_speed)
+        self.max_dvl_gap = max(0.0, float(max_dvl_gap))
+        self.dvl_jump_reset_count = max(0, int(dvl_jump_reset_count))
         self._last_dvl = None
+        self._last_dvl_seen_time = None
+        self._dvl_jump_reject_streak = 0
         self.dvl_accepted = 0
         self.dvl_rejected = 0
+        self.dvl_rejected_invalid = 0
+        self.dvl_rejected_speed = 0
+        self.dvl_rejected_jump = 0
+        self.dvl_reacquired = 0
 
     # ---------------- 预测 ----------------
     def predict(self, a_m, w_m, dt):
@@ -144,21 +153,67 @@ class ROVEKF:
         self.P = 0.5 * (self.P + self.P.T)
         return float(residual @ np.linalg.solve(S, residual))
 
-    def update_dvl(self, v_body_meas, sigma=0.01):
+    def update_dvl(self, v_body_meas, sigma=0.01, timestamp=None):
+        """Update with DVL body velocity.
+
+        ``timestamp`` is an optional monotonic time in seconds.  When supplied,
+        a gap longer than ``max_dvl_gap`` enables measurement reacquisition
+        instead of comparing against a stale jump baseline.
+        """
         v_meas = np.asarray(v_body_meas, dtype=float).ravel()
+        measurement_time = None
+        if timestamp is not None:
+            try:
+                measurement_time = float(timestamp)
+            except (TypeError, ValueError):
+                measurement_time = None
+            if measurement_time is not None and not np.isfinite(measurement_time):
+                measurement_time = None
+
+        previous_seen_time = self._last_dvl_seen_time
         if v_meas.size != 3 or not np.all(np.isfinite(v_meas)):
             self.dvl_rejected += 1
+            self.dvl_rejected_invalid += 1
             return 0.0
+        if measurement_time is not None:
+            self._last_dvl_seen_time = measurement_time
+
         speed = float(np.linalg.norm(v_meas))
         if self.max_dvl_speed > 0.0 and speed > self.max_dvl_speed:
             self.dvl_rejected += 1
+            self.dvl_rejected_speed += 1
             return 0.0
+
         if self.max_dvl_jump > 0.0 and self._last_dvl is not None:
-            jump = float(np.linalg.norm(v_meas - self._last_dvl))
-            if jump > self.max_dvl_jump:
-                self.dvl_rejected += 1
-                return 0.0
+            gap_expired = False
+            if (self.max_dvl_gap > 0.0
+                    and measurement_time is not None
+                    and previous_seen_time is not None):
+                gap = measurement_time - previous_seen_time
+                gap_expired = gap < 0.0 or gap > self.max_dvl_gap
+
+            if gap_expired:
+                self._last_dvl = None
+                self._dvl_jump_reject_streak = 0
+                self.dvl_reacquired += 1
+            else:
+                jump = float(np.linalg.norm(v_meas - self._last_dvl))
+                if jump > self.max_dvl_jump:
+                    self.dvl_rejected += 1
+                    self.dvl_rejected_jump += 1
+                    self._dvl_jump_reject_streak += 1
+                    if (self.dvl_jump_reset_count > 0
+                            and self._dvl_jump_reject_streak >= self.dvl_jump_reset_count):
+                        # A persistent jump may be a real speed step. Re-capture
+                        # the baseline after a bounded streak, but still reject
+                        # this sample so the EKF does not immediately absorb it.
+                        self._last_dvl = v_meas.copy()
+                        self._dvl_jump_reject_streak = 0
+                        self.dvl_reacquired += 1
+                    return 0.0
+
         self._last_dvl = v_meas.copy()
+        self._dvl_jump_reject_streak = 0
         self.dvl_accepted += 1
         R = quat_to_rot(self.q)
         h = R.T @ self.v

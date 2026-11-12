@@ -10,6 +10,8 @@
 深度计确定 z、DVL 确定初始速度。
 """
 
+import time
+
 import numpy as np
 import rclpy
 from rclpy.node import Node
@@ -37,10 +39,13 @@ class EKFNode(Node):
         self.declare_parameter('init_delay', 0.1)
         self.declare_parameter('max_dvl_jump', 0.0)
         self.declare_parameter('max_dvl_speed', 0.0)
+        self.declare_parameter('max_dvl_gap', 2.0)
+        self.declare_parameter('dvl_jump_reset_count', 10)
         self.sigma_dvl = float(self.get_parameter('sigma_dvl').value)
         self.sigma_depth = float(self.get_parameter('sigma_depth').value)
         self.sigma_att = float(self.get_parameter('sigma_att').value)
         self.init_delay = float(self.get_parameter('init_delay').value)
+        self.max_dvl_speed = float(self.get_parameter('max_dvl_speed').value)
 
         self.ekf = None
         self.dr = None
@@ -73,10 +78,37 @@ class EKFNode(Node):
                                      msg.twist.linear.z])
         if self.ekf is not None and self.initialized_dt:
             rejected_before = self.ekf.dvl_rejected
-            self.ekf.update_dvl(self.pending_dvl, sigma=self.sigma_dvl)
-            if self.ekf.dvl_rejected != rejected_before:
+            invalid_before = self.ekf.dvl_rejected_invalid
+            speed_before = self.ekf.dvl_rejected_speed
+            jump_before = self.ekf.dvl_rejected_jump
+            reacquired_before = self.ekf.dvl_reacquired
+            stamp = (msg.header.stamp.sec
+                     + 1e-9 * msg.header.stamp.nanosec)
+            if stamp <= 0.0:
+                ros_stamp = self.get_clock().now().nanoseconds * 1e-9
+                stamp = ros_stamp if ros_stamp > 0.0 else time.monotonic_ns() * 1e-9
                 self.get_logger().warn(
-                    'DVL 野值被门限拒绝 (累计 %d 次)' % self.ekf.dvl_rejected)
+                    'DVL header.stamp 为 0，使用本地单调时钟判断到达间隔',
+                    throttle_duration_sec=5.0)
+            self.ekf.update_dvl(
+                self.pending_dvl, sigma=self.sigma_dvl, timestamp=stamp)
+            if self.ekf.dvl_rejected != rejected_before:
+                if self.ekf.dvl_rejected_invalid != invalid_before:
+                    message = 'DVL 量测格式或有限值异常'
+                elif self.ekf.dvl_rejected_speed != speed_before:
+                    message = 'DVL 超过 max_dvl_speed 门限'
+                elif self.ekf.dvl_rejected_jump != jump_before:
+                    message = 'DVL 超过 max_dvl_jump 门限'
+                else:
+                    message = 'DVL 量测被门限拒绝'
+                self.get_logger().warn(
+                    '%s (累计 %d 次)' % (message, self.ekf.dvl_rejected),
+                    throttle_duration_sec=5.0)
+            if self.ekf.dvl_reacquired != reacquired_before:
+                self.get_logger().info(
+                    'DVL 门限重新捕获基准 (累计 %d 次)'
+                    % self.ekf.dvl_reacquired,
+                    throttle_duration_sec=5.0)
 
     def on_imu(self, msg: Imu):
         stamp = (msg.header.stamp.sec, msg.header.stamp.nanosec)
@@ -94,16 +126,28 @@ class EKFNode(Node):
                 return
             if self.pending_depth is None or self.pending_dvl is None:
                 return
+            dvl0 = np.asarray(self.pending_dvl, dtype=float).ravel()
+            if (dvl0.size != 3 or not np.all(np.isfinite(dvl0))
+                    or (self.max_dvl_speed > 0.0
+                        and np.linalg.norm(dvl0) > self.max_dvl_speed)):
+                self.get_logger().warn(
+                    '初始化 DVL 量测无效或超过 max_dvl_speed，等待新量测',
+                    throttle_duration_sec=5.0)
+                self.pending_dvl = None
+                return
             p0 = np.array([float(self.get_parameter('init_x').value),
                            float(self.get_parameter('init_y').value),
                            -self.pending_depth])
-            v0 = quat_to_rot(q) @ self.pending_dvl
+            v0 = quat_to_rot(q) @ dvl0
             self.ekf = ROVEKF(
                 p0, v0, q,
                 sigma_acc=float(self.get_parameter('sigma_acc').value),
                 sigma_gyro=float(self.get_parameter('sigma_gyro').value),
                 max_dvl_jump=float(self.get_parameter('max_dvl_jump').value),
-                max_dvl_speed=float(self.get_parameter('max_dvl_speed').value),
+                max_dvl_speed=self.max_dvl_speed,
+                max_dvl_gap=float(self.get_parameter('max_dvl_gap').value),
+                dvl_jump_reset_count=int(
+                    self.get_parameter('dvl_jump_reset_count').value),
             )
             self.dr = SpaceState(p0, v0, q)
             self.last_stamp = stamp
