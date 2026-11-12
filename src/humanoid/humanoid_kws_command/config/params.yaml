@@ -1,0 +1,6 @@
+# ROS 2 节点参数
+kws_command_node:
+  ros__parameters:
+    wav_path: ""          # 留空则只发 unknown
+    model_path: ""        # 留空则只发 unknown
+    repeat_hz: 0.5        # 识别与发布周期
