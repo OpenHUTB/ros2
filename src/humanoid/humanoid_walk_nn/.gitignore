@@ -28,3 +28,5 @@ Thumbs.db
 media/*.log
 # per-frame ROS run logs (regenerate with main.sh slam_nav / benchmark)
 results/ros_*_slam_nav.json
+results/dataset_*.json
+results/ros_*.png

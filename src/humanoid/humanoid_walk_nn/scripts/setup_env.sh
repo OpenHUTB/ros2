@@ -7,16 +7,12 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VENV="$ROOT/.venv"
 ROS_PY="/opt/ros/noetic/lib/python3/dist-packages"
-# Bundled Python >= 3.10 shipped with the course VM.
-BUNDLED="/home/lxy/codex_vehicle_20261021_2040/runtime/python/bin/python3.11"
+# 可选：用环境变量 PYTHON311 指定 >= 3.10 的解释器；否则自动探测。
 
 if [ -x "$VENV/bin/python3" ] && "$VENV/bin/python3" -c "import numpy" 2>/dev/null; then
   echo "[setup] venv already usable: $VENV"
 else
   PY="${PYTHON311:-}"
-  if [ -z "$PY" ] && [ -x "$BUNDLED" ]; then
-    PY="$BUNDLED"
-  fi
   if [ -z "$PY" ]; then
     for cand in python3.11 python3.10; do
       if command -v "$cand" >/dev/null 2>&1; then PY="$(command -v "$cand")"; break; fi
