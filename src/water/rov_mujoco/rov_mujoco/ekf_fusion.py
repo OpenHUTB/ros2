@@ -79,7 +79,8 @@ class ROVEKF:
 
     def __init__(self, p0, v0, q0, P0_diag=None,
                  sigma_acc=0.05, sigma_gyro=0.01,
-                 sigma_ba=1e-4, sigma_bg=1e-5):
+                 sigma_ba=1e-4, sigma_bg=1e-5,
+                 max_dvl_jump=0.0, max_dvl_speed=0.0):
         self.p = np.array(p0, dtype=float)
         self.v = np.array(v0, dtype=float)
         self.q = quat_normalize(np.array(q0, dtype=float))
@@ -94,6 +95,14 @@ class ROVEKF:
         self.sigma_ba = sigma_ba
         self.sigma_bg = sigma_bg
         self.initialized = True
+        # 简单 DVL 门限（0 = 关闭）：
+        #   相邻两次可接受量测的速度跳变超过 max_dvl_jump 视为野值；
+        #   量测速度模长超过 max_dvl_speed 也视为野值。
+        self.max_dvl_jump = float(max_dvl_jump)
+        self.max_dvl_speed = float(max_dvl_speed)
+        self._last_dvl = None
+        self.dvl_accepted = 0
+        self.dvl_rejected = 0
 
     # ---------------- 预测 ----------------
     def predict(self, a_m, w_m, dt):
@@ -136,12 +145,27 @@ class ROVEKF:
         return float(residual @ np.linalg.solve(S, residual))
 
     def update_dvl(self, v_body_meas, sigma=0.01):
+        v_meas = np.asarray(v_body_meas, dtype=float).ravel()
+        if v_meas.size != 3 or not np.all(np.isfinite(v_meas)):
+            self.dvl_rejected += 1
+            return 0.0
+        speed = float(np.linalg.norm(v_meas))
+        if self.max_dvl_speed > 0.0 and speed > self.max_dvl_speed:
+            self.dvl_rejected += 1
+            return 0.0
+        if self.max_dvl_jump > 0.0 and self._last_dvl is not None:
+            jump = float(np.linalg.norm(v_meas - self._last_dvl))
+            if jump > self.max_dvl_jump:
+                self.dvl_rejected += 1
+                return 0.0
+        self._last_dvl = v_meas.copy()
+        self.dvl_accepted += 1
         R = quat_to_rot(self.q)
         h = R.T @ self.v
         H = np.zeros((3, 15))
         H[:, IV] = R.T
         H[:, ITH] = skew(h)
-        return self._update(H, np.asarray(v_body_meas) - h, np.eye(3) * sigma * sigma)
+        return self._update(H, v_meas - h, np.eye(3) * sigma * sigma)
 
     def update_depth(self, depth_meas, sigma=0.02):
         """depth_meas: 向下为正 (m)。"""
@@ -196,7 +220,8 @@ class SensorModel:
                  bias_acc=0.05, bias_gyro=0.003,
                  sigma_dvl=0.01, bias_dvl=0.005,
                  sigma_depth=0.02, sigma_att=0.01,
-                 dvl_dropout=0.10):
+                 dvl_dropout=0.10,
+                 dvl_outlier_ratio=0.0, dvl_outlier_scale=2.0):
         self.rng = np.random.default_rng(seed)
         self.sigma_acc = sigma_acc
         self.sigma_gyro = sigma_gyro
@@ -204,6 +229,8 @@ class SensorModel:
         self.sigma_depth = sigma_depth
         self.sigma_att = sigma_att
         self.dvl_dropout = dvl_dropout
+        self.dvl_outlier_ratio = float(dvl_outlier_ratio)
+        self.dvl_outlier_scale = float(dvl_outlier_scale)
         self.ba = self.rng.normal(0.0, bias_acc, 3)
         self.bg = self.rng.normal(0.0, bias_gyro, 3)
         self.b_dvl = self.rng.normal(0.0, bias_dvl, 3)
@@ -225,7 +252,14 @@ class SensorModel:
         if self.rng.random() < self.dvl_dropout:
             return None
         v_body = R.T @ np.asarray(v_world) + self.b_dvl
-        return v_body + self.rng.normal(0.0, self.sigma_dvl, 3)
+        v_body = v_body + self.rng.normal(0.0, self.sigma_dvl, 3)
+        if self.dvl_outlier_ratio > 0.0 and self.rng.random() < self.dvl_outlier_ratio:
+            direction = self.rng.normal(0.0, 1.0, 3)
+            norm = float(np.linalg.norm(direction))
+            if norm > 1e-9:
+                direction /= norm
+            v_body = v_body + direction * self.dvl_outlier_scale * self.rng.uniform(0.5, 1.0)
+        return v_body
 
     def depth(self, p):
         return -float(p[2]) + float(self.rng.normal(0.0, self.sigma_depth))
