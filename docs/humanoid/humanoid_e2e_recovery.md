@@ -250,6 +250,43 @@ python3 -m pytest test -q
 # 权重非全零、零权重必须失稳
 ```
 
+### 5.9 诊断脚本（diag/）
+
+第 4 节的每个实测数字都能用 `diag/` 里的 14 个脚本重跑出来。它们按证据链编号，
+各自只回答一个问题，不参与主流程；清单与逐条命令见
+[`src/humanoid/humanoid_e2e_recovery/diag/README.md`](../../src/humanoid/humanoid_e2e_recovery/diag/README.md)。
+
+复现"为什么纯视觉只能 3.5 s"的最小组合：
+
+```bash
+cd src/humanoid/humanoid_e2e_recovery              # 模块根目录
+python3 diag/02_probe_strong_push.py --episodes 3              # 采强扰动探针数据（约 90 s）
+python3 diag/03_correlation_ceiling.py --dataset data/diag_probe.npz   # 信息量上限：R²=0.999
+python3 diag/04_std_floor_scan.py --dataset data/diag_probe.npz        # 兜底扫描：0.02 最优
+python3 diag/09_blend_sweep.py --betas 0 0.3 --seconds 10     # 混合控制：β=0 3.53 s 倒，β=0.3 站满 10 s
+```
+
+对应关系：
+
+| 第 4 节的结论 | 复现脚本 |
+|---|---|
+| 图像信息够（单像素 corr 0.84、岭回归 R²=0.999） | 01、03 |
+| 兜底取 0.02（1e-3→0.30，0.02→0.98） | 04 |
+| 旧权重"站稳 10 s"是常数 +55 的巧合 | 07（含常数 ±55 对照） |
+| 网络在跟踪专家（61.0/20.15 vs 56.6/22.80） | 08 |
+| 只能 3.5 s：缺速度阻尼，补 30% 专家力矩即站满 | 09 |
+| 排除延迟 / 帧间差分 / 零偏 / DAgger | 10、11、12、13 |
+| 入库权重的生成过程（4 272 条 → 3.53 s） | 14 |
+
+三点使用注意：
+
+- `data/` 被 `.gitignore` 排除，数据集要先 `python3 main.py --collect --episodes 8` 采；
+- 闭环类脚本的 `--seconds` 必须长于预期失稳时间，否则会把"还没倒"读成"站稳"；
+- 探针数据与 `X_mean/X_std` 绑定当前渲染后端，换后端（EGL → Windows 原生）必须重采重训，
+  否则会重现"输入整体偏移 → 第一层 ReLU 全死 → 输出恒定"的故障；
+  旧版权重可用 `git show afb05a539:src/humanoid/humanoid_e2e_recovery/models_trained/e2e_policy.npz` 取回，
+  配合 `diag/07_closedloop_probe.py --weights <旧权重>` 即可复现"网络踝 pitch 恒为 2.67、std 0.00"。
+
 ## 演示动图
 
 ![端到端视觉平衡控制](../img/humanoid/e2e_recovery_demo.gif)

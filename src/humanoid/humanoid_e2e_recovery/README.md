@@ -79,8 +79,12 @@ humanoid_e2e_recovery/
 │   ├── dataset.py                       # 专家数据采集
 │   ├── train.py                         # 训练（输出逐维标准化）
 │   └── predictor.py                     # 端到端推理
+├── diag/                                # 诊断脚本（14 个，复现文档里的实测数值）
+│   ├── README.md                        # 每个脚本回答什么问题 / 命令 / 期望输出
+│   ├── _common.py                       # 路径与策略封装
+│   └── 01…14_*.py                       # 按证据链顺序编号
 ├── test/test_e2e.py                     # 单元测试（含判别力回归测试）
-├── data/e2e_dataset.npz                 # 采集数据集
+├── data/e2e_dataset.npz                 # 采集数据集（.gitignore 排除，需自行采集）
 └── models_trained/e2e_policy.npz        # 训练权重
 ```
 
@@ -91,9 +95,8 @@ pip install -r requirements.txt
 
 python3 main.py --check                  # 自检（含全零权重对照）
 python3 main.py --collect --episodes 12  # 采集专家数据
-python3 main.py --train                  # 训练（200 epochs）
-python3 main.py --demo --force 50        # 演示：先空站，再 50 N 推扰；纯网络约 3.3 s 后失稳
-python3 generate_gif.py --out demo.gif   # 逐帧离屏渲染录演示 gif（overview 机位，30 fps）
+python3 main.py --train                  # 训练（80 epochs）
+python3 main.py --demo --force 50        # 演示：先空站 3 s，再 50 N 推扰后 10 s
 
 python3 -m pytest test -q                # 单元测试
 ```
@@ -178,6 +181,31 @@ python3 -m pytest test -q                # 单元测试
 因此 `main.py --check` 把端到端判据定为 **3 s**（`E2E_STAND_SECONDS`），并把 10 s 作为**报告项**打印实测值、不参与通过/失败判定。要真正达到纯视觉 10 s，需要从架构上补速度信息：多帧时序输入（差分、光流）、把本体感知拼进输入，或提高渲染分辨率让姿态变化可见。
 
 > 旧文档里"端到端网络 5.5° 站稳 10 s"是**常数 +55 N·m 的效果**：旧权重踝 pitch 恒为 +55，恰好落在能站住的那个常数上，是巧合而非学到了控制。常数 0 或常数 -55 都会在 1.2–1.3 s 跌倒，与全零权重同级。
+
+## 诊断脚本（diag/）
+
+上面每个数字都能用 `diag/` 里的脚本重跑出来。14 个脚本按证据链编号，各自只回答一个问题，
+清单、命令与期望输出见 [diag/README.md](diag/README.md)。
+
+```bash
+python3 diag/02_probe_strong_push.py --episodes 3           # 采强扰动探针数据（约 90 s）
+python3 diag/03_correlation_ceiling.py --dataset data/diag_probe.npz   # 信息量上限 R²=0.999
+python3 diag/04_std_floor_scan.py --dataset data/diag_probe.npz        # 兜底扫描，0.02 最优
+python3 diag/09_blend_sweep.py --betas 0 0.3 --seconds 10   # 混合控制：0.3 就站满 10 s
+python3 diag/14_pipeline_check.py --episodes 8              # 全链路复现入库权重
+```
+
+| 想验证的结论 | 用哪个脚本 |
+|---|---|
+| 图像信息够不够 | 01、03 |
+| 兜底值为什么取 0.02 | 04（1e-3→0.3011，0.02→0.9817） |
+| 旧权重为什么"站稳 10 s"是假象 | 07（常数 ±55 对照） |
+| 网络是不是在跟专家 | 08（逐帧对照） |
+| 为什么只能 3.5 s | 09（β=0.3 补齐阻尼即站满） |
+| 排除项（延迟/差分/零偏/DAgger） | 10、11、12、13 |
+| 入库权重怎么来的 | 14（采集→训练→闭环） |
+
+> 探针数据与 `X_mean/X_std` 绑定当前渲染后端；换后端（例如从 EGL 换到 Windows 原生）必须重采重训，否则会重新触发"输入整体偏移 → 第一层 ReLU 全死"的故障。
 
 ## 与 PR1 的对比
 
