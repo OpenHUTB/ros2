@@ -136,9 +136,12 @@ nav:
     - 肌肉驱动的夹爪抓取: './musculoskeletal/msk_gripper.md'
     - 肌肉驱动的下肢关节与步态: './musculoskeletal/muscle_leg_gait.md'
     - 膝关节肌肉骨骼仿真与轨迹跟踪: './musculoskeletal/knee_tracking.md'
-    - 拮抗共激活分析（二连杆机械臂肌肉骨骼仿真）: './muscle_arm_cocontraction_simulation.md'
+    - 给定黑箱关节轨迹，反推肌肉参数: './musculoskeletal/msk_muscle_ident.md'
+
 - 机械臂操作:
     - MuJoCo 单臂抓取与 π0 推理接口复现（CPU 演示）: './manipulation/pi0_mujoco_grasp.md'
+r
+    - 拮抗共激活分析（二连杆机械臂肌肉骨骼仿真）: './muscle_arm_cocontraction_simulation.md'
 - 地面载具:
     - 离线测试接入 GitHub Actions: './ground/offline_checks.md'
     - 编码器量化误差与速度估计滤波对比: './ground/encoder_quantization_velocity.md'
@@ -210,6 +213,7 @@ nav:
     - MuJoCo 两轮自平衡小车: './ground/mujoco_balance_car.md'
     - MuJoCo 差速小车电机温升模型: './ground/mujoco_motor_thermal_model.md'
     - MuJoCo 地面差速小车侧倾/翻车风险预测与主动限速: './ground/mujoco_car_rollover_guard.md'
+    - ROS 2 电机温度保护节点: './ground/mujoco_motor_thermal_guard.md'
     - MuJoCo 地面差速小车单侧驱动失效检测与差速补偿: './ground/mujoco_car_drive_fault.md'
     - MuJoCo 四轮独立悬架越野小车仿真: './ground/mujoco_offroad_suspension.md'
     - 2D 小车目标追踪仿真: './ground/car_2d_target_tracker.md'
@@ -237,6 +241,7 @@ nav:
     - ROS2 DWA 局部规划器随机场景压力测试与舒适性评价: './ground/ros2_dwa_benchmark.md'
     - ROS2 A*+DWA 的 Gazebo 三维验证: './ground/ros2_dwa_gazebo.md'
     - UWB 多基站测距定位布站几何精度对比评测: './ground/uwb_baseline_geometry_eval.md'
+    - 电机温度时序预测与误差评估: './ground/mujoco_motor_temperature_predictor.md'
     - TurtleBot3 自主导航与避障参数优化: './ground/turtlebot3_auto_nav/README.md'
     - TurtleBot3 键盘遥控: './ground/turtlebot3_keyboard_teleop.md'
     - ROS2 TurtleBot3 激光雷达避障实验: './ground/ros2_turtlebot3_obstacle.md'
@@ -399,6 +404,7 @@ nav:
     - 无人机执行器故障注入与控制退化观测: './air/uav_actuator_fault_sim.md'
     - 四旋翼吊挂负载防摆控制: './air/uav_slung_load.md'
     - 无人机桨故障健康度估计（1D-CNN+GRU）: './air/uav_rotor_fault_detector_nn.md'
+    - 无人机桨故障下的神经容错控制: './air/uav_neural_fault_tolerant_control.md'
     - 无人机编队飞行: './air/uav_formation_flight.md'
     - 移动地面目标的后方等距跟随: './air/uav_moving_target_follow.md'
     - 神经安全过滤器: './air/uav_neural_safety_filter.md'
