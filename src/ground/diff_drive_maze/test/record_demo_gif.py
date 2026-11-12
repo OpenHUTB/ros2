@@ -30,9 +30,9 @@ from PIL import Image  # noqa: E402
 
 import main as m  # noqa: E402
 
-W, H = 960, 720
-RECORD_EVERY = 8    # 每 8 个仿真步录一帧
-FRAME_MS = 40       # 每帧 GIF 延迟（ms）
+W, H = 768, 576
+RECORD_EVERY = 16   # 每 16 个仿真步录一帧（16*5ms=80ms 实时）
+FRAME_MS = 80       # 每帧 GIF 延迟（ms）
 
 
 def _default_out() -> Path:

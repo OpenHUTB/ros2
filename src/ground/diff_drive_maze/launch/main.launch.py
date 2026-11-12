@@ -18,12 +18,13 @@ PACKAGE_NAME = "diff_drive_maze"
 
 def generate_launch_description():
     # install 空间：入口脚本装在 lib/<pkg>/main.py；未安装时回退到源码包根。
+    # launch 文件位于 <pkg>/launch/，dirname(__file__) 退一级 ".." 即到包根 main.py。
     try:
         pkg_prefix = get_package_prefix(PACKAGE_NAME)
         main_script = os.path.join(pkg_prefix, "lib", PACKAGE_NAME, "main.py")
     except Exception:
         main_script = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)), "..", "..", "main.py")
+            os.path.dirname(os.path.abspath(__file__)), "..", "main.py")
 
     headless = LaunchConfiguration("headless")
 

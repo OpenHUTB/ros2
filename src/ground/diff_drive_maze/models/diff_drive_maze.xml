@@ -17,6 +17,7 @@
       <freejoint/>
       <geom name="chassis" type="box" size="0.2 0.1 0.05" rgba="0.2 0.4 0.8 1"/>
       <inertial pos="0 0 0" mass="2.0" diaginertia="0.01 0.01 0.02"/>
+      <!-- 后轮：由 velocity 执行器驱动，差速逆解得到左右轮角速度 -->
       <body name="left_wheel" pos="-0.08 0.11 -0.05">
         <joint name="left_wheel_joint" type="hinge" axis="0 1 0"/>
         <geom name="left_wheel" type="cylinder" fromto="0 -0.03 0 0 0.03 0" size="0.05" rgba="0.1 0.1 0.1 1" friction="1.0 0.1 0.1"/>
@@ -25,6 +26,16 @@
       <body name="right_wheel" pos="-0.08 -0.11 -0.05">
         <joint name="right_wheel_joint" type="hinge" axis="0 1 0"/>
         <geom name="right_wheel" type="cylinder" fromto="0 -0.03 0 0 0.03 0" size="0.05" rgba="0.1 0.1 0.1 1" friction="1.0 0.1 0.1"/>
+        <inertial pos="0 0 0" mass="0.1" diaginertia="0.0001 0.0001 0.0001"/>
+      </body>
+      <body name="front_left_wheel" pos="0.08 0.11 -0.05">
+        <joint name="front_left_wheel_joint" type="hinge" axis="0 1 0"/>
+        <geom name="front_left_wheel" type="cylinder" fromto="0 -0.03 0 0 0.03 0" size="0.05" rgba="0.3 0.3 0.3 1" friction="1.0 0.1 0.1"/>
+        <inertial pos="0 0 0" mass="0.1" diaginertia="0.0001 0.0001 0.0001"/>
+      </body>
+      <body name="front_right_wheel" pos="0.08 -0.11 -0.05">
+        <joint name="front_right_wheel_joint" type="hinge" axis="0 1 0"/>
+        <geom name="front_right_wheel" type="cylinder" fromto="0 -0.03 0 0 0.03 0" size="0.05" rgba="0.3 0.3 0.3 1" friction="1.0 0.1 0.1"/>
         <inertial pos="0 0 0" mass="0.1" diaginertia="0.0001 0.0001 0.0001"/>
       </body>
     </body>
