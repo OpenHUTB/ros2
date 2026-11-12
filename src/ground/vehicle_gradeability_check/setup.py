@@ -23,9 +23,9 @@ setup(
     zip_safe=True,
     entry_points={
         "console_scripts": [
-            "gradeability_check = vehicle_gradeability_check.nodes:main_checker",
-            "gradeability_demo_sim = vehicle_gradeability_check.nodes:main_simulator",
-            "gradeability_offline_demo = vehicle_gradeability_check.demo:main",
+            "main_check = vehicle_gradeability_check.nodes:main_checker",
+            "main_sim = vehicle_gradeability_check.nodes:main_simulator",
+            "main_demo = vehicle_gradeability_check.demo:main",
         ]
     },
 )
