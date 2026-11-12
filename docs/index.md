@@ -63,6 +63,7 @@ ROS每章节运行代码:
     * [URDF 四轮小车建模与 RViz 显示](./chapter/urdf_car_modeling.md)
 * [第 5 章](./chapter/chap5.md) - 机器人感知
     * [行人隐私脱敏视觉检测节点](./privacy_mask/README.md)
+    * [基于激光雷达扫描的神经网络障碍物分类](./chapter/chap5/lidar_obstacle_nn.md)
 * [第 6 章](./chapter/chap6.md) - 机器人 SLAM 与自主导航
     * [自建小车 Gazebo GMapping 建图](./chapter/urdf_car_gmapping.md)
 * [第 7 章](./chapter/chap7.md) - 阿克曼四轮小车运动控制
@@ -79,6 +80,7 @@ ROS每章节运行代码:
     * [MuJoCo 双自由度机械臂画正方形](./chapter/mujoco_two_dof_arm_square.md)
     * [MuJoCo 二连杆机械臂 IK 画圆](./chapter/mujoco_arm_ik.md)
 * [第 9 章](./chapter/chap9.md) - ROS 2
+    * [Gazebo 仿真相机与图像话题验证](./chapter/chap9/gazebo_camera_sim.md)
 * [第 10 章](./chapter/turtlebot3_gazebo_control.md) - Turtlebot3 Gazebo键盘控制
 
 
@@ -94,6 +96,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [双足步态生成与 ZMP 稳定性](./humanoid/bipedal_gait_zmp.md)
 * [基于三次样条插值的双足多步态平滑切换](./humanoid/biped_cubic_spline_gait_switch.md)
 * [人形机器人键盘运动控制](./humanoid/humanoid_keyboard_control.md)
+* [关节轨迹重定时：约束饱和下的最快时间缩放](./humanoid/joint_traj_retime.md) —— 自然三次样条 + 速度/加速度约束下的最大常数缩放，14 项测试
 * [人形机器人平衡控制与外力抗扰恢复](./humanoid/humanoid_push_recovery.md)
 * [人形机器人 PPO 神经网络平衡控制](./humanoid/humanoid_ppo_locomotion.md)
 * [人形机器人 2D 激光雷达 CNN 感知与避障](./humanoid/humanoid_lidar_nn_perception.md)
@@ -110,6 +113,8 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [人形机器人轻量级 ZMP 步行控制基线](./humanoid/humanoid_zmp_walking.md)
 * [人形机器人深度图姿态估计与平衡控制](./humanoid/humanoid_depth_pose_control.md)
 * [关节指令的 QoS 与时延影响评估](./humanoid/joint_qos_latency_eval.md)
+
+* [人形机器人支撑多边形与倾倒裕度核算](./humanoid/humanoid_support_margin.md) —— 双足凸包、稳定裕度与临界推力/冲量；默认 40 kg 样机裕度 125 mm，61 N 推力或 17.5 N·s 冲量即可推倒
 * [人形机器人 IMU 姿态解算：互补滤波与 Madgwick 对比](./humanoid/humanoid_imu_attitude.md)
 * [人形机器人离线语音指令控制](./humanoid/humanoid_voice_command.md)
 * [人形机器人跑步牛顿第二定律理论计算与演示](./humanoid/humanoid_newton_running.md)
@@ -121,6 +126,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [肌肉骨骼人基础](./musculoskeletal/musculoskeletal_basics.md)
 * [基于关节状态与肌腱力反馈的 MuJoCo 肌肉骨骼肘关节神经网络轨迹控制](./musculoskeletal/mujoco_musculoskeletal_elbow_nn_control.md)
 * [肌肉-肌腱串联弹性实验](./musculoskeletal/msk_tendon_basics.md) —— 单关节 + 拮抗肌，肌腱储能/传力/释放三组实验
+* [肌肉协同降维与恢复质量评估](./musculoskeletal/muscle_synergy_lab.md) —— NMF 求协同数，用 VAF 与子空间夹角区分“重建得像”与“协同是真的”，13 项测试
 * [MuJoCo肌肉骨骼人键盘遥操作行走踢腿蹲起](./musculoskeletal/msk_human_walking_teleop.md) —— 22 条 Hill 肌肉驱动 13 DoF 全身模型，平地/坡道/负载三场景
 * [MuJoCo 肌肉骨骼灵巧手：键盘遥操作与神经网络肌肉激活控制](./musculoskeletal/msk_hand_teleop.md)
 * [MuJoCo 双关节肌肉骨骼手臂到达控制](./musculoskeletal/msk_arm_reach.md)
@@ -168,10 +174,12 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [里程计轨迹记录](./ground/odom_trace_recorder.md)
 * [转向执行器滞后](./ground/steering_actuator_lag.md)
 * [刹车距离核算](./ground/braking_distance_check.md)
+* [半主动悬架车身姿态控制](./ground/semi_active_suspension.md) —— 7 自由度整车垂向模型（车身垂向/俯仰/侧倾 + 四个非簧载质量），天棚 + 地棚混合阻尼把过减速带车身加速度峰值压低 9.3%、制动点头 16.3%、过弯侧倾 9.2%，随机路面最小轮荷提高 5.8%，并说明稳态姿态改不了、只能削过渡过程
 * [换挡策略与闭环控制](./ground/gear_shift_policy.md)
 * [牵引车挂车折刀判定](./ground/trailer_kinematics.md)
 * [速度曲线规划](./ground/speed_profile_check.md)
 * [转弯扫掠校验](./ground/turning_sweep_check.md)
+* [爬坡能力与牵引力余量核算](./ground/vehicle_gradeability_check.md) —— 按整车质量、坡度、车速与附着系数核算所需/可用牵引力和余量，区分可爬坡、动力不足与打滑风险
 * [车辆几何通过性核算](./ground/passability_check.md) —— 接近角/离去角/纵向通过角 + 沿剖面逐位姿判断车头/车底/车尾会不会蹭、蹭多深
 * [RQT 插件](./ground/rqt_plugin.md)
 * [激光雷达点云语义分割](./ground/carla_lidar_pointcloud_segmentation.md)
@@ -203,6 +211,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [双惯量传动扭振的状态反馈极点配置](./ground/drivetrain_torsion_state_feedback.md) —— 用状态反馈把扭振阻尼比 0.134 提到 0.70，不用改机械结构
 
 * [MuJoCo 差速小车到达目标点（go-to-goal）](./ground/mujoco_diff_drive_go_to_goal.md)
+* [MuJoCo 差速小车射线绕行避障](./ground/mujoco_obstacle_avoidance.md)
 * [MuJoCo 地面小车射线感知与分级减速避障](./ground/mujoco_car_avoidance.md)
 * [MuJoCo 地面小车神经网络端到端避障](./ground/mujoco_car_nn_avoidance.md)
 * [MuJoCo 两轮自平衡小车](./ground/mujoco_balance_car.md)
@@ -226,6 +235,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [ROS2 A*+DWA 的 Gazebo 三维验证](./ground/ros2_dwa_gazebo.md)
 * [UWB 多基站测距定位布站几何精度对比评测](./ground/uwb_baseline_geometry_eval.md) —— 四种布站构型的 GDOP 与蒙特卡洛定位精度对比
 * [TurtleBot3 仿真自主导航与避障参数优化](./ground/turtlebot3_auto_nav/README.md)
+* [TurtleBot3 键盘遥控](./ground/turtlebot3_keyboard_teleop.md) —— w/s/a/d 差速底盘遥控，松开按键 0.5 秒自动归零悬停
 * [ROS2 TurtleBot3 激光雷达避障实验](./ground/ros2_turtlebot3_obstacle.md) —— 课程作业二独立归档：/scan 前方扇区测距、量程过滤、左右择优转向与断流看门狗（最小闭环）
 * [地面无人车视觉 SLAM 建图与自主导航](./ground/ugv_visual_slam_nav.md) —— 单目 RGB-D 做 EKF-SLAM 与占据栅格，A\* 规划 + 纯追踪执行，并排训练端到端 CNN 做对照
 * [DVS 事件相机背景活动抑制与运动目标跟踪](./ground/dvs_event_motion_tracking.md) —— 直接解析 CARLA 13 字节事件流，用 BAF 学习静态树冠噪声、残差连通域分割运动车辆，实测抑制 79.7% 背景事件、检出率 100%、质心 MAE 2.35 px，事件量仅为等价整帧像素的 3.21%
@@ -265,6 +275,8 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [视觉-惯性时间偏移互相关估计](./ground/vio_time_offset_estimation.md) —— 陀螺与视觉角速率归一化互相关 + 抛物线插值；200 次试验偏移误差 RMSE 0.89 ms，补偿后残差 0.1911 → 0.0907（改善 52.5%）
 * [ROS2 差速机器人 A* 全局规划与 DWA 局部避障](ground/ros2_dwa_avoidance.md) —— A* 全局路线 + DWA 局部跟踪，5 场景 3 控制器对比，窄走廊与 U 形陷阱通过
 * [差速机器人里程计标定与神经网络滑移补偿（ROS 1 + MuJoCo）](./ground/diff_drive_odom_calib.md) —— MuJoCo 物理仿真下的 catkin 包；两个解耦实验辨识路程/轮距系数，再用 MLP 学转向滑移的非线性补偿，方形路径终点误差 2.91 m → 1.94 m → 0.98 m
+
+* [差速底盘驱动系统选型核算](./ground/diff_drive_powertrain_sizing.md) —— 滚动/坡度/加速/风阻合阻力折算轮边转矩、轮速与功率；默认 12 kg 底盘直接驱动 1.536 N*m 超持续转矩，按 16.76 减速比配箱后降到 0.092 N*m
 * [IMU 噪声 Allan 方差辨识与倾角滤波整定](./ground/imu_allan_noise_identification.md) —— 1 h 静止陀螺记录辨识 ARW（中位数 +0.46%）与零偏不稳定性（+3.77%，95% 区间 [−16.7, +44.4]），ARW→角度噪声、BI→偏置游走；倾角卡尔曼 NEES 1.61，过程噪声偏小 4 倍时 10.07
 * [基于 IMU 的路面异常检测（坑洼 / 减速带 / 粗糙路面）](./ground/imu_road_anomaly_detection.md) —— 三轴重力投影（静态姿态）、3σ 滑窗能量检测与规则分类，四分之一车仿真 + CARLA 实采两套带真值数据，事件挂接 GNSS 经纬度
 * [无动力被动行走（轮辐式 Rimless Wheel）](./ground/passive_walker.md)
@@ -274,6 +286,9 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [前视相机车道偏离预警（视觉横向偏移与地图真值对照）](./ground/carla_visual_lane_departure_warning.md) —— 用前视图像估计横向偏移，并与地图真值逐帧对照
 * [差速 AGV 坡道起步辅助（防溜车）](./ground/hill_start_assist.md) —— MuJoCo 12° 斜坡，四轮轮角保持 PD + 坡度前馈，松刹车 3 s 后溜 2.18 m 降到 0.008 m
 * [地面移动底盘速度指令安全监督](./ground/cmd_vel_guard.md) —— 对 `/cmd_vel` 做限幅、急停、超时与非法值拦截，无需仿真环境
+* [差速小车双侧墙通道居中 PD 巡航仿真](./ground/diff_drive_corridor_centering.md) —— 纯 Python PD 控制器只用左右墙与前方三路测距把差速底盘保持在直通道中线，配套 2D 运动学虚拟测距节点，离线仿真给出轨迹、墙距与速度指令曲线
+* [巡线小车仿真（色带中线 PD 跟踪）](./ground/line_follower_car.md) —— 一排虚拟光电传感器读取线偏差，pure pursuit 预瞄 + PD 转向闭环引导沿黑线巡线
+* [窄道会车让行仿真（避让龛规则）](./ground/narrow_giveway_passing.md) —— 双向共用窄路两侧设避让龛，对向小车按距离远近决定进龛等待，交汇后驶出，纯 NumPy 二维仿真
 * [VRU 冲突风险图](./ground/vru_conflict_risk_map.md) —— 按时间对齐自车与行人、儿童和骑行者轨迹，输出最小距离、TTC 和风险等级
 * [里程计健康监视（打滑 / 堵转 / 反向检测）](./ground/odom_health_monitor.md) —— 比较 `/cmd_vel` 与 `/odom` 的速度比值，识别打滑、堵转与反向运动
 * [轮速传感器 + 龙伯格观测器估计传动轴扭角](./ground/wheel_speed_observer.md) —— 只测轮速即可反推传动轴扭角，给出带宽-噪声的量化权衡
@@ -294,6 +309,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [无人机动态电子围栏预测预警](./air/uav_dynamic_geofence_guard.md) —— 针对移动临时禁飞区计算预测净空、最近接近时间和规避方向，并附 ROS 2 Humble 实跑证据
 
 * [winter 场景无人机圆周飞行](./air/winter_circle.md)
+* [无人机航向角 PD 稳定控制与阶跃转向仿真](./air/uav_yaw_stabilize.md) —— 阵风力矩与往复风扰下的航向保持精度、阵风恢复时间，附实现动图
 * [AirSim ROS 1 Noetic PPO 联调](./air/airsim_rl_planner_ros1.md)
 * [无人机制动旧入口](./ground/mujoco_drone_distance_stop.md)
 
@@ -342,6 +358,8 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [建立虚拟机和空域载具之间的连接](./air/setup_and_connect.md)
 * [无人机目标高度限幅、变化率约束与超时保持](./air/uav_altitude_command_guard.md)
 * [无人机偏航指令最短路径与角速度限幅](./air/uav_yaw_command_guard.md) —— 将偏航误差映射到 `[-pi, pi)`，避免跨 180° 时绕远路，并限制 `Twist.angular.z`
+
+* [多旋翼重心偏移配平与饱和包线核算](./air/uav_cg_trim_envelope.md) —— 四电机悬停拉力分配、配平倾角与饱和包线；默认 1.2 kg 样机重心偏 3 mm 即俯仰 5.7°，6 N 电机上限对应 ±0.13 m 配平包线
 * [无人机雷达DQN建图与端到端控制](./air/uav_lidar_dqn_navigation/index.md) —— 24 扇区雷达特征 + Dueling Double DQN 自主学习避障导航，gmapping 同步建图，图像端到端 DQN 控制
 * [DQN 策略离线评估](./air/uav_lidar_dqn_navigation/policy_eval.md) —— 不依赖 ROS/AirSim，汇总训练日志并复现“正前方若干米有墙”的 Q 值与动作探测
 
@@ -424,6 +442,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [无人机桨故障健康度估计](./air/uav_rotor_fault_detector_nn.md) —— 用机载 IMU 与控制器指令（13 维特征）经 1D-CNN+GRU 实时回归四桨剩余推力权限，单桨完全失效 0.10 s 检出、误报率 0，同时提供 ROS2 节点与在线估计接口
 
 * [无人机编队飞行](./air/uav_formation_flight.md) —— 长机按航点巡航、僚机保持队形（一字/纵队/三角可动态切换），三架共用一条 AirSim RPC，依次起飞、低空展开后进入任务
+* [移动地面目标的后方等距跟随](./air/uav_moving_target_follow.md) —— 解析截获预测 + standoff 参考生成 + 偏移方向限速，MuJoCo 真飞跟随误差 0.1~4.6 m
 * [神经安全过滤器](./air/uav_neural_safety_filter.md)
 * [无人机控制权限饱和与积分饱和监测](./air/uav_control_authority_guard.md) —— 对比期望与实际角速度、执行器饱和和电压下降，识别控制权限不足并输出机动限制建议
 
