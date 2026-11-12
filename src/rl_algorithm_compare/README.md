@@ -58,7 +58,32 @@ python3 compare.py --out results
 
 # 渲染推理 gif（无 OpenGL 环境自动降级到 matplotlib 绘制）
 python3 render_gif.py --model results/dqn_mlp1.pkl --algo dqn --episodes 1
+
+# 多随机种子基准评测（均值 ± 标准差，结果写 results/benchmark/）
+python3 benchmark.py --seeds 0,1,2 --episodes 200
 ```
+
+`train.py` 也支持 `--seed` 复现单次训练；训练循环已抽成 `train_agent()`，供 `benchmark.py` 复用。
+
+## 基准评测
+
+单次训练曲线抖动很大，`benchmark.py` 对每组配置跑多个随机种子：
+
+```bash
+cd src/rl_algorithm_compare
+python3 -m rl_algorithm_compare.benchmark --seeds 0,1 --episodes 120
+python3 -m unittest discover -s test      # 19 个用例，不需要 MuJoCo
+```
+
+输出 `results/benchmark/summary.csv`（各配置均值/标准差/最值）与 `curves.csv`（跨种子平均曲线），
+该目录已在 `.gitignore` 中忽略。
+
+> 种子同时控制**环境初值、ε-greedy 探索、回放采样和网络初始权重**（`MLP(seed=…)`）。
+> 建议至少跑 5 个种子：初始化方差很可观，2 个种子容易得出"稳定收敛"的假象
+> （实测一层 DQN：固定初始化 std≈0.8，纳入初始化后 std≈39.9）。
+
+耗时参考：2 个种子 × 120 回合（3 组配置）在本机约 3 分钟；只跑 DQN 两组配置约 2 分钟。
+回合数越大越慢，CI 里建议 `--episodes 20` 起步。
 
 ## 结果
 

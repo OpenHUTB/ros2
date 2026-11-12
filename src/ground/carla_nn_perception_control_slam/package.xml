@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>carla_nn_perception_control_slam</name>
+  <version>1.0.0</version>
+  <description>
+    基于神经网络的 CARLA 无人车感知、规划、控制与 SLAM 仿真模块：
+    键盘运动控制、YOLOv5 感知与轨迹跟踪、激光建图与 A* 导航、PilotNet 端到端驾驶。
+  </description>
+  <maintainer email="yu071110@users.noreply.github.com">yu071110</maintainer>
+  <license>MIT</license>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-opencv</exec_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

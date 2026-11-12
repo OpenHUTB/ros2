@@ -1,0 +1,10 @@
+{
+  "map": "Carla/Maps/Town10HD_Opt",
+  "grid_cells_known": 49330,
+  "map_frames": 130,
+  "nav_frames": 110,
+  "a_star_waypoints": 112,
+  "avg_speed_kmh": 24.46,
+  "min_obstacle_distance_m": 3.42,
+  "elapsed_s": 54.4
+}
