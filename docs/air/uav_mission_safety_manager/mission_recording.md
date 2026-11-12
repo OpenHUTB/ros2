@@ -91,3 +91,77 @@ ROS_DOMAIN_ID=97 ROS_LOCALHOST_ONLY=1 python3 \
 脚本启动真实 launch 和独立记录进程，在 demo 中验证三航点成功、暂停/恢复后客户端取消、返航抢占及最终落地；正常停止进程后实际执行安装的 `mission_report`，校验 JSONL、三个任务的终态、暂停时长、距离和 CSV 行数。原始状态和报告写入指定目录，不应提交仓库。
 
 本功能已在 Ubuntu 22.04 / ROS 2 Humble 的本地 demo 和 OpenHUTB Air 场景完成验证。AirSim 覆盖三航点成功、暂停/恢复后客户端取消、返航抢占及最终落地；独立记录器生成完整 JSONL，离线 JSON/CSV 的三个任务终态与 ROS 观测一致。起飞 RPC 仍可能返回 False，离地由遥测确认；该既有异常未修复。尚未验证 Foxy、真机、磁盘耗尽或进程崩溃下的完整行为。
+
+
+## 首次集成验证结果 {#integration-validation}
+
+该轮与下文交互手动复测分别进行，不能合并样本数或混用测量值。环境为 WSL2 Ubuntu 22.04 / ROS 2 Humble / Python 3.10.12、Windows OpenHUTB Air 屋顶场景；AirSim 客户端 1.8.1、msgpack-rpc-python 0.4.1、tornado 4.5.3、numpy 1.21.5。模拟器发行构建号未确定。
+
+两包构建、rosdep 检查、63 项单元测试（原有 54 项与新增 9 项）通过；真实 launch 的 demo 记录冒烟、原 Action 冒烟及 MkDocs 构建通过。demo 控制器和记录器在不同进程运行，导出任务如下：
+
+| demo 任务 | 队列终态 | 完成/总数 | 观测时长 (s) | 观测暂停 (s) | 采样距离 (m) |
+| --- | --- | --- | --- | --- | --- |
+| 三航点 | COMPLETED | 3/3 | 1.600 | 0.000 | 5.975 |
+| 暂停恢复后客户端取消 | CANCELED | 0/1 | 1.600 | 1.249 | 0.174 |
+| 返航抢占 | CANCELED | 0/1 | 0.003 | 0.000 | 0.000 |
+
+以上为本地运动适配器结果，不代表 AirSim 飞行动力学。三条均为 `demo`、`start_partial=false`，返航后的 `LANDED` 由 ROS 状态另行确认。
+
+AirSim 该轮起点 NED `[0,0,11.196054]`，航点 `[1,0,8.196054]`、`[2,0,8.196054]`、`[2,1,8.196054]`，速度均为 0.3 m/s。三航点 Action `SUCCEEDED`；暂停恢复后客户端取消为 Action `CANCELED`；返航抢占为 Action `ABORTED`、队列 `CANCELED`，随后 `RETURNING → LANDING → LANDED`。独立 AirSim 遥测确认 Landed，最终距该轮起点约 0.03292 m；本轮未观察到 FAILSAFE。
+
+| AirSim 任务 | 队列终态 | 完成/总数 | 观测时长 (s) | 观测暂停 (s) | 采样距离 (m) |
+| --- | --- | --- | --- | --- | --- |
+| 三航点 | COMPLETED | 3/3 | 10.400 | 0.000 | 2.964 |
+| 暂停恢复后客户端取消 | CANCELED | 0/1 | 3.600 | 3.247 | 0.263 |
+| 返航抢占 | CANCELED | 0/1 | 0.005 | 0.000 | 0.000 |
+
+AirSim 日志共 **482** 条状态样本，footer 与样本数一致，JSON/CSV 解析导出成功；三个任务均为 `airsim`、`start_partial=false`，终态未重复计数。第三条的零距离仅表示该队列片段未观察到位置变化，后续返航不计入已终止任务。
+
+起飞 RPC 返回 `False`，遥测确认离地；落地后 collision_info 报告屋顶对象接触，不据此宣称无碰撞或避障通过。飞行验证完成后，本地包装脚本只向 `ros2 run` 父进程发送 SIGINT，等待记录器退出超时；随后向记录器子进程及控制节点发送 SIGINT，均退出，完整 footer 和导出验证通过。这是测试收尾问题，原始失败输出保留，不将其计为飞行失败或数据丢失。数据来源为 [PR #656 的验证说明](https://github.com/OpenHUTB/ros2/pull/656)，原始日志和报告仅保留本地。
+
+## 交互手动复测结果 {#manual-validation}
+
+Windows OpenHUTB Air / WSL2 Ubuntu 22.04 / ROS 2 Humble。使用 [PR #656](https://github.com/OpenHUTB/ros2/pull/656) 提交 `743c6e37` 的已安装程序，独立记录器在连接和起飞前启动，落地后以 Ctrl+C 正常关闭。起点 NED 为 `[0,0,11.196103]`；三航点为 `[1,0,8.196103]`、`[2,0,8.196103]`、`[2,1,8.196103]`，速度均为 0.3 m/s。坐标仅适用于本次场景，不能直接作为其他起点的飞行指令。
+
+| 任务 | 队列终态 | 完成/总数 | 观测时长 (s) | 观测暂停 (s) | 采样距离 (m) |
+| --- | --- | --- | --- | --- | --- |
+| 三航点 | COMPLETED | 3/3 | 8.400 | 0.000 | 2.164 |
+| 暂停恢复后取消 | CANCELED | 0/1 | 167.086 | 158.439 | 0.896 |
+| 返航抢占 | CANCELED | 0/1 | 0.263 | 0.000 | 0.008 |
+
+日志 footer 与报告样本数均为 **6536**，模式仅为 `airsim`，三条任务均 `start_partial=false`。实际安装的 `mission_report` 成功生成 `summary.json` 和 `missions.csv`，终态持续发布没有重复形成任务。原始 JSONL 与生成报告保留本地，不提交源码仓库。
+
+三航点 Action 明确返回 `SUCCEEDED`。暂停时飞行状态和队列均为 `PAUSED`，恢复服务返回 `Accepted: EXECUTING`；取消服务返回 `return_code=0` 且 `goals_canceling` 非空，之后状态话题与报告确认队列 `CANCELED`。本轮未取得该目标的 Action 最终 `status=5`，不能据此声称完成 Action 最终取消状态取证。
+
+返航抢占任务返回 Action `status=6 / ABORTED`、队列 `CANCELED`；随后状态话题确认 `LANDED`、目标清空、`command_pending=false`，最终位置约 `[-0.031658,-0.005988,11.206094]`。后续返航落地不计入表中第三条已终止队列任务的时长与距离。
+
+本地辅助脚本以 heredoc 执行 Python 后调用 `input()`，因标准输入已被脚本占用而出现 `EOFError`，任务仍保持暂停；之后手动恢复并取消。158.439 秒包含截图和排查等待，不能写成预设的 3 秒。状态查询还遇到不支持的 CLI 参数及等待无输出。以上是辅助操作问题，保留取证限制，未据此追加不存在的成功结果。
+
+起飞 RPC 返回 `False`，位置遥测确认上升约 1.53 m 并进入 `EXECUTING`；既有异常没有修复。上述采样距离不代表精确航程、飞行误差或避障验证。本轮与首次集成验证分别记录，不沿用第四次 PR 的飞行数据。
+
+
+## Action 最终取消状态补充复测 {#cancel-result-validation}
+
+针对上一轮交互操作未取得 Action 最终取消状态的问题，使用第五次 PR 的已安装程序，在 OpenHUTB Air / WSL2 Ubuntu 22.04 / ROS 2 Humble 下重新执行集成复测。测试客户端保留 GoalHandle，在暂停、恢复后调用 `cancel_goal_async()`，再直接等待 `get_result_async()`；没有使用状态话题查询来推断结果。
+
+实际输出：
+
+```text
+three_waypoints: SUCCEEDED, completed=3; takeoff_rpc_result=False
+FINAL_CANCEL_RESULT: status=5, queue_state=CANCELED
+pause_resume_client_cancel: CANCELED; final status=5 verified by get_result_async()
+return_interrupt: Action ABORTED, queue CANCELED, then LANDED
+PASS: separate recorder, JSONL, pause timing, terminal deduplication, JSON/CSV exports
+```
+
+本轮起点 NED `[0,0,11.164961]`，三航点相对起点的水平偏移依次为 `[1,0]`、`[2,0]`、`[2,1]`，z 为起点上方 3 m，速度 0.3 m/s。随后朝起点方向提交慢速任务，暂停约 3 秒、恢复并取消；最后新任务由返航抢占，独立 AirSim 遥测确认 Landed，最终距本轮起点约 0.05590 m。上述数值仅属于本轮场景。
+
+控制节点与记录器分别运行，落地后均正常停止。记录器直接运行安装入口，避免只向 `ros2 run` 父进程发信号的旧收尾问题。JSONL footer 和报告样本数均为 **298**，三个任务均为 `airsim`、`start_partial=false`，实际报告入口成功导出 JSON/CSV：
+
+| 任务 | 队列终态 | 完成/总数 | 观测时长 (s) | 观测暂停 (s) | 采样距离 (m) |
+| --- | --- | --- | --- | --- | --- |
+| 三航点 | COMPLETED | 3/3 | 10.599 | 0.000 | 2.989 |
+| 暂停恢复后客户端取消 | CANCELED | 0/1 | 3.601 | 3.199 | 0.266 |
+| 返航抢占 | CANCELED | 0/1 | 0.002 | 0.000 | 0.000 |
+
+这轮明确补充了 Action 最终 `status=5 / CANCELED` 的直接证据，不改变上一轮查询未取得结果的事实，也不混用 482、6536 与 298 条样本的统计。起飞 RPC 仍返回 `False`，遥测确认已离地；落地后 collision_info 报告屋顶对象接触，不宣称无碰撞或避障验证。原始日志、终端输出和导出报告保留本地，不纳入仓库。

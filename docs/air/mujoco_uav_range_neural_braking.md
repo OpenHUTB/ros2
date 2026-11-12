@@ -4,8 +4,6 @@
 
 无人机沿固定航向接近静态障碍物，模型保留水平、竖直两个平移自由度，以及重力、质量、阻尼和碰撞。机体质量为 0.52 千克，参考高度为 1.2 米，物理步长为 0.01 秒；不包含姿态稳定、旋翼气动或真实飞控接口。
 
-![物理场景](../img/mujoco_uav_range_neural_braking/reference_scene.png)
-
 ## 控制原理
 
 `reference` 读取几何间距与真实速度作为参照；`range` 使用前向测距与距离差分估速；`mlp` 使用相同传感输入预测水平加速度。传感器比机身前缘向前安装 0.01 米，推理前补偿该偏移。
@@ -86,13 +84,69 @@ python train.py --data datasets --output models --epochs 350 --hidden-size 16
 
 几何参照与测距控制分别对应约 0.629 米和 0.668 米的间距，两者使用不同观测，不能混作同一组结果。神经控制在默认 1.5 米/秒场景无碰撞；3 米/秒超出训练速度范围，记录 4 个接触步。
 
-![神经控制曲线](../img/mujoco_uav_range_neural_braking/mlp_braking_curves.png)
+### 几何参照控制
 
-![神经制动过程](../img/mujoco_uav_range_neural_braking/mlp_braking.gif)
+![几何参照控制场景](../img/mujoco_uav_range_neural_braking/reference_scene.png)
+
+![几何参照控制的间距与速度响应](../img/mujoco_uav_range_neural_braking/reference_braking_curves.png)
+
+![几何参照控制的制动过程](../img/mujoco_uav_range_neural_braking/reference_braking.gif)
+
+### 测距控制
+
+![测距控制场景](../img/mujoco_uav_range_neural_braking/range_scene.png)
+
+![测距控制的间距与速度响应](../img/mujoco_uav_range_neural_braking/range_braking_curves.png)
+
+![测距控制的制动过程](../img/mujoco_uav_range_neural_braking/range_braking.gif)
+
+### 神经控制
+
+![神经控制场景](../img/mujoco_uav_range_neural_braking/mlp_scene.png)
+
+![神经控制的间距与速度响应](../img/mujoco_uav_range_neural_braking/mlp_braking_curves.png)
+
+![神经控制的制动过程](../img/mujoco_uav_range_neural_braking/mlp_braking.gif)
+
+曲线图对比 0、1.5、3 米/秒三种初速度下的表面间距和速度变化；动态图展示对应控制器的仿真过程。
 
 ## 检查与文件职责
 
-21 项自动化检查覆盖物理制动、高度恢复、测距失效、回合划分、模型保存加载、命令行参数提示、接触实验退出行为和 MLP 多速度评测。
+原有 21 项自动化检查覆盖物理制动、高度恢复、测距失效、回合划分、模型保存加载、命令行参数提示、接触实验退出行为和 MLP 多速度评测。
+
+## 场景扫描
+
+`scenario_sweep.py` 复用仿真模型，组合扫描初始位置、障碍物位置、初速度和高度，并输出逐场景结果与碰撞汇总：
+
+```
+python scenario_sweep.py --controller range --start-x=-8,-7 --wall-x 0 --speed 0,1.5 --height 1.2 --output results/range_sweep.json --csv-output sample_data/scenario_sweep.csv
+```
+
+JSON 汇总场景数量、碰撞场景数、最大碰撞步数和最小间距，并保留逐场景完整指标；CSV 将场景参数与仿真指标整理为固定列，便于表格筛选和对比。
+
+样例 CSV 由上述 MuJoCo 场景实际运行生成，包含起点位置、障碍位置、初速度、高度、步数、碰撞步数、最小间距和高度误差。
+
+场景扫描新增 4 项自动化测试，覆盖参数组合、空输入校验、CSV 字段与逐场景数据，以及命令行 JSON/CSV 输出。
+
+可直接对扫描 CSV 做参数分组分析，无需重跑仿真：
+
+```
+python scenario_analysis.py sample_data/scenario_sweep.csv --output sample_data/scenario_sensitivity.json
+```
+
+分析结果按起点、障碍位置、初速度和高度分别汇总样本数、平均/最差间距和样本碰撞占比，并按分组平均间距跨度排序。每次只按一个参数分组，其他参数合并统计；该结果用于描述当前扫描网格，不代表因果敏感度或实际碰撞概率。样例分析见 `sample_data/scenario_sensitivity.json`。
+
+分组分析新增 4 项自动化测试，覆盖统计口径、输入校验和命令行 JSON 输出。
+
+```mermaid
+flowchart LR
+    A[起点位置、障碍位置、初速度、高度] --> B[组合场景参数]
+    B --> C[逐场景运行 MuJoCo 仿真]
+    C --> D[记录间距、速度、碰撞指标]
+    D --> E[生成 JSON 汇总]
+    D --> F[生成逐场景 CSV]
+    F --> G[分组统计与鲁棒性排序]
+```
 
 | 文件 | 职责 |
 | --- | --- |
@@ -100,6 +154,7 @@ python train.py --data datasets --output models --epochs 350 --hidden-size 16
 | `simulation.py` | 物理步进、控制与指标 |
 | `main.py` | 运行与轨迹导出 |
 | `evaluate.py` | 多速度闭环比较与图形 |
+| `scenario_sweep.py` | 多参数场景扫描与汇总 |
 | `dataset.py` | 回合采样与划分 |
 | `mlp.py`、`train.py` | 神经模型、训练与误差计算 |
 | `launch/main.launch.py` | 仿真启动、控制器和权重参数 |

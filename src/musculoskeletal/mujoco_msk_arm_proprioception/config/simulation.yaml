@@ -1,0 +1,33 @@
+mujoco_msk_arm_proprioception:
+  ros__parameters:
+    sample_rate_hz: 100.0
+    delay_s: 0.03
+    length_noise_std_m: 0.0005
+    velocity_noise_std_m_s: 0.005
+    force_noise_std_n: 0.2
+    tendon_extension_noise_std_m: 0.0001
+    random_seed: 0
+    velocity_filter_tau_s: 0.02
+    muscle_names:
+      - shoulder_flexor
+      - shoulder_extensor
+      - elbow_flexor
+      - elbow_extensor
+      - biarticular_flexor
+      - biarticular_extensor
+    moment_arms_flat:
+      - -0.060
+      - 0.000
+      - 0.060
+      - 0.000
+      - 0.000
+      - -0.050
+      - 0.000
+      - 0.050
+      - -0.030
+      - -0.040
+      - 0.030
+      - 0.040
+    resting_lengths_m: [0.200, 0.200, 0.230, 0.230, 0.300, 0.300]
+    tendon_stiffness_n_m: [3500.0, 3500.0, 3000.0, 3000.0, 2500.0, 2500.0]
+    max_forces_n: [220.0, 220.0, 180.0, 180.0, 150.0, 150.0]
