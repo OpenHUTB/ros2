@@ -9,9 +9,10 @@ from __future__ import annotations
 import math
 
 import rclpy
-from geometry_msgs.msg import Point
+from geometry_msgs.msg import Point, PoseStamped
 from nav_msgs.msg import Path
 from rclpy.node import Node
+from rclpy.qos import DurabilityPolicy, HistoryPolicy, QoSProfile, ReliabilityPolicy
 from std_msgs.msg import String
 from std_srvs.srv import Trigger
 from visualization_msgs.msg import Marker, MarkerArray
@@ -22,6 +23,19 @@ from .colreg import ColregConfig
 SHIP_RGB = [(0.11, 0.32, 0.57), (0.78, 0.33, 0.17), (0.27, 0.52, 0.24)]
 SAFE_RGB = (0.57, 0.69, 0.82)
 TEXT_RGB = (0.12, 0.14, 0.16)
+
+# 轨迹只在启动和 replay 时各发一次，若用默认的 VOLATILE QoS，晚于节点启动的
+# 订阅者（RViz 后开、重连、切换 Fixed Frame）永远等不到那次发布：DDS 不会给
+# VOLATILE 的晚到订阅者补发历史样本，表现为 /usv_colreg/track_a 一直超时、
+# 主船轨迹始终为空。这里改成 TRANSIENT_LOCAL，由发布端保留最后一条样本，
+# 晚到的订阅者连上就能收到完整 Path。MarkerArray 每帧都在重发，不存在补发
+# 问题，但一并设为 TRANSIENT_LOCAL，保证 RViz 中途重连时空窗只到下一个 tick。
+LATCHED_QOS = QoSProfile(
+    depth=1,
+    history=HistoryPolicy.KEEP_LAST,
+    reliability=ReliabilityPolicy.RELIABLE,
+    durability=DurabilityPolicy.TRANSIENT_LOCAL,
+)
 
 
 def _quat(yaw_deg: float) -> tuple[float, float, float, float]:
@@ -46,8 +60,8 @@ class UsvColregNode(Node):
         self.result = sim.run(scenarios.by_name(name), config=self.config)
         self.index = 0
 
-        self.marker_pub = self.create_publisher(MarkerArray, '/usv_colreg/markers', 10)
-        self.path_pub = self.create_publisher(Path, '/usv_colreg/track_a', 10)
+        self.marker_pub = self.create_publisher(MarkerArray, '/usv_colreg/markers', LATCHED_QOS)
+        self.path_pub = self.create_publisher(Path, '/usv_colreg/track_a', LATCHED_QOS)
         self.status_pub = self.create_publisher(String, '/usv_colreg/status', 10)
 
         self.create_service(Trigger, '/usv_colreg/replay', self._on_replay)
@@ -64,13 +78,13 @@ class UsvColregNode(Node):
 
     # ------------------------------------------------------------ 发布
     def _publish_path(self) -> None:
+        """整条主船轨迹发一次。TRANSIENT_LOCAL 会把它留给后来的订阅者。"""
         path = Path()
         path.header.frame_id = 'map'
         path.header.stamp = self.get_clock().now().to_msg()
         for frame in self.result.frames[::4]:
             pose = frame.ships[0]
             point = Point(x=float(pose[0]), y=float(pose[1]), z=0.0)
-            from geometry_msgs.msg import PoseStamped
             ps = PoseStamped()
             ps.header.frame_id = 'map'
             ps.pose.position = point
@@ -178,9 +192,15 @@ class UsvColregNode(Node):
         self.index = (self.index + self.step) % len(self.result.frames)
 
     def _on_replay(self, request, response):
+        """回到第一帧重新播，并重发一次完整 Path。
+
+        只把 index 归零不会让轨迹重新出现：轨迹不是逐帧发的，replay 之后
+        订阅端手上的那条 Path 可能是旧的、也可能根本没收到过。
+        """
         self.index = 0
+        self._publish_path()
         response.success = True
-        response.message = '已从头回放'
+        response.message = '已从头回放，主船轨迹已重新发布'
         return response
 
 

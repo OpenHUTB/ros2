@@ -40,8 +40,11 @@ python3 -m usv_colreg_avoidance.main --offline --output results
 单元测试：
 
 ```bash
-python3 -m pytest tests -v      # 20 项
+python3 -m pytest tests -v      # 25 项
 ```
+
+其中 `tests/test_ros_node_qos.py` 用一层最小 `rclpy` 桩把节点真构造起来，
+锁住轨迹 QoS 与 replay 重发行为（不需要 ROS 环境）。
 
 ## ROS 2 下运行
 
@@ -63,6 +66,27 @@ ros2 launch usv_colreg_avoidance main.launch.py scenario:=head_on
 
 参数：`scenario`（场景）、`d_safe`（安全会遇距离，默认 400 m）、
 `playback_rate`（回放帧率）、`frame_step`（每帧推进的仿真步数）。
+
+### 轨迹 QoS
+
+`/usv_colreg/track_a` 与 `/usv_colreg/markers` 用
+`TRANSIENT_LOCAL + RELIABLE + KEEP_LAST(1)` 发布，RViz 里两个订阅端也配成
+`Transient Local`。
+
+原因：完整轨迹只在节点启动和调 `/usv_colreg/replay` 时各发一次。若用默认的
+`VOLATILE`，DDS 不会给晚到的订阅者补发历史样本——RViz 晚于节点启动、断线
+重连、或切换 Fixed Frame 之后，`track_a` 就一直是空的，只能重启节点。
+
+复验（三个终端）：
+
+```bash
+# 1) 先起节点
+ros2 launch usv_colreg_avoidance main.launch.py
+# 2) 节点已经在跑之后再起 RViz，主船轨迹应当立刻出现（不是等到下一次发布）
+rviz2 -d install/usv_colreg_avoidance/share/usv_colreg_avoidance/rviz/usv_colreg_avoidance.rviz
+# 3) 确认发布端 durability
+ros2 topic info /usv_colreg/track_a --verbose   # 期望 Durability: TRANSIENT_LOCAL
+```
 
 ## 模型
 
