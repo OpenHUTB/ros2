@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<!-- 建图 + 导航 + SLAM 同步仿真（任务 3） -->
+<launch>
+  <arg name="scene" default="warehouse"/>
+  <arg name="seed" default="0"/>
+  <arg name="goal_x" default="2.4"/>
+  <arg name="goal_y" default="0.0"/>
+  <arg name="policy" default="classical"/>
+
+  <node pkg="humanoid_mujoco_slam_nn_nav" type="sim_node.py" name="humanoid_sim" output="screen">
+    <param name="scene" value="$(arg scene)"/>
+    <param name="seed" value="$(arg seed)"/>
+  </node>
+
+  <node pkg="humanoid_mujoco_slam_nn_nav" type="nav_node.py" name="humanoid_nav" output="screen">
+    <param name="goal_x" value="$(arg goal_x)"/>
+    <param name="goal_y" value="$(arg goal_y)"/>
+    <param name="policy" value="$(arg policy)"/>
+    <param name="inflation" value="0.30"/>
+  </node>
+
+  <node pkg="humanoid_mujoco_slam_nn_nav" type="metrics_node.py" name="humanoid_metrics" output="screen">
+    <param name="mode" value="$(arg policy)"/>
+    <param name="scene" value="$(arg scene)"/>
+    <param name="goal_x" value="$(arg goal_x)"/>
+    <param name="goal_y" value="$(arg goal_y)"/>
+    <param name="output" value="$(find humanoid_mujoco_slam_nn_nav)/results/ros_$(arg policy)_$(arg scene).json"/>
+  </node>
+</launch>

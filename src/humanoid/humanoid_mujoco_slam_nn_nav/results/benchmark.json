@@ -1,0 +1,110 @@
+{
+  "classical/warehouse": {
+    "success": true,
+    "fallen": false,
+    "time_s": 64.4,
+    "travel_m": 10.331,
+    "collisions": 5,
+    "final_dist_m": 0.333,
+    "ate_rmse_m": 0.0403,
+    "map_coverage": 0.457,
+    "mode": "done",
+    "wall_time_s": 4.0
+  },
+  "classical/obstacle_field": {
+    "success": true,
+    "fallen": false,
+    "time_s": 52.54,
+    "travel_m": 7.335,
+    "collisions": 0,
+    "final_dist_m": 0.346,
+    "ate_rmse_m": 0.0256,
+    "map_coverage": 0.486,
+    "mode": "done",
+    "wall_time_s": 2.9
+  },
+  "classical/corridor": {
+    "success": true,
+    "fallen": false,
+    "time_s": 48.36,
+    "travel_m": 6.633,
+    "collisions": 0,
+    "final_dist_m": 0.348,
+    "ate_rmse_m": 0.0353,
+    "map_coverage": 0.248,
+    "mode": "done",
+    "wall_time_s": 2.6
+  },
+  "neural/warehouse": {
+    "success": false,
+    "fallen": true,
+    "time_s": 106.72,
+    "travel_m": 13.697,
+    "collisions": 0,
+    "final_dist_m": 0.482,
+    "ate_rmse_m": 0.0362,
+    "map_coverage": 0.469,
+    "mode": "settle",
+    "wall_time_s": 8.2
+  },
+  "neural/obstacle_field": {
+    "success": false,
+    "fallen": false,
+    "time_s": 120.0,
+    "travel_m": 13.424,
+    "collisions": 0,
+    "final_dist_m": 1.383,
+    "ate_rmse_m": 0.0355,
+    "map_coverage": 0.487,
+    "mode": "neural",
+    "wall_time_s": 17.2
+  },
+  "neural/corridor": {
+    "success": false,
+    "fallen": true,
+    "time_s": 9.29,
+    "travel_m": 1.745,
+    "collisions": 0,
+    "final_dist_m": 3.735,
+    "ate_rmse_m": 0.0492,
+    "map_coverage": 0.247,
+    "mode": "settle",
+    "wall_time_s": 0.6
+  },
+  "e2e/warehouse": {
+    "success": true,
+    "fallen": false,
+    "time_s": 64.37,
+    "travel_m": 8.232,
+    "collisions": 5,
+    "final_dist_m": 0.332,
+    "ate_rmse_m": 0.0353,
+    "map_coverage": 0.45,
+    "mode": "done",
+    "wall_time_s": 13.3
+  },
+  "e2e/obstacle_field": {
+    "success": false,
+    "fallen": false,
+    "time_s": 120.0,
+    "travel_m": 14.765,
+    "collisions": 13,
+    "final_dist_m": 1.844,
+    "ate_rmse_m": 0.0488,
+    "map_coverage": 0.498,
+    "mode": "e2e",
+    "wall_time_s": 22.6
+  },
+  "e2e/corridor": {
+    "success": false,
+    "fallen": true,
+    "time_s": 51.93,
+    "travel_m": 6.92,
+    "collisions": 3,
+    "final_dist_m": 1.274,
+    "ate_rmse_m": 0.0391,
+    "map_coverage": 0.239,
+    "mode": "settle",
+    "wall_time_s": 24.8
+  }
+}

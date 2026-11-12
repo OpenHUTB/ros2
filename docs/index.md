@@ -131,7 +131,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [人形机器人神经网络行走控制：CPG 基线与学习路线可行性分析](./humanoid/humanoid_ars_phase_walk.md)
 * [人形机器人跑步牛顿第二定律理论计算与演示](./humanoid/humanoid_newton_running.md)
 * [人形机器人全身柔顺控制](./humanoid/humanoid_g1_compliance.md)
-
+* [人形机器人 MuJoCo 建图导航与神经网络控制](./humanoid/humanoid_mujoco_slam_nn_nav.md)
 
 ## 3. 肌肉骨骼人 <span id='musculoskeletal'></span>
 
