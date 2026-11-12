@@ -25,11 +25,17 @@ class MLP:
     输出层激活：'linear'（用于 Q 值）或 'softmax'（用于策略概率）。
     """
 
-    def __init__(self, sizes, out='linear', lr=1e-3):
+    def __init__(self, sizes, out='linear', lr=1e-3, seed=None):
+        """``seed`` 控制权重初始化。
+
+        以前这里硬编码 ``RandomState(0)``，导致外部传什么随机种子，
+        网络初始权重都一样——多随机种子评测时方差里就漏掉了初始化方差。
+        现在把 seed 透传进来；不传时保持原来的 0，兼容旧调用。
+        """
         self.sizes = list(sizes)
         self.out = out
         self.lr = lr
-        rng = np.random.RandomState(0)
+        rng = np.random.RandomState(0 if seed is None else int(seed))
         # Xavier / He 初始化
         self.W = [rng.randn(sizes[i], sizes[i + 1]) *
                   np.sqrt(2.0 / sizes[i]) for i in range(len(sizes) - 1)]
