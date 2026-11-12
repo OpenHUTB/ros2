@@ -69,6 +69,7 @@ def main():
         for ln in lines:
             fh.write(ln + "\n")
         fh.write("最差稳态误差 %.3f m（PASS 阈值 %.3f m）\n" % (worst, threshold))
+        fh.write("结论: %s\n" % ("PASS" if worst <= threshold else "FAIL"))
     print("written:", args.out)
 
 
