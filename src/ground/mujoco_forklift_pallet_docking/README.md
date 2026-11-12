@@ -8,10 +8,12 @@
 
 - Ubuntu 22.04
 - ROS 2 Humble
-- MuJoCo 3.12.0 或兼容版本
+- MuJoCo 3.12.0（与随包权重及评估记录一致）
 - Python 3、NumPy、Pillow
 
 ## 运行
+
+先按 `requirements.txt` 安装依赖，使用 MuJoCo 3.12.0 复现文档中的动力学结果。其他版本的物理与渲染行为不同，不能直接套用本版本的评估数据。
 
 从 ROS 2 工作空间构建并启动：
 
@@ -20,6 +22,8 @@ colcon build --packages-select mujoco_forklift_pallet_docking
 source install/setup.bash
 ros2 launch mujoco_forklift_pallet_docking main.launch.py
 ```
+
+命令行入口为 `ros2 run mujoco_forklift_pallet_docking forklift_pallet_docking --mode evaluate`；保留 `main` 作为兼容入口。
 
 从仓库根目录直接运行：
 
