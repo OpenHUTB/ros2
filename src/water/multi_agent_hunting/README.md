@@ -47,6 +47,10 @@ ros2 run multi_agent_hunting multi_agent_hunting --seed 7 --max-steps 300
 
 没有安装 HoloOcean 时自动进入 dry-run 模式，用模拟数据演示完整流程。
 
+HoloOcean 真实模式尚未实测：代码已为每个 agent 补 `LocationSensor`，并兼容
+`LocationSensor` / `Location` 两种观测键；首次接入前请确认 `env.tick()` 返回里包含
+`LocationSensor`。
+
 ## 参数（scenario.json）
 
 | 参数 | 默认值 | 说明 |
