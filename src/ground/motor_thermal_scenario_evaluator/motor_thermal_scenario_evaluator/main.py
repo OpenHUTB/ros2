@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Run fixed-speed and thermal-derated scenario comparisons."""
 
 from __future__ import annotations

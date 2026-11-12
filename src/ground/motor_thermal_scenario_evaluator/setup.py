@@ -7,7 +7,6 @@ setup(
     name=package_name,
     version="0.1.0",
     packages=[package_name],
-    py_modules=["main"],
     data_files=[
         ("share/ament_index/resource_index/packages", ["resource/" + package_name]),
         ("share/" + package_name, ["package.xml"]),
@@ -20,7 +19,7 @@ setup(
     description="Standalone analytical motor thermal scenario evaluator",
     license="Apache-2.0",
     entry_points={"console_scripts": [
-        "motor_thermal_evaluate = main:main",
+        "motor_thermal_evaluate = motor_thermal_scenario_evaluator.main:main",
         "motor_thermal_plot = motor_thermal_scenario_evaluator.plot:main",
     ]},
 )

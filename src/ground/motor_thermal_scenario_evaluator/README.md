@@ -5,9 +5,12 @@
 ## Run
 
 ```bash
-python3 main.py --steps 6000 --output output/thermal_evaluation
+python3 -m pip install .
+motor_thermal_evaluate --steps 6000 --output output/thermal_evaluation
 python3 -m motor_thermal_scenario_evaluator.plot --csv output/thermal_evaluation/scenario_curves.csv --output docs/img/ground/motor_thermal_scenario_evaluator/scenario_curves.png
 ```
+
+以上命令在本包目录执行。
 
 ## ROS 2 launch
 
