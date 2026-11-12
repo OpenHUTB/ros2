@@ -157,7 +157,14 @@ class SlopeScanNode(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    node = SlopeScanNode()
+    try:
+        node = SlopeScanNode()
+    except RuntimeError as error:
+        # PyBullet 后端不可用时给出可读错误，而不是抛 traceback
+        rclpy.logging.get_logger('slope_sim').error(
+            '节点初始化失败: {}'.format(error))
+        rclpy.shutdown()
+        return
     try:
         node.run_once()
     finally:
