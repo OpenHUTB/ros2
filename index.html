@@ -292,6 +292,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="musculoskeletal/msk_muscle_ident/">给定黑箱关节轨迹，反推肌肉参数</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="musculoskeletal/muscle_force_distribution/">肌肉冗余系统的力分配：最小范数与加权最小二乘</a>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">机械臂操作</span></p>
 <ul>
@@ -1168,6 +1170,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="water/multi_agent_hunting/">多 AUV 协同围捕</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="water/usv_los_guidance/">水面无人艇（USV）视线（LOS）路径跟踪制导</a>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">路径规划与跟踪</span></p>
 <ul>
@@ -1181,6 +1185,8 @@
 <p class="caption"><span class="caption-text">经典控制</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="classical_control/cartpole_balance/">倒立摆平衡小车 (cart-pole, LQR)</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="classical_control/sliding_mode_control/">滑模控制（SMC）：二阶系统的鲁棒轨迹跟踪</a>
 </li>
 </ul>
 </div>
@@ -1370,6 +1376,7 @@
 <li><a href="humanoid/mujoco_hopper_slip_control/">MuJoCo单足弹跳机器人简单仿真：SLIP 模型与 Raibert 弹跳控制</a></li>
 <li><a href="humanoid/humanoid_passage_width_sweep/">人形足迹下的局部避障算法对比：MPPI 与斥力法的窄通道宽度扫描</a></li>
 <li><a href="musculoskeletal/msk_muscle_ident/">给定黑箱关节轨迹，反推肌肉参数</a></li>
+<li><a href="musculoskeletal/muscle_force_distribution/">肌肉冗余系统的力分配：最小范数与加权最小二乘</a> —— 冗余拮抗肌的最小范数分配，力矩跟踪误差 &lt; 1e-3 Nm，附激活度与跟踪曲线</li>
 </ul>
 <h2 id="4">4. 地面载具  <span id="ground_vehicle"></span></h2>
 <ul>
@@ -2110,10 +2117,12 @@
 <ul>
 <li><a href="water/ros2_usv_station_keeping/">欠驱动无人艇低速定点保持与横漂补偿</a> —— 几何制导 + 在线流估计 + 双环控制，无侧推器也能顶流定点</li>
 <li><a href="water/multi_agent_hunting/">多 AUV 协同围捕</a> —— 拍卖算法做任务分配，水声信道带真实延迟与丢包，包抄点向目标收缩并有捕获判定，支持 seed 复现</li>
+<li><a href="water/usv_los_guidance/">水面无人艇（USV）视线（LOS）路径跟踪制导</a> —— LOS 制导 + 航向包裹，横漂误差收敛至 0.09 m</li>
 </ul>
 <h2 id="7">7. 经典控制 <span id="classical_control"></span></h2>
 <ul>
 <li><a href="classical_control/cartpole_balance/">倒立摆平衡小车 (cart-pole, LQR 最优控制)</a> —— 用 LQR 让倒立摆从倾斜被拉回竖直保持不倒,演示 ROS 发布/订阅闭环与最优控制</li>
+<li><a href="classical_control/sliding_mode_control/">滑模控制（SMC）：二阶系统的鲁棒轨迹跟踪</a> —— 边界层切换律，到达条件 K &gt; D_max；常值扰动下 SMC 平均误差 0.012，PD 0.255</li>
 </ul>
 <h2 id="8">8. 机械臂操作 <span id="manipulation"></span></h2>
 <ul>
