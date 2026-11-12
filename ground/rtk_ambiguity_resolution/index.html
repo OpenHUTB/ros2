@@ -768,7 +768,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与制动 / Warehouse UAV Braking</a>
+<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与分级制动</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
 </li>
@@ -905,31 +905,31 @@
 \nabla\Delta P_i=\mathbf{a}_i^\top\mathbf{b}+\eta_i
 </script>
 </p>
-<p>其中 <script type="math/tex">\mathbf{a}_i</script> 是双差方向余弦（由卫星方位角/高度角计算），<script type="math/tex">\mathbf{b}</script> 是基线向量，
-<script type="math/tex">\nabla\Delta N_i</script> 是整数双差模糊度，<script type="math/tex">\lambda=0.1903</script> m（GPS L1）。
+<p>其中 $\mathbf{a}_i$ 是双差方向余弦（由卫星方位角/高度角计算），$\mathbf{b}$ 是基线向量，
+$\nabla\Delta N_i$ 是整数双差模糊度，$\lambda=0.1903$ m（GPS L1）。
 5 颗卫星给出 4 个双差，测相噪声 0.01 周、测码噪声 0.30 m。</p>
 <h3 id="12">1.2 浮点解</h3>
-<p>把 <script type="math/tex">[\,\mathbf{b};\ \mathbf{N}\,]</script> 一起做加权最小二乘：</p>
+<p>把 $[\,\mathbf{b};\ \mathbf{N}\,]$ 一起做加权最小二乘：</p>
 <p>
 <script type="math/tex; mode=display">
 \hat{\mathbf{x}}=(H^\top WH)^{-1}H^\top W\mathbf{y},\qquad
 Q=(H^\top WH)^{-1}
 </script>
 </p>
-<p>单历元时模糊度精度其实由<strong>测码</strong>决定（基线只能靠码观测约束），所以 <script type="math/tex">\sigma_N\approx1.36</script> 周；
+<p>单历元时模糊度精度其实由<strong>测码</strong>决定（基线只能靠码观测约束），所以 $\sigma_N\approx1.36$ 周；
 这正是单历元无法可靠固定的原因。</p>
 <h3 id="13-lambda">1.3 LAMBDA 去相关</h3>
-<p>对 <script type="math/tex">Q_N</script> 做 <script type="math/tex">LDL^\top</script> 分解，用整数高斯变换</p>
+<p>对 $Q_N$ 做 $LDL^\top$ 分解，用整数高斯变换</p>
 <p>
 <script type="math/tex; mode=display">
 Z_{i,:}\leftarrow Z_{i,:}-\text{round}(L_{ij})\,Z_{j,:}
 </script>
 </p>
-<p>把非对角元压到 <script type="math/tex">|L_{ij}|\le0.5</script>，再按对角元排序做置换，直到不再变化。
-<script type="math/tex">Z</script> 是幺模整数矩阵（<script type="math/tex">|\det Z|=1</script>），因此 <script type="math/tex">\mathbf{z}=Z\mathbf{N}</script> 仍是整数向量，而
-<script type="math/tex">Q_z=ZQ_NZ^\top</script> 的条件数从 24855 降到 7.87（约 3000 倍），整数搜索的枚举量随之下降。</p>
+<p>把非对角元压到 $|L_{ij}|\le0.5$，再按对角元排序做置换，直到不再变化。
+$Z$ 是幺模整数矩阵（$|\det Z|=1$），因此 $\mathbf{z}=Z\mathbf{N}$ 仍是整数向量，而
+$Q_z=ZQ_NZ^\top$ 的条件数从 24855 降到 7.87（约 3000 倍），整数搜索的枚举量随之下降。</p>
 <h3 id="14-ratio">1.4 整数搜索与 ratio 检验</h3>
-<p>在 <script type="math/tex">3\sigma</script> 的盒子里枚举整数向量，按二次型</p>
+<p>在 $3\sigma$ 的盒子里枚举整数向量，按二次型</p>
 <p>
 <script type="math/tex; mode=display">
 c(\mathbf{z})=(\mathbf{z}-\hat{\mathbf{z}})^\top Q_z^{-1}(\mathbf{z}-\hat{\mathbf{z}})
@@ -948,8 +948,8 @@ c(\mathbf{z})=(\mathbf{z}-\hat{\mathbf{z}})^\top Q_z^{-1}(\mathbf{z}-\hat{\mathb
 </script>
 </p>
 <h3 id="15">1.5 仿真</h3>
-<p>5 颗卫星（方位 20°/110°/200°/280°/340°，高度角 70°…15°），真实基线 <script type="math/tex">(0.80,0.60,0.10)</script> m，
-双差模糊度取 0–120 周单差之差的整数。每个"固定窗口"由 <script type="math/tex">k</script> 个历元堆叠而成，
+<p>5 颗卫星（方位 20°/110°/200°/280°/340°，高度角 70°…15°），真实基线 $(0.80,0.60,0.10)$ m，
+双差模糊度取 0–120 周单差之差的整数。每个"固定窗口"由 $k$ 个历元堆叠而成，
 模糊度在窗口内保持不变——这就是实际 RTK 的固定流程。</p>
 <h2 id="2-ros-2">2. ROS 2 接口</h2>
 <table>
@@ -1107,8 +1107,7 @@ python3<span class="w"> </span>-m<span class="w"> </span>unittest<span class="w"
 </thead>
 <tbody>
 <tr>
-<td>
-<script type="math/tex">Q_N</script> 条件数</td>
+<td>$Q_N$ 条件数</td>
 <td>24855</td>
 <td>7.87</td>
 </tr>
@@ -1165,7 +1164,7 @@ python3<span class="w"> </span>-m<span class="w"> </span>unittest<span class="w"
 <li>未建模对流层/电离层延迟、多路径与卫星钟差残差，仿真只含高斯噪声。</li>
 <li>基线短（约 1 m），双差残差近似为零均值；长基线需要估计大气延迟参数。</li>
 <li>卫星几何固定不变，未模拟可见星变化与周跳；实际还需要周跳探测。</li>
-<li>整数搜索用 <script type="math/tex">3\sigma</script> 盒枚举，维度高时应换成 SE-VB 收缩搜索。</li>
+<li>整数搜索用 $3\sigma$ 盒枚举，维度高时应换成 SE-VB 收缩搜索。</li>
 <li>纯 Python 实现，20 个窗口约 0.4 s，未做实时优化。</li>
 <li>ROS 2 端只做了 <code>compileall</code>、<code>package.xml</code> 解析与桩模块联调，未在本机执行 <code>colcon build</code> 与 <code>ros2 launch</code>。</li>
 </ol>

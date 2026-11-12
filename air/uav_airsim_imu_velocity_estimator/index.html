@@ -732,7 +732,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../mujoco_warehouse_uav_collision_braking/">仓储通道测距与制动 / Warehouse UAV Braking</a>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_warehouse_uav_collision_braking/">仓储通道测距与分级制动</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
 </li>
@@ -903,7 +903,7 @@
 u_t = \left[a_x, a_y, a_z, \omega_x, \omega_y, \omega_z\right]_t
 </script>
 </p>
-<p>取长度 <script type="math/tex">T=5</script> 的滑窗</p>
+<p>取长度 $T=5$ 的滑窗</p>
 <p>
 <script type="math/tex; mode=display">
 x_t = \left[u_{t-T+1}, \ldots, u_t\right] \in \mathbb{R}^{30}
@@ -915,8 +915,8 @@ x_t = \left[u_{t-T+1}, \ldots, u_t\right] \in \mathbb{R}^{30}
 y_t = \frac{\lVert v_t \rVert}{4.0} \quad \in [0, 1]
 </script>
 </p>
-<p>其中 <script type="math/tex">v_t</script> 为仿真真值速度，4.0 m/s 是归一化尺度。</p>
-<p><strong>为什么回归速度大小而不是三轴分量</strong>：三轴分量 <script type="math/tex">v_x, v_y</script> 在往返飞行时正负抵消，样本均值接近 0，网络极易退化为「恒输出均值」，此时 <script type="math/tex">R^2</script> 会掉到 0.001。速度大小与 IMU 的振动强度单调相关——桨叶转速越高、机体振动越强、速度越大——这是一条稳定的物理规律，网络可以学到。</p>
+<p>其中 $v_t$ 为仿真真值速度，4.0 m/s 是归一化尺度。</p>
+<p><strong>为什么回归速度大小而不是三轴分量</strong>：三轴分量 $v_x, v_y$ 在往返飞行时正负抵消，样本均值接近 0，网络极易退化为「恒输出均值」，此时 $R^2$ 会掉到 0.001。速度大小与 IMU 的振动强度单调相关——桨叶转速越高、机体振动越强、速度越大——这是一条稳定的物理规律，网络可以学到。</p>
 <h2 id="4">4. 网络结构</h2>
 <p>三层全连接，纯 NumPy 实现，无框架依赖：</p>
 <p>
@@ -929,8 +929,8 @@ h_1 = \tanh(W_1 x + b_1), \quad W_1 \in \mathbb{R}^{30 \times 32}
 y = \tanh(W_2 h_1 + b_2), \quad W_2 \in \mathbb{R}^{32 \times 1}
 </script>
 </p>
-<p>参数量 <script type="math/tex">30 \times 32 + 32 + 32 \times 1 + 1 = 1025</script>，权重文件 4 KB 量级，可直接入库。</p>
-<p><strong>为什么这么小</strong>：720 条样本，隐层一旦上到 64+32，验证 MSE 从 0.062 恶化到 0.126，训练 MSE 却降到 0.014，是典型的过拟合。缩到单隐层 32 并加 L2 正则（<script type="math/tex">\lambda = 10^{-3}</script>）后，训练与验证才拉平。</p>
+<p>参数量 $30 \times 32 + 32 + 32 \times 1 + 1 = 1025$，权重文件 4 KB 量级，可直接入库。</p>
+<p><strong>为什么这么小</strong>：720 条样本，隐层一旦上到 64+32，验证 MSE 从 0.062 恶化到 0.126，训练 MSE 却降到 0.014，是典型的过拟合。缩到单隐层 32 并加 L2 正则（$\lambda = 10^{-3}$）后，训练与验证才拉平。</p>
 <p>损失函数</p>
 <p>
 <script type="math/tex; mode=display">
@@ -943,18 +943,18 @@ y = \tanh(W_2 h_1 + b_2), \quad W_2 \in \mathbb{R}^{32 \times 1}
 \frac{\partial \mathcal{L}}{\partial z_2} = \frac{2(\hat{y}-y)}{N}\left(1-\hat{y}^2\right)
 </script>
 </p>
-<p>优化器为 Adam（<script type="math/tex">\beta_1=0.9</script>、<script type="math/tex">\beta_2=0.999</script>、<script type="math/tex">\epsilon=10^{-8}</script>），学习率 <script type="math/tex">10^{-3}</script>，batch 16，120 epoch，按验证 MSE 保留最优权重。</p>
+<p>优化器为 Adam（$\beta_1=0.9$、$\beta_2=0.999$、$\epsilon=10^{-8}$），学习率 $10^{-3}$，batch 16，120 epoch，按验证 MSE 保留最优权重。</p>
 <h2 id="5">5. 数据采集</h2>
-<p>6 个回合，每回合 120 步，共 720 条样本。每回合起点随机撒在 <script type="math/tex">x \in [-28, -16]</script>、<script type="math/tex">y \in [-4, 4]</script>、<script type="math/tex">z \in [-7, -4.5]</script>，初始偏航 <script type="math/tex">\pm 30°</script>。</p>
+<p>6 个回合，每回合 120 步，共 720 条样本。每回合起点随机撒在 $x \in [-28, -16]$、$y \in [-4, 4]$、$z \in [-7, -4.5]$，初始偏航 $\pm 30°$。</p>
 <p>每步的动作每 8 步随机换一次：</p>
 <p>
 <script type="math/tex; mode=display">
 v_{\text{fwd}} \sim U(0.3, 3.2) \ \text{m/s}, \quad \omega_{\text{yaw}} \sim U(-0.8, 0.8) \ \text{rad/s}
 </script>
 </p>
-<p>高度目标在 <script type="math/tex">[-8.5, -3.5]</script> 内随机游走，用于给 IMU 制造垂直方向的加速度激励。</p>
+<p>高度目标在 $[-8.5, -3.5]$ 内随机游走，用于给 IMU 制造垂直方向的加速度激励。</p>
 <p><strong>采样时序</strong>是关键：发 <code>moveByVelocityAsync(duration=0.25)</code> 后<strong>不阻塞</strong>，<code>sleep(0.14)</code> 再读 IMU 与速度，再 <code>sleep(0.11)</code>。这样读到的速度是「正在飞」的速度。若阻塞返回后再读，无人机已减速，速度长期为 0，标签全废——这是第一版采集中最耗时的一次返工。</p>
-<p>输入标准化参数（<script type="math/tex">x</script> 的均值与标准差，30 维）与样本一起存进 <code>imu_vel_data.npz</code>，部署时必须用同一组参数。</p>
+<p>输入标准化参数（$x$ 的均值与标准差，30 维）与样本一起存进 <code>imu_vel_data.npz</code>，部署时必须用同一组参数。</p>
 <h2 id="6">6. 控制执行</h2>
 <p>沿用已验证的写法：<code>moveByVelocityAsync</code> 的 vx/vy 是<strong>世界坐标系分量</strong>，必须按当前偏航角分解：</p>
 <p>
@@ -1132,7 +1132,7 @@ ros2<span class="w"> </span>launch<span class="w"> </span>uav_airsim_imu_velocit
 <h3 id="mlppy"><code>mlp.py</code></h3>
 <ul>
 <li><code>forward()</code>：逐层 <code>h = h @ W + b</code> 后接 <code>tanh</code>，把每层输出压进 <code>cache</code> 供反向使用。</li>
-<li><code>backward()</code>：从输出层倒推，<code>dW = np.outer(h_prev, d)</code>，<code>d = d @ W.T</code>，隐层再乘 <script type="math/tex">(1-h^2)</script>。逐样本训练，不用矩阵乘——批量维度会引入额外转置错误。</li>
+<li><code>backward()</code>：从输出层倒推，<code>dW = np.outer(h_prev, d)</code>，<code>d = d @ W.T</code>，隐层再乘 $(1-h^2)$。逐样本训练，不用矩阵乘——批量维度会引入额外转置错误。</li>
 <li><code>Adam.step()</code>：标准一阶/二阶矩估计加偏差校正。</li>
 <li><code>save/load</code>：<code>np.savez_compressed</code>，键名 <code>W0/W1/b0/b1</code>。</li>
 </ul>
@@ -1141,7 +1141,7 @@ ros2<span class="w"> </span>launch<span class="w"> </span>uav_airsim_imu_velocit
 <h3 id="datasetpy"><code>dataset.py</code></h3>
 <ul>
 <li><code>collect()</code>：6 回合主循环。每步先按 8 步周期换动作，发不阻塞的速度指令，<code>sleep(0.14)</code> 后采 IMU 窗口与速度真值，<code>sleep(0.11)</code> 收尾。</li>
-<li>标签取 <script type="math/tex">\lVert v \rVert / 4.0</script>，存为 1 维。</li>
+<li>标签取 $\lVert v \rVert / 4.0$，存为 1 维。</li>
 <li>标准化参数与样本同存一个 npz，避免部署时用错统计量。</li>
 </ul>
 <h3 id="trainpy"><code>train.py</code></h3>

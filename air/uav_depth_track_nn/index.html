@@ -732,7 +732,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../mujoco_warehouse_uav_collision_braking/">仓储通道测距与制动 / Warehouse UAV Braking</a>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_warehouse_uav_collision_braking/">仓储通道测距与分级制动</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
 </li>
@@ -1011,19 +1011,19 @@ colcon<span class="w"> </span>build<span class="w"> </span>--packages-select<spa
 </table>
 <h2 id="5">5 算法原理</h2>
 <h3 id="51">5.1 参考轨迹</h3>
-<p>给定轨迹是圆心 <script type="math/tex">C=(0,0)</script>、半径 <script type="math/tex">R</script>、高度 <script type="math/tex">h</script> 的圆。无人机当前位置 <script type="math/tex">(x,y)</script> 相对圆心的极角</p>
+<p>给定轨迹是圆心 $C=(0,0)$、半径 $R$、高度 $h$ 的圆。无人机当前位置 $(x,y)$ 相对圆心的极角</p>
 <p>
 <script type="math/tex; mode=display">
 \theta = \operatorname{atan2}(y - C_y,\; x - C_x)
 </script>
 </p>
-<p>参考点取在极角前方 <script type="math/tex">\Delta\psi</script> 处：</p>
+<p>参考点取在极角前方 $\Delta\psi$ 处：</p>
 <p>
 <script type="math/tex; mode=display">
 p_{\text{ref}} = \left(C_x + R\cos(\theta + \Delta\psi),\;\; C_y + R\sin(\theta + \Delta\psi)\right)
 </script>
 </p>
-<p>用<strong>瞬时极角</strong>而不是累加角度，可以避免无人机经过圆心时 <script type="math/tex">\theta</script> 跳变 <script type="math/tex">\pi</script> 导致参考点瞬移到圆的另一侧。</p>
+<p>用<strong>瞬时极角</strong>而不是累加角度，可以避免无人机经过圆心时 $\theta$ 跳变 $\pi$ 导致参考点瞬移到圆的另一侧。</p>
 <h3 id="52">5.2 网络输入</h3>
 <p>网络同时接收图像与参考偏差。偏差在机体坐标系下计算：</p>
 <p>
@@ -1033,7 +1033,7 @@ p_{\text{ref}} = \left(C_x + R\cos(\theta + \Delta\psi),\;\; C_y + R\sin(\theta 
 \begin{bmatrix} p_{\text{ref},x} - x \\ p_{\text{ref},y} - y \end{bmatrix}
 </script>
 </p>
-<p>其中 <script type="math/tex">\psi</script> 为偏航角。四个标量特征为</p>
+<p>其中 $\psi$ 为偏航角。四个标量特征为</p>
 <p>
 <script type="math/tex; mode=display">
 f = \left[\frac{d_x}{5},\; \frac{d_y}{5},\; \sin e,\; \cos e\right],\qquad
@@ -1043,10 +1043,10 @@ e = \operatorname{atan2}(d_y, d_x)
 <h3 id="53">5.3 网络结构</h3>
 <p><code>TrackNet</code> 由两个分支组成：</p>
 <ul>
-<li>图像分支：<script type="math/tex">64\times64</script> 深度图 → Conv(16) → Pool → Conv(32) → Pool → Conv(64) → Pool → 展平 4096 → Linear(128)</li>
+<li>图像分支：$64\times64$ 深度图 → Conv(16) → Pool → Conv(32) → Pool → Conv(64) → Pool → 展平 4096 → Linear(128)</li>
 <li>标量分支：4 维特征直接拼接</li>
 </ul>
-<p>两支拼接成 132 维，经 <code>Linear(132→64)</code> → ReLU → <code>Linear(64→2)</code> 输出 <script type="math/tex">(v_x, v_y)</script>。
+<p>两支拼接成 132 维，经 <code>Linear(132→64)</code> → ReLU → <code>Linear(64→2)</code> 输出 $(v_x, v_y)$。
 卷积输出尺寸按</p>
 <p>
 <script type="math/tex; mode=display">
@@ -1064,14 +1064,13 @@ v_z &= \operatorname{clip}\left(k_h(-h - z),\; -0.5,\; 0.5\right)\\
 \end{aligned}
 </script>
 </p>
-<p>采集端写进 CSV 的训练标签是<strong>专家的完整动作</strong> <script type="math/tex">\boldsymbol a=(v_x,v_y)</script>，所以推理端必须
-直接使用网络输出 <script type="math/tex">\hat{\boldsymbol v}</script>；如果再把同一条几何参考律加回去，专家动作就被算了
+<p>采集端写进 CSV 的训练标签是<strong>专家的完整动作</strong> $\boldsymbol a=(v_x,v_y)$，所以推理端必须
+直接使用网络输出 $\hat{\boldsymbol v}$；如果再把同一条几何参考律加回去，专家动作就被算了
 两遍——这正是第一版实现的错误，已在本版删掉 <code>max_residual</code> 并把 <code>stabilizer_gain</code>
-默认置 0。保留 <script type="math/tex">g</script> 这个参数只是为了换场景时能临时打开几何兜底，
+默认置 0。保留 $g$ 这个参数只是为了换场景时能临时打开几何兜底，
 正常运行不要打开。</p>
-<p>
-<script type="math/tex">\operatorname{clip}(\cdot, v_{\max})</script> 为按合速度等比缩放：当 <script type="math/tex">\|\hat{\boldsymbol v}\|>v_{\max}</script> 时
-整体乘以 <script type="math/tex">v_{\max}/\|\hat{\boldsymbol v}\|</script>，保留方向不变。</p>
+<p>$\operatorname{clip}(\cdot, v_{\max})$ 为按合速度等比缩放：当 $|\hat{\boldsymbol v}|&gt;v_{\max}$ 时
+整体乘以 $v_{\max}/|\hat{\boldsymbol v}|$，保留方向不变。</p>
 <h3 id="55">5.5 训练目标</h3>
 <p>行为克隆，最小化专家动作与网络输出的均方误差：</p>
 <p>
@@ -1079,7 +1078,7 @@ v_z &= \operatorname{clip}\left(k_h(-h - z),\; -0.5,\; 0.5\right)\\
 \mathcal{L} = \frac{1}{N}\sum_{i=1}^{N}\left\|\hat v_i - v_i^{\star}\right\|^2
 </script>
 </p>
-<p>优化器 Adam，学习率 <script type="math/tex">10^{-3}</script>，数据按 8:1:1 划分，保存验证集最优权重。</p>
+<p>优化器 Adam，学习率 $10^{-3}$，数据按 8:1:1 划分，保存验证集最优权重。</p>
 <h2 id="6">6 源代码解析</h2>
 <table>
 <thead>

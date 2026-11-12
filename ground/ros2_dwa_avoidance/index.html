@@ -840,7 +840,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与制动 / Warehouse UAV Braking</a>
+<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与分级制动</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
 </li>
@@ -1013,11 +1013,11 @@ v &\in [v_c-a_v\Delta t,\ v_c+a_v\Delta t]\cap[v_{\min},v_{\max}]\\
 \omega &\in [\omega_c-a_\omega\Delta t,\ \omega_c+a_\omega\Delta t]\cap[-\omega_{\max},\omega_{\max}]
 \end{aligned}\right\}</script>
 </p>
-<p>默认参数：<script type="math/tex">v_{\max}=0.8</script> m/s、<script type="math/tex">v_{\min}=-0.15</script> m/s、<script type="math/tex">\omega_{\max}=1.8</script> rad/s、
-<script type="math/tex">a_v=1.2</script> m/s²、<script type="math/tex">a_\omega=3.0</script> rad/s²、<script type="math/tex">\Delta t=0.1</script> s。
-窗口内按 <script type="math/tex">0.1</script> m/s 与 <script type="math/tex">0.1</script> rad/s 离散采样，逐条前向预测 <script type="math/tex">T=1.5</script> s（15 步）。</p>
+<p>默认参数：$v_{\max}=0.8$ m/s、$v_{\min}=-0.15$ m/s、$\omega_{\max}=1.8$ rad/s、
+$a_v=1.2$ m/s²、$a_\omega=3.0$ rad/s²、$\Delta t=0.1$ s。
+窗口内按 $0.1$ m/s 与 $0.1$ rad/s 离散采样，逐条前向预测 $T=1.5$ s（15 步）。</p>
 <h2 id="3">3. 轨迹评价函数</h2>
-<p>对每条可行轨迹 <script type="math/tex">\tau</script>，计算四项归一化代价：</p>
+<p>对每条可行轨迹 $\tau$，计算四项归一化代价：</p>
 <p>
 <script type="math/tex; mode=display">
 J(\tau)=w_h J_{\text{heading}}+w_g J_{\text{goal}}+w_c J_{\text{clear}}+w_v J_{\text{vel}}
@@ -1033,43 +1033,34 @@ J(\tau)=w_h J_{\text{heading}}+w_g J_{\text{goal}}+w_c J_{\text{clear}}+w_v J_{\
 </thead>
 <tbody>
 <tr>
-<td>航向 <script type="math/tex">J_{\text{heading}}</script>
-</td>
-<td>轨迹终点到前视点的方位角与终点航向之差，除以 <script type="math/tex">\pi</script>
-</td>
+<td>航向 $J_{\text{heading}}$</td>
+<td>轨迹终点到前视点的方位角与终点航向之差，除以 $\pi$</td>
 <td>0.60</td>
 </tr>
 <tr>
-<td>目标 <script type="math/tex">J_{\text{goal}}</script>
-</td>
+<td>目标 $J_{\text{goal}}$</td>
 <td>终点到前视点距离 / 当前距离</td>
 <td>0.50</td>
 </tr>
 <tr>
-<td>间隙 <script type="math/tex">J_{\text{clear}}</script>
-</td>
-<td>
-<script type="math/tex">\mathrm{clip}\big((d_{\text{norm}}-(d_{\min}-r))/d_{\text{norm}},0,1\big)</script>
-</td>
+<td>间隙 $J_{\text{clear}}$</td>
+<td>$\mathrm{clip}\big((d_{\text{norm}}-(d_{\min}-r))/d_{\text{norm}},0,1\big)$</td>
 <td>0.60</td>
 </tr>
 <tr>
-<td>速度 <script type="math/tex">J_{\text{vel}}</script>
-</td>
-<td>
-<script type="math/tex">(v_{\max}-v)/(v_{\max}-v_{\min})</script>
-</td>
+<td>速度 $J_{\text{vel}}$</td>
+<td>$(v_{\max}-v)/(v_{\max}-v_{\min})$</td>
 <td>1.50</td>
 </tr>
 </tbody>
 </table>
-<p>其中 <script type="math/tex">d_{\min}</script> 是预测轨迹到最近激光点的最小距离，<script type="math/tex">r=0.22</script> m 为机器人半径，
-<script type="math/tex">d_{\text{norm}}=0.7</script> m。速度权重取得较大，是为了避免“停下来最安全”的退化解：
+<p>其中 $d_{\min}$ 是预测轨迹到最近激光点的最小距离，$r=0.22$ m 为机器人半径，
+$d_{\text{norm}}=0.7$ m。速度权重取得较大，是为了避免“停下来最安全”的退化解：
 在早期调试中，速度权重 0.3 时规划器会在障碍物前 2 m 处逐渐刹停并原地不动，
 把权重提高到 1.5 后才表现为绕行。</p>
-<p><strong>可行性</strong>：轨迹上任意一点到激光点的距离必须不小于 <script type="math/tex">r+0.08</script> m（安全裕度），
+<p><strong>可行性</strong>：轨迹上任意一点到激光点的距离必须不小于 $r+0.08$ m（安全裕度），
 否则该样本直接剔除。若窗口内所有样本都不可行，进入恢复行为：比较左右前向
-扇区的最近障碍距离，向更空旷的一侧原地旋转（<script type="math/tex">v=0</script>），直到前方重新可行。
+扇区的最近障碍距离，向更空旷的一侧原地旋转（$v=0$），直到前方重新可行。
 这一条很关键：早期版本在恢复时朝目标方向旋转，结果机器人正对障碍物反复“盯”着它，
 在窄走廊里 60 s 都出不来；改成朝自由侧旋转后才能脱困。</p>
 <p>另有一条“防蠕动”规则：当最优样本速度接近 0、而最近间隙只比安全阈值大不到 0.15 m 时，
@@ -1089,7 +1080,7 @@ J(\tau)=w_h J_{\text{heading}}+w_g J_{\text{goal}}+w_c J_{\text{clear}}+w_v J_{\
   避免 <code>astar</code> 直接返回空路径、退化成“直奔目标”后停在第一个障碍前。</li>
 </ul>
 <h3 id="42">4.2 搜索与路径简化</h3>
-<p>8 邻域 A*，对角线代价 <script type="math/tex">\sqrt{2}</script>，禁止穿过两个相邻障碍格的角点。
+<p>8 邻域 A*，对角线代价 $\sqrt{2}$，禁止穿过两个相邻障碍格的角点。
 得到栅格路径后用贪心视线简化（string pulling）压缩成少量折线点。</p>
 <h3 id="43">4.3 前视点与视线约束</h3>
 <p>沿简化路径取距机器人 1.2 m 的点作为 DWA 的“目标”。先计算机器人在路径上的
@@ -1121,8 +1112,7 @@ DWA 被拉向墙面。</p>
 </tr>
 <tr>
 <td>输出速度</td>
-<td>截断到 <script type="math/tex">\pm v_{\max}</script>、<script type="math/tex">\pm\omega_{\max}</script>
-</td>
+<td>截断到 $\pm v_{\max}$、$\pm\omega_{\max}$</td>
 </tr>
 <tr>
 <td>目标在滚动窗口外</td>
@@ -1283,7 +1273,7 @@ python3<span class="w"> </span>-m<span class="w"> </span>unittest<span class="w"
    但 A* 版本因为路线更靠中间，间隙略小，仍在安全范围内。</li>
 </ol>
 <h3 id="83">8.3 最小间隙</h3>
-<p>所有成功回合的最小离障距离为 0.30–1.14 m。规划器内部要求 <script type="math/tex">r+0.08=0.30</script> m，
+<p>所有成功回合的最小离障距离为 0.30–1.14 m。规划器内部要求 $r+0.08=0.30$ m，
 实测最低 0.30 m，说明安全裕度被真正执行，而不是只在代价函数里“软约束”。</p>
 <h2 id="9">9. 参数灵敏度</h2>
 <p>固定 A<em> 层，扫描 <code>predict_time ∈ {1.0,1.5,2.0,2.5,3.0}</code> s 与
@@ -1334,7 +1324,7 @@ python3<span class="w"> </span>-m<span class="w"> </span>unittest<span class="w"
 <p><img alt="参数扫描" src="../../img/ground/ros2_dwa_avoidance/parameter_sweep.png"/></p>
 <p>结论：在已有 A<em> 路线的前提下，</em><em>缩短预测时域能显著提高通行速度，成功率不降</em><em>。
 时域从 1.5 s 增到 3.0 s，平均时间从 18.2 s 增到 39.0 s，翻了一倍多；
-原因是恒定 <script type="math/tex">(v,\omega)</script> 的长时域预测会放大航向代价，规划器倾向于选小速度。
+原因是恒定 $(v,\omega)$ 的长时域预测会放大航向代价，规划器倾向于选小速度。
 所有 45 次组合都成功，最小间隙范围是 </em><em>0.302–0.600 m</em>*
 （corridor 0.314–0.328 m、doorway 0.535–0.600 m、clutter 0.302–0.344 m）；
 成功率对参数不敏感，但间隙随场景差异很大，不能概括为“稳定在 0.31–0.33 m”。

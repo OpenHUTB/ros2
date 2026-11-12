@@ -792,7 +792,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与制动 / Warehouse UAV Braking</a>
+<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与分级制动</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
 </li>
@@ -950,15 +950,15 @@
 <p>
 <script type="math/tex; mode=display">\theta_{k+1} = \theta_k + \omega_k\,\Delta t</script>
 </p>
-<p>底层轮速由 <script type="math/tex">(v, \omega)</script> 反解（<code>wheel_base</code> 为轮距 <script type="math/tex">L</script>，轮半径 <script type="math/tex">r</script>）：</p>
+<p>底层轮速由 $(v, \omega)$ 反解（<code>wheel_base</code> 为轮距 $L$，轮半径 $r$）：</p>
 <p>
 <script type="math/tex; mode=display">\dot\varphi_L = \frac{v - \omega L/2}{r},\qquad \dot\varphi_R = \frac{v + \omega L/2}{r}</script>
 </p>
-<p>实现中加入了<strong>加速度限幅</strong>：<script type="math/tex">\Delta v</script> 每周期不超过 <script type="math/tex">a_{\max}\Delta t</script>，
+<p>实现中加入了<strong>加速度限幅</strong>：$\Delta v$ 每周期不超过 $a_{\max}\Delta t$，
 避免速度指令阶跃导致轮胎打滑，也便于在真车上做平滑控制。</p>
 <h2 id="3">3. 纯追踪控制器</h2>
 <h3 id="31">3.1 前视点选取</h3>
-<p>在参考路径上寻找距离当前位置 <script type="math/tex">L_d</script> 的点 <script type="math/tex">(x_g, y_g)</script>，并用线性插值保证
+<p>在参考路径上寻找距离当前位置 $L_d$ 的点 $(x_g, y_g)$，并用线性插值保证
 目标点始终落在路径折线上，而不是落在某个离散步之间。</p>
 <p>前视距离有两层自适应——先按速度取基准值，再按前视点附近的路径曲率缩短：</p>
 <p>
@@ -967,8 +967,8 @@
 <p>
 <script type="math/tex; mode=display">L_d = \mathrm{clip}\!\left(\frac{L_{d,\text{speed}}}{1 + g\,|\kappa_{\text{path}}|\,s},\ L_{d,\min},\ L_{d,\max}\right)</script>
 </p>
-<p>其中 <script type="math/tex">\kappa_{\text{path}}</script> 是用前视点附近弧长 <script type="math/tex">s</script> 上三点外接圆估出来的路径曲率，
-<script type="math/tex">g</script> 为 <code>curve_gain</code>（取 0 即退回纯速度自适应，用于对照实验）。</p>
+<p>其中 $\kappa_{\text{path}}$ 是用前视点附近弧长 $s$ 上三点外接圆估出来的路径曲率，
+$g$ 为 <code>curve_gain</code>（取 0 即退回纯速度自适应，用于对照实验）。</p>
 <p>参数取值（<code>PurePursuitController</code>）：</p>
 <table>
 <thead>
@@ -1017,22 +1017,22 @@
 </tbody>
 </table>
 <h3 id="32">3.2 曲率与角速度</h3>
-<p>将前视点变换到车体坐标系（前向 <script type="math/tex">x</script>，左向 <script type="math/tex">y</script>）：</p>
+<p>将前视点变换到车体坐标系（前向 $x$，左向 $y$）：</p>
 <p>
 <script type="math/tex; mode=display">x_g' = \Delta x\cos\theta + \Delta y\sin\theta,\qquad y_g' = -\Delta x\sin\theta + \Delta y\cos\theta</script>
 </p>
-<p>航向偏差 <script type="math/tex">\alpha = \operatorname{atan2}(y_g', x_g')</script>，由纯追踪的经典几何关系，
-过前视点的圆弧曲率为 <script type="math/tex">\kappa = 2\sin\alpha / L_d</script>，于是</p>
+<p>航向偏差 $\alpha = \operatorname{atan2}(y_g', x_g')$，由纯追踪的经典几何关系，
+过前视点的圆弧曲率为 $\kappa = 2\sin\alpha / L_d$，于是</p>
 <p>
 <script type="math/tex; mode=display">\omega = \kappa v = \frac{2v\sin\alpha}{L_d}</script>
 </p>
 <h3 id="33">3.3 稳定性说明</h3>
-<p>纯追踪在 <script type="math/tex">L_d</script> 固定时对路径曲率变化是稳定的；前视距离随速度增大而增大，
+<p>纯追踪在 $L_d$ 固定时对路径曲率变化是稳定的；前视距离随速度增大而增大，
 本质上等价于在高速时降低控制增益，抑制了差速机器人在大曲率路径上的转向震荡。
-本实现中 <script type="math/tex">L_d \ge L_{d,\min} = 0.4</script> m 大于车长 0.36 m，可避免前视点落在车身内部导致的奇异。</p>
+本实现中 $L_d \ge L_{d,\min} = 0.4$ m 大于车长 0.36 m，可避免前视点落在车身内部导致的奇异。</p>
 <h3 id="34">3.4 曲率自适应前视（本版新增）</h3>
-<p>只按速度取 <script type="math/tex">L_d</script> 时，S 形路径在曲率反号处会出现横向误差尖峰：前视点跨在弯道外侧，
-机器人倾向于"抄近路"切内弯。改进办法是让 <script type="math/tex">L_d</script> 随路径曲率缩短（上节公式中的第二层），
+<p>只按速度取 $L_d$ 时，S 形路径在曲率反号处会出现横向误差尖峰：前视点跨在弯道外侧，
+机器人倾向于"抄近路"切内弯。改进办法是让 $L_d$ 随路径曲率缩短（上节公式中的第二层），
 弯道上前视点自动拉近，直道上保持原值。</p>
 <p>曲率用前视点附近弧长 <code>curve_span</code> 上三点外接圆估计（<code>Path.curvature()</code>），
 比取相邻三点更抗离散噪声；闭合路径按取模回绕。</p>
@@ -1079,30 +1079,29 @@
 </tbody>
 </table>
 <p>默认取 2.5：再往上收益变缓，但前视距离更短、弯道耗时略增（步数 636 → 671）。
-速度提到 1.5 / 2.0 m/s 时同样单调改善且未出现震荡（<script type="math/tex">L_{d,\min}</script> 兜底，前视点不会退到车身内部），
+速度提到 1.5 / 2.0 m/s 时同样单调改善且未出现震荡（$L_{d,\min}$ 兜底，前视点不会退到车身内部），
 因此默认值在 0.9–2.0 m/s 区间内都可用。</p>
 <h2 id="4">4. 反应式避障</h2>
 <h3 id="41">4.1 危险度</h3>
-<p>取车头前方 <script type="math/tex">\pm 60°</script> 扇区内的最小测距 <script type="math/tex">d_{\min}</script>：</p>
+<p>取车头前方 $\pm 60°$ 扇区内的最小测距 $d_{\min}$：</p>
 <p>
 <script type="math/tex; mode=display">r = \mathrm{clip}\left(\frac{d_{\text{safe}} - d_{\min}}{d_{\text{safe}} - d_{\text{danger}}},\ 0,\ 1\right)</script>
 </p>
-<p>其中 <script type="math/tex">d_{\text{safe}} = 1.2</script> m、<script type="math/tex">d_{\text{danger}} = 0.45</script> m。</p>
+<p>其中 $d_{\text{safe}} = 1.2$ m、$d_{\text{danger}} = 0.45$ m。</p>
 <h3 id="42">4.2 转向策略</h3>
 <p>比较扇区左右两半的平均余量，向<strong>更空旷的一侧</strong>施加偏置：</p>
 <p>
 <script type="math/tex; mode=display">\omega_{\text{bias}} = \sigma \cdot g \cdot r,\qquad \sigma = \mathrm{sign}\left(\bar d_L - \bar d_R\right)</script>
 </p>
-<p>
-<script type="math/tex">g = 1.6</script> rad/s。使用半扇区均值而不是最近点的单点距离，是为了避免被单个噪点带偏。</p>
+<p>$g = 1.6$ rad/s。使用半扇区均值而不是最近点的单点距离，是为了避免被单个噪点带偏。</p>
 <h3 id="43">4.3 速度耦合</h3>
 <p>
 <script type="math/tex; mode=display">v \leftarrow v \cdot (1 - 0.85\,r)</script>
 </p>
 <p>危险度为 1 时速度降至 15%。这一点很关键：反应式避障的转向能力与速度直接相关，
-转弯半径 <script type="math/tex">R = v/\omega</script>；不减速则 <script type="math/tex">R</script> 过大，机器人来不及绕过障碍。</p>
+转弯半径 $R = v/\omega$；不减速则 $R$ 过大，机器人来不及绕过障碍。</p>
 <h3 id="44">4.4 危险距离内的急停</h3>
-<p>仅靠减速仍然存在下限：上式在 <script type="math/tex">r=1</script> 时仍保留 15% 速度，机器人会继续逼近障碍。
+<p>仅靠减速仍然存在下限：上式在 $r=1$ 时仍保留 15% 速度，机器人会继续逼近障碍。
 因此当最小测距进入危险距离之内时，直接判定为急停：</p>
 <p>
 <script type="math/tex; mode=display">d_{\min} \le d_{\text{danger}} \;\Rightarrow\; v = 0</script>
@@ -1111,7 +1110,7 @@
 避免在障碍正前方「停死」。该行为由 <code>test_arbitration_emergency_stop_zero_speed_keeps_turn</code>
 与 <code>test_simulation_survives_emergency_stop</code> 两项测试锁定。</p>
 <h2 id="5">5. 控制仲裁与安全兜底</h2>
-<p>每个控制周期最终下发哪一组 <script type="math/tex">(v, \omega)</script> 由 <code>arbitrate()</code> 统一裁决——
+<p>每个控制周期最终下发哪一组 $(v, \omega)$ 由 <code>arbitrate()</code> 统一裁决——
 节点层不再出现多个分支各自发布速度的情况，所有决策只有一个出口：</p>
 <table>
 <thead>
@@ -1126,15 +1125,13 @@
 <tr>
 <td style="text-align: center;">0</td>
 <td><code>/odom</code> 超过 <code>odom_timeout</code>(0.5 s) 未更新，或从未收到</td>
-<td>停车 <script type="math/tex">(0,0)</script>
-</td>
+<td>停车 $(0,0)$</td>
 <td><code>stale_odom</code></td>
 </tr>
 <tr>
 <td style="text-align: center;">1</td>
 <td>到达路径终点</td>
-<td>停车 <script type="math/tex">(0,0)</script>
-</td>
+<td>停车 $(0,0)$</td>
 <td><code>finished</code></td>
 </tr>
 <tr>
@@ -1151,15 +1148,13 @@
 </tr>
 <tr>
 <td style="text-align: center;">4</td>
-<td>前向测距 <script type="math/tex">\le d_{\text{danger}}</script>
-</td>
-<td>急停 <script type="math/tex">v=0</script>，保留转向</td>
+<td>前向测距 $\le d_{\text{danger}}$</td>
+<td>急停 $v=0$，保留转向</td>
 <td><code>emergency_stop</code></td>
 </tr>
 </tbody>
 </table>
-<p>出口处统一把角速度截断到 <script type="math/tex">\pm</script>
-<code>max_angular</code>(1.8 rad/s)，防止叠加偏置后
+<p>出口处统一把角速度截断到 $\pm$ <code>max_angular</code>(1.8 rad/s)，防止叠加偏置后
 下发车辆执行不了的角速度。</p>
 <p>三点设计考量：</p>
 <ol>
@@ -1196,9 +1191,9 @@ ros2<span class="w"> </span>launch<span class="w"> </span>ros2_pure_pursuit<span
 <h2 id="7">7. 实验结果</h2>
 <h3 id="71">7.1 场景设置</h3>
 <ul>
-<li>参考路径四种：圆形（<script type="math/tex">R=8</script> m）、8 字形（利萨如曲线 <script type="math/tex">a=10</script> m）、S 形（<script type="math/tex">L=24</script> m，<script type="math/tex">A=3</script> m）、直线（<script type="math/tex">L=20</script> m）</li>
+<li>参考路径四种：圆形（$R=8$ m）、8 字形（利萨如曲线 $a=10$ m）、S 形（$L=24$ m，$A=3$ m）、直线（$L=20$ m）</li>
 <li>障碍：沿路径法线方向偏移 0.80 m、半径 0.50 m 布置两处；
-  该位置满足 <script type="math/tex">0.80 < 0.50 + 0.35</script>，即<strong>关闭避障必然碰撞</strong>、开启避障必须绕行</li>
+  该位置满足 $0.80 &lt; 0.50 + 0.35$，即<strong>关闭避障必然碰撞</strong>、开启避障必须绕行</li>
 <li>期望速度 0.9 m/s，控制周期 0.05 s，机器人等效外接半径 0.35 m</li>
 </ul>
 <h3 id="72">7.2 对照实验数据</h3>
@@ -1355,12 +1350,11 @@ ros2<span class="w"> </span>launch<span class="w"> </span>ros2_pure_pursuit<span
 </tr>
 <tr>
 <td><code>test_arbitration_emergency_stop_zero_speed_keeps_turn</code></td>
-<td>危险距离内 <script type="math/tex">v=0</script> 且保留转向</td>
+<td>危险距离内 $v=0$ 且保留转向</td>
 </tr>
 <tr>
 <td><code>test_avoider_emergency_stop_inside_danger_distance</code></td>
-<td>
-<script type="math/tex">d_{\min} \le d_{\text{danger}}</script> 时急停</td>
+<td>$d_{\min} \le d_{\text{danger}}$ 时急停</td>
 </tr>
 <tr>
 <td><code>test_arbitration_stale_odom_stops_robot</code></td>

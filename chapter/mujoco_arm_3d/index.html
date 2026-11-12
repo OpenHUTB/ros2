@@ -732,7 +732,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与制动 / Warehouse UAV Braking</a>
+<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与分级制动</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
 </li>
@@ -890,7 +890,7 @@
 </tr>
 <tr>
 <td>yaw 解缠</td>
-<td><strong>做了</strong>。1.5 圈跨过 <script type="math/tex">\mathrm{atan2}</script> 的 <script type="math/tex">\pm\pi</script> 跳变点，逐帧把 <script type="math/tex">q_0</script> 加减 <script type="math/tex">2\pi</script> 拉回上一帧附近（§2.2）</td>
+<td><strong>做了</strong>。1.5 圈跨过 $\mathrm{atan2}$ 的 $\pm\pi$ 跳变点，逐帧把 $q_0$ 加减 $2\pi$ 拉回上一帧附近（§2.2）</td>
 </tr>
 <tr>
 <td>PD 位置控制</td>
@@ -913,15 +913,15 @@
 <h2 id="2">2. 原理</h2>
 <h3 id="21">2.1 空间逆运动学（闭式解）</h3>
 <p>模型：<code>yaw</code> 绕 Z 轴（方位角），<code>shoulder</code> / <code>elbow</code> 绕 −Y 轴（在臂平面内弯折），
-两段杆长 <script type="math/tex">L_1=L_2=0.30</script> m，肩俯仰铰点高度 <script type="math/tex">z_0=0.24</script> m。</p>
-<p>给定末端目标 <script type="math/tex">(x,y,z)</script>，先把目标分解成水平半径与臂平面内的极坐标：</p>
+两段杆长 $L_1=L_2=0.30$ m，肩俯仰铰点高度 $z_0=0.24$ m。</p>
+<p>给定末端目标 $(x,y,z)$，先把目标分解成水平半径与臂平面内的极坐标：</p>
 <p>
 <script type="math/tex; mode=display">
 r=\sqrt{x^{2}+y^{2}},\qquad \Delta z=z-z_{0},\qquad d=\sqrt{r^{2}+\Delta z^{2}}
 </script>
 </p>
-<p>可达性判据 <script type="math/tex">|L_1-L_2|\le d\le L_1+L_2</script>；不满足则返回 <code>None</code>，主程序会打印"目标点在工作空间外"并跳过该帧。
-余弦定理求肘角（这里取"肘上"解 <script type="math/tex">q_2>0</script>，画面里小臂向上折）：</p>
+<p>可达性判据 $|L_1-L_2|\le d\le L_1+L_2$；不满足则返回 <code>None</code>，主程序会打印"目标点在工作空间外"并跳过该帧。
+余弦定理求肘角（这里取"肘上"解 $q_2&gt;0$，画面里小臂向上折）：</p>
 <p>
 <script type="math/tex; mode=display">
 \cos q_{2}=\frac{d^{2}-L_{1}^{2}-L_{2}^{2}}{2L_{1}L_{2}},\qquad q_{2}=\arccos\big(\cos q_{2}\big)
@@ -952,8 +952,8 @@ x=x_{\text{arm}}\cos q_{0},\qquad y=x_{\text{arm}}\sin q_{0},\qquad z=z_{0}+z_{\
 </script>
 </p>
 <h3 id="22-yaw">2.2 yaw 解缠</h3>
-<p>1.5 圈（540°）会跨过 <script type="math/tex">\mathrm{atan2}</script> 的 <script type="math/tex">\pm\pi</script> 跳变点，直接取角会让关节在相邻两帧之间
-"瞬间甩 360°"。逐帧把新的 <script type="math/tex">q_0</script> 加减 <script type="math/tex">2\pi</script> 拉回上一帧附近（差值控制在 <script type="math/tex">(-\pi,\pi]</script>），
+<p>1.5 圈（540°）会跨过 $\mathrm{atan2}$ 的 $\pm\pi$ 跳变点，直接取角会让关节在相邻两帧之间
+"瞬间甩 360°"。逐帧把新的 $q_0$ 加减 $2\pi$ 拉回上一帧附近（差值控制在 $(-\pi,\pi]$），
 关节角保持连续，画面才是平滑画圆。</p>
 <h3 id="23-pd">2.3 为什么默认不用 PD 驱动</h3>
 <p>这条只适用于 <strong>PD 对照路径</strong>（<code>ARM3D_PD=1</code>）：按 1/24 s 的帧间隔只走 1 个 2 ms 物理步时，
@@ -987,7 +987,7 @@ PD 路径仍保留（<code>ARM3D_PD=1 ARM3D_KP=.. ARM3D_KD=..</code>）作为对
 \begin{bmatrix}p_x\\p_y\end{bmatrix}
 </script>
 </p>
-<p>最小二乘解出 3×4 投影矩阵 <script type="math/tex">P</script>，投影关系为</p>
+<p>最小二乘解出 3×4 投影矩阵 $P$，投影关系为</p>
 <p>
 <script type="math/tex; mode=display">
 \begin{bmatrix}u\\v\\w\end{bmatrix}=P\begin{bmatrix}x\\y\\z\\1\end{bmatrix},\qquad
@@ -1126,7 +1126,7 @@ viewer 里没有，所以这里用 <code>user_scn</code> 补了真实的三维�
 </code></pre></div>
 <p><code>逆解</code> 是 <code>ik3</code> 算出的三个关节角（rad），<code>正解</code> 是把这组角写进 <code>qpos</code> 后由 <strong>MuJoCo 引擎</strong>
 读出的末端世界坐标（<code>data.xpos[tip]</code>），不是手写正解 —— 所以这一列能排除"自己验自己"。
-<code>点4</code> 的 <code>3.142</code> 与 <code>-0.000</code> 是 <script type="math/tex">\pi</script> 附近的浮点舍入，几何上是同一组解。</p>
+<code>点4</code> 的 <code>3.142</code> 与 <code>-0.000</code> 是 $\pi$ 附近的浮点舍入，几何上是同一组解。</p>
 <p><code>python3 main.py</code> 的实际输出（同一台机器）：</p>
 <div class="highlight"><pre><span></span><code>相机标定：10/10 个点有效，平均重投影误差 1.56 px
 三自由度机械臂空间螺旋线：半径 0.20 m，高度 0.32→0.56 m，1.5 圈，共 216 帧，运动学驱动（IK 解直写 qpos + mj_forward，不做物理积分）
@@ -1150,7 +1150,7 @@ viewer 里没有，所以这里用 <code>user_scn</code> 补了真实的三维�
 <p>也就是不再去碰 <code>../../../docs/img</code>，不会因为目标目录无权限而中断。文件大小每次会有 KB 级浮动
 （1.65~1.66 MB），是 GIF 调色板压缩的差异，逐帧画面一致。</p>
 <h3 id="34">3.4 运动动图</h3>
-<p>末端从 <script type="math/tex">z=0.32</script> m 起，绕半径 0.20 m 的圆转 1.5 圈，同时匀速升到 <script type="math/tex">z=0.56</script> m；
+<p>末端从 $z=0.32$ m 起，绕半径 0.20 m 的圆转 1.5 圈，同时匀速升到 $z=0.56$ m；
 地面的 16 个绿点是这条螺旋线在地面的水平投影参考点（半径同为 0.20 m，每 22.5° 一个）。
 动图见<strong>页首那张主图</strong>（同一张图，这里不重复贴）。</p>
 <p>本图由 <code>main.py</code> 逐帧渲染并合成，<strong>216 帧 / 640×480 / 每帧 40 ms / 8.64 s / 1.64 MB</strong>。</p>
@@ -1202,13 +1202,11 @@ GIF 时间轴精度只有 10 ms，41.7 ms 会被写成 <strong>40 ms</strong>，
 </thead>
 <tbody>
 <tr>
-<td>杆长 <script type="math/tex">L_1</script> / <script type="math/tex">L_2</script>
-</td>
+<td>杆长 $L_1$ / $L_2$</td>
 <td>0.30 m / 0.30 m</td>
 </tr>
 <tr>
-<td>肩俯仰铰点高度 <script type="math/tex">z_0</script>
-</td>
+<td>肩俯仰铰点高度 $z_0$</td>
 <td>0.24 m</td>
 </tr>
 <tr>

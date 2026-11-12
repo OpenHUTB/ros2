@@ -762,7 +762,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与制动 / Warehouse UAV Braking</a>
+<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与分级制动</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
 </li>
@@ -911,7 +911,7 @@
 </table>
 <h2 id="2">2. 原理</h2>
 <h3 id="21">2.1 为什么会溜</h3>
-<p>车静止在倾角 <script type="math/tex">\alpha</script> 的坡上时，重力沿坡分量 <script type="math/tex">mg\sin\alpha</script> 由静摩擦平衡。
+<p>车静止在倾角 $\alpha$ 的坡上时，重力沿坡分量 $mg\sin\alpha$ 由静摩擦平衡。
 一旦轮子可以自由转动（相当于松开驻车），四个轮子一起滚，整车就沿坡下滑。</p>
 <div class="admonition warning">
 <p class="admonition-title">车身必须按坡度摆正</p>
@@ -929,7 +929,7 @@
 <li><strong>PD 部分</strong>：把轮子锁在原来的角度上，相当于电子驻车</li>
 <li><strong>前馈部分</strong>：直接抵消重力分量，让稳态误差接近 0（只用 PD 会缓慢蠕动）</li>
 </ul>
-<p>参数：<script type="math/tex">k_p=45</script>、<script type="math/tex">k_d=3</script>，前馈 0.286 N·m/轮（<script type="math/tex">m=7.0</script> kg, <script type="math/tex">\alpha=12°</script>, <script type="math/tex">r=0.08</script> m）。</p>
+<p>参数：$k_p=45$、$k_d=3$，前馈 0.286 N·m/轮（$m=7.0$ kg, $\alpha=12°$, $r=0.08$ m）。</p>
 <h2 id="3">3. 运行</h2>
 <h3 id="31">3.1 依赖</h3>
 <div class="highlight"><pre><span></span><code><span class="c1"># 基础（自检只需要这些）</span>
@@ -1025,7 +1025,7 @@ python3<span class="w"> </span>tools/make_gif.py<span class="w">                
 <li><strong>三点支撑在斜面上不稳</strong>：改成 <strong>4 轮两轴</strong>布局，俯仰静定，落稳后稳定 4 点接触。</li>
 <li><strong>速度执行器相当于刹车</strong>：<code>velocity</code> 执行器 <code>ctrl=0</code> 等于把轮速锁在 0，
    3 s 只移动 4.7 cm，演示不出溜车 → 改成 <code>motor</code>（力矩）执行器。</li>
-<li><strong>出生法向量 x 分量写反 + 漏掉轮毂偏移</strong>：法向应为 <script type="math/tex">(\sin(-\alpha),0,\cos(-\alpha))</script>，
+<li><strong>出生法向量 x 分量写反 + 漏掉轮毂偏移</strong>：法向应为 $(\sin(-\alpha),0,\cos(-\alpha))$，
    且抬高量是"轮半径 + 轮毂下移 0.02"，不是只有轮半径。错了会让车陷进地面（穿透 2.69 cm）。</li>
 <li><strong><code>peak_pitch</code> / <code>ncon</code> 曾是死变量</strong>：算了却不参与判据，等于只查末俯仰，
    会漏掉中途翻车。现在两者都是硬判据。</li>

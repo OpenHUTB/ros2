@@ -764,7 +764,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与制动 / Warehouse UAV Braking</a>
+<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与分级制动</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
 </li>
@@ -905,17 +905,17 @@ q_k=\mathrm{round}\!\left(\frac{\theta_k}{\Delta}\right)\Delta,\qquad
 v_k=\frac{q_k-q_{k-1}}{dt}
 </script>
 </p>
-<p>量化误差 <script type="math/tex">\pm\Delta/2</script> 除以 <script type="math/tex">dt=1</script> ms 后放大 1000 倍，得到速度误差量级
-<script type="math/tex">\Delta/dt</script>：1024 CPR 时约 6.1 rad/s，4096 CPR 时约 1.5 rad/s。</p>
+<p>量化误差 $\pm\Delta/2$ 除以 $dt=1$ ms 后放大 1000 倍，得到速度误差量级
+$\Delta/dt$：1024 CPR 时约 6.1 rad/s，4096 CPR 时约 1.5 rad/s。</p>
 <blockquote>
 <p><strong>口径</strong>：表中 CPR 指<strong>四倍频（quadrature ×4）解码后的计数/转</strong>，不是编码器线数：若按线数选型，1024 线对应 4096 CPR、4096 线对应 16384 CPR。量化步长 Δ = 2π/CPR，与 <code>EncoderSpec.step_rad</code> 一致。</p>
 </blockquote>
 <h3 id="12">1.2 三种滤波</h3>
 <ul>
-<li><strong>滑动平均</strong>：对最近 <script type="math/tex">N=5</script> 个差分值取平均，噪声降 <script type="math/tex">\sqrt5</script> 倍，代价 <script type="math/tex">2</script> ms 延迟；</li>
-<li><strong>α-β 跟踪器</strong>：对位置做预测-校正，<script type="math/tex">\alpha=0.35,\ \beta=0.08</script>；</li>
-<li><strong>两状态卡尔曼</strong>：状态 <script type="math/tex">[\theta,v]</script>，过程噪声 25 rad/s²（覆盖梯形曲线的加减速），
-  量测噪声取 <script type="math/tex">\Delta/3</script>。</li>
+<li><strong>滑动平均</strong>：对最近 $N=5$ 个差分值取平均，噪声降 $\sqrt5$ 倍，代价 $2$ ms 延迟；</li>
+<li><strong>α-β 跟踪器</strong>：对位置做预测-校正，$\alpha=0.35,\ \beta=0.08$；</li>
+<li><strong>两状态卡尔曼</strong>：状态 $[\theta,v]$，过程噪声 25 rad/s²（覆盖梯形曲线的加减速），
+  量测噪声取 $\Delta/3$。</li>
 </ul>
 <p>延迟用互相关峰的位置度量（估计相对真值的滞后）；采样间隔 1 ms，所以延迟分辨率就是 <strong>±1 ms</strong>，1024 CPR 下原始差分噪声很大，0 ms 的峰值也可能是伪峰。</p>
 <h3 id="13">1.3 数据</h3>

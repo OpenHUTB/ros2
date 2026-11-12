@@ -742,7 +742,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../mujoco_warehouse_uav_collision_braking/">仓储通道测距与制动 / Warehouse UAV Braking</a>
+<li class="toctree-l1"><a class="reference internal" href="../../mujoco_warehouse_uav_collision_braking/">仓储通道测距与分级制动</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
 </li>
@@ -901,10 +901,8 @@
 </tr>
 <tr>
 <td>均匀栅格（voxel grid）</td>
-<td>与体积成正比，<script type="math/tex">O(N^3)</script>
-</td>
-<td>
-<script type="math/tex">O(1)</script>，常数最小</td>
+<td>与体积成正比，$O(N^3)$</td>
+<td>$O(1)$，常数最小</td>
 <td>单一，全局一致</td>
 <td>简单，直接写格子</td>
 <td>小范围、高分辨率固定场景</td>
@@ -912,8 +910,7 @@
 <tr>
 <td>八叉树（octree）</td>
 <td>按需分配，空区域不占内存</td>
-<td>
-<script type="math/tex">O(\log N)</script>，树遍历</td>
+<td>$O(\log N)$，树遍历</td>
 <td>多分辨率，近密远疏</td>
 <td>支持按节点分裂/合并</td>
 <td>大范围、在线增长的三维地图</td>
@@ -925,7 +922,7 @@
 <h3 id="13">1.3 为什么本项目选八叉树</h3>
 <p>具体算一笔账。本项目默认分辨率 0.3 m，离线验证场景是一个 20×20×6 m 的房间：</p>
 <ul>
-<li>均匀栅格：<script type="math/tex">67 \times 67 \times 20 \approx 8.98</script> 万个体素，其中绝大多数是空气，也被完整分配；</li>
+<li>均匀栅格：$67 \times 67 \times 20 \approx 8.98$ 万个体素，其中绝大多数是空气，也被完整分配；</li>
 <li>八叉树：同一场景扫满一圈之后，<strong>自由叶节点约 1.8 万个</strong>（实测 17945 / 19366，随传感器巡游
   时序略有浮动），只有栅格法的五分之一，因为大片空区域合并成了大节点。</li>
 </ul>
@@ -938,7 +935,7 @@
 <li><strong>与 ROS 生态直接互通。</strong> <code>octomap_msgs/Octomap</code> 是标准消息，RViz 能直接显示，
    后面第 6 节要讲的 ROS 2 对照也建立在同一套消息上。</li>
 </ol>
-<p>代价是查询变慢：找一个点落在哪个叶节点上是 <script type="math/tex">O(\log N)</script> 的树遍历，
+<p>代价是查询变慢：找一个点落在哪个叶节点上是 $O(\log N)$ 的树遍历，
 而且"邻居"不再是"下标加一"，这是 A* 一节要专门处理的难点。</p>
 <h3 id="14">1.4 目标与交付形态</h3>
 <p>目标不是"实现一个算法"，而是<strong>一条从传感器到飞行的完整闭环链路，且每一步都能在本机复现</strong>：</p>
@@ -968,7 +965,7 @@
 </tr>
 </tbody>
 </table>
-<p><strong>已经测出来的指标</strong>（离线场景，目标点 <script type="math/tex">(7.5, -7.5, 2.0)</script>，设定速度 3.0 m/s）：</p>
+<p><strong>已经测出来的指标</strong>（离线场景，目标点 $(7.5, -7.5, 2.0)$，设定速度 3.0 m/s）：</p>
 <table>
 <thead>
 <tr>
@@ -1019,7 +1016,7 @@
   换成真实载具时，这一层要换成 VIO / 激光里程计。</li>
 <li><strong>不做动力学控制。</strong> 底层由 AirSim 内置的位置控制器执行（<code>moveToPositionAsync</code>），
   本项目只负责给出几何路径与航点序列；姿态、推力分配不在范围内。</li>
-<li><strong>不追求最优。</strong> <code>heuristic_weight &gt; 1</code> 可切加权 A*；跨分辨率邻居用 <script type="math/tex">k_{\max}</script> 截断，
+<li><strong>不追求最优。</strong> <code>heuristic_weight &gt; 1</code> 可切加权 A*；跨分辨率邻居用 $k_{\max}$ 截断，
   是保守近似（只可能绕远，不会穿墙）。这些取舍在对应页面里都写明了。</li>
 <li><strong>不做动态障碍。</strong> 地图是增量更新的，但规划不预测移动障碍的未来位置，
   也没有滚动重规划的时间保证。</li>
@@ -1127,17 +1124,13 @@
 <td>世界系</td>
 <td>NED（北-东-地）</td>
 <td>ENU（东-北-天）</td>
-<td>
-<script type="math/tex">(e, n, u) = (y, x, -z)</script>
-</td>
+<td>$(e, n, u) = (y, x, -z)$</td>
 </tr>
 <tr>
 <td>机体系</td>
 <td>FRD（前-右-下）</td>
 <td>FLU（前-左-上）</td>
-<td>
-<script type="math/tex">(x, y, z) = (x, -y, -z)</script>
-</td>
+<td>$(x, y, z) = (x, -y, -z)$</td>
 </tr>
 <tr>
 <td>姿态</td>

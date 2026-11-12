@@ -770,7 +770,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../mujoco_warehouse_uav_collision_braking/">仓储通道测距与制动 / Warehouse UAV Braking</a>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_warehouse_uav_collision_braking/">仓储通道测距与分级制动</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
 </li>
@@ -902,7 +902,7 @@
 <h2 id="1">1. 问题：单桨失效到底有多严重</h2>
 <p>四旋翼在悬停时四条旋翼的总推力约等于重力，单条桨承担 25% 的升力。一旦某条桨停转，
 剩余三条桨即使按原指令继续出力，合力方向也会立刻偏斜，同时产生一个无法抵消的滚转（或俯仰）力矩。</p>
-<p>实测（<code>open_ground</code> 场景，悬停 1.5 m，<script type="math/tex">t=2.0\ \text{s}</script> 注入故障，仿真 8 s）：</p>
+<p>实测（<code>open_ground</code> 场景，悬停 1.5 m，$t=2.0\ \text{s}$ 注入故障，仿真 8 s）：</p>
 <table>
 <thead>
 <tr>
@@ -979,7 +979,7 @@
 </ol>
 <p>其余（动力学、场景、传感器、控制器）全部复用底座，一行都不改。</p>
 <h2 id="3">3. 故障模型</h2>
-<p>把第 <script type="math/tex">i</script> 条桨的实际推力写成"指令 × 增益 + 偏置"：</p>
+<p>把第 $i$ 条桨的实际推力写成"指令 × 增益 + 偏置"：</p>
 <p>
 <script type="math/tex; mode=display">
 T_i^{\text{act}}(t) \;=\; g_i(t)\, u_i^{\text{cmd}}(t) \;+\; b_i(t),
@@ -987,58 +987,40 @@ T_i^{\text{act}}(t) \;=\; g_i(t)\, u_i^{\text{cmd}}(t) \;+\; b_i(t),
 \qquad T_{\max} = 6.0\ \text{N}
 </script>
 </p>
-<p>四种桨故障用不同的 <script type="math/tex">(g_i, b_i)</script> 组合表达：</p>
+<p>四种桨故障用不同的 $(g_i, b_i)$ 组合表达：</p>
 <table>
 <thead>
 <tr>
 <th>类型</th>
-<th>增益 <script type="math/tex">g_i(t)</script>
-</th>
-<th>偏置 <script type="math/tex">b_i(t)</script>
-</th>
+<th>增益 $g_i(t)$</th>
+<th>偏置 $b_i(t)$</th>
 <th>物理含义</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><code>loss</code></td>
-<td>
-<script type="math/tex">1-\alpha(t)</script>
-</td>
-<td>
-<script type="math/tex">0</script>
-</td>
+<td>$1-\alpha(t)$</td>
+<td>$0$</td>
 <td>桨停转（电机/电调损坏、桨叶脱落）</td>
 </tr>
 <tr>
 <td><code>degradation</code></td>
-<td>
-<script type="math/tex">1+(s-1)\alpha(t)</script>
-</td>
-<td>
-<script type="math/tex">0</script>
-</td>
-<td>推力只能出到原来的 <script type="math/tex">s</script>（桨叶损伤、电压跌落）</td>
+<td>$1+(s-1)\alpha(t)$</td>
+<td>$0$</td>
+<td>推力只能出到原来的 $s$（桨叶损伤、电压跌落）</td>
 </tr>
 <tr>
 <td><code>stuck</code></td>
-<td>
-<script type="math/tex">1-\alpha(t)</script>
-</td>
-<td>
-<script type="math/tex">s\,T_{\max}\,\alpha(t)</script>
-</td>
+<td>$1-\alpha(t)$</td>
+<td>$s\,T_{\max}\,\alpha(t)$</td>
 <td>电调卡在固定占空比，不再响应指令</td>
 </tr>
 <tr>
 <td><code>progressive</code></td>
-<td>
-<script type="math/tex">\max\!\big(0.05,\;1-\dot\lambda\,(t-t_0)\big)</script>
-</td>
-<td>
-<script type="math/tex">0</script>
-</td>
-<td>每秒钟损失 <script type="math/tex">\dot\lambda</script> 的推力（缓慢恶化）</td>
+<td>$\max!\big(0.05,\;1-\dot\lambda\,(t-t_0)\big)$</td>
+<td>$0$</td>
+<td>每秒钟损失 $\dot\lambda$ 的推力（缓慢恶化）</td>
 </tr>
 </tbody>
 </table>
@@ -1048,8 +1030,7 @@ T_i^{\text{act}}(t) \;=\; g_i(t)\, u_i^{\text{cmd}}(t) \;+\; b_i(t),
 \alpha(t) \;=\; \min\!\left(1,\; \frac{t-t_0}{r}\right),
 </script>
 </p>
-<p>
-<script type="math/tex">t_0</script> 是注入时刻（<code>onset</code>），<script type="math/tex">r</script> 是过渡时长（<code>ramp</code>；<script type="math/tex">r=0</script> 时故障瞬间生效）。</p>
+<p>$t_0$ 是注入时刻（<code>onset</code>），$r$ 是过渡时长（<code>ramp</code>；$r=0$ 时故障瞬间生效）。</p>
 <p>传感器故障走的是<strong>另一条路</strong>：它不改推力，而是篡改控制器读到的 IMU 角速度。实现分两步——先按过渡加零偏/噪声/丢包，再把被污染的角速度积分成控制器用的姿态估计：</p>
 <p>
 <script type="math/tex; mode=display">
@@ -1080,8 +1061,7 @@ T_i^{\text{act}}(t) \;=\; g_i(t)\, u_i^{\text{cmd}}(t) \;+\; b_i(t),
 </tr>
 <tr>
 <td><code>onset</code> / <code>ramp</code></td>
-<td>与旋翼故障共用同一套分段生效规则，<script type="math/tex">\alpha_s(t)</script> 即上式的 <script type="math/tex">\alpha(t)</script>
-</td>
+<td>与旋翼故障共用同一套分段生效规则，$\alpha_s(t)$ 即上式的 $\alpha(t)$</td>
 </tr>
 </tbody>
 </table>
@@ -1109,7 +1089,7 @@ T_i^{\text{act}}(t) \;=\; g_i(t)\, u_i^{\text{cmd}}(t) \;+\; b_i(t),
 <div class="admonition tip">
 <p class="admonition-title">为什么用 <code>np.clip</code></p>
 <p>故障后的推力必须落在物理可达范围内。<code>stuck</code> 的偏置加上指令放大后很容易超过
-<script type="math/tex">T_{\max}</script>，不裁剪会得到一个不存在于真实电调上的推力，指标也就失真了。</p>
+$T_{\max}$，不裁剪会得到一个不存在于真实电调上的推力，指标也就失真了。</p>
 </div>
 <h3 id="42-runnerpy">4.2 闭环运行器 <code>runner.py</code></h3>
 <p>主循环只有五行，故障注入插在中间：</p>
@@ -1131,7 +1111,7 @@ T_i^{\text{act}}(t) \;=\; g_i(t)\, u_i^{\text{cmd}}(t) \;+\; b_i(t),
         <span class="n">w</span> <span class="o">=</span> <span class="n">injector</span><span class="o">.</span><span class="n">sense_omega</span><span class="p">(</span><span class="n">real</span><span class="o">.</span><span class="n">omega</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prev</span><span class="p">)</span>   <span class="c1"># 篡改角速度</span>
         <span class="k">return</span> <span class="n">replace</span><span class="p">(</span><span class="n">real</span><span class="o">.</span><span class="n">state</span><span class="p">(),</span> <span class="n">omega</span><span class="o">=</span><span class="n">w</span><span class="p">,</span> <span class="n">quat</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_quat_hat</span><span class="p">)</span> <span class="c1"># 姿态由 ω 积分</span>
 </code></pre></div>
-<p><code>_quat_hat</code> 只在传感器故障生效后开始用 <script type="math/tex">\omega^{sensed}</script> 积分（健康时不启用，所以基线保持 0 漂移）；
+<p><code>_quat_hat</code> 只在传感器故障生效后开始用 $\omega^{sensed}$ 积分（健康时不启用，所以基线保持 0 漂移）；
 控制器每拍拿到的是"带零偏的角速度 + 漂移的姿态估计"，而物理推进仍然用真实状态——这样故障才真的
 闭环进了控制律，而不是只写在结果表里。</p>
 <div class="admonition note">
@@ -1157,8 +1137,7 @@ E_u &= \textstyle\int \lVert \mathbf{u}(t) \rVert^2\, dt, \\
 \end{aligned}
 </script>
 </p>
-<p>
-<script type="math/tex">\bar\omega_\psi</script> 值得单独说明：单桨完全失效后，四旋翼<strong>必须放弃偏航控制</strong>，靠机体自转来平衡
+<p>$\bar\omega_\psi$ 值得单独说明：单桨完全失效后，四旋翼<strong>必须放弃偏航控制</strong>，靠机体自转来平衡
 反扭矩才能维持姿态（Mueller &amp; D'Andrea, ICRA 2014）。所以"存活且偏航角速度稳定在非零常数"
 是容错控制真的按机制工作的证据，而不是靠调参凑出来的指标。</p>
 <h3 id="44-scenariopy">4.4 用例矩阵 <code>scenario.py</code></h3>

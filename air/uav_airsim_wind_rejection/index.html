@@ -732,7 +732,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../mujoco_warehouse_uav_collision_braking/">仓储通道测距与制动 / Warehouse UAV Braking</a>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_warehouse_uav_collision_braking/">仓储通道测距与分级制动</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
 </li>
@@ -881,8 +881,8 @@
 <p><img alt="demo" src="../../img/uav/wind_reject/demo.gif"/></p>
 <p>动图由 <code>simGetImages(ImageType.Scene)</code> 逐帧截取真实 Blocks 画面合成，150 帧，3.9 MB。画面中无人机顶着 15 m/s 侧风悬停，可见方块墙随位移滑动。</p>
 <h2 id="3">3. 问题描述</h2>
-<p>设无人机在水平面的位置为 <script type="math/tex">\mathbf{p}=(x,y)</script>，目标悬停点 <script type="math/tex">\mathbf{p}^\*=(x^\*,y^\*)</script>，外部风场 <script type="math/tex">\mathbf{w}=(w_x,w_y)</script>。</p>
-<p>无补偿时无人机被风推走，位置误差 <script type="math/tex">\mathbf{e}=\mathbf{p}^\*-\mathbf{p}</script> 持续增大。目标是在每个控制周期 <script type="math/tex">\Delta t=0.25</script> s 内输出补偿速度 <script type="math/tex">\mathbf{u}=(u_x,u_y)</script>，使 <script type="math/tex">\|\mathbf{e}\|</script> 有界。</p>
+<p>设无人机在水平面的位置为 $\mathbf{p}=(x,y)$，目标悬停点 $\mathbf{p}^*=(x^*,y^*)$，外部风场 $\mathbf{w}=(w_x,w_y)$。</p>
+<p>无补偿时无人机被风推走，位置误差 $\mathbf{e}=\mathbf{p}^*-\mathbf{p}$ 持续增大。目标是在每个控制周期 $\Delta t=0.25$ s 内输出补偿速度 $\mathbf{u}=(u_x,u_y)$，使 $|\mathbf{e}|$ 有界。</p>
 <h2 id="4">4. 专家策略（标签来源）</h2>
 <p>专家能看到真实风速（特权信息），控制律为</p>
 <p>
@@ -890,8 +890,8 @@
 \mathbf{u}=\mathrm{clip}\big(K_p\,\mathbf{e}-K_d\,\mathbf{v}-k_w\,\mathbf{w},\;[-u_{\max},u_{\max}]\big)
 </script>
 </p>
-<p>其中 <script type="math/tex">\mathbf{v}</script> 由相邻两帧位置差分估计，<script type="math/tex">K_p=0.55</script>、<script type="math/tex">K_d=0.20</script>、<script type="math/tex">u_{\max}=3.0</script> m/s。</p>
-<p><strong>关键标定</strong>：理想情况下 <script type="math/tex">k_w=1</script>（完全前馈抵消），但实测 SimpleFlight 内置速度环已经把绝大部分风抵消掉了——20 m/s 的风只产生约 1.6 m/s 的等效漂移。因此实际标定为 <script type="math/tex">k_w=0.08</script>，若按 1.0 会把无人机反向推飞。</p>
+<p>其中 $\mathbf{v}$ 由相邻两帧位置差分估计，$K_p=0.55$、$K_d=0.20$、$u_{\max}=3.0$ m/s。</p>
+<p><strong>关键标定</strong>：理想情况下 $k_w=1$（完全前馈抵消），但实测 SimpleFlight 内置速度环已经把绝大部分风抵消掉了——20 m/s 的风只产生约 1.6 m/s 的等效漂移。因此实际标定为 $k_w=0.08$，若按 1.0 会把无人机反向推飞。</p>
 <h2 id="5">5. 神经网络</h2>
 <p>网络看不到风速，只能看到 IMU 与位置误差。</p>
 <p>输入：IMU 5 帧滑动窗口，每帧 6 轴（加速度 3 + 角速度 3），加位置误差 2 维，共 <strong>32 维</strong>。</p>
@@ -909,7 +909,7 @@
 \mathcal{L}=\frac{1}{N}\sum_i\|\hat{\mathbf{u}}_i-\mathbf{u}_i\|^2+\lambda\sum_l\|\mathbf{W}_l\|^2,\quad \lambda=10^{-3}
 </script>
 </p>
-<p>优化器：Adam，学习率 <script type="math/tex">2\times10^{-3}</script>，批大小 16，120 轮，按验证集 MSE 保留最优权重。</p>
+<p>优化器：Adam，学习率 $2\times10^{-3}$，批大小 16，120 轮，按验证集 MSE 保留最优权重。</p>
 <h2 id="6">6. 算法流程</h2>
 <div class="highlight"><pre><span></span><code>初始化：连接 AirSim，切多旋翼模式，起飞到 (0,0,-5)
 循环 每个回合（6 回合）：
@@ -950,7 +950,7 @@
 </tbody>
 </table>
 <p>平均偏移降低 77%，最大偏移降低 78%。</p>
-<p>离线训练：600 条样本，验证 MSE <script type="math/tex">3.7\times10^{-4}</script>，R² <strong>0.997</strong>。</p>
+<p>离线训练：600 条样本，验证 MSE $3.7\times10^{-4}$，R² <strong>0.997</strong>。</p>
 <h2 id="8">8. 源码解析</h2>
 <table>
 <thead>
@@ -1042,15 +1042,13 @@ ros2<span class="w"> </span>launch<span class="w"> </span>uav_airsim_wind_reject
 <td>2</td>
 <td>反向冲到 +2.7 m</td>
 <td>位置误差项与风前馈叠加后 clip 饱和</td>
-<td>降 <script type="math/tex">K_p</script> 与 <script type="math/tex">k_w</script>
-</td>
+<td>降 $K_p$ 与 $k_w$</td>
 </tr>
 <tr>
 <td>3</td>
 <td>2.8 m/s 风几乎吹不动无人机</td>
 <td>SimpleFlight 内置速度环抗风极强</td>
-<td>加大到 8~18 m/s，并按实测重标定 <script type="math/tex">k_w=0.08</script>
-</td>
+<td>加大到 8~18 m/s，并按实测重标定 $k_w=0.08$</td>
 </tr>
 <tr>
 <td>4</td>
@@ -1080,7 +1078,7 @@ ros2<span class="w"> </span>launch<span class="w"> </span>uav_airsim_wind_reject
 </table>
 <h2 id="11">11. 局限与改进方向</h2>
 <ol>
-<li><strong>补偿强度略不足</strong>：演示末段仍有约 4 m 残留偏移，把 <script type="math/tex">u_{\max}</script> 提到 4 m/s 可进一步压低。</li>
+<li><strong>补偿强度略不足</strong>：演示末段仍有约 4 m 残留偏移，把 $u_{\max}$ 提到 4 m/s 可进一步压低。</li>
 <li><strong>网络学的是反馈映射</strong>：因为输入里有位置误差，R² 0.997 反映的是对 PD 律的拟合，而非纯粹的扰动辨识。若要强迫网络从 IMU 辨识风，应去掉位置误差输入并改用强化学习。</li>
 <li><strong>风模型简化</strong>：<code>simSetWind</code> 是恒定风，未覆盖阵风与湍流；真实阵风需要时变风场。</li>
 <li><strong>单机型</strong>：仅在 SimpleFlight 上验证，PX4 SITL 的风响应特性不同，前馈系数需重新标定。</li>

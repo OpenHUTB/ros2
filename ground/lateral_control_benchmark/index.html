@@ -784,7 +784,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与制动 / Warehouse UAV Braking</a>
+<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与分级制动</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
 </li>
@@ -913,18 +913,18 @@
 </ul>
 <h2 id="1">1. 三种算法原理</h2>
 <h3 id="11">1.1 车辆运动学模型（三者共用）</h3>
-<p>后轴参考点的运动学自行车模型，状态 <script type="math/tex">[x, y, \theta, v]</script>，控制量 <script type="math/tex">[\delta, a]</script>：</p>
+<p>后轴参考点的运动学自行车模型，状态 $[x, y, \theta, v]$，控制量 $[\delta, a]$：</p>
 <p>
 <script type="math/tex; mode=display">
 \dot{x} = v\cos\theta,\qquad \dot{y} = v\sin\theta,\qquad
 \dot{\theta} = \frac{v\tan\delta}{L},\qquad \dot{v} = a
 </script>
 </p>
-<p>其中 <script type="math/tex">L</script> 为轴距（默认 2.7 m），<script type="math/tex">\delta</script> 为前轮转角（左转为正）。
+<p>其中 $L$ 为轴距（默认 2.7 m），$\delta$ 为前轮转角（左转为正）。
 模块用 RK4 积分，步长 0.02 s。另提供线性二自由度动力学模型（含轮胎侧偏刚度、
 质心侧偏角），用 <code>--model dynamic</code> 切换，用于检验控制器在中高速下的表现。</p>
 <h3 id="12-pure-pursuit">1.2 纯跟踪（pure pursuit）</h3>
-<p>取前视距离 <script type="math/tex">L_d</script>（随车速自适应 <script type="math/tex">L_d=\mathrm{clamp}(k_{ld}v, L_{d,min}, L_{d,max})</script>）处的路径点为目标:</p>
+<p>取前视距离 $L_d$（随车速自适应 $L_d=\mathrm{clamp}(k_{ld}v, L_{d,min}, L_{d,max})$）处的路径点为目标:</p>
 <p>
 <script type="math/tex; mode=display">
 \alpha = \mathrm{atan2}(y_{t}-y,\ x_{t}-x) - \theta,\qquad
@@ -939,10 +939,8 @@
 </script>
 </p>
 <ul>
-<li>
-<script type="math/tex">\psi_e = \mathrm{wrap}(\theta_{path}-\theta)</script> 为<strong>路径切向相对车头</strong>的偏角；</li>
-<li>
-<script type="math/tex">e</script> 为控制点横向偏差（左偏为正）；两项都带上述符号，若写反成本车相对路径的定义
+<li>$\psi_e = \mathrm{wrap}(\theta_{path}-\theta)$ 为<strong>路径切向相对车头</strong>的偏角；</li>
+<li>$e$ 为控制点横向偏差（左偏为正）；两项都带上述符号，若写反成本车相对路径的定义
   却不翻号，闭环会变成正反馈（这是这类实现最常见的错误）。</li>
 <li>第三项为<strong>曲率前馈</strong>，直接补偿路径弯曲造成的稳态偏差。</li>
 </ul>
@@ -981,20 +979,20 @@
 </tbody>
 </table>
 <h3 id="14-lqr-lqri">1.4 LQR（本实现为 LQRI，带横向偏差积分）</h3>
-<p>误差状态 <script type="math/tex">e=[e,\ \psi_e,\ r]</script>，控制量为期望横摆角速度：</p>
+<p>误差状态 $e=[e,\ \psi_e,\ r]$，控制量为期望横摆角速度：</p>
 <p>
 <script type="math/tex; mode=display">
 \dot{e} = v\psi_e,\qquad \dot{\psi}_e = r - \kappa v,\qquad \dot{r} = (r_{des}-r)/T
 </script>
 </p>
-<p>线性化后 <script type="math/tex">A=\begin{bmatrix}0&v&0\\0&0&1\\0&0&-1/T\end{bmatrix}</script>，
-<script type="math/tex">B=[0,0,1/T]^\top</script>。解连续 Riccati 方程得到 <script type="math/tex">K</script>，控制律：</p>
+<p>线性化后 $A=<script type="math/tex; mode=display">\begin{bmatrix}0&v&0\\0&0&1\\0&0&-1/T\end{bmatrix}</script>$，
+$B=[0,0,1/T]^\top$。解连续 Riccati 方程得到 $K$，控制律：</p>
 <p>
 <script type="math/tex; mode=display">
 r_{des} = \underbrace{\kappa v}_{\text{曲率前馈}} - K\,[e,\psi_e,r-r_{ref}]^\top - K_i z,\qquad \dot{z}=e
 </script>
 </p>
-<p>再折算为前轮转角 <script type="math/tex">\delta=\arctan(L r/v)</script>。</p>
+<p>再折算为前轮转角 $\delta=\arctan(L r/v)$。</p>
 <p>两个关键实现点：</p>
 <ol>
 <li><strong>必须有曲率前馈</strong>：否则反馈项要"持续存在"才能维持转向，表现为恒定的稳态偏差。</li>
@@ -1081,12 +1079,11 @@ roslaunch<span class="w"> </span>lateral_control_benchmark<span class="w"> </spa
 </table>
 <p>指标定义：</p>
 <ul>
-<li><strong>平均绝对横向偏差</strong> <script type="math/tex">\overline{|e|}</script>：全时段平均；</li>
-<li><strong>RMS</strong> <script type="math/tex">\sqrt{\overline{e^2}}</script>：对大偏差更敏感；</li>
+<li><strong>平均绝对横向偏差</strong> $\overline{|e|}$：全时段平均；</li>
+<li><strong>RMS</strong> $\sqrt{\overline{e^2}}$：对大偏差更敏感；</li>
 <li><strong>稳态偏差</strong>：轨迹末段 25% 的平均绝对偏差，反映稳态精度；</li>
-<li><strong>收敛时间</strong>：<script type="math/tex">|e|</script>
-<strong>首次进入并此后一直保持</strong>在 0.2 m 以内的时刻；从未满足则取总时长；</li>
-<li><strong>离道占比</strong>：<script type="math/tex">|e|>1\,\mathrm{m}</script> 的采样占比，反映安全性；</li>
+<li><strong>收敛时间</strong>：$|e|$ <strong>首次进入并此后一直保持</strong>在 0.2 m 以内的时刻；从未满足则取总时长；</li>
+<li><strong>离道占比</strong>：$|e|&gt;1\,\mathrm{m}$ 的采样占比，反映安全性；</li>
 <li><strong>转角变化率 RMS</strong>：转角差分得到，反映转向平顺性；</li>
 <li><strong>综合排名</strong>：在同一场景内部对各指标排名，再汇总平均名次（越小越好），
   避免"场景难度"直接决定名次。</li>
@@ -1323,7 +1320,7 @@ roslaunch<span class="w"> </span>lateral_control_benchmark<span class="w"> </spa
 <td>1</td>
 <td>LQR 在 1 m 偏差下算出 −256° 转角、闭环发散</td>
 <td>线性化时横摆角速度方程缺少转向增益，且 B 矩阵符号与误差方向相反，闭环成了正反馈</td>
-<td>按 <script type="math/tex">r'=(r_{des}-r)/T</script> 重写线性化，明确 <script type="math/tex">B=[0,0,1/T]^\top</script> 与反馈符号</td>
+<td>按 $r'=(r_{des}-r)/T$ 重写线性化，明确 $B=[0,0,1/T]^\top$ 与反馈符号</td>
 </tr>
 <tr>
 <td>2</td>
@@ -1352,9 +1349,8 @@ roslaunch<span class="w"> </span>lateral_control_benchmark<span class="w"> </spa
 <tr>
 <td>6</td>
 <td>曲率前馈在低速出现 0/0</td>
-<td>
-<script type="math/tex">L\kappa v/v</script> 在 <script type="math/tex">v\to0</script> 时未定义</td>
-<td>控制量改为期望横摆角速度，转角换算处对 <script type="math/tex">v</script> 取下限</td>
+<td>$L\kappa v/v$ 在 $v\to0$ 时未定义</td>
+<td>控制量改为期望横摆角速度，转角换算处对 $v$ 取下限</td>
 </tr>
 <tr>
 <td>7</td>

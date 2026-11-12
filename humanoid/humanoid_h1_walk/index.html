@@ -784,7 +784,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与制动 / Warehouse UAV Braking</a>
+<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与分级制动</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
 </li>
@@ -949,7 +949,7 @@
 </tr>
 </tbody>
 </table>
-<p>任务定位：课程任务「<strong>物理仿真 + 运动控制</strong>」。速度指令 <script type="math/tex">[v_x, v_y, \omega_z]</script> 由
+<p>任务定位：课程任务「<strong>物理仿真 + 运动控制</strong>」。速度指令 $[v_x, v_y, \omega_z]$ 由
 <code>/cmd_vel</code> 或键盘给出，神经网络输出 10/12 个腿部关节的目标角，PD 控制器把它变成力矩。</p>
 <h2 id="_2">二、与同类模块的区别</h2>
 <p>仓库里已有人形相关模块，本模块的差异在<strong>机型</strong>与<strong>控制算法</strong>：</p>
@@ -1054,8 +1054,7 @@ ea3003268d5d2e4b5004eb26d0969fbfdedced265ceeec7bf0b335309259cc80  weights/h1_2_m
 </tr>
 <tr>
 <td>6–8</td>
-<td>速度指令 <script type="math/tex">[v_x, v_y, \omega_z]</script>
-</td>
+<td>速度指令 $[v_x, v_y, \omega_z]$</td>
 <td>× [2, 2, 0.25]</td>
 </tr>
 <tr>
@@ -1129,7 +1128,7 @@ g_z &= 1 - 2(q_w^2 + q_z^2)
 \end{aligned}
 </script>
 </p>
-<p><strong>LSTM 隐状态跨帧保留</strong>（<script type="math/tex">1\times1\times64</script>），相当于 0.8 s 步态周期内的短期记忆，
+<p><strong>LSTM 隐状态跨帧保留</strong>（$1\times1\times64$），相当于 0.8 s 步态周期内的短期记忆，
 让策略能记住「上一拍是哪只脚支撑」。因此策略节点不能在运行中重启，否则要经过
 一段重新收敛；<code>Walker.reset()</code> 会把隐状态与细胞状态清零。</p>
 <h3 id="44-pd">4.4 动作与 PD 控制</h3>
@@ -1150,10 +1149,8 @@ g_z &= 1 - 2(q_w^2 + q_z^2)
 <thead>
 <tr>
 <th>关节</th>
-<th>H1 <script type="math/tex">K_p</script> / <script type="math/tex">K_d</script>
-</th>
-<th>H1_2 <script type="math/tex">K_p</script> / <script type="math/tex">K_d</script>
-</th>
+<th>H1 $K_p$ / $K_d$</th>
+<th>H1_2 $K_p$ / $K_d$</th>
 </tr>
 </thead>
 <tbody>
@@ -1305,12 +1302,12 @@ python<span class="w"> </span>main.py<span class="w"> </span>--gif<span class="w
 </tbody>
 </table>
 <ul>
-<li><strong>vx RMSE</strong>：前进/后退阶段机体系 <script type="math/tex">v_x</script> 与指令的均方根误差，越小越贴合指令；</li>
-<li><strong>wz RMSE</strong>：转向阶段 <script type="math/tex">\omega_z</script> 与指令的均方根误差；</li>
-<li><strong>CoT</strong>：单位距离能耗 <script type="math/tex">\int \sum_i |\tau_i \dot q_i|\,dt \,/\, (mgd)</script>，无量纲。</li>
+<li><strong>vx RMSE</strong>：前进/后退阶段机体系 $v_x$ 与指令的均方根误差，越小越贴合指令；</li>
+<li><strong>wz RMSE</strong>：转向阶段 $\omega_z$ 与指令的均方根误差；</li>
+<li><strong>CoT</strong>：单位距离能耗 $\int \sum_i |\tau_i \dot q_i|\,dt \,/\, (mgd)$，无量纲。</li>
 </ul>
 <p>指令 0.5 m/s 时两机型实际走出 0.44~0.47 m/s，误差主要来自起步与停止的加减速段
-（图中 <script type="math/tex">t=3</script> s 与 <script type="math/tex">t=19</script> s 附近的爬升/下降沿）。H1_2 多两个踝侧摆关节，
+（图中 $t=3$ s 与 $t=19$ s 附近的爬升/下降沿）。H1_2 多两个踝侧摆关节，
 转向跟踪略差（0.142 vs 0.083），但能耗更低（CoT 0.33 vs 0.34）：踝部主动发力
 分担了髋膝的负担。</p>
 <h3 id="63">6.3 与上游实现的一致性</h3>
@@ -1351,7 +1348,7 @@ z: 1.0319247295131657     # 骨盆高度 1.03 m，与仿真一致
 </code></pre></div>
 <p>策略节点日志：<code>已推理 750 帧，平均单帧 0.50 ms</code>，即推理占用控制周期的 2.5%，
 其余时间都在物理步进。<code>/humanoid/obs</code> 的 41 维数据正常发布，前 6 维是机身角速度
-与重力方向（<script type="math/tex">g_z \approx -1</script> 表示直立）。</p>
+与重力方向（$g_z \approx -1$ 表示直立）。</p>
 <p>为排除本地残留文件的影响，上述流程在<strong>从远端干净克隆</strong>的工作空间又完整跑了一遍：</p>
 <div class="highlight"><pre><span></span><code>$ colcon list --base-paths src/humanoid/humanoid_h1_walk
 humanoid_h1_walk    src/humanoid/humanoid_h1_walk   (ros.ament_python)
@@ -1376,7 +1373,7 @@ average rate: 49.989 / 50.001     # std dev 0.4 ms
    但不影响行走。</li>
 <li><strong>没有外力恢复能力</strong>。训练时未加入推力扰动，受侧向撞击会倒；需要抗扰请配合
    <code>humanoid_push_recovery</code>。</li>
-<li><strong>后退速度有限</strong>。指令范围限制在 <script type="math/tex">v_x \in [-0.5, 1.0]</script> m/s，超出后策略跟踪不上，
+<li><strong>后退速度有限</strong>。指令范围限制在 $v_x \in [-0.5, 1.0]$ m/s，超出后策略跟踪不上，
    会拖步甚至失稳。</li>
 <li><strong>Windows 中文路径</strong>。MuJoCo 与 torch 都按窄字符读文件名，本模块已做兜底
    （模型复制到临时 ASCII 目录、权重读成字节流），首次运行会多花约 1 s。</li>

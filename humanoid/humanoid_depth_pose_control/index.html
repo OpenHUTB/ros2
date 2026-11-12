@@ -768,7 +768,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与制动 / Warehouse UAV Braking</a>
+<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与分级制动</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
 </li>
@@ -904,7 +904,7 @@
 </div>
 <h2 id="3">3. 计算原理</h2>
 <h3 id="31">3.1 深度图归一化</h3>
-<p><code>mujoco.Renderer.render(depth=True)</code> 返回米制深度 <script type="math/tex">d</script>，按相机视锥归一化：</p>
+<p><code>mujoco.Renderer.render(depth=True)</code> 返回米制深度 $d$，按相机视锥归一化：</p>
 <p>
 <script type="math/tex; mode=display">
 \tilde d = \operatorname{clip}\!\left(\frac{d - z_{\text{near}}}{z_{\text{far}} - z_{\text{near}}},\,0,\,1\right)
@@ -917,7 +917,7 @@ x_{ij} = \frac{1}{4\cdot 4}\sum_{u,v} \tilde d_{4i+u,\,4j+v}
 </script>
 </p>
 <h3 id="32-zyx">3.2 躯干姿态角（ZYX 欧拉角）</h3>
-<p>从根四元数 <script type="math/tex">(q_w,q_x,q_y,q_z)</script> 解析：</p>
+<p>从根四元数 $(q_w,q_x,q_y,q_z)$ 解析：</p>
 <p>
 <script type="math/tex; mode=display">
 \begin{aligned}
@@ -937,7 +937,7 @@ h_2 &= \mathrm{ReLU}(h_1W_2+b_2),\quad W_2\in\mathbb{R}^{128\times64}\\
 \end{aligned}
 </script>
 </p>
-<p>损失 <script type="math/tex">L=\frac1N\sum\|\hat y-y\|^2</script>，反向：</p>
+<p>损失 $L=\frac1N\sum|\hat y-y|^2$，反向：</p>
 <p>
 <script type="math/tex; mode=display">
 \delta_{\text{out}}=\frac{2}{N}(\hat y-y),\quad
@@ -945,7 +945,7 @@ h_2 &= \mathrm{ReLU}(h_1W_2+b_2),\quad W_2\in\mathbb{R}^{128\times64}\\
 \delta_{h_2}=\delta_{\text{out}}W_3^\top\odot\mathbb{1}(z_2>0)\ \dots
 </script>
 </p>
-<p>更新用 EMA 动量 <script type="math/tex">m\leftarrow0.9m+0.1g</script>、<script type="math/tex">p\leftarrow p-\eta m</script>，<script type="math/tex">\eta</script> 余弦退火。</p>
+<p>更新用 EMA 动量 $m\leftarrow0.9m+0.1g$、$p\leftarrow p-\eta m$，$\eta$ 余弦退火。</p>
 <h3 id="34-ankle-strategy">3.4 站姿平衡层（ankle strategy）</h3>
 <p>纯关节 PD 是开环的：这个模型 1.5 s 起慢漂，3 s 最大倾角 59.8°（脚掌支撑面
 0.22 m 对应倾覆角 9.6°，过了就倒）。<code>sim.step()</code> 默认叠加一层质心反馈：</p>

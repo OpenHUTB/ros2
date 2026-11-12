@@ -812,7 +812,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与制动 / Warehouse UAV Braking</a>
+<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与分级制动</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
 </li>
@@ -1219,24 +1219,24 @@ DDS 互相发现需要时间，若视频第 0 帧就出现数字，最早的识�
 </code></pre></div>
 <h2 id="5">5. 原理与公式</h2>
 <h3 id="51-otsu-mnist">5.1 图像预处理：Otsu 自适应二值化与 MNIST 归一化</h3>
-<p>真实相机画面背景复杂，检测前需要把数字从背景中分割出来。设灰度图像素灰度 <script type="math/tex">I(x,y) \in [0,255]</script>。</p>
-<p><strong>极性自动判断</strong>：用图像四周 5 像素的环带均值 <script type="math/tex">\bar{b}</script> 估计背景亮度。若 <script type="math/tex">\bar{b} > 127</script>（浅背景深数字），
+<p>真实相机画面背景复杂，检测前需要把数字从背景中分割出来。设灰度图像素灰度 $I(x,y) \in [0,255]$。</p>
+<p><strong>极性自动判断</strong>：用图像四周 5 像素的环带均值 $\bar{b}$ 估计背景亮度。若 $\bar{b} &gt; 127$（浅背景深数字），
 用 <code>THRESH_BINARY_INV</code>（前景取 1）；否则（深背景亮数字，如白板字、屏幕字）用 <code>THRESH_BINARY</code>。
 这使得同一个网络可以同时识别"纸上黑字"与"屏幕亮字"。</p>
-<p><strong>Otsu 大津法</strong>：遍历阈值 <script type="math/tex">t</script>，把像素分为前景/背景两类，最大化类间方差：</p>
+<p><strong>Otsu 大津法</strong>：遍历阈值 $t$，把像素分为前景/背景两类，最大化类间方差：</p>
 <p>
 <script type="math/tex; mode=display">
 \sigma_B^2(t) = w_0(t)\,w_1(t)\,\big[\mu_0(t) - \mu_1(t)\big]^2, \qquad
 t^{*} = \arg\max_{t \in [0,255]} \sigma_B^2(t)
 </script>
 </p>
-<p>其中 <script type="math/tex">w_0, w_1</script> 为两类像素占比，<script type="math/tex">\mu_0, \mu_1</script> 为两类灰度均值。随后用 3×3 开运算去除孤立噪点，
+<p>其中 $w_0, w_1$ 为两类像素占比，$\mu_0, \mu_1$ 为两类灰度均值。随后用 3×3 开运算去除孤立噪点，
 取<strong>最大连通域</strong>外接矩形（面积 &lt; 60 像素视为无目标，返回 -1）。</p>
 <p><strong>MNIST 风格归一化</strong>：MNIST 训练样本是"白字黑底、数字笔画居中于 20×20、整体画布 28×28"的格式，
 推理输入必须与训练分布一致。把裁剪块统一为白字黑底（若亮像素占多数则反相），
 补成正方形后缩放到 20×20，居中粘贴到 28×28 黑色画布上。</p>
 <h3 id="52">5.2 卷积神经网络</h3>
-<p>网络结构（输入 <script type="math/tex">1 \times 28 \times 28</script>）：</p>
+<p>网络结构（输入 $1 \times 28 \times 28$）：</p>
 <table>
 <thead>
 <tr>
@@ -1285,10 +1285,10 @@ Y_{c_{out}}(i, j) = \sum_{c_{in}=1}^{C_{in}} \sum_{u=-1}^{1} \sum_{v=-1}^{1}
 X_{c_{in}}(i+u,\, j+v) \, W_{c_{out}, c_{in}}(u, v) + b_{c_{out}}
 </script>
 </p>
-<p><strong>ReLU 激活</strong>引入非线性：<script type="math/tex">\mathrm{ReLU}(x) = \max(0, x)</script>。</p>
+<p><strong>ReLU 激活</strong>引入非线性：$\mathrm{ReLU}(x) = \max(0, x)$。</p>
 <p><strong>最大池化</strong>取 2×2 窗口内最大值，使特征对小的平移鲁棒：
-<script type="math/tex">P(i,j) = \max_{(u,v) \in 2\times2} Y(2i+u,\, 2j+v)</script>。</p>
-<p><strong>输出层 softmax</strong> 把 10 维 logits <script type="math/tex">z_k</script> 归一化为概率：</p>
+$P(i,j) = \max_{(u,v) \in 2\times2} Y(2i+u,\, 2j+v)$。</p>
+<p><strong>输出层 softmax</strong> 把 10 维 logits $z_k$ 归一化为概率：</p>
 <p>
 <script type="math/tex; mode=display">
 p_k = \frac{\exp(z_k)}{\sum_{j=1}^{10} \exp(z_j)}
@@ -1303,7 +1303,7 @@ p_k = \frac{\exp(z_k)}{\sum_{j=1}^{10} \exp(z_j)}
 <p>CPU 上单帧前向推理耗时约 0.2 ms（实测见 8.1 节），远快于 10 Hz 的处理节拍。</p>
 <h3 id="53">5.3 指令防抖与状态机</h3>
 <p>单帧识别不可靠（噪声帧、过渡帧会瞬间误识），控制节点用<strong>滑动窗口多数投票</strong>确认指令：
-维护最近 <code>stable_frames=6</code> 个识别结果，仅当窗口全为同一数字 <script type="math/tex">d</script> 且置信度 <script type="math/tex">c \ge 0.7</script> 时触发。
+维护最近 <code>stable_frames=6</code> 个识别结果，仅当窗口全为同一数字 $d$ 且置信度 $c \ge 0.7$ 时触发。
 状态机如下：</p>
 <div class="mermaid">stateDiagram-v2
     [*] --&gt; idle
@@ -1322,30 +1322,30 @@ p_k = \frac{\exp(z_k)}{\sum_{j=1}^{10} \exp(z_j)}
 </ol>
 <h3 id="54-p">5.4 旋转闭环 P 控制</h3>
 <p>平移动作为 1 s 定时长的开环速度脉冲（turtlesim 体坐标平移）。旋转动作则基于位姿反馈闭环。
-设目标转角 <script type="math/tex">\theta_{ref}</script>（如 ±45°、±90°、360°），每拍累加乌龟实际转角并计算误差：</p>
+设目标转角 $\theta_{ref}$（如 ±45°、±90°、360°），每拍累加乌龟实际转角并计算误差：</p>
 <p>
 <script type="math/tex; mode=display">
 \Delta\theta_k = \mathrm{wrap}\big(\theta_k - \theta_{k-1}\big), \qquad
 e_k = \theta_{ref} - \sum_{i \le k} \Delta\theta_i
 </script>
 </p>
-<p>其中 <code>wrap</code> 把角差展开到 <script type="math/tex">(-\pi, \pi]</script>，保证 90° 以内的转角走最短方向：</p>
+<p>其中 <code>wrap</code> 把角差展开到 $(-\pi, \pi]$，保证 90° 以内的转角走最短方向：</p>
 <p>
 <script type="math/tex; mode=display">
 \mathrm{wrap}(a) = \big( a + \pi \big) \bmod 2\pi - \pi
 </script>
 </p>
-<p><strong>比例（P）控制律</strong>，输出限幅到 <script type="math/tex">\omega_{max} = 2.0\ \mathrm{rad/s}</script>：</p>
+<p><strong>比例（P）控制律</strong>，输出限幅到 $\omega_{max} = 2.0\ \mathrm{rad/s}$：</p>
 <p>
 <script type="math/tex; mode=display">
 \omega_k = \mathrm{clip}\big(K_p \, e_k,\ -\omega_{max},\ +\omega_{max}\big), \qquad K_p = 3.0
 </script>
 </p>
-<p>当 <script type="math/tex">|e_k| < \varepsilon</script>（<script type="math/tex">\varepsilon = 0.03\ \mathrm{rad} \approx 1.7°</script>）连续 3 拍成立视为到位。
+<p>当 $|e_k| &lt; \varepsilon$（$\varepsilon = 0.03\ \mathrm{rad} \approx 1.7°$）连续 3 拍成立视为到位。
 注意到位后必须<strong>显式发布零速指令</strong>：turtlesim 会保持最后一次收到的速度继续运动，
 若验证帧不发指令，乌龟会冲过容差并在极限环附近震荡。</p>
 <h3 id="55-turtlesim">5.5 turtlesim 运动学</h3>
-<p>turtlesim 是二维差速式运动学模型，收到 <script type="math/tex">(v_x, v_y, \omega)</script> 后按当前朝向积分位置：</p>
+<p>turtlesim 是二维差速式运动学模型，收到 $(v_x, v_y, \omega)$ 后按当前朝向积分位置：</p>
 <p>
 <script type="math/tex; mode=display">
 \dot{x} = v_x \cos\theta - v_y \sin\theta, \qquad
@@ -1402,7 +1402,7 @@ e_k = \theta_{ref} - \sum_{i \le k} \Delta\theta_i
 <span class="n">flags</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">THRESH_BINARY_INV</span> <span class="o">+</span> <span class="n">cv2</span><span class="o">.</span><span class="n">THRESH_OTSU</span> <span class="k">if</span> <span class="n">bg_mean</span> <span class="o">&gt;</span> <span class="mi">127</span> <span class="k">else</span> <span class="n">cv2</span><span class="o">.</span><span class="n">THRESH_BINARY</span> <span class="o">+</span> <span class="n">cv2</span><span class="o">.</span><span class="n">THRESH_OTSU</span>
 <span class="n">_</span><span class="p">,</span> <span class="n">binary</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">threshold</span><span class="p">(</span><span class="n">frame_gray</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="n">flags</span><span class="p">)</span>
 </code></pre></div>
-<p><code>cv2.threshold</code> 的阈值参数传 0 时由 <code>THRESH_OTSU</code> 标志自动计算 5.1 节的最优阈值 <script type="math/tex">t^{*}</script>。
+<p><code>cv2.threshold</code> 的阈值参数传 0 时由 <code>THRESH_OTSU</code> 标志自动计算 5.1 节的最优阈值 $t^{*}$。
 之后开运算、取最大连通域、外接矩形四周扩边 10%（给笔画留边），交由
 <code>_normalize_mnist</code> 完成 20×20 居中归一化。</p>
 <h3 id="72-cnn-detector_nodepytick">7.2 CNN 推理（<code>detector_node.py::tick</code>）</h3>
@@ -1417,7 +1417,7 @@ e_k = \theta_{ref} - \sum_{i \le k} \Delta\theta_i
 <span class="bp">self</span><span class="o">.</span><span class="n">pub_digit</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">Int32</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">digit</span><span class="p">))</span>   <span class="c1"># -1 表示未检测到</span>
 <span class="bp">self</span><span class="o">.</span><span class="n">pub_conf</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">Float32</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">conf</span><span class="p">))</span>
 </code></pre></div>
-<p>输入张量归一化到 <script type="math/tex">[0,1]</script>（与训练一致），<code>no_grad</code> 关闭梯度记录以省内存；
+<p>输入张量归一化到 $[0,1]$（与训练一致），<code>no_grad</code> 关闭梯度记录以省内存；
 <code>digit=-1</code> 与"未过置信门限"在下游语义不同：前者表示"目标消失"（用于复位防重复锁），
 后者表示"看到了但不确定"。</p>
 <h3 id="73-command_nodepy_step_action">7.3 旋转闭环与零速保持（<code>command_node.py::_step_action</code>）</h3>
@@ -1569,8 +1569,8 @@ e_k = \theta_{ref} - \sum_{i \le k} \Delta\theta_i
    根因是状态机在 <code>action</code> 态只执行当前动作、不缓存新指令；加入 <code>pending</code> 队列后（5.3 节），
    长动作期间的稳定识别结果在冷却结束后依次执行。</li>
 <li><strong>turtlesim 速度保持 → 显式零速</strong>。turtlesim 收到速度指令后会持续按该速度运动直到下一条指令。
-   旋转到位后的"验证帧"若不发指令，乌龟以 <script type="math/tex">\omega_{max}</script> 冲过容差再被拉回，形成极限环；
-   在到位验证帧显式发布 <script type="math/tex">(0,0,0)</script> 后消除。</li>
+   旋转到位后的"验证帧"若不发指令，乌龟以 $\omega_{max}$ 冲过容差再被拉回，形成极限环；
+   在到位验证帧显式发布 $(0,0,0)$ 后消除。</li>
 <li><strong>DDS 发现延迟 → 视频起始空白段</strong>。launch 同时拉起三个节点，早期发布的识别结果可能在
    控制节点订阅建立前丢失（表现为第一个指令偶发不触发）。为虚拟相机视频增加 1.2 s 起始空白段后，
    第一个指令稳定触发。</li>

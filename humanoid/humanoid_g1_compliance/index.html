@@ -788,7 +788,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与制动 / Warehouse UAV Braking</a>
+<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与分级制动</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
 </li>
@@ -1071,14 +1071,12 @@
 <tr>
 <td><code>command_lin_vel</code></td>
 <td>2</td>
-<td>线速度指令 <script type="math/tex">[v_x, v_y]</script>
-</td>
+<td>线速度指令 $[v_x, v_y]$</td>
 </tr>
 <tr>
 <td><code>command_ang_vel</code></td>
 <td>1</td>
-<td>偏航角速度指令 <script type="math/tex">\omega_z</script>
-</td>
+<td>偏航角速度指令 $\omega_z$</td>
 </tr>
 <tr>
 <td><code>command_waist_yaw</code></td>
@@ -1130,7 +1128,7 @@
 \mathbf{o}^{\text{hist}}_t = \big[\,\mathbf{f}_{t-63},\dots,\mathbf{f}_t\,\big] \in \mathbb{R}^{6080}
 </script>
 </p>
-<p>其中 <script type="math/tex">\mathbf{f}_t \in \mathbb{R}^{95}</script> 是第 <script type="math/tex">t</script> 帧的 95 维。actor 只看最近 0.2 s（10 帧），
+<p>其中 $\mathbf{f}_t \in \mathbb{R}^{95}$ 是第 $t$ 帧的 95 维。actor 只看最近 0.2 s（10 帧），
 adapter 看最近 1.28 s（64 帧）——长历史用来估计「现在被多大力推着」这类隐变量。</p>
 <p>刚度进网络前必须取对数，这是训练时的约定：</p>
 <p>
@@ -1151,9 +1149,8 @@ adapter 看最近 1.28 s（64 帧）——长历史用来估计「现在被多�
 \end{aligned}
 </script>
 </p>
-<p>
-<script type="math/tex">\mathbf{z}_t</script> 相当于对「外部接触状态」的在线估计：同样的关节角和角速度，
-被 6 N 推着和被 0 N 推着在 64 帧历史里留下的痕迹不同，<script type="math/tex">\mathbf{z}</script> 就不同，
+<p>$\mathbf{z}_t$ 相当于对「外部接触状态」的在线估计：同样的关节角和角速度，
+被 6 N 推着和被 0 N 推着在 64 帧历史里留下的痕迹不同，$\mathbf{z}$ 就不同，
 策略据此决定该硬扛还是该让。教师网络、critic、特权观测归一化器都还在 checkpoint 里，
 但不在部署计算路径上（<code>strict=True</code> 加载需要它们的形状）。</p>
 <h3 id="44">4.4 刚度指令与柔顺性</h3>
@@ -1165,15 +1162,14 @@ adapter 看最近 1.28 s（64 帧）——长历史用来估计「现在被多�
 \boldsymbol\tau = K_p \odot (\mathbf{q}^\star - \mathbf{q}) - K_d \odot \dot{\mathbf{q}}
 </script>
 </p>
-<p><strong>注意</strong>：<script type="math/tex">K_p</script> 是固定的训练刚度，不随刚度指令变化。刚度指令 <script type="math/tex">\mathbf{k}</script> 只进观测，
-策略通过「改 <script type="math/tex">\mathbf{q}^\star</script> 让多少」来体现柔顺。末端等效刚度用稳态让位定义：</p>
+<p><strong>注意</strong>：$K_p$ 是固定的训练刚度，不随刚度指令变化。刚度指令 $\mathbf{k}$ 只进观测，
+策略通过「改 $\mathbf{q}^\star$ 让多少」来体现柔顺。末端等效刚度用稳态让位定义：</p>
 <p>
 <script type="math/tex; mode=display">
 K_{\text{eff}} = \frac{F}{\delta_{\text{steady}}}
 </script>
 </p>
-<p>
-<script type="math/tex">F</script> 是外力、<script type="math/tex">\delta</script> 是末端位移。指令 <script type="math/tex">K_{lin,la}=30</script> 时实测 <script type="math/tex">K_{\text{eff}} = 116</script> N/m，
+<p>$F$ 是外力、$\delta$ 是末端位移。指令 $K_{lin,la}=30$ 时实测 $K_{\text{eff}} = 116$ N/m，
 指令 250 时 298 N/m——策略把「指令刚度」映射成了「末端实际刚度」，但不是线性的，
 高刚度区会饱和（见第六节）。</p>
 <h3 id="45">4.5 启动状态机</h3>
@@ -1199,8 +1195,7 @@ K_{\text{eff}} = \frac{F}{\delta_{\text{steady}}}
 </tr>
 <tr>
 <td>HANDOFF → RAMP_UP</td>
-<td>按键 A，3 s 升 <script type="math/tex">K_p</script>
-</td>
+<td>按键 A，3 s 升 $K_p$</td>
 <td>跳过</td>
 </tr>
 <tr>
@@ -1210,10 +1205,10 @@ K_{\text{eff}} = \frac{F}{\delta_{\text{steady}}}
 </tr>
 </tbody>
 </table>
-<p><strong>为什么不需要吊带</strong>：上游从「零力矩瘫软」状态启动，<script type="math/tex">K_p=35</script> 撑不住 34 kg 自重
+<p><strong>为什么不需要吊带</strong>：上游从「零力矩瘫软」状态启动，$K_p=35$ 撑不住 34 kg 自重
 （需 335 N，而 35 N·m 量级的力矩不够），所以必须吊带托住。本模块从训练时的
 default pose 起步——它本来就在策略的训练分布内，满刚度直接接管即可。</p>
-<p>实测软启动（吊带 + 分级升 <script type="math/tex">K_p</script>）反而更差：弹簧式吊带会把机器人拉离地面
+<p>实测软启动（吊带 + 分级升 $K_p$）反而更差：弹簧式吊带会把机器人拉离地面
 （9 s 时骨盆 0.921 m），策略看到「悬空」状态后开始漂移，最终失稳。
 <code>StartupFSM(direct=False)</code> 的完整状态机仍保留在代码里，供需要时对照。</p>
 <h2 id="_5">五、编译与启动</h2>
@@ -1254,9 +1249,7 @@ python<span class="w"> </span>main.py<span class="w"> </span>--list<span class="
 <table>
 <thead>
 <tr>
-<th>
-<script type="math/tex">K_{lin,la}</script>
-</th>
+<th>$K_{lin,la}$</th>
 <th>峰值让位</th>
 <th>稳态让位</th>
 <th>撤销残留</th>
@@ -1342,7 +1335,7 @@ python<span class="w"> </span>main.py<span class="w"> </span>--list<span class="
    撤销外力后残余振荡更明显（残留 12.8 mm vs 低刚度 2.7 mm），这是「硬」的代价。</li>
 </ol>
 <h3 id="63">6.3 站立稳定性</h3>
-<p>零指令站立 12 s：骨盆高度 0.713 ~ 0.740 m，姿态投影 <script type="math/tex">g_z = -0.9998</script>（直立）。
+<p>零指令站立 12 s：骨盆高度 0.713 ~ 0.740 m，姿态投影 $g_z = -0.9998$（直立）。
 起步 4 s 内指数收敛到策略自己的平衡点（后移约 8.6 cm，时间常数约 1.5 s），
 6 s 后残余波动 &lt; 5 mm，8 s 后 &lt; 0.5 mm。所以所有柔顺实验都留了 3 s 稳定期再施力。</p>
 <h3 id="64">6.4 演示</h3>
@@ -1437,7 +1430,7 @@ data: '{"t": 37.346, "state": "POLICY",
 （实测 MuJoCo 3.9.0）。离线测试、<code>smoke_compliance.py</code>、<code>bench_compliance.py</code>
 都不需要渲染，删掉这个环境变量即可。</p>
 <h3 id="83">8.3 机器人一启动就摔</h3>
-<p>确认 <code>direct_start:=true</code>（默认）。如果手动改成软启动，<script type="math/tex">K_p=35</script> 撑不住自重，
+<p>确认 <code>direct_start:=true</code>（默认）。如果手动改成软启动，$K_p=35$ 撑不住自重，
 必须配合外力支撑；而弹簧吊带又会把机器人拉离地面导致策略漂移，两难。</p>
 <h3 id="84">8.4 让位数和文档对不上</h3>
 <p>让位强烈依赖基线选取。本模块的基线取「施力前最后 10 帧手腕位置均值」，

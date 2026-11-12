@@ -764,7 +764,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与制动 / Warehouse UAV Braking</a>
+<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与分级制动</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
 </li>
@@ -892,25 +892,25 @@
 </ul>
 <h2 id="1">1. 方法</h2>
 <h3 id="11">1.1 信号模型</h3>
-<p>陀螺与视觉角速率（由图像平面特征位移反解）真值相同，但视觉晚 <script type="math/tex">\delta</script>：</p>
+<p>陀螺与视觉角速率（由图像平面特征位移反解）真值相同，但视觉晚 $\delta$：</p>
 <p>
 <script type="math/tex; mode=display">
 g(t)=\omega(t)+b_g+n_g(t),\qquad
 v(t)=s\,\omega(t-\delta)+n_v(t)
 </script>
 </p>
-<p>其中 <script type="math/tex">b_g</script> 是陀螺零偏，<script type="math/tex">s</script> 是视觉尺度（焦距/特征深度不确定导致），
-<script type="math/tex">n_g,n_v</script> 为白噪声。仿真取 <script type="math/tex">\omega</script> 为两个不可通约正弦加一段 chirp（保证互相关峰尖锐），
-200 Hz、8 s、<script type="math/tex">\delta=25</script> ms。</p>
+<p>其中 $b_g$ 是陀螺零偏，$s$ 是视觉尺度（焦距/特征深度不确定导致），
+$n_g,n_v$ 为白噪声。仿真取 $\omega$ 为两个不可通约正弦加一段 chirp（保证互相关峰尖锐），
+200 Hz、8 s、$\delta=25$ ms。</p>
 <h3 id="12">1.2 归一化互相关</h3>
-<p>对每个候选滞后 <script type="math/tex">\ell\in[-\ell_{max},\ell_{max}]</script>（<script type="math/tex">\ell_{max}=80</script> ms）：</p>
+<p>对每个候选滞后 $\ell\in[-\ell_{max},\ell_{max}]$（$\ell_{max}=80$ ms）：</p>
 <p>
 <script type="math/tex; mode=display">
 \rho(\ell)=\frac{1}{N}\sum_i
 \frac{g_i-\bar g}{\sigma_g}\cdot\frac{v_{i+\ell}-\bar v}{\sigma_v}
 </script>
 </p>
-<p>注意 <script type="math/tex">v</script> 延迟意味着 <script type="math/tex">v_{i+\ell}</script> 对应 <script type="math/tex">g_i</script>。峰值位置即粗估计。</p>
+<p>注意 $v$ 延迟意味着 $v_{i+\ell}$ 对应 $g_i$。峰值位置即粗估计。</p>
 <h3 id="13">1.3 二次插值</h3>
 <p>在峰值三点上做抛物线插值</p>
 <p>
@@ -921,8 +921,8 @@ v(t)=s\,\omega(t-\delta)+n_v(t)
 <p>得到亚采样精度（本模块 200 Hz 下相当于 5 ms 采样间隔内的细分）。</p>
 <h3 id="14">1.4 评价指标</h3>
 <ul>
-<li>偏移误差 <script type="math/tex">|\hat\delta-\delta|</script>（ms）；</li>
-<li>补偿残差：对齐后 <script type="math/tex">\mathrm{RMS}(g-s\,v)</script>，分别按 0 ms、估计值、真值统计。</li>
+<li>偏移误差 $|\hat\delta-\delta|$（ms）；</li>
+<li>补偿残差：对齐后 $\mathrm{RMS}(g-s\,v)$，分别按 0 ms、估计值、真值统计。</li>
 </ul>
 <h2 id="2-ros-2">2. ROS 2 接口</h2>
 <table>

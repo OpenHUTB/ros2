@@ -758,7 +758,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与制动 / Warehouse UAV Braking</a>
+<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与分级制动</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
 </li>
@@ -884,15 +884,15 @@
 <h3 id="11">1.1 扫描聚类</h3>
 <p>激光点按角度顺序排列。相邻有效光束满足</p>
 <ul>
-<li>角间隔 <script type="math/tex">\Delta\theta < 0.12</script> rad；</li>
-<li>距离跳变 <script type="math/tex">|\Delta r| < 0.65</script> m；</li>
+<li>角间隔 $\Delta\theta &lt; 0.12$ rad；</li>
+<li>距离跳变 $|\Delta r| &lt; 0.65$ m；</li>
 </ul>
 <p>时归为同一个簇；无效光束强制断开。少于 3 束或外接半径大于 3.5 m 的簇丢弃；半径 &gt;0.8 m 的长墙/车侧保留为 cluster，但不进入圆模型 TTC。
-每个簇用质心 <script type="math/tex">(x,y)</script> 和最大半径 <script type="math/tex">r</script> 表示。</p>
+每个簇用质心 $(x,y)$ 和最大半径 $r$ 表示。</p>
 <h3 id="12">1.2 跟踪</h3>
 <p>对每个已有 track，在所有簇中取最近邻；距离小于 0.9 m 视为关联成功。
 速度用最近 5 帧位置做最小二乘拟合（不足 3 帧退化为相邻帧差分），
-即分别对 <script type="math/tex">x(t)</script>、<script type="math/tex">y(t)</script> 拟合直线，斜率作为 <script type="math/tex">v_x, v_y</script>。</p>
+即分别对 $x(t)$、$y(t)$ 拟合直线，斜率作为 $v_x, v_y$。</p>
 <p>连续 3 帧未关联的 track 删除；未关联的簇新建 track。</p>
 <h3 id="13-ttc">1.3 TTC</h3>
 <p>把障碍近似为圆，机器人安全圆半径为</p>
@@ -901,14 +901,14 @@
 R = r_{\text{robot}} + r_{\text{safety}} + r_{\text{obstacle}}
 </script>
 </p>
-<p>解 <script type="math/tex">|p + vt| = R</script> 的最小正根：</p>
+<p>解 $|p + vt| = R$ 的最小正根：</p>
 <p>
 <script type="math/tex; mode=display">
 a=|v|^2,\quad b=2p\cdot v,\quad c=|p|^2-R^2,\quad
 t=\frac{-b-\sqrt{b^2-4ac}}{2a}
 </script>
 </p>
-<p>若 <script type="math/tex">p\cdot v \ge 0</script>（远离）或判别式为负，返回 <script type="math/tex">\infty</script>。</p>
+<p>若 $p\cdot v \ge 0$（远离）或判别式为负，返回 $\infty$。</p>
 <h3 id="14">1.4 迟滞告警</h3>
 <p><code>TTC &lt; 2.5 s</code> 触发，<code>TTC &gt; 3.5 s</code> 解除，避免阈值附近来回抖动。</p>
 <h2 id="2">2. 运行</h2>

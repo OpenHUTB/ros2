@@ -816,7 +816,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../mujoco_warehouse_uav_collision_braking/">仓储通道测距与制动 / Warehouse UAV Braking</a>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_warehouse_uav_collision_braking/">仓储通道测距与分级制动</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
 </li>
@@ -992,11 +992,11 @@
 </table>
 <h3 id="22">2.2 动力学与风扰</h3>
 <ul>
-<li>X 型四旋翼，旋翼推力 <script type="math/tex">T_i = k_f \omega_i^2</script>，反扭矩 <script type="math/tex">Q_i = k_\tau \omega_i^2 \cdot \text{spin}_i</script>；</li>
-<li>电机一阶响应 <script type="math/tex">\dot{\omega} = (\omega_{cmd} - \omega)/\tau_m</script>；</li>
-<li>四元数积分更新姿态，含陀螺耦合项 <script type="math/tex">\omega \times (I\omega)</script>；</li>
+<li>X 型四旋翼，旋翼推力 $T_i = k_f \omega_i^2$，反扭矩 $Q_i = k_\tau \omega_i^2 \cdot \text{spin}_i$；</li>
+<li>电机一阶响应 $\dot{\omega} = (\omega_{cmd} - \omega)/\tau_m$；</li>
+<li>四元数积分更新姿态，含陀螺耦合项 $\omega \times (I\omega)$；</li>
 <li>风场 = 恒定风 + 半正弦阵风 + 一阶低通白噪声湍流；</li>
-<li>气动阻力 <script type="math/tex">F_d = -\frac{1}{2}\rho C_d A |v_r| v_r</script>，<script type="math/tex">v_r</script> 为机体相对空气的速度。</li>
+<li>气动阻力 $F_d = -\frac{1}{2}\rho C_d A |v_r| v_r$，$v_r$ 为机体相对空气的速度。</li>
 </ul>
 <h2 id="3">3. 目录结构</h2>
 <div class="highlight"><pre><span></span><code>src/air/quad_cascade_pid_hover_wind/

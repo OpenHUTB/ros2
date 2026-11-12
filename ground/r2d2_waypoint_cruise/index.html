@@ -760,7 +760,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与制动 / Warehouse UAV Braking</a>
+<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与分级制动</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
 </li>
@@ -907,15 +907,15 @@ python3<span class="w"> </span>src/ground/r2d2_waypoint_cruise/src/r2d2_waypoint
 <h2 id="_4">控制算法说明</h2>
 <h3 id="_5">差速运动学</h3>
 <p>R2D2 为四轮差速驱动模型，左右两侧车轮分别独立控制：
-- 线速度 <script type="math/tex">v = (v_{left} + v_{right}) / 2</script>
-- 角速度 <script type="math/tex">\omega = (v_{left} - v_{right}) / L</script>（<script type="math/tex">L</script> 为轮距）</p>
+- 线速度 $v = (v_{left} + v_{right}) / 2$
+- 角速度 $\omega = (v_{left} - v_{right}) / L$（$L$ 为轮距）</p>
 <h3 id="p">航点跟踪 P 控制器</h3>
 <ol>
-<li><strong>位置误差</strong>：计算机器人当前位置 <script type="math/tex">(x, y)</script> 到目标航点 <script type="math/tex">(g_x, g_y)</script> 的距离 <script type="math/tex">d</script>。</li>
-<li><strong>航向误差</strong>：计算目标方向角与当前朝向的夹角偏差 <script type="math/tex">\Delta\theta</script>。</li>
+<li><strong>位置误差</strong>：计算机器人当前位置 $(x, y)$ 到目标航点 $(g_x, g_y)$ 的距离 $d$。</li>
+<li><strong>航向误差</strong>：计算目标方向角与当前朝向的夹角偏差 $\Delta\theta$。</li>
 <li><strong>速度调节</strong>：</li>
-<li>线速度 <script type="math/tex">v = K_p^{dist} \cdot d</script>，接近目标时自动减速；</li>
-<li>角速度 <script type="math/tex">\omega = K_p^{heading} \cdot \Delta\theta</script>，航向偏差大时先转向再前进。</li>
+<li>线速度 $v = K_p^{dist} \cdot d$，接近目标时自动减速；</li>
+<li>角速度 $\omega = K_p^{heading} \cdot \Delta\theta$，航向偏差大时先转向再前进。</li>
 <li><strong>航点切换</strong>：当距离小于阈值（0.3 m）时，自动切换到下一个航点。</li>
 </ol>
 <h2 id="ros">ROS 接口说明</h2>

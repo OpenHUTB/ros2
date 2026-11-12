@@ -784,7 +784,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与制动 / Warehouse UAV Braking</a>
+<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与分级制动</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
 </li>
@@ -940,15 +940,15 @@
 <p>这三个指标来自 SLAM 评测领域的标准做法（Sturm et al., IROS 2012），
 本模块把它们实现成不依赖 ROS 的纯 NumPy 工具，同时提供 ROS 1 在线版本。</p>
 <h2 id="2">2. 公式</h2>
-<p>设真值轨迹 <script type="math/tex">P^{gt}_i</script>、估计轨迹 <script type="math/tex">P^{est}_i</script>（<script type="math/tex">i=1..N</script>），均为二维位姿 <script type="math/tex">(x,y,\theta)</script>。</p>
+<p>设真值轨迹 $P^{gt}_i$、估计轨迹 $P^{est}_i$（$i=1..N$），均为二维位姿 $(x,y,\theta)$。</p>
 <h3 id="21-umeyama">2.1 刚体对齐（Umeyama）</h3>
-<p>求旋转 <script type="math/tex">R</script> 与平移 <script type="math/tex">t</script>，使</p>
+<p>求旋转 $R$ 与平移 $t$，使</p>
 <p>
 <script type="math/tex; mode=display">
 \min_{R \in SO(2),\ t} \sum_{i=1}^{N} \left\| R\, p^{est}_i + t - p^{gt}_i \right\|^2
 </script>
 </p>
-<p>闭式解由两组点的协方差矩阵 <script type="math/tex">S = \frac{1}{N}\sum_i (p^{gt}_i - \bar{p}^{gt})(p^{est}_i - \bar{p}^{est})^\top</script> 的 SVD 给出：</p>
+<p>闭式解由两组点的协方差矩阵 $S = \frac{1}{N}\sum_i (p^{gt}_i - \bar{p}^{gt})(p^{est}_i - \bar{p}^{est})^\top$ 的 SVD 给出：</p>
 <p>
 <script type="math/tex; mode=display">
 S = U \Sigma V^\top,\quad R = U \begin{bmatrix}1&0\\0&\det(UV^\top)\end{bmatrix} V^\top,\quad t = \bar{p}^{gt} - R\,\bar{p}^{est}
@@ -963,13 +963,13 @@ S = U \Sigma V^\top,\quad R = U \begin{bmatrix}1&0\\0&\det(UV^\top)\end{bmatrix}
 </script>
 </p>
 <h3 id="23-rpe">2.3 RPE</h3>
-<p>对间隔 <script type="math/tex">\Delta</script> 的每一对帧：</p>
+<p>对间隔 $\Delta$ 的每一对帧：</p>
 <p>
 <script type="math/tex; mode=display">
 E_i = \left( (P^{gt}_i)^{-1} P^{gt}_{i+\Delta} \right)^{-1} \left( (P^{est}_i)^{-1} P^{est}_{i+\Delta} \right)
 </script>
 </p>
-<p>取 <script type="math/tex">E_i</script> 的平移量 <script type="math/tex">\| \mathrm{trans}(E_i) \|</script> 与旋转量 <script type="math/tex">|\theta(E_i)|</script> 分别统计 RMSE。
+<p>取 $E_i$ 的平移量 $| \mathrm{trans}(E_i) |$ 与旋转量 $|\theta(E_i)|$ 分别统计 RMSE。
 RPE 不需要对齐，因此能直接暴露尺度误差。</p>
 <h3 id="24">2.4 漂移率</h3>
 <p>
@@ -997,15 +997,12 @@ RPE(delta=50) 平移  : RMSE 0.0756 m
 </code></pre></div>
 <h3 id="31">3.1 手算验证</h3>
 <p>指标是否算对，可以直接用纸笔核对：</p>
-<p>每步前进 <script type="math/tex">1.5\ \text{m/s} \times 0.05\ \text{s} = 0.075\ \text{m}</script>，
-轮半径尺度误差 2%，因此每步多算 <script type="math/tex">0.075 \times 0.02 = 0.0015\ \text{m}</script>。</p>
+<p>每步前进 $1.5\ \text{m/s} \times 0.05\ \text{s} = 0.075\ \text{m}$，
+轮半径尺度误差 2%，因此每步多算 $0.075 \times 0.02 = 0.0015\ \text{m}$。</p>
 <ul>
-<li>
-<script type="math/tex">\text{RPE}(\Delta=1) = 0.0015\ \text{m}</script> ✅</li>
-<li>
-<script type="math/tex">\text{RPE}(\Delta=10) = 10 \times 0.0015 = 0.015\ \text{m}</script> ✅</li>
-<li>
-<script type="math/tex">\text{RPE}(\Delta=50) = 50 \times 0.0015 = 0.075\ \text{m}</script> ✅</li>
+<li>$\text{RPE}(\Delta=1) = 0.0015\ \text{m}$ ✅</li>
+<li>$\text{RPE}(\Delta=10) = 10 \times 0.0015 = 0.015\ \text{m}$ ✅</li>
+<li>$\text{RPE}(\Delta=50) = 50 \times 0.0015 = 0.075\ \text{m}$ ✅</li>
 </ul>
 <p>这三个数与程序输出一致，说明实现没有漏项。</p>
 <h3 id="32">3.2 运行效果</h3>
@@ -1092,7 +1089,7 @@ RPE(delta=50) 平移  : RMSE 0.0756 m
 <ol>
 <li><strong>漂移率与尺度误差近似成正比</strong>：2% 的轮半径误差，跑 60 m 就偏 1.9%，
    即 100 m 偏约 3.2 m。</li>
-<li><strong>多算与少算对称</strong>：<script type="math/tex">\pm</script>2% 的 ATE 都是 0.33 m，说明该指标对符号不敏感，
+<li><strong>多算与少算对称</strong>：$\pm$2% 的 ATE 都是 0.33 m，说明该指标对符号不敏感，
    要判断"偏大还是偏小"需看原始（未对齐）坐标下的终点误差方向。</li>
 </ol>
 <p>表格对应的数据文件：<code>results/sweep_scale.json</code>。</p>

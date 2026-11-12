@@ -732,7 +732,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../mujoco_warehouse_uav_collision_braking/">仓储通道测距与制动 / Warehouse UAV Braking</a>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_warehouse_uav_collision_braking/">仓储通道测距与分级制动</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
 </li>
@@ -938,13 +938,12 @@
 <p>动图由 <code>simGetImages(ImageType.Scene)</code> 逐帧截取真实 Blocks 画面合成，180 帧，4.1 MB。无人机从 (-24, 0) 起飞后绕方块墙外围飞完一整圈，全程最小深度维持在 0.25 左右，只有一次擦边降到 0.10。</p>
 <h2 id="3">3. 问题定义</h2>
 <p>无人机在方块墙场景中朝前飞，每 0.25 s 取一帧深度图，输出「往哪拐、要不要爬升」，目标是<strong>不撞墙</strong>并把最小深度维持在安全距离以上。</p>
-<p>状态 <script type="math/tex">s_t</script> 是 64×64 的归一化深度图 <script type="math/tex">D_t</script>，动作 <script type="math/tex">a_t = (\omega_t, \Delta z_t)</script>。</p>
+<p>状态 $s_t$ 是 64×64 的归一化深度图 $D_t$，动作 $a_t = (\omega_t, \Delta z_t)$。</p>
 <p>深度归一化：</p>
 <p>
 <script type="math/tex; mode=display">D(p) = \frac{\min(d(p),\, d_{\max})}{d_{\max}},\qquad d_{\max} = 20\ \text{m}</script>
 </p>
-<p>
-<script type="math/tex">D = 1</script> 表示远处或天空，<script type="math/tex">D \to 0</script> 表示贴脸障碍。</p>
+<p>$D = 1$ 表示远处或天空，$D \to 0$ 表示贴脸障碍。</p>
 <h2 id="4">4. 专家策略（标签来源）</h2>
 <p>专家<strong>只读深度图</strong>，不看真值位姿，因此标签里不含任何位姿信息——这一点是刻意设计的，用来避免「网络其实在读答案」的泄漏问题。</p>
 <p>把画面下 2/3 按列切成左中右三块，每块取 10 分位数作为该区域最近距离：</p>
@@ -952,7 +951,7 @@
 <script type="math/tex; mode=display">d_L = P_{10}(D_{[h/3:,\ 0:w/3]}),\quad d_M = P_{10}(D_{[h/3:,\ w/3:2w/3]}),\quad d_R = P_{10}(D_{[h/3:,\ 2w/3:w]})</script>
 </p>
 <p>用 10 分位而不是最小值，是为了抗单像素噪声。</p>
-<p>中间开阔（<script type="math/tex">d_M > 0.35</script>）时轻微回中：</p>
+<p>中间开阔（$d_M &gt; 0.35$）时轻微回中：</p>
 <p>
 <script type="math/tex; mode=display">\omega = 0.05\,(d_R - d_L)</script>
 </p>
@@ -960,12 +959,12 @@
 <p>
 <script type="math/tex; mode=display">u = \mathrm{clip}\!\left(\frac{0.35 - d_M}{0.35 - 0.15},\, 0,\, 1\right),\qquad \omega = \sigma\,(0.35 + 0.55u)</script>
 </p>
-<p>其中 <script type="math/tex">\sigma \in \{-1, +1\}</script> 是往更空的一侧转。<strong>左右深度差小于 0.04 时不切换 <script type="math/tex">\sigma</script></strong>——没有这个滞回，专家会逐帧翻转转向方向，无人机原地打转（实测过，见第 7 节）。</p>
-<p>贴脸（<script type="math/tex">d_M < 0.15</script>）时同时爬升：</p>
+<p>其中 $\sigma \in {-1, +1}$ 是往更空的一侧转。<strong>左右深度差小于 0.04 时不切换 $\sigma$</strong>——没有这个滞回，专家会逐帧翻转转向方向，无人机原地打转（实测过，见第 7 节）。</p>
+<p>贴脸（$d_M &lt; 0.15$）时同时爬升：</p>
 <p>
 <script type="math/tex; mode=display">\Delta z = 0.5 + 0.5u</script>
 </p>
-<p>最后对 <script type="math/tex">\omega</script> 做半步平滑 <script type="math/tex">\omega \leftarrow 0.5\,\omega_{\text{prev}} + 0.5\,\omega</script>，避免一帧一个极端值。</p>
+<p>最后对 $\omega$ 做半步平滑 $\omega \leftarrow 0.5\,\omega_{\text{prev}} + 0.5\,\omega$，避免一帧一个极端值。</p>
 <h2 id="5">5. 网络结构</h2>
 <div class="highlight"><pre><span></span><code>输入 1×64×64
   → Conv2D(1→8, k=5, stride=2)      输出 8×30×30
@@ -976,11 +975,11 @@
   → Linear(64→2)
   → tanh                             输出 (ω_norm, Δz_norm)
 </code></pre></div>
-<p>卷积用 im2col 展开成矩阵乘，反向按 <script type="math/tex">dW = X^\top dY</script> 累加：</p>
+<p>卷积用 im2col 展开成矩阵乘，反向按 $dW = X^\top dY$ 累加：</p>
 <p>
 <script type="math/tex; mode=display">\frac{\partial L}{\partial W_c} = \sum_{i,j} X_{ij}\, dY_{ij},\qquad X_{ij} \in \mathbb{R}^{25}</script>
 </p>
-<p>损失是带权 MSE（权重 <script type="math/tex">w = 1 + 3|\omega|</script>，因为动作大量集中在 0，不加权网络会退化成永远直飞）：</p>
+<p>损失是带权 MSE（权重 $w = 1 + 3|\omega|$，因为动作大量集中在 0，不加权网络会退化成永远直飞）：</p>
 <p>
 <script type="math/tex; mode=display">L = w\,\frac{1}{2}\sum_{k=1}^{2}(\hat a_k - a_k)^2</script>
 </p>
@@ -989,7 +988,7 @@
 <script type="math/tex; mode=display">m_t = \beta_1 m_{t-1} + (1-\beta_1) g_t,\quad v_t = \beta_2 v_{t-1} + (1-\beta_2) g_t^2</script>
 <script type="math/tex; mode=display">\theta_t = \theta_{t-1} - \eta\,\frac{\hat m_t}{\sqrt{\hat v_t} + \epsilon}</script>
 </p>
-<p>训练时做<strong>左右翻转增强</strong>：深度图水平镜像、<script type="math/tex">\omega</script> 取反，等价于免费多一倍样本，也让网络学到左右对称性。</p>
+<p>训练时做<strong>左右翻转增强</strong>：深度图水平镜像、$\omega$ 取反，等价于免费多一倍样本，也让网络学到左右对称性。</p>
 <h2 id="6">6. 控制执行</h2>
 <p>每步把网络输出还原成物理量：</p>
 <p>
@@ -1106,7 +1105,7 @@
 </tbody>
 </table>
 <p>演示中无人机从 (-24, 0) 起飞后绕方块墙外围飞了一整圈，全程最小深度维持在 0.25 左右，只在一次擦边降到 0.10——说明「看到障碍就转向」的行为确实被学出来了。</p>
-<p>R² 只有 0.298 是诚实的数字：专家在开阔区大量输出 <script type="math/tex">\omega \approx 0</script>，网络对这类样本接近「输出常数」，而真正有信息量的是靠近墙的那部分。调高动作加权能继续提升，但会让远离障碍时的行为过于激进，这里保留当前设置。</p>
+<p>R² 只有 0.298 是诚实的数字：专家在开阔区大量输出 $\omega \approx 0$，网络对这类样本接近「输出常数」，而真正有信息量的是靠近墙的那部分。调高动作加权能继续提升，但会让远离障碍时的行为过于激进，这里保留当前设置。</p>
 <h2 id="10">10. 复现步骤</h2>
 <h3 id="101">10.1 环境</h3>
 <ul>

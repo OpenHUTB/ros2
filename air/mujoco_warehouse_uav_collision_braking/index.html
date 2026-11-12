@@ -6,14 +6,14 @@
 <meta content="IE=edge" http-equiv="X-UA-Compatible"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <link href="../../img/favicon.ico" rel="shortcut icon"/>
-<title>仓储通道测距与制动 / Warehouse UAV Braking - 模拟器的 ROS 文档</title>
+<title>仓储通道测距与分级制动 - 模拟器的 ROS 文档</title>
 <link href="../../css/theme.css" rel="stylesheet"/>
 <link href="../../css/theme_extra.css" rel="stylesheet"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
 <link href="../../extra.css" rel="stylesheet"/>
 <script>
         // Current page data
-        var mkdocs_page_name = "\u4ed3\u50a8\u901a\u9053\u6d4b\u8ddd\u4e0e\u5236\u52a8 / Warehouse UAV Braking";
+        var mkdocs_page_name = "\u4ed3\u50a8\u901a\u9053\u6d4b\u8ddd\u4e0e\u5206\u7ea7\u5236\u52a8";
         var mkdocs_page_input_path = "air/mujoco_warehouse_uav_collision_braking.md";
         var mkdocs_page_url = null;
       </script>
@@ -732,19 +732,23 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
 </li>
-<li class="toctree-l1 current"><a class="reference internal current" href="#">仓储通道测距与制动 / Warehouse UAV Braking</a>
+<li class="toctree-l1 current"><a class="reference internal current" href="#">仓储通道测距与分级制动</a>
 <ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="#scene-and-structure">场景与结构 / Scene and Structure</a>
+<li class="toctree-l2"><a class="reference internal" href="#_2">场景与结构</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#ranging-and-control">测距与控制 / Ranging and Control</a>
+<li class="toctree-l2"><a class="reference internal" href="#_3">测距与控制</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#execution-and-interfaces">运行与接口 / Execution and Interfaces</a>
+<li class="toctree-l2"><a class="reference internal" href="#_4">运行与接口</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#results">运行结果 / Results</a>
+<li class="toctree-l2"><a class="reference internal" href="#_5">运行结果</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#source-guide">源码导读 / Source Guide</a>
+<li class="toctree-l2"><a class="reference internal" href="#_6">源码导读</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#supervision-and-isolation">监督数据与隔离 / Supervision and Isolation</a>
+<li class="toctree-l2"><a class="reference internal" href="#_7">监督数据与隔离</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_8">轻量模型</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_9">多场景对照</a>
 </li>
 </ul>
 </li>
@@ -854,7 +858,7 @@
 <ul class="wy-breadcrumbs">
 <li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
 <li class="breadcrumb-item">空域载具</li>
-<li class="breadcrumb-item active">仓储通道测距与制动 / Warehouse UAV Braking</li>
+<li class="breadcrumb-item active">仓储通道测距与分级制动</li>
 <li class="wy-breadcrumbs-aside">
 <a href="https://github.com/OpenHUTB/ros2/edit/master/docs/air/mujoco_warehouse_uav_collision_braking.md"> 编辑页面</a>
 </li>
@@ -863,24 +867,21 @@
 </div>
 <div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
 <div class="section" itemprop="articleBody">
-<div><h1 id="multi-beam-ranging-and-graded-braking-for-warehouse-uavs">仓储通道巡检无人机多束测距与分级制动 / Multi-Beam Ranging and Graded Braking for Warehouse UAVs</h1>
-<h2 id="scene-and-structure">场景与结构 / Scene and Structure</h2>
-<p>系统采用 MuJoCo 3.12.0 构建仓储巡检通道，覆盖静态箱体、横穿障碍和窄通道。无人机具有三轴平移自由度，姿态固定；测距、标签计算和 ROS 发布共享同一物理模型。
-The system uses MuJoCo 3.12.0 for warehouse inspection aisles with static boxes, crossing obstacles and narrow passages. The UAV has three translational degrees of freedom and fixed attitude. Ranging, label calculation and ROS publication share the same physical model.</p>
-<p><img alt="仓储测距 / Warehouse ranging" src="warehouse_ranging.png"/></p>
-<p><img alt="静态障碍制动 / Braking before a static obstacle" src="warehouse_ranging.gif"/></p>
+<div><h1 id="_1">仓储通道巡检无人机多束测距与分级制动</h1>
+<h2 id="_2">场景与结构</h2>
+<p>系统采用 MuJoCo 3.12.0 构建仓储巡检通道，覆盖静态箱体、横穿障碍和窄通道。无人机具有三轴平移自由度，姿态固定；测距、标签计算和 ROS 发布共享同一物理模型。</p>
+<p><img alt="仓储测距" src="warehouse_ranging.png"/></p>
+<p><img alt="静态障碍制动" src="warehouse_ranging.gif"/></p>
 <div class="mermaid">flowchart LR
-    A[MuJoCo 场景 / Scene] --&gt; B[九束射线 / Nine rays]
-    B --&gt; C[制动距离 / Stopping distance]
-    C --&gt; D[速度跟踪 / Speed tracking]
+    A[MuJoCo 场景] --&gt; B[九束射线]
+    B --&gt; C[制动距离]
+    C --&gt; D[速度跟踪]
     D --&gt; A
-    B --&gt; E[ROS 测距与位姿 / Ranges and pose]
+    B --&gt; E[ROS 测距与位姿]
 </div>
-<h2 id="ranging-and-control">测距与控制 / Ranging and Control</h2>
-<p>射线在水平面覆盖 −60° 至 60°，间隔 15°，量程 8 m；排除自身机体。物理步长为 0.02 s。前方中央三束距离的最小值用于保守制动。
-Horizontal rays span −60° to 60° at 15° intervals with an 8 m range, excluding the UAV body. The physics step is 0.02 s. The minimum of the three central beams supports conservative braking.</p>
-<p>设测距值为 <script type="math/tex">r</script>，机体半径为 0.18 m，控制预留距离为 0.70 m：
-Let <script type="math/tex">r</script> be the minimum central range, with body radius 0.18 m and control reserve 0.70 m:</p>
+<h2 id="_3">测距与控制</h2>
+<p>射线在水平面覆盖 −60° 至 60°，间隔 15°，量程 8 m；排除自身机体。物理步长为 0.02 s。前方中央三束距离的最小值用于保守制动。</p>
+<p>设测距值为 <script type="math/tex">r</script>，机体半径为 0.18 m，控制预留距离为 0.70 m：</p>
 <p>
 <script type="math/tex; mode=display">
 g=\max(0,r-0.18-0.70),\qquad d_b=v^2/4+0.25v
@@ -891,95 +892,87 @@ g=\max(0,r-0.18-0.70),\qquad d_b=v^2/4+0.25v
 v_{ref}=\min(v_{cruise},\max(0,\sqrt{4g+0.25}-0.5))
 </script>
 </p>
-<p>当 <script type="math/tex">g\le d_b</script> 时标签为制动；当 <script type="math/tex">d_b<g\le d_b+1.5</script> 时为警戒；其余为畅通。速度跟踪采用比例反馈并将纵向加速度限制在 ±2 m/s²；预留距离包含跟踪响应裕度，不代表严格碰撞安全证明。
-Labels are brake for <script type="math/tex">g\le d_b</script>, caution for <script type="math/tex">d_b<g\le d_b+1.5</script>, and clear otherwise. Proportional speed feedback limits longitudinal acceleration to ±2 m/s². The reserve includes tracking response margin and is not a formal collision-safety guarantee.</p>
-<h2 id="execution-and-interfaces">运行与接口 / Execution and Interfaces</h2>
-<p>源码位于 <code>src/air/mujoco_warehouse_uav_collision_braking</code>。模块提供 <code>main.py</code>、<code>launch/main.launch.py</code> 和 Dockerfile。Ubuntu 22.04、ROS 2 Humble 和 MuJoCo 环境可直接在 Docker Desktop 的 Linux 容器内运行。
-Source is located in <code>src/air/mujoco_warehouse_uav_collision_braking</code>. The module provides <code>main.py</code>, <code>launch/main.launch.py</code> and a Dockerfile. Ubuntu 22.04, ROS 2 Humble and MuJoCo run in Docker Desktop Linux containers.</p>
+<p>当 <script type="math/tex">g\le d_b</script> 时标签为制动；当 <script type="math/tex">d_b<g\le d_b+1.5</script> 时为警戒；其余为畅通。速度跟踪采用比例反馈并将纵向加速度限制在 ±2 m/s²；预留距离包含跟踪响应裕度，不代表严格碰撞安全证明。</p>
+<h2 id="_4">运行与接口</h2>
+<p>源码位于 <code>src/air/mujoco_warehouse_uav_collision_braking</code>。模块提供 <code>main.py</code>、<code>launch/main.launch.py</code> 和 Dockerfile。Ubuntu 22.04、ROS 2 Humble 和 MuJoCo 环境可直接在 Docker Desktop 的 Linux 容器内运行。</p>
 <div class="highlight"><pre><span></span><code>docker<span class="w"> </span>build<span class="w"> </span>-t<span class="w"> </span>warehouse-uav:humble<span class="w"> </span>.
 docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>warehouse-uav:humble
 python3<span class="w"> </span>main.py<span class="w"> </span>--scenario<span class="w"> </span>static<span class="w"> </span>--render<span class="w"> </span>--output<span class="w"> </span>results/static
 ros2<span class="w"> </span>launch<span class="w"> </span>mujoco_warehouse_uav_collision_braking<span class="w"> </span>main.launch.py<span class="w"> </span>scenario:<span class="o">=</span>crossing<span class="w"> </span>duration:<span class="o">=</span><span class="m">8</span>.0
 </code></pre></div>
-<p>发布接口为 <code>/warehouse/scan</code>、<code>/warehouse/pose</code>、<code>/warehouse/reference_velocity</code> 和 <code>/warehouse/status</code>，类型分别为 LaserScan、PoseStamped、TwistStamped 和 String。
-Published topics are <code>/warehouse/scan</code>, <code>/warehouse/pose</code>, <code>/warehouse/reference_velocity</code> and <code>/warehouse/status</code>, using LaserScan, PoseStamped, TwistStamped and String respectively.</p>
-<h2 id="results">运行结果 / Results</h2>
-<p>下表为初始速度 1.2 m/s、持续 8 s 的参考控制结果；不作为神经网络性能结果。
-The table reports reference-control runs at an initial speed of 1.2 m/s for 8 s; these are not neural-network performance results.</p>
+<p>发布接口为 <code>/warehouse/scan</code>、<code>/warehouse/pose</code>、<code>/warehouse/reference_velocity</code> 和 <code>/warehouse/status</code>，类型分别为 LaserScan、PoseStamped、TwistStamped 和 String。</p>
+<h2 id="_5">运行结果</h2>
+<p>下表为初始速度 1.2 m/s、持续 8 s 的参考控制结果；不作为神经网络性能结果。</p>
 <table>
 <thead>
 <tr>
-<th>场景 / Scenario</th>
-<th>碰撞 / Collision</th>
-<th>终点 x / Final x (m)</th>
-<th>末速度 / Final speed (m/s)</th>
+<th>场景</th>
+<th>碰撞</th>
+<th style="text-align: right;">终点 x</th>
+<th style="text-align: right;">末速度</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>静态 / Static</td>
-<td>否 / No</td>
-<td>4.9836</td>
-<td>0.000004</td>
+<td>静态</td>
+<td>否</td>
+<td style="text-align: right;">4.9836</td>
+<td style="text-align: right;">0.000004</td>
 </tr>
 <tr>
-<td>横穿 / Crossing</td>
-<td>否 / No</td>
-<td>9.1730</td>
-<td>1.1613</td>
+<td>横穿</td>
+<td>否</td>
+<td style="text-align: right;">9.1730</td>
+<td style="text-align: right;">1.1613</td>
 </tr>
 <tr>
-<td>窄道 / Narrow</td>
-<td>否 / No</td>
-<td>4.9836</td>
-<td>0.000004</td>
+<td>窄道</td>
+<td>否</td>
+<td style="text-align: right;">4.9836</td>
+<td style="text-align: right;">0.000004</td>
 </tr>
 </tbody>
 </table>
-<p>ROS 启动检查持续 2 s，节点完成 100 个物理步并正常退出。动画大小约 2.37 MiB。单元检查覆盖射线几何、静态制动、接触检测、横穿运动与高度保持。
-The ROS launch check runs for 2 s, completing 100 physics steps before a clean exit. The animation is approximately 2.37 MiB. Unit checks cover ray geometry, static braking, contact detection, crossing motion and altitude hold.</p>
-<h2 id="source-guide">源码导读 / Source Guide</h2>
-<p><code>simulation.py</code> 构建场景、施加作用力并计算射线；<code>ros_node.py</code> 将物理状态转换为消息；<code>visualize.py</code> 使用仿真状态生成动画；<code>tests/test_simulation.py</code> 检查关键行为。
-<code>simulation.py</code> builds scenes, applies forces and casts rays; <code>ros_node.py</code> converts physical states to messages; <code>visualize.py</code> renders simulation states; <code>tests/test_simulation.py</code> checks key behavior.</p>
-<p>完整课题为“仓储通道巡检无人机的多束测距神经网络碰撞风险预测与分级制动”。训练、独立测试、学习控制的 ROS 集成与多场景比较在参考控制和监督数据基础上扩展。
-The full topic is “Neural Collision Risk Prediction and Graded Braking for Warehouse Inspection UAVs Using Multi-Beam Ranging”. Training, held-out testing, ROS integration of learned control and multi-scenario comparison extend the reference controller and supervised data.</p>
-<p>参考资料 / References: <a href="https://mujoco.readthedocs.io/">MuJoCo</a>、<a href="https://docs.ros.org/en/humble/">ROS 2 Humble</a>。</p>
-<h2 id="supervision-and-isolation">监督数据与隔离 / Supervision and Isolation</h2>
-<p><code>dataset.py</code> 对每条轨迹使用独立随机流，变化障碍位置、巡航速度和横穿速度。每个场景按完整轨迹分为训练60%、验证20%、测试20%；不按单帧随机打散。状态输入只使用当前观测和历史观测，不包含未来位置或碰撞结果。
-<code>dataset.py</code> uses an independent random stream per episode, varying obstacle position, cruise speed and crossing speed. Each scenario uses an episode-level 60%/20%/20% training/validation/test split rather than shuffled frames. Inputs use current and historical observations without future positions or contact outcomes.</p>
+<p>ROS 启动检查持续 2 s，节点完成 100 个物理步并正常退出。动画大小约 2.37 MiB。单元检查覆盖射线几何、静态制动、接触检测、横穿运动与高度保持。</p>
+<h2 id="_6">源码导读</h2>
+<p><code>simulation.py</code> 构建场景、施加作用力并计算射线；<code>ros_node.py</code> 将物理状态转换为消息；<code>visualize.py</code> 使用仿真状态生成动画；<code>tests/test_simulation.py</code> 检查关键行为。</p>
+<p>完整课题为“仓储通道巡检无人机的多束测距神经网络碰撞风险预测与分级制动”。本模块包括监督数据生成、模型训练、独立测试、ROS 学习控制接口和多场景基准。</p>
+<p><a href="https://mujoco.readthedocs.io/">参考资料：MuJoCo</a>、<a href="https://docs.ros.org/en/humble/">ROS 2 Humble</a>。</p>
+<h2 id="_7">监督数据与隔离</h2>
+<p><code>dataset.py</code> 对每条轨迹使用独立随机流，变化障碍位置、巡航速度和横穿速度。每个场景按完整轨迹分为训练60%、验证20%、测试20%；不按单帧随机打散。状态输入只使用当前观测和历史观测，不包含未来位置或碰撞结果。</p>
 <table>
 <thead>
 <tr>
-<th>输入或标签 / Input or Target</th>
-<th>维度 / Dimensions</th>
-<th>定义 / Definition</th>
+<th>输入或标签</th>
+<th style="text-align: right;">维度</th>
+<th>定义</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>距离 / Range</td>
-<td>9</td>
-<td>水平射线距离，0至8 m / Horizontal ray distance, 0–8 m</td>
+<td>距离</td>
+<td style="text-align: right;">9</td>
+<td>水平射线距离，0 至 8 m</td>
 </tr>
 <tr>
-<td>闭合速度 / Closing rate</td>
-<td>9</td>
-<td>前帧距离减当前距离除以0.02 s，限幅±10 m/s / Previous minus current range over 0.02 s, clipped to ±10 m/s</td>
+<td>闭合速度</td>
+<td style="text-align: right;">9</td>
+<td>前帧距离减当前距离后除以 0.02 s，限幅 ±10 m/s</td>
 </tr>
 <tr>
-<td>实际/巡航速度 / Actual/cruise speed</td>
-<td>2</td>
-<td>当前纵向速度与轨迹巡航设定 / Current forward speed and episode cruise setting</td>
+<td>实际速度 / 巡航速度</td>
+<td style="text-align: right;">2</td>
+<td>当前纵向速度、轨迹巡航设定</td>
 </tr>
 <tr>
-<td>参考速度 / Reference speed</td>
-<td>1</td>
-<td>制动距离规则给出的速度 / Speed from the stopping-distance rule</td>
+<td>参考速度</td>
+<td style="text-align: right;">1</td>
+<td>制动距离规则给出的速度</td>
 </tr>
 <tr>
-<td>风险标签 / Risk label</td>
-<td>1</td>
-<td>0畅通、1警戒、2制动 / 0 clear, 1 caution, 2 brake</td>
+<td>风险标签</td>
+<td style="text-align: right;">1</td>
+<td>0 畅通、1 警戒、2 制动</td>
 </tr>
 </tbody>
 </table>
@@ -989,39 +982,159 @@ python3<span class="w"> </span>-m<span class="w"> </span>unittest<span class="w"
 <table>
 <thead>
 <tr>
-<th>分区 / Split</th>
-<th>轨迹 / Episodes</th>
-<th>样本 / Samples</th>
-<th>畅通/警戒/制动 / Clear/Caution/Brake</th>
+<th>分区</th>
+<th style="text-align: right;">轨迹</th>
+<th style="text-align: right;">样本</th>
+<th>畅通 / 警戒 / 制动</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>训练 / Train</td>
-<td>18</td>
-<td>5465</td>
+<td>训练</td>
+<td style="text-align: right;">18</td>
+<td style="text-align: right;">5465</td>
 <td>2437 / 1195 / 1833</td>
 </tr>
 <tr>
-<td>验证 / Validation</td>
-<td>6</td>
-<td>1816</td>
+<td>验证</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">1816</td>
 <td>854 / 309 / 653</td>
 </tr>
 <tr>
-<td>测试 / Test</td>
-<td>6</td>
-<td>2008</td>
+<td>测试</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">2008</td>
 <td>990 / 468 / 550</td>
 </tr>
 </tbody>
 </table>
-<p>每条轨迹最多8 s，首次接触后停止，因而样本数量随轨迹变化。巡航与参考制动行为混合用于覆盖接近障碍时的观测。标签表达参考规则，不表示真实飞行中的碰撞概率。
-Episodes last at most 8 s and stop after first contact, so sample counts vary. Mixed cruise and reference-braking behavior covers obstacle-approach observations. Labels represent a reference rule, not real-flight collision probabilities.</p>
-<p><a href="dataset_manifest.json">数据清单 / Dataset manifest</a> 保存种子、轨迹参数、特征顺序、分区统计和数组SHA-256；<a href="sample_rows.csv">样本片段 / Sample rows</a> 便于查看数据结构。
-The manifest stores seeds, episode parameters, feature order, split statistics and array SHA-256 digests. Sample rows illustrate the schema.</p>
-<p>八项检查覆盖几何与控制行为、首帧闭合速度复位、固定种子复现和轨迹泄漏拒绝。三个分区的轨迹集合互不相交，且每个分区均包含三个场景和三类风险标签。
-Eight checks cover geometry/control behavior, first-frame closing-rate reset, seeded reproducibility and rejection of episode leakage. Split episode sets are disjoint, and each contains all three scenarios and risk classes.</p></div>
+<p>每条轨迹最多8 s，首次接触后停止，因而样本数量随轨迹变化。巡航与参考制动行为混合用于覆盖接近障碍时的观测。标签表达参考规则，不表示真实飞行中的碰撞概率。</p>
+<p><a href="dataset_manifest.json">数据清单</a> 保存种子、轨迹参数、特征顺序、分区统计和数组SHA-256；<a href="sample_rows.csv">样本片段</a> 便于查看数据结构。</p>
+<p>13 项单元测试覆盖几何与控制行为、首帧闭合速度复位、固定种子复现、轨迹泄漏拒绝、模型训练和评估输出。三个分区的轨迹集合互不相交，且每个分区均包含三个场景和三类风险标签。</p>
+<h2 id="_8">轻量模型</h2>
+<p>训练器使用 NumPy MLP，输入20维，隐藏层为24和16个单元，输出风险三分类与速度回归。训练过程固定随机种子，保存标准化均值、尺度、权重和偏置，模型文件可独立加载。</p>
+<div class="mermaid">flowchart LR
+    A[20维测距特征] --&gt; B[MLP 24-16]
+    B --&gt; C[风险概率]
+    B --&gt; D[参考速度]
+    C --&gt; E[状态话题]
+    D --&gt; F[速度话题]
+</div>
+<p>评估只使用测试分区，输出 <code>risk_accuracy</code>、<code>speed_mae_mps</code> 和 3×3 混淆矩阵。固定种子42、训练80轮得到风险准确率 0.770、速度平均绝对误差 0.820 m/s。修复速度回归梯度未按批次样本数归一化的问题后，速度 MAE 由旧运行的 0.522 m/s 变为 0.820 m/s；旧值来自样本数相关的梯度步长，不能作为同配置稳定基线。混淆矩阵行表示真实类别、列表示预测类别，类别顺序为畅通、警戒、制动。</p>
+<table>
+<thead>
+<tr>
+<th>真实类别 / 预测类别</th>
+<th style="text-align: right;">畅通</th>
+<th style="text-align: right;">警戒</th>
+<th style="text-align: right;">制动</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>畅通</td>
+<td style="text-align: right;">915</td>
+<td style="text-align: right;">71</td>
+<td style="text-align: right;">4</td>
+</tr>
+<tr>
+<td>警戒</td>
+<td style="text-align: right;">220</td>
+<td style="text-align: right;">162</td>
+<td style="text-align: right;">86</td>
+</tr>
+<tr>
+<td>制动</td>
+<td style="text-align: right;">41</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">469</td>
+</tr>
+</tbody>
+</table>
+<p>机器可读的完整指标见<a href="test_metrics.json">独立测试结果</a>。</p>
+<p>学习控制节点通过 <code>/warehouse/scan</code>、<code>/warehouse/pose</code> 接收输入，通过 <code>/warehouse/learned_velocity</code>、<code>/warehouse/learned_status</code> 输出预测。它与参考控制接口并列，便于逐场景比较。</p>
+<h2 id="_9">多场景对照</h2>
+<p>基准分别运行纯参考控制、纯学习控制和带参考制动上限的学习控制。学习节点发布指令时启用制动上限；纯学习组用于观察未经规则修正的模型行为。</p>
+<p>离线基准直接使用 MuJoCo 的纵向速度真值构造模型输入和参考标签；ROS 学习节点则根据 <code>/warehouse/pose</code> 相邻位姿差分估速。因此，下列基准用于比较固定仿真条件下的控制组，不等同于 ROS 在线节点的实测指标。</p>
+<table>
+<thead>
+<tr>
+<th>控制方式</th>
+<th>场景</th>
+<th>接触</th>
+<th style="text-align: right;">末速度 (m/s)</th>
+<th style="text-align: right;">风险一致率</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>参考控制</td>
+<td>静态</td>
+<td>否</td>
+<td style="text-align: right;">0.000004</td>
+<td style="text-align: right;">0.818</td>
+</tr>
+<tr>
+<td>参考控制</td>
+<td>横穿</td>
+<td>否</td>
+<td style="text-align: right;">1.161290</td>
+<td style="text-align: right;">0.728</td>
+</tr>
+<tr>
+<td>参考控制</td>
+<td>窄道</td>
+<td>否</td>
+<td style="text-align: right;">0.000004</td>
+<td style="text-align: right;">0.905</td>
+</tr>
+<tr>
+<td>纯学习</td>
+<td>静态</td>
+<td>是</td>
+<td style="text-align: right;">0.000000</td>
+<td style="text-align: right;">0.840</td>
+</tr>
+<tr>
+<td>纯学习</td>
+<td>横穿</td>
+<td>是</td>
+<td style="text-align: right;">1.418006</td>
+<td style="text-align: right;">0.693</td>
+</tr>
+<tr>
+<td>纯学习</td>
+<td>窄道</td>
+<td>是</td>
+<td style="text-align: right;">0.000000</td>
+<td style="text-align: right;">0.898</td>
+</tr>
+<tr>
+<td>学习控制加制动上限</td>
+<td>静态</td>
+<td>否</td>
+<td style="text-align: right;">0.000004</td>
+<td style="text-align: right;">0.818</td>
+</tr>
+<tr>
+<td>学习控制加制动上限</td>
+<td>横穿</td>
+<td>否</td>
+<td style="text-align: right;">1.161035</td>
+<td style="text-align: right;">0.753</td>
+</tr>
+<tr>
+<td>学习控制加制动上限</td>
+<td>窄道</td>
+<td>否</td>
+<td style="text-align: right;">0.000006</td>
+<td style="text-align: right;">0.893</td>
+</tr>
+</tbody>
+</table>
+<p>纯学习控制在三个固定场景中均发生接触，说明当前模型输出需要制动上限保护。学习控制加制动上限的三个场景均未发生接触。风险一致率用于衡量分类与参考标签的一致程度，不代表碰撞概率。受约束结果与纯学习结果分开展示，避免将规则约束效果计为模型性能。</p>
+<p>表中窄道风险一致率在三个控制组内均为最高值；纯学习控制的横穿场景一致率最低，为 0.693。风险一致率仅表示模型分类与参考标签的一致程度，不表示碰撞概率。完整命令和固定种子结果见<a href="validation_report/">验证记录</a>。</p></div>
 </div>
 </div><footer>
 <div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">

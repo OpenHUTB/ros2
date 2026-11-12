@@ -732,7 +732,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与制动 / Warehouse UAV Braking</a>
+<li class="toctree-l1"><a class="reference internal" href="../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与分级制动</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../air/uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
 </li>
@@ -889,7 +889,7 @@ y = (\varphi - \varphi_0)\cdot R
 </script>
 </p>
 <ol>
-<li>把航线变成线段 <script type="math/tex">A \to B</script>，求禁区中心到线段的<strong>点到线段最短距离</strong>：</li>
+<li>把航线变成线段 $A \to B$，求禁区中心到线段的<strong>点到线段最短距离</strong>：</li>
 </ol>
 <p>
 <script type="math/tex; mode=display">
@@ -898,7 +898,7 @@ d_{min} = \left|A + t\,(B-A)\right|
 </script>
 </p>
 <ol>
-<li>若 <script type="math/tex">d_{min} \le radius</script> 判定为穿越。</li>
+<li>若 $d_{min} \le radius$ 判定为穿越。</li>
 </ol>
 <p>判定优先级：端点在内（<code>pickup_inside</code> / <code>delivery_inside</code>）优先于航线穿越（<code>path_crosses</code>），同一个禁区只记一条违规。禁飞区半径通常只有几百米到几公里，局部等距近似的误差远小于判定裕度，而且不会像「逐点采样」那样漏掉细长的穿越。</p>
 <h3 id="_6">输出示例</h3>

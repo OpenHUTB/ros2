@@ -788,7 +788,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与制动 / Warehouse UAV Braking</a>
+<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与分级制动</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
 </li>
@@ -908,7 +908,7 @@
 <div><h1 id="-">相机-激光雷达外参标定</h1>
 <p>本模块在<strong>已知真值</strong>的合成场景中完成激光雷达到相机的外参标定，并给出可量化的误差指标。仓库里原有的相机相关示例位于 <code>src/chap5/robot_vision</code>（ROS 1，以相机检测为主），没有激光雷达与相机之间的外参标定模块；本模块补上这一环，同时用合成真值回答"标定到底有多准"。</p>
 <h2 id="1">1. 项目简介</h2>
-<p>多传感器融合的第一步是<strong>空间对齐</strong>：激光雷达的点云要投影到相机图像上，必须知道两个传感器之间的旋转 <script type="math/tex">\mathbf{R}</script> 和平移 <script type="math/tex">\mathbf{t}</script>。本模块的流程是：</p>
+<p>多传感器融合的第一步是<strong>空间对齐</strong>：激光雷达的点云要投影到相机图像上，必须知道两个传感器之间的旋转 $\mathbf{R}$ 和平移 $\mathbf{t}$。本模块的流程是：</p>
 <div class="highlight"><pre><span></span><code>多姿态棋盘格（已知真值）
         ↓  投影 + 传感器噪声
 3D 角点（LiDAR 系） ↔ 2D 角点（像素）
@@ -958,7 +958,7 @@
 <p>离线脚本只依赖 NumPy 与 OpenCV；ROS 2 节点额外依赖 <code>rclpy</code>、<code>sensor_msgs</code>、<code>std_msgs</code>。</p>
 <h2 id="3">3. 原理</h2>
 <h3 id="31">3.1 投影模型</h3>
-<p>设 LiDAR 坐标系下的点为 <script type="math/tex">\mathbf{p}_l</script>，外参为 <script type="math/tex">(\mathbf{R}, \mathbf{t})</script>，则相机坐标与像素坐标为</p>
+<p>设 LiDAR 坐标系下的点为 $\mathbf{p}_l$，外参为 $(\mathbf{R}, \mathbf{t})$，则相机坐标与像素坐标为</p>
 <p>
 <script type="math/tex; mode=display">
 \mathbf{p}_c = \mathbf{R}\,\mathbf{p}_l + \mathbf{t}, \qquad
@@ -966,9 +966,9 @@
 = \frac{1}{z_c}\,\mathbf{K}\,\mathbf{p}_c
 </script>
 </p>
-<p>其中 <script type="math/tex">\mathbf{K}</script> 为相机内参矩阵（<script type="math/tex">f_x, f_y, c_x, c_y</script>）。本模块默认使用 640×480、<script type="math/tex">f_x=f_y=600</script>、<script type="math/tex">c_x=320</script>、<script type="math/tex">c_y=240</script> 的无畸变相机；ROS 2 节点可以订阅 <code>/camera_info</code> 覆盖这组内参。</p>
+<p>其中 $\mathbf{K}$ 为相机内参矩阵（$f_x, f_y, c_x, c_y$）。本模块默认使用 640×480、$f_x=f_y=600$、$c_x=320$、$c_y=240$ 的无畸变相机；ROS 2 节点可以订阅 <code>/camera_info</code> 覆盖这组内参。</p>
 <h3 id="32-pnp">3.2 PnP 求解</h3>
-<p>已知 <script type="math/tex">N</script> 组 3D–2D 对应点，求解 <script type="math/tex">(\mathbf{R}, \mathbf{t})</script> 即 PnP 问题。本模块采用：</p>
+<p>已知 $N$ 组 3D–2D 对应点，求解 $(\mathbf{R}, \mathbf{t})$ 即 PnP 问题。本模块采用：</p>
 <ol>
 <li><code>cv2.SOLVEPNP_EPNP</code> 求初值（不需要初始猜测）；</li>
 <li>以该初值为起点，用 <code>cv2.SOLVEPNP_ITERATIVE</code> 最小化重投影误差。</li>

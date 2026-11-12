@@ -762,7 +762,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../mujoco_warehouse_uav_collision_braking/">仓储通道测距与制动 / Warehouse UAV Braking</a>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_warehouse_uav_collision_braking/">仓储通道测距与分级制动</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
 </li>
@@ -891,26 +891,26 @@
 </ul>
 <h2 id="1">1. 方法</h2>
 <h3 id="11">1.1 风三角</h3>
-<p>设地速 <script type="math/tex">\mathbf{v}_g</script>、航向单位矢量 <script type="math/tex">\mathbf{u}</script>（机头方向）、真空速 <script type="math/tex">V_a</script>，则</p>
+<p>设地速 $\mathbf{v}_g$、航向单位矢量 $\mathbf{u}$（机头方向）、真空速 $V_a$，则</p>
 <p>
 <script type="math/tex; mode=display">
 \mathbf{v}_g=V_a\,\mathbf{u}+\mathbf{w}
 </script>
 </p>
-<p>皮托管只测到 <script type="math/tex">|V_a|</script>，所以给定候选风 <script type="math/tex">\mathbf{w}</script>，空速由</p>
+<p>皮托管只测到 $|V_a|$，所以给定候选风 $\mathbf{w}$，空速由</p>
 <p>
 <script type="math/tex; mode=display">
 V_a=\mathbf{u}^\top(\mathbf{v}_g-\mathbf{w})
 </script>
 </p>
-<p>反解。把它代回，得到只含 <script type="math/tex">\mathbf{w}</script> 的残差——<strong>垂直分量必须为零</strong>：</p>
+<p>反解。把它代回，得到只含 $\mathbf{w}$ 的残差——<strong>垂直分量必须为零</strong>：</p>
 <p>
 <script type="math/tex; mode=display">
 \mathbf{r}_i(\mathbf{w})=\big(I-\mathbf{u}_i\mathbf{u}_i^\top\big)(\mathbf{v}_{g,i}-\mathbf{w})
 </script>
 </p>
-<p>于是估计问题变成 <script type="math/tex">\min_{\mathbf{w}}\sum_i\lVert\mathbf{r}_i(\mathbf{w})\rVert^2</script>。
-雅可比为 <script type="math/tex">-(I-\mathbf{u}_i\mathbf{u}_i^\top)</script>，用 Gauss–Newton 求解（本问题线性化后几乎精确，3 次迭代收敛）。</p>
+<p>于是估计问题变成 $\min_{\mathbf{w}}\sum_i\lVert\mathbf{r}_i(\mathbf{w})\rVert^2$。
+雅可比为 $-(I-\mathbf{u}_i\mathbf{u}_i^\top)$，用 Gauss–Newton 求解（本问题线性化后几乎精确，3 次迭代收敛）。</p>
 <h3 id="12">1.2 可观测性</h3>
 <p>信息矩阵</p>
 <p>
@@ -918,11 +918,11 @@ V_a=\mathbf{u}^\top(\mathbf{v}_g-\mathbf{w})
 \mathcal I=\frac{1}{\sigma^2}\sum_i\big(I-\mathbf{u}_i\mathbf{u}_i^\top\big)
 </script>
 </p>
-<p>只有两个特征值都远离零时风才可估。单一航向下两个投影相同，<script type="math/tex">\mathcal I</script> 秩 1——
+<p>只有两个特征值都远离零时风才可估。单一航向下两个投影相同，$\mathcal I$ 秩 1——
 这就是"悬停/直线飞行估不出风"的数学原因。本模块要求
-<script type="math/tex">\lambda_{\min}\ge10^{-3}\lambda_{\max}</script> 才认为可估。</p>
+$\lambda_{\min}\ge10^{-3}\lambda_{\max}$ 才认为可估。</p>
 <h3 id="13">1.3 对飞平均法</h3>
-<p>经典做法：分别沿 <script type="math/tex">\mathbf{u}</script> 与 <script type="math/tex">-\mathbf{u}</script> 飞，取两次地速的平均：</p>
+<p>经典做法：分别沿 $\mathbf{u}$ 与 $-\mathbf{u}$ 飞，取两次地速的平均：</p>
 <p>
 <script type="math/tex; mode=display">
 \frac{\mathbf{v}_{g,1}+\mathbf{v}_{g,2}}{2}
@@ -962,7 +962,7 @@ python3<span class="w"> </span>main.py<span class="w"> </span>--out<span class="
 python3<span class="w"> </span>-m<span class="w"> </span>unittest<span class="w"> </span>discover<span class="w"> </span>-s<span class="w"> </span>tests<span class="w"> </span>-v
 </code></pre></div>
 <h2 id="4">4. 结果</h2>
-<p>环境：Windows 11、Python 3.12.14、NumPy 2.3.5。真值风 <script type="math/tex">(3.0,-2.0)</script> m/s（3.6 m/s），
+<p>环境：Windows 11、Python 3.12.14、NumPy 2.3.5。真值风 $(3.0,-2.0)$ m/s（3.6 m/s），
 空速 12 m/s、GPS 速度噪声 0.2 m/s、航向噪声 1°、每段空速波动 ±0.35 m/s，每种机动 40 次试验。</p>
 <table>
 <thead>
@@ -1037,7 +1037,7 @@ python3<span class="w"> </span>-m<span class="w"> </span>unittest<span class="w"
 </tbody>
 </table>
 <p><img alt="噪声敏感性" src="../../img/air/uav_wind_estimation/noise_sweep.png"/></p>
-<p>σ 每翻一倍，误差依次变为 ×1.08、×1.26、×1.59：低噪声段被 1° 航向噪声的地板限制，0.2 以上才逐渐趋于线性，0.4 时仍受地板影响（实测 0.078，纯线性外推会是 0.098）。用 <script type="math/tex">\sqrt{\sigma_0^2+(k\sigma)^2}</script> 描述更贴合，拟合 <script type="math/tex">\sigma_0\approx0.035</script>、<script type="math/tex">k\approx0.17</script>。</p>
+<p>σ 每翻一倍，误差依次变为 ×1.08、×1.26、×1.59：低噪声段被 1° 航向噪声的地板限制，0.2 以上才逐渐趋于线性，0.4 时仍受地板影响（实测 0.078，纯线性外推会是 0.098）。用 $\sqrt{\sigma_0^2+(k\sigma)^2}$ 描述更贴合，拟合 $\sigma_0\approx0.035$、$k\approx0.17$。</p>
 <h3 id="42">4.2 三个结论</h3>
 <ol>
 <li><strong>机动决定可观测性</strong>：悬停与直线飞行的信息矩阵秩 1，本类方向约束估计器都只能给出"平均地速"，
@@ -1089,7 +1089,7 @@ python3<span class="w"> </span>-m<span class="w"> </span>unittest<span class="w"
 <li>只估计<strong>水平风</strong>，未估计上升气流与风切变；三维风需要攻角/侧滑角观测。</li>
 <li>假设风在观测窗口内恒定；实际需要递推估计（如卡尔曼）以跟踪变化。</li>
 <li>空速用皮托管模型（无安装角误差、无位置误差修正），真实系统需先做空速标定。</li>
-<li>可观测性判据用信息矩阵特征值比，阈值 <script type="math/tex">10^{-3}</script> 是工程取值，不是统计检验。</li>
+<li>可观测性判据用信息矩阵特征值比，阈值 $10^{-3}$ 是工程取值，不是统计检验。</li>
 <li>未考虑机动本身的代价（圆周机动耗电、偏离航线），实际任务规划需权衡。</li>
 <li>ROS 2 端只做了 <code>compileall</code>、<code>package.xml</code> 解析与桩模块联调，未在本机执行 <code>colcon build</code> 与 <code>ros2 launch</code>。</li>
 </ol>
@@ -1097,7 +1097,7 @@ python3<span class="w"> </span>-m<span class="w"> </span>unittest<span class="w"
 <p>使用 DeepSeek Harness（deepseek-flash）辅助完成代码、推导整理、测试与文档。作者核对了风三角残差、
 信息矩阵与可观测性判据，并在本机实际运行了离线实验与 12 项单元测试，数值来自 <code>results/summary.json</code>。</p>
 <blockquote>
-<p><strong>建模选择</strong>：本模块<strong>不消费</strong> /uav/airspeed。若把皮托管量测接进来，单点即可解 <script type="math/tex">\mathbf{w}=\mathbf{v}_g-V_a\mathbf{u}</script>，直线飞行也可估，不可估就消失了。因此表 4.1/4.2 的不可估是<strong>方向约束估计算法</strong>的结论；空速波动 ±0.35 m/s 不进入残差，对本估计器无影响。</p>
+<p><strong>建模选择</strong>：本模块<strong>不消费</strong> /uav/airspeed。若把皮托管量测接进来，单点即可解 $\mathbf{w}=\mathbf{v}_g-V_a\mathbf{u}$，直线飞行也可估，不可估就消失了。因此表 4.1/4.2 的不可估是<strong>方向约束估计算法</strong>的结论；空速波动 ±0.35 m/s 不进入残差，对本估计器无影响。</p>
 </blockquote></div>
 </div>
 </div><footer>

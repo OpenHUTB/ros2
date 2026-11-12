@@ -754,7 +754,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与制动 / Warehouse UAV Braking</a>
+<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与分级制动</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
 </li>
@@ -879,9 +879,9 @@
 <h3 id="11-log-odds">1.1 栅格与 log-odds</h3>
 <ul>
 <li>分辨率 0.05 m，默认覆盖 <code>[-10, 10] × [-10, 10]</code>；</li>
-<li>每个格子保存 log-odds <script type="math/tex">\ell=\log\frac{p}{1-p}</script>，初值 0（未知）；</li>
-<li>激光命中格 <script type="math/tex">\ell \leftarrow \ell + 0.85</script>，光束经过的自由格
-  <script type="math/tex">\ell \leftarrow \ell - 0.40</script>，并截断到 <script type="math/tex">[-5, 5]</script>。</li>
+<li>每个格子保存 log-odds $\ell=\log\frac{p}{1-p}$，初值 0（未知）；</li>
+<li>激光命中格 $\ell \leftarrow \ell + 0.85$，光束经过的自由格
+  $\ell \leftarrow \ell - 0.40$，并截断到 $[-5, 5]$。</li>
 </ul>
 <h3 id="12">1.2 光束标记</h3>
 <p>对每束激光，从机器人所在格到端点做 <strong>Bresenham</strong> 直线：</p>
@@ -890,7 +890,7 @@
 <li>端点在 <code>range_max</code> 内时标记为占据；</li>
 <li>端点超出量程只标记自由，不标记占据。</li>
 </ul>
-<p>输出时 <script type="math/tex">\ell > 0.2</script> 记为占据（100），<script type="math/tex">\ell < -0.2</script> 记为自由（0），
+<p>输出时 $\ell &gt; 0.2$ 记为占据（100），$\ell &lt; -0.2$ 记为自由（0），
 其余为未知（-1）。</p>
 <h2 id="2">2. 运行</h2>
 <div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/hutb_ws

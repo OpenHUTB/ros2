@@ -798,7 +798,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../mujoco_warehouse_uav_collision_braking/">仓储通道测距与制动 / Warehouse UAV Braking</a>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_warehouse_uav_collision_braking/">仓储通道测距与分级制动</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
 </li>
@@ -1044,7 +1044,7 @@
 信息（实测池化版横向输出塌到 ±0.05 m/s）。</p>
 <p>策略头输出高斯均值，标准差是<strong>状态无关</strong>的可学习参数；动作经 <code>tanh</code> 压到
 [−1,1]，再按环境速度上限缩放。对数概率含 <code>tanh</code> 的雅可比修正
-<script type="math/tex">\log p(a) = \log p_{\text{raw}}(r) - \log(1-a^2)</script>；缺这一项时动作长期贴边界。</p>
+$\log p(a) = \log p_{\text{raw}}(r) - \log(1-a^2)$；缺这一项时动作长期贴边界。</p>
 <hr/>
 <h2 id="3">3. 环境</h2>
 <table>
@@ -1165,14 +1165,14 @@ DAgger 用<strong>策略自己的状态分布</strong>，探索留给后面的 P
 <code>run_dagger</code> 每轮跑一次闭环评测，把通过门数记进训练曲线。</p>
 <h3 id="52">5.2 损失</h3>
 <p>行为克隆用 <strong>MSE</strong>，不用 Huber：</p>
-<p>Huber 在残差大于 <script type="math/tex">\delta</script> 后退化成 L1，梯度是常数，回归目标变成条件<strong>中位数</strong>。
+<p>Huber 在残差大于 $\delta$ 后退化成 L1，梯度是常数，回归目标变成条件<strong>中位数</strong>。
 本任务里横向指令在 ±3 m/s 之间来回摆动（相邻门 y 差最大 1.4 m），中位数接近 0
 ——实测 Huber(δ=0.1) 把策略的横向输出压在 [−0.08, +0.08] m/s，专家是
 [−2.8, +3.0]，闭环 3.7/8；换 MSE 后输出范围 [−0.34, +0.55]，闭环 5.0/8。</p>
 <h3 id="521">5.2.1 水平镜像增广</h3>
-<p>深度图左右翻转 + <script type="math/tex">v_y</script> 取反是<strong>严格成立</strong>的样本：相机与机体左右对称、重力沿
-<script type="math/tex">z</script>、专家律 <script type="math/tex">v_y = k(\text{目标}_y - p_y)</script> 在 <script type="math/tex">y \to -y</script> 下正好变号。增广把数据
-翻倍，并固定"画面左 ↔ <script type="math/tex">+v_y</script>"的符号约定；不增广时左右两种情形各自从数据里学，
+<p>深度图左右翻转 + $v_y$ 取反是<strong>严格成立</strong>的样本：相机与机体左右对称、重力沿
+$z$、专家律 $v_y = k(\text{目标}_y - p_y)$ 在 $y \to -y$ 下正好变号。增广把数据
+翻倍，并固定"画面左 ↔ $+v_y$"的符号约定；不增广时左右两种情形各自从数据里学，
 横向输出被压向中间。</p>
 <p>验证集<strong>先切再增广</strong>：镜像件与原件是同一帧的两种视角，混进验证集会泄漏。</p>
 <p>消融（同一份 2176 条专家数据、40 轮、同一批评测种子）：</p>
@@ -1181,7 +1181,7 @@ DAgger 用<strong>策略自己的状态分布</strong>，探索留给后面的 P
 <tr>
 <th>mirror</th>
 <th>验证 MSE</th>
-<th>开环 RMS(<script type="math/tex">v_y</script>, <script type="math/tex">v_z</script>)</th>
+<th>开环 RMS($v_y$, $v_z$)</th>
 <th>横向输出范围</th>
 <th>闭环</th>
 </tr>
@@ -1206,12 +1206,10 @@ DAgger 用<strong>策略自己的状态分布</strong>，探索留给后面的 P
 <h3 id="53-ppo">5.3 PPO</h3>
 <p>裁剪式代理目标 + GAE。两处符号约定：</p>
 <ul>
-<li>
-<script type="math/tex">\partial \log p/\partial \mu = +(r-\mu)/\sigma^2</script>（高斯得分函数，符号为正）。
+<li>$\partial \log p/\partial \mu = +(r-\mu)/\sigma^2$（高斯得分函数，符号为正）。
   写成负号会让更新把高回报动作的概率往下压——单测里奖励偏向 +1 的动作，
   10 轮 PPO 后策略输出收敛到 −1。</li>
-<li>熵 <script type="math/tex">H = \log\sigma + \text{const}</script>，最大化熵是让 <script type="math/tex">\log\sigma</script>
-<strong>变大</strong>。</li>
+<li>熵 $H = \log\sigma + \text{const}$，最大化熵是让 $\log\sigma$ <strong>变大</strong>。</li>
 </ul>
 <hr/>
 <h2 id="6-2-ppo">6. 对比实验②：同一 PPO、不同网络结构</h2>
@@ -1435,13 +1433,13 @@ DAgger 用<strong>策略自己的状态分布</strong>，探索留给后面的 P
 <h3 id="81-nnpyim2col">8.1 <code>nn.py</code>：im2col 的维度顺序</h3>
 <p><code>as_strided</code> 的维度顺序与 reshape 的目标一致。顺序不一致时 reshape 按内存序
 重新分组；此时前向与反向仍互为转置、数值梯度校验通过，只有伴随恒等式
-<script type="math/tex">\langle A, \text{col2im}(B)\rangle = \langle \text{im2col}(A), B\rangle</script>
+$\langle A, \text{col2im}(B)\rangle = \langle \text{im2col}(A), B\rangle$
 能发现（单测含这一项）。</p>
 <h3 id="82">8.2 混控饱和会吃掉姿态控制</h3>
-<p><code>mixer</code> 的力矩预算是 <script type="math/tex">\min(4T_{\max}-T,\ T)</script>：期望总推力 <script type="math/tex">T</script> 顶到 <script type="math/tex">4T_{\max}</script>
+<p><code>mixer</code> 的力矩预算是 $\min(4T_{\max}-T,\ T)$：期望总推力 $T$ 顶到 $4T_{\max}$
 时预算归零，四个桨都满转、没有任何差动余量，姿态控制彻底消失。</p>
-<p>几何控制器的位置增益 <script type="math/tex">k_p=-16</script> 只需要 0.6 m 的位置误差就能把期望推力算到
-上限——实测竞速场景里 <script type="math/tex">|f|</script> 峰值 <strong>2269 N，是上限 24 N 的 95 倍</strong>，全程
+<p>几何控制器的位置增益 $k_p=-16$ 只需要 0.6 m 的位置误差就能把期望推力算到
+上限——实测竞速场景里 $|f|$ 峰值 <strong>2269 N，是上限 24 N 的 95 倍</strong>，全程
 <strong>54.5% 的控制步力矩预算不足 5%</strong>，姿态不可控。</p>
 <p>修法是给控制器加输出限幅（<code>GeometricController.thrust_alloc = 0.7</code>），
 等比缩小期望推力矢量而不是逐个 clip。加上之后专家从 0/8 变成 8/8。</p>
@@ -1453,24 +1451,22 @@ DAgger 用<strong>策略自己的状态分布</strong>，探索留给后面的 P
 <h3 id="84-ppopy">8.4 <code>ppo.py</code>：熵项的符号与高斯得分函数</h3>
 <p>两处符号写反时训练照常进行、更新方向相反：</p>
 <ul>
-<li>
-<script type="math/tex">\partial \log p/\partial \mu = +(r-\mu)/\sigma^2</script>（高斯对数密度的得分函数，
+<li>$\partial \log p/\partial \mu = +(r-\mu)/\sigma^2$（高斯对数密度的得分函数，
   符号为<strong>正</strong>）。写成负号的意思是"降低高回报动作的概率"——单测里奖励偏向
-  <script type="math/tex">+1</script> 的动作，10 轮 PPO 后策略输出收敛到 <script type="math/tex">-1</script>。</li>
-<li>熵 <script type="math/tex">H = \log\sigma + \text{const}</script>，最大化熵是让 <script type="math/tex">\log\sigma</script>
-<strong>变大</strong>。</li>
+  $+1$ 的动作，10 轮 PPO 后策略输出收敛到 $-1$。</li>
+<li>熵 $H = \log\sigma + \text{const}$，最大化熵是让 $\log\sigma$ <strong>变大</strong>。</li>
 </ul>
 <p>这两处不靠肉眼看，靠两个单测：<code>test_ppo_pushes_toward_high_reward_action</code>
 （回报只与动作有关的赌博机，PPO 必须把动作推向高回报侧）和
 <code>test_entropy_raises_log_std</code>（两份逐位相同的策略、同一批数据，只差
-<code>entropy_coef</code>，<script type="math/tex">\log\sigma</script> 的差必须为正）。</p>
+<code>entropy_coef</code>，$\log\sigma$ 的差必须为正）。</p>
 <h3 id="85">8.5 整网梯度的验证方式</h3>
-<p>扰动 <script type="math/tex">10^{-5}</script> 会让几千个 ReLU 里的某几个跨过折点，每次翻转对数值梯度的
-贡献与真实梯度<strong>同量级</strong>：实测 <script type="math/tex">\text{corr}(g, n) = 0.72</script>、逐元素比值落在
-<script type="math/tex">-136</script> 到 <script type="math/tex">+8</script> 之间，真梯度和噪声混在一起，怎么调容差都验不出问题。</p>
+<p>扰动 $10^{-5}$ 会让几千个 ReLU 里的某几个跨过折点，每次翻转对数值梯度的
+贡献与真实梯度<strong>同量级</strong>：实测 $\text{corr}(g, n) = 0.72$、逐元素比值落在
+$-136$ 到 $+8$ 之间，真梯度和噪声混在一起，怎么调容差都验不出问题。</p>
 <p>所以逐元素的数值梯度只在<strong>层一级</strong>做（Conv2d / GRU / 自注意力三个测试，
 外加 im2col 的伴随恒等式）；整网用<strong>下降量</strong>验——沿解析梯度走一步，损失
-下降量应与 <script type="math/tex">\eta\|g\|^2</script> 同量级（实测只有 0.25 倍，折点噪声吃掉七成，
+下降量应与 $\eta|g|^2$ 同量级（实测只有 0.25 倍，折点噪声吃掉七成，
 所以带宽放到 0.05~5 倍）。这一步抓得住符号写反与量级写错。</p>
 <h3 id="86">8.6 出图路径的动作尺度</h3>
 <p>策略输出是 <code>tanh</code> 的 [−1,1]，要乘上速度上限才是物理指令。<code>plotting._rollout</code>

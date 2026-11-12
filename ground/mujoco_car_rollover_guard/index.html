@@ -776,7 +776,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与制动 / Warehouse UAV Braking</a>
+<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与分级制动</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
 </li>
@@ -960,7 +960,7 @@
 与刚体真实姿态对不上（初始时刻就差 90°），换成 <code>xquat</code> 后姿态与倾角一致。</p>
 <h2 id="4">4. 原理</h2>
 <h3 id="41">4.1 静态侧翻临界角</h3>
-<p>车在横向平面内的支撑多边形宽度是轮距 <script type="math/tex">d</script>，质心高度 <script type="math/tex">h_{cg}</script>。重力作用线一旦越过外侧轮，
+<p>车在横向平面内的支撑多边形宽度是轮距 $d$，质心高度 $h_{cg}$。重力作用线一旦越过外侧轮，
 车就失去抗倾覆力矩，静态临界角</p>
 <p>
 <script type="math/tex; mode=display">\theta_c=\arctan\frac{d/2}{h_{cg}}</script>
@@ -970,10 +970,8 @@
 <thead>
 <tr>
 <th>载荷高度</th>
-<th>质心高度 <script type="math/tex">h_{cg}</script>
-</th>
-<th>静态临界角 <script type="math/tex">\theta_c</script>
-</th>
+<th>质心高度 $h_{cg}$</th>
+<th>静态临界角 $\theta_c$</th>
 </tr>
 </thead>
 <tbody>
@@ -998,11 +996,11 @@
 车会先侧倾到很大角度再彻底翻过去；55° 这个值是在三档载荷、三档车速下实测翻车时刻都稳定
 落在 55°~60° 之间后定的。</p>
 <h3 id="42">4.2 动态侧翻条件</h3>
-<p>转弯时离心加速度 <script type="math/tex">a_y=v\,\omega</script>，横向载荷转移比</p>
+<p>转弯时离心加速度 $a_y=v\,\omega$，横向载荷转移比</p>
 <p>
 <script type="math/tex; mode=display">\frac{\Delta F_z}{F_z}=\frac{a_y h_{cg}}{g\, d/2}</script>
 </p>
-<p>当 <script type="math/tex">a_y/g>d/(2h_{cg})</script> 时内侧轮离地。按上式，三档载荷对应的横向加速度阈值分别是 8.4 / 6.6 / 5.4 m/s²，
+<p>当 $a_y/g&gt;d/(2h_{cg})$ 时内侧轮离地。按上式，三档载荷对应的横向加速度阈值分别是 8.4 / 6.6 / 5.4 m/s²，
 所以载荷越高，同样的转弯速度越早进入危险区。</p>
 <h3 id="43">4.3 差速运动学</h3>
 <p>归一化指令 <code>(steer, throttle)</code> 换算成左右轮目标角速度：</p>
@@ -1017,7 +1015,7 @@
 <script type="math/tex; mode=display">\mathbf{x}=[\phi,\theta,\omega_x,\omega_y,\omega_z,a_x,a_y,v,s]</script>
 </p>
 <p>（横滚角、俯仰角、三轴角速度、纵向/侧向加速度、前向车速、转向指令）。按物理量程归一化
-<script type="math/tex">[0.6,0.6,4,4,4,15,15,4,1]</script> 后裁剪到 ±3，训练前就固定，不用数据统计量，换场景不用重算。</p>
+$[0.6,0.6,4,4,4,15,15,4,1]$ 后裁剪到 ±3，训练前就固定，不用数据统计量，换场景不用重算。</p>
 <p>网络是两层全连接：9 → 16（tanh）→ 1（sigmoid），177 个参数，纯 numpy 实现（前向、反向、Adam 都手写），
 不引入 PyTorch。损失用带类别权重的二元交叉熵——翻车样本只占 3.8%，不加权的话网络会全部预测"不翻"。</p>
 <p>标签按"未来 0.5 s 内是否翻车"打：翻车时刻前 25 个控制周期（50 Hz）标 1，其余标 0。

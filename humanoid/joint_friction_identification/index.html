@@ -764,7 +764,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与制动 / Warehouse UAV Braking</a>
+<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与分级制动</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
 </li>
@@ -899,25 +899,24 @@ Stribeck 摩擦的四个参数，并把模型作为前馈加入 PD 控制，量�
 </script>
 </p>
 <ul>
-<li>
-<script type="math/tex">\tau_c</script>：库仑摩擦；<script type="math/tex">\tau_v</script>：黏性系数；<script type="math/tex">\tau_s</script>：静摩擦（低速峰值）；<script type="math/tex">v_s</script>：Stribeck 速度。
-要求 <script type="math/tex">\tau_s\ge\tau_c</script>、<script type="math/tex">v_s>0</script>。</li>
+<li>$\tau_c$：库仑摩擦；$\tau_v$：黏性系数；$\tau_s$：静摩擦（低速峰值）；$v_s$：Stribeck 速度。
+要求 $\tau_s\ge\tau_c$、$v_s&gt;0$。</li>
 </ul>
 <h3 id="12">1.2 恒速扫掠辨识</h3>
-<p>恒速时 <script type="math/tex">\ddot q=0</script>，关节力矩只平衡摩擦（与少量线性阻尼）：</p>
+<p>恒速时 $\ddot q=0$，关节力矩只平衡摩擦（与少量线性阻尼）：</p>
 <p>
 <script type="math/tex; mode=display">
 \tau_{\text{meas}}(v_i)=\tau_f(v_i)+b\,v_i+\varepsilon_i
 </script>
 </p>
-<p>对给定 <script type="math/tex">v_s</script>，模型对 <script type="math/tex">(\tau_c,\tau_v,\tau_s)</script> 是<strong>线性</strong>的：</p>
+<p>对给定 $v_s$，模型对 $(\tau_c,\tau_v,\tau_s)$ 是<strong>线性</strong>的：</p>
 <p>
 <script type="math/tex; mode=display">
 \tau=\tau_c\,(s_i-d_i)+\tau_v\,v_i+\tau_s\,d_i,\qquad
 s_i=\mathrm{sign}(v_i),\ d_i=s_i e^{-|v_i|/v_s}
 </script>
 </p>
-<p>因此外层对 <script type="math/tex">v_s</script> 做一维网格搜索（0.02–2 rad/s，120 点），内层用最小二乘闭式求解，
+<p>因此外层对 $v_s$ 做一维网格搜索（0.02–2 rad/s，120 点），内层用最小二乘闭式求解，
 取残差最小的组合。</p>
 <h3 id="13">1.3 前馈补偿</h3>
 <p>控制律</p>
@@ -962,8 +961,8 @@ python3<span class="w"> </span>main.py<span class="w"> </span>--out<span class="
 python3<span class="w"> </span>-m<span class="w"> </span>unittest<span class="w"> </span>discover<span class="w"> </span>-s<span class="w"> </span>tests<span class="w"> </span>-v
 </code></pre></div>
 <h2 id="4">4. 结果</h2>
-<p>环境：Windows 11、Python 3.12.14、NumPy 2.3.5。真值 <script type="math/tex">\tau_c=0.45</script>、<script type="math/tex">\tau_v=0.08</script>、
-<script type="math/tex">\tau_s=0.65</script>、<script type="math/tex">v_s=0.20</script>。</p>
+<p>环境：Windows 11、Python 3.12.14、NumPy 2.3.5。真值 $\tau_c=0.45$、$\tau_v=0.08$、
+$\tau_s=0.65$、$v_s=0.20$。</p>
 <h3 id="41">4.1 参数辨识</h3>
 <table>
 <thead>
@@ -1004,7 +1003,7 @@ python3<span class="w"> </span>-m<span class="w"> </span>unittest<span class="w"
 <p>拟合残差 RMS 0.0061 N·m（噪声 0.01）。</p>
 <p><img alt="摩擦曲线" src="../../img/humanoid/joint_friction_identification/friction_curve.png"/></p>
 <p>库仑与静摩擦误差都在 2 % 以内；黏性与 Stribeck 速度误差偏大（15–19 %），原因是这两者在
-有限扫速范围内高度相关——把 <script type="math/tex">v_s</script> 调大、同时把 <script type="math/tex">\tau_v</script> 调小可以得到几乎相同的曲线。
+有限扫速范围内高度相关——把 $v_s$ 调大、同时把 $\tau_v$ 调小可以得到几乎相同的曲线。
 文档第 6 节把它列为已知限制，而不是藏起来。</p>
 <h3 id="42">4.2 跟踪补偿</h3>
 <table>

@@ -784,7 +784,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与制动 / Warehouse UAV Braking</a>
+<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与分级制动</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
 </li>
@@ -929,23 +929,21 @@
 d_{\text{clear}} = \left\lceil \frac{r_{\text{robot}} + r_{\text{extra}}}{\text{resolution}} \right\rceil \ \text{格}
 </script>
 </p>
-<p>膨胀用两次可分离的最小值滤波实现，复杂度 <script type="math/tex">O(HW)</script> 且与半径无关：</p>
+<p>膨胀用两次可分离的最小值滤波实现，复杂度 $O(HW)$ 且与半径无关：</p>
 <ul>
-<li>横向：<script type="math/tex">G[i][j] \leftarrow \bigvee_{k=-r}^{r} \text{grid}[i][j+k]</script>
-</li>
-<li>纵向：<script type="math/tex">P[i][j] \leftarrow \bigvee_{k=-r}^{r} G[i+k][j]</script>
-</li>
+<li>横向：$G[i][j] \leftarrow \bigvee_{k=-r}^{r} \text{grid}[i][j+k]$</li>
+<li>纵向：$P[i][j] \leftarrow \bigvee_{k=-r}^{r} G[i+k][j]$</li>
 </ul>
 <p>膨胀的必要性在第 5 节有定量验证：它直接决定通道是否还能通行。</p>
 <h3 id="22-a">2.2 A* 搜索</h3>
-<p>状态为栅格坐标，8 邻接代价为直行 1、对角 <script type="math/tex">\sqrt{2}</script>：</p>
+<p>状态为栅格坐标，8 邻接代价为直行 1、对角 $\sqrt{2}$：</p>
 <p>
 <script type="math/tex; mode=display">
 f(n) = g(n) + w \cdot h(n), \qquad g(n) = g(\text{parent}) + c(n, \text{parent})
 </script>
 </p>
-<p>启发式按邻接方式自动选择，保证<strong>可采纳性</strong>（<script type="math/tex">h</script> 不超过真实剩余代价），
-因此 <script type="math/tex">w=1</script> 时 A* 给出最优解：</p>
+<p>启发式按邻接方式自动选择，保证<strong>可采纳性</strong>（$h$ 不超过真实剩余代价），
+因此 $w=1$ 时 A* 给出最优解：</p>
 <table>
 <thead>
 <tr>
@@ -958,23 +956,19 @@ f(n) = g(n) + w \cdot h(n), \qquad g(n) = g(\text{parent}) + c(n, \text{parent})
 <tr>
 <td>8 邻接</td>
 <td>octile</td>
-<td>
-<script type="math/tex">\sqrt{2}\min(\Delta i,\Delta j) + \max(\Delta i,\Delta j) - \min(\Delta i,\Delta j)</script>
-</td>
+<td>$\sqrt{2}\min(\Delta i,\Delta j) + \max(\Delta i,\Delta j) - \min(\Delta i,\Delta j)$</td>
 </tr>
 <tr>
 <td>4 邻接</td>
 <td>manhattan</td>
-<td>
-<script type="math/tex">\lvert \Delta i\rvert + \lvert \Delta j\rvert</script>
-</td>
+<td>$\lvert \Delta i\rvert + \lvert \Delta j\rvert$</td>
 </tr>
 </tbody>
 </table>
 <p>工程细节：</p>
 <ul>
 <li><strong>二叉堆 + 延迟删除</strong>：不维护 decrease-key 索引，节点重复弹出时跳过；</li>
-<li><strong>平局打破</strong>：<script type="math/tex">f</script> 相同时优先 <script type="math/tex">h</script> 小者（更接近目标），开阔地形上减少无谓扩展；</li>
+<li><strong>平局打破</strong>：$f$ 相同时优先 $h$ 小者（更接近目标），开阔地形上减少无谓扩展；</li>
 <li><strong>严格穿角</strong>：对角步要求两侧格<strong>都</strong>是自由格。只禁止"两侧都占用"虽然栅格层面合法，
   但连接两个格心的直线仍可能擦过占用格的一角，与后处理的连续空间碰撞检查语义不一致；</li>
 <li><strong>有界搜索</strong>：<code>max_expansions</code> 超限立即终止，地图异常时不会打满 CPU；</li>
@@ -999,9 +993,9 @@ E_i = w_s \left\lVert p_i - \tfrac{1}{2}(p_{i-1}+p_{i+1}) \right\rVert^2
 <h3 id="24">2.4 时间参数化</h3>
 <p>几何路径转成可执行轨迹：</p>
 <ol>
-<li>三点外接圆估计各点曲率 <script type="math/tex">\kappa</script>；</li>
-<li>曲率限速 <script type="math/tex">v \le \sqrt{a_{\text{lat}} / \lvert\kappa\rvert}</script>，避免转弯时侧向加速度超限；</li>
-<li>沿弧长做<strong>前向 + 后向两遍扫描</strong>，用 <script type="math/tex">v^2 - v_0^2 = 2a\Delta s</script> 保证加减速不超限
+<li>三点外接圆估计各点曲率 $\kappa$；</li>
+<li>曲率限速 $v \le \sqrt{a_{\text{lat}} / \lvert\kappa\rvert}$，避免转弯时侧向加速度超限；</li>
+<li>沿弧长做<strong>前向 + 后向两遍扫描</strong>，用 $v^2 - v_0^2 = 2a\Delta s$ 保证加减速不超限
    （后向扫描负责"提前刹车"）；</li>
 <li>逐段按平均速度积分得到时间戳。</li>
 </ol>
@@ -1146,7 +1140,7 @@ ros2<span class="w"> </span>launch<span class="w"> </span>ros2_astar_planner<spa
 <h3 id="52">5.2 走廊场景：路径与速度剖面</h3>
 <p><img alt="走廊场景规划结果" src="corridor.png"/></p>
 <p>图中浅红色为机器人半径对应的膨胀层，蓝线为 A* 原始路径，红线为捷径 + 梯度平滑结果。
-右侧为梯形速度剖面 <script type="math/tex">v(s)</script> 与曲率 <script type="math/tex">\kappa(s)</script>；指标面板给出路径长度、扩展节点数、
+右侧为梯形速度剖面 $v(s)$ 与曲率 $\kappa(s)$；指标面板给出路径长度、扩展节点数、
 折点/转角变化与加速度约束校验结果。</p>
 <p>平滑把折点数从 53 降到 6、转角数从 11 降到 4，路径长度从 6.24 m 缩短到 5.95 m（4.6%）。</p>
 <h3 id="53">5.3 平滑前后对照</h3>

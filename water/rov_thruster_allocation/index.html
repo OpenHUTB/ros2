@@ -732,7 +732,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与制动 / Warehouse UAV Braking</a>
+<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与分级制动</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
 </li>
@@ -885,7 +885,7 @@
 </ul>
 <h2 id="1">1. 方法</h2>
 <h3 id="11">1.1 配置矩阵</h3>
-<p>每个推进器用位置 <script type="math/tex">\mathbf{r}_i</script> 与推力方向 <script type="math/tex">\mathbf{d}_i</script>（单位向量）描述，对机体六维力旋量贡献</p>
+<p>每个推进器用位置 $\mathbf{r}_i$ 与推力方向 $\mathbf{d}_i$（单位向量）描述，对机体六维力旋量贡献</p>
 <p>
 <script type="math/tex; mode=display">
 \mathbf{t}_i=\begin{bmatrix}\mathbf{d}_i\\ \mathbf{r}_i\times\mathbf{d}_i\end{bmatrix}\in\mathbb{R}^6,
@@ -894,15 +894,15 @@
 </script>
 </p>
 <p>本模块的 8 推进器：4 个水平 45° 布置在四角（提供纵向、横向、艏摇），4 个垂直布置在
-<script type="math/tex">(\pm0.30,\pm0.22)</script>（提供升沉、横滚、纵倾）。配置矩阵条件数 10.9，满秩 6。</p>
+$(\pm0.30,\pm0.22)$（提供升沉、横滚、纵倾）。配置矩阵条件数 10.9，满秩 6。</p>
 <blockquote>
 <p>备注：只用 2 个垂推时矩阵秩为 5（横滚不可控），这也是实际 ROV 要么 2 垂推只做纵倾、
 要么 4 垂推才做横滚的原因。第一版就是 6 推进器，<code>cond=inf</code>，加两个垂推后才满秩。</p>
 </blockquote>
 <h3 id="12">1.2 三种分配</h3>
 <ul>
-<li>伪逆：<script type="math/tex">\mathbf{f}=T^{+}\boldsymbol{\tau}</script>，残差为零但<strong>不检查限幅</strong>；</li>
-<li>伪逆后限幅：<script type="math/tex">\mathbf{f}=\mathrm{clip}(T^{+}\boldsymbol{\tau},\pm f_{\max})</script>，安全但残差被放大；</li>
+<li>伪逆：$\mathbf{f}=T^{+}\boldsymbol{\tau}$，残差为零但<strong>不检查限幅</strong>；</li>
+<li>伪逆后限幅：$\mathbf{f}=\mathrm{clip}(T^{+}\boldsymbol{\tau},\pm f_{\max})$，安全但残差被放大；</li>
 <li>箱约束 QP：</li>
 </ul>
 <p>
@@ -911,10 +911,10 @@
 \quad\text{s.t.}\quad |f_i|\le f_{\max}
 </script>
 </p>
-<p>用循环坐标下降求解（每次只更新一个分量并投影回盒内），<script type="math/tex">\lambda=10^{-6}</script> 只作数值正则。</p>
+<p>用循环坐标下降求解（每次只更新一个分量并投影回盒内），$\lambda=10^{-6}$ 只作数值正则。</p>
 <h3 id="13">1.3 需求生成</h3>
-<p>包络内需求取 <script type="math/tex">\boldsymbol{\tau}=T\mathbf{f}_{\text{true}}</script>，其中 <script type="math/tex">f_{\text{true}}</script> 在
-<script type="math/tex">[-f_{\max},f_{\max}]</script> 内均匀采样，因此一定可达；超包络需求把同样的力旋量乘以 1.8，
+<p>包络内需求取 $\boldsymbol{\tau}=T\mathbf{f}<em _text_true="\text{true">{\text{true}}$，其中 $f</em>}$ 在
+$[-f_{\max},f_{\max}]$ 内均匀采样，因此一定可达；超包络需求把同样的力旋量乘以 1.8，
 必然触发限幅。这样两类场景的"标准答案"都是已知的。</p>
 <h2 id="2-ros-2">2. ROS 2 接口</h2>
 <table>
@@ -1027,7 +1027,7 @@ python3<span class="w"> </span>-m<span class="w"> </span>unittest<span class="w"
 <li>包络内伪逆与 QP 都精确，但伪逆有 2.8 % 的触限——分配器必须知道限幅，否则下游再截断就失真；</li>
 <li>超包络时没有精确解，QP 的力旋量残差比"先伪逆再限幅"低 36 %（20.00 vs 31.41）；</li>
 <li>代价是 QP 的推力平方和更高（7563 vs 6629）——它优先保力旋量而非省电，实际部署可按任务在
-   <script type="math/tex">\lambda</script> 与残差权重之间取舍。</li>
+   $\lambda$ 与残差权重之间取舍。</li>
 </ol>
 <p><strong>口径</strong>：QP 的箱约束是硬约束，max|f| 恒为 40 N，所以它那一列是“触限比例”（顶在限幅边界），不是“越限”。真正的越限只发生在未限幅伪逆上：包络内 2.75 %、超包络 29.62 %，峰值分别到 54.5 N 与 98.1 N。包络内伪逆的零残差建立在这样不可实现的解上，原因是 8 个推进器只张成 6 维力旋量、零空间 2 维，最小范数解不等于生成需求的 f_true，可能把某些分量推过 40 N。</p>
 <h2 id="5">5. 复现</h2>

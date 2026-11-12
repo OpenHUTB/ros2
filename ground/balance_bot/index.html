@@ -768,7 +768,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与制动 / Warehouse UAV Braking</a>
+<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与分级制动</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
 </li>
@@ -933,15 +933,15 @@
 </p>
 <div class="admonition warning">
 <p class="admonition-title">本模块用的是 PD，不是 LQR</p>
-<p>早期版本的导航和标题里写过"LQR"，但代码里<strong>没有求解 Riccati 方程、也没有增益矩阵 <script type="math/tex">K</script></strong>，
+<p>早期版本的导航和标题里写过"LQR"，但代码里<strong>没有求解 Riccati 方程、也没有增益矩阵 $K$</strong>，
 三个增益是网格搜索手工调出来的（<code>kp=45, kd=2.0, kv=2.6</code>）。评审指出后已全部改成 PD 表述。
-PD 可以看成 LQR 的对角近似 —— 如果真要 LQR，需要用上式的 <script type="math/tex">A,B</script> 解</p>
+PD 可以看成 LQR 的对角近似 —— 如果真要 LQR，需要用上式的 $A,B$ 解</p>
 <p>
 <script type="math/tex; mode=display">
 A^\top P + PA - PBR^{-1}B^\top P + Q = 0
 </script>
 </p>
-<p>再取 <script type="math/tex">K = R^{-1}B^\top P</script>，控制律 <script type="math/tex">\tau = -K\mathbf{x}</script>。这一步本模块没做。</p>
+<p>再取 $K = R^{-1}B^\top P$，控制律 $\tau = -K\mathbf{x}$。这一步本模块没做。</p>
 </div>
 <p>本模块实际使用的控制律：</p>
 <p>
@@ -950,11 +950,11 @@ A^\top P + PA - PBR^{-1}B^\top P + Q = 0
 </script>
 </p>
 <h3 id="22">2.2 速度项为什么是负号（调参踩的坑）</h3>
-<p>直觉上会写成 <script type="math/tex">+k_v(v_{target}-v)</script>，但实测<strong>指令 +0.3 m/s 时车以 −3.7 m/s 倒着跑</strong>，
+<p>直觉上会写成 $+k_v(v_{target}-v)$，但实测<strong>指令 +0.3 m/s 时车以 −3.7 m/s 倒着跑</strong>，
 静止时还会自己漂出 12 m。</p>
-<p>物理原因：自平衡车要前进，必须先用<strong>反向</strong>轮矩把车身压成前倾（<script type="math/tex">\theta<0</script>），
+<p>物理原因：自平衡车要前进，必须先用<strong>反向</strong>轮矩把车身压成前倾（$\theta&lt;0$），
 车身前倾后轮子再追上去，整车才会向前 —— 速度指令要先经过倾角，符号与直觉相反。
-改成负号后：<script type="math/tex">v_{target}=0.3</script> 时实测 <strong>0.310 m/s</strong>，静止时不漂移。</p>
+改成负号后：$v_{target}=0.3$ 时实测 <strong>0.310 m/s</strong>，静止时不漂移。</p>
 <h3 id="23">2.3 神经网络怎么学</h3>
 <p>没有用强化学习（要试几百次、容易不收敛），而是<strong>行为克隆</strong>：
 先让上面的 PD 控制器在仿真里跑，采集 <code>(状态, 力矩)</code> 对，再让 MLP 去拟合。

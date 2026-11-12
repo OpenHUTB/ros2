@@ -830,7 +830,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../mujoco_warehouse_uav_collision_braking/">仓储通道测距与制动 / Warehouse UAV Braking</a>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_warehouse_uav_collision_braking/">仓储通道测距与分级制动</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
 </li>
@@ -1014,7 +1014,7 @@
 <hr/>
 <h2 id="2">2. 问题定义</h2>
 <h3 id="21">2.1 标称模型与残差</h3>
-<p>控制器所使用的<strong>标称模型</strong>（世界系 ENU，<script type="math/tex">R</script> 为机体→世界旋转）：</p>
+<p>控制器所使用的<strong>标称模型</strong>（世界系 ENU，$R$ 为机体→世界旋转）：</p>
 <p>
 <script type="math/tex; mode=display">
 a_{\text{nom}} = \frac{T}{m_{\text{nom}}}\,R\,e_z + g_{\text{vec}},
@@ -1032,12 +1032,12 @@ a_{\text{true}} = \frac{\Delta v}{\Delta t}\Big|_{\text{里程计}}
   + \underbrace{\Delta a_{\text{ground}}}_{\text{地面效应}}
 </script>
 </p>
-<p>它全部由可观测量算出：<script type="math/tex">a_{\text{true}}</script> 由里程计速度差分得到，
-<script type="math/tex">a_{\text{nom}}</script> 由下达的推力与姿态算出。<strong>不需要知道真值质量、真值阻力系数</strong>
+<p>它全部由可观测量算出：$a_{\text{true}}$ 由里程计速度差分得到，
+$a_{\text{nom}}$ 由下达的推力与姿态算出。<strong>不需要知道真值质量、真值阻力系数</strong>
 ——这正是它作为在线学习标签的合法性所在。</p>
 <h3 id="22">2.2 为什么在机体系里学</h3>
 <p>阻力在机体系里是速度的固定函数（各向异性但姿态无关），载荷偏置也随机体一起转。
-把目标量表成机体系 <script type="math/tex">\Delta a_b = R^{\mathsf T}\Delta a</script>、输入特征也全用机体系量，
+把目标量表成机体系 $\Delta a_b = R^{\mathsf T}\Delta a$、输入特征也全用机体系量，
 网络学到的是"速度 → 力"这一<strong>与姿态解耦</strong>的映射：</p>
 <p>
 <script type="math/tex; mode=display">
@@ -1052,7 +1052,7 @@ f_{\theta}: \big(v_b,\; a^{\text{cmd}}_b,\; \omega_b,\; z,\; T/m\big) \;\longmap
 f_{\text{des}} = m_{\text{nom}}\big(a_d + K_p e_p + K_d e_v + g e_z\big)
 </script>
 </p>
-<p>标称模型对加速度是<strong>线性</strong>的，因此把网络预测的 <script type="math/tex">\widehat{\Delta a}</script> 直接从 <script type="math/tex">a_d</script> 里减掉，
+<p>标称模型对加速度是<strong>线性</strong>的，因此把网络预测的 $\widehat{\Delta a}$ 直接从 $a_d$ 里减掉，
 等价于换了一个更准的模型：</p>
 <p>
 <script type="math/tex; mode=display">
@@ -1060,7 +1060,7 @@ f_{\text{des}} = m_{\text{nom}}\Big(a_d - \widehat{\Delta a} + K_p e_p + K_d e_v
 </script>
 </p>
 <p><strong>控制器内部一行都不用动。</strong> 误差只剩网络的预测残差
-<script type="math/tex">\Delta a - \widehat{\Delta a}</script>，反馈只需要处理这一小截，稳定裕度基本不受影响。</p>
+$\Delta a - \widehat{\Delta a}$，反馈只需要处理这一小截，稳定裕度基本不受影响。</p>
 <h3 id="24">2.4 常值扰动的下界：为什么反馈不够</h3>
 <p>几何控制器没有积分项，稳态误差满足</p>
 <p>
@@ -1068,8 +1068,8 @@ f_{\text{des}} = m_{\text{nom}}\Big(a_d - \widehat{\Delta a} + K_p e_p + K_d e_v
 |e_p| = \frac{|\Delta a|}{|K_p|}
 </script>
 </p>
-<p>实测与解析的对照（定点悬停、<script type="math/tex">K_{p,z}=-20</script>）：</p>
-<p>| 载荷 | 解析 <script type="math/tex">|\Delta a_z|</script> | 解析静差 | 实测静差 |
+<p>实测与解析的对照（定点悬停、$K_{p,z}=-20$）：</p>
+<p>| 载荷 | 解析 $|\Delta a_z|$ | 解析静差 | 实测静差 |
 |---|---|---|---|
 | 无 | 0 | 0 | 0.000 m |
 | +0.25 kg | 2.58 m/s² | 0.129 m | 0.129 m |
@@ -1102,8 +1102,8 @@ w_{k+1} = a\,w_k + \sigma\sqrt{1-a^2}\;\xi_k,
 </script>
 </p>
 <p>这个离散化是 OU 过程的<strong>精确解</strong>而不是欧拉近似，任意步长下稳态方差都严格等于
-<script type="math/tex">\sigma^2</script>。默认 <script type="math/tex">\tau = 1.5</script> s，垂直分量按 0.5 缩小。风通过<strong>相对气流速度</strong>
-<script type="math/tex">v_b - R^{\mathsf T}w</script> 进入阻力，因此是一个真实的物理扰动而不是外加的力。</p>
+$\sigma^2$。默认 $\tau = 1.5$ s，垂直分量按 0.5 缩小。风通过<strong>相对气流速度</strong>
+$v_b - R^{\mathsf T}w$ 进入阻力，因此是一个真实的物理扰动而不是外加的力。</p>
 <h3 id="33">3.3 挂载载荷</h3>
 <p>在机体下方以 XML 后处理的方式挂一个集中质量刚体。<strong>不用</strong>直接改
 <code>model.body_mass</code>：那样会绕开 MuJoCo 的惯量重算（<code>mj_setConst</code>），
@@ -1135,10 +1135,10 @@ w_{k+1} = a\,w_k + \sigma\sqrt{1-a^2}\;\xi_k,
               \underbrace{T/m}_{1}\big]
 </script>
 </p>
-<p>中间三项是<strong>二次阻力基</strong>：气动阻力本就正比于 <script type="math/tex">v|v|</script>，把这一项显式喂进去，
+<p>中间三项是<strong>二次阻力基</strong>：气动阻力本就正比于 $v|v|$，把这一项显式喂进去，
 网络不必从零拟合平方关系。</p>
-<p>高度 <script type="math/tex">z</script> 与归一化推力 <script type="math/tex">T/m</script> 是为地面效应与载荷准备的：悬停时
-<script type="math/tex">T/m_{\text{nom}} = g\,m_{\text{true}}/m_{\text{nom}}</script>，因此它<strong>唯一地</strong>编码了载荷档位，
+<p>高度 $z$ 与归一化推力 $T/m$ 是为地面效应与载荷准备的：悬停时
+$T/m_{\text{nom}} = g\,m_{\text{true}}/m_{\text{nom}}$，因此它<strong>唯一地</strong>编码了载荷档位，
 网络可以把常值载荷偏差学成一个精确的线性项。</p>
 <h3 id="42">4.2 结构</h3>
 <table>
@@ -1188,11 +1188,11 @@ w_{k+1} = a\,w_k + \sigma\sqrt{1-a^2}\;\xi_k,
 Python 3.8）都要能 import，纯 numpy 省掉一个 700 MB 依赖；这个规模下
 torch 并不更快（9 万样本 60 轮实测 12 s）；ROS 节点不需要额外安装任何东西。</p>
 <p>反向传播按链式法则手写，<code>--selftest</code> 用中心差分逐点校验，
-相对误差 <script type="math/tex">< 10^{-5}</script>（实测 <script type="math/tex">2\times10^{-8}</script>）。</p>
+相对误差 $&lt; 10^{-5}$（实测 $2\times10^{-8}$）。</p>
 <div class="admonition warning">
 <p class="admonition-title">一个真金白银换来的坑</p>
-<p>MSE 的梯度必须除以<strong>元素总数</strong> <script type="math/tex">N\times 3</script>，而不是样本数 <script type="math/tex">N</script>——
-<code>np.mean</code> 摊的是全部元素。只除 <script type="math/tex">N</script> 会让梯度整体大 3 倍。
+<p>MSE 的梯度必须除以<strong>元素总数</strong> $N\times 3$，而不是样本数 $N$——
+<code>np.mean</code> 摊的是全部元素。只除 $N$ 会让梯度整体大 3 倍。
 Adam 对梯度整体缩放不敏感（所以这个 bug 训练时完全看不出来），
 但换成 SGD 或调学习率就会对不上。</p>
 </div>
@@ -1202,7 +1202,7 @@ Adam 对梯度整体缩放不敏感（所以这个 bug 训练时完全看不出�
 <hr/>
 <h2 id="5">5. 在线自适应：最后一层的递推最小二乘</h2>
 <p>离线网络只见过 <code>none / light / heavy</code> 三档载荷，遇到没见过的档位只能靠泛化。
-<strong>在线自适应</strong>用飞行中实测的 <script type="math/tex">\Delta a</script> 直接修正网络：</p>
+<strong>在线自适应</strong>用飞行中实测的 $\Delta a$ 直接修正网络：</p>
 <p>
 <script type="math/tex; mode=display">
 \theta_k = \theta_{k-1} + K_k\big(y_k - \varphi_k^{\mathsf T}\theta_{k-1}\big),
@@ -1218,22 +1218,21 @@ P_k = \frac{1}{\lambda}\Big(P_{k-1} - K_k\varphi_k^{\mathsf T}P_{k-1}\Big)
 <p><strong>只更新最后一层</strong>（65 × 3 = 195 个参数），前面几层冻结。理由是在线数据
 时序强相关（一条轨迹上的速度不可能跳变），对整个网络做梯度更新会沿相关方向
 把隐层冲垮；而最后一层是线性回归，RLS 对相关数据的收敛性有闭式保证，
-单步只要 <script type="math/tex">O(h^2)</script>（<script type="math/tex">h=65</script>，实测 6 µs，100 Hz 下占用 &lt; 0.1% CPU）。</p>
+单步只要 $O(h^2)$（$h=65$，实测 6 µs，100 Hz 下占用 &lt; 0.1% CPU）。</p>
 <h3 id="51">5.1 三个必须做的防护</h3>
 <p>RLS 在这类问题上<strong>天然不稳</strong>，三个防护缺一不可：</p>
-<p><strong>（1）先验协方差 <script type="math/tex">\delta</script> —— 最关键的一个。</strong>
-<script type="math/tex">\theta</script> 的初值取离线网络的最后一层，<script type="math/tex">P_0 = \delta I</script> 表示对它的置信度。
-<script type="math/tex">\delta</script> 取 <script type="math/tex">10^3</script> 相当于认为离线解完全不可信，第一次更新就按
-<script type="math/tex">K \approx \varphi/\varphi^{\mathsf T}\varphi</script> 把 <script type="math/tex">\theta</script>
-<strong>精确拟合到单个样本上</strong>。
+<p><strong>（1）先验协方差 $\delta$ —— 最关键的一个。</strong>
+$\theta$ 的初值取离线网络的最后一层，$P_0 = \delta I$ 表示对它的置信度。
+$\delta$ 取 $10^3$ 相当于认为离线解完全不可信，第一次更新就按
+$K \approx \varphi/\varphi^{\mathsf T}\varphi$ 把 $\theta$ <strong>精确拟合到单个样本上</strong>。
 定点悬停（回归向量几乎不变、零空间维度极高）时实测 RMSE 0.14 ~ 0.25 m，
-比不用 RLS 还差；<script type="math/tex">\delta</script> 取 <script type="math/tex">10^2</script> 后同一组工况降到 0.019 ~ 0.027 m。</p>
-<p><strong>（2）空转期。</strong> 先跑 100 步"只辨识、不施加"，等 <script type="math/tex">\theta</script> 在真实数据上收敛
+比不用 RLS 还差；$\delta$ 取 $10^2$ 后同一组工况降到 0.019 ~ 0.027 m。</p>
+<p><strong>（2）空转期。</strong> 先跑 100 步"只辨识、不施加"，等 $\theta$ 在真实数据上收敛
 再接管最后一层。起飞段恰好是最大最脏的一个样本，直接施加会当场翻机
 （实测 +0.75 kg 档 RMSE 4.2 m）。</p>
-<p><strong>（3）协方差上限。</strong> 回归向量长期只占一个方向时（定点悬停），<script type="math/tex">P</script> 会在零空间里
-按 <script type="math/tex">1/\lambda</script> 指数增长，等阵风把 <script type="math/tex">\varphi</script> 转到新方向时增益突然变大。
-超限时<strong>按比例缩放</strong>协方差而不是重置成初值——重置等价于声称"<script type="math/tex">\hat\theta</script> 一无所知"，
+<p><strong>（3）协方差上限。</strong> 回归向量长期只占一个方向时（定点悬停），$P$ 会在零空间里
+按 $1/\lambda$ 指数增长，等阵风把 $\varphi$ 转到新方向时增益突然变大。
+超限时<strong>按比例缩放</strong>协方差而不是重置成初值——重置等价于声称"$\hat\theta$ 一无所知"，
 下一次更新照样跳，没有意义。</p>
 <div class="admonition warning">
 <p class="admonition-title">另一个真金白银换来的坑</p>
@@ -1265,7 +1264,7 @@ RMSE 出现 4.52 m 的乱跳，而单独跑同一工况只有 0.02 m——全部
 <p><strong>采集为什么要加激励？</strong> 沿参考轨迹飞时状态几乎落在一条一维流形上，
 网络在这个流形外没有任何约束（实测：无激励时训练集 RMSE 0.03 m/s²，
 但换一条轨迹立刻退化到 0.44 m/s²）。叠加一阶低通的带限随机加速度
-（<script type="math/tex">\sigma = 1.2</script> m/s²，<script type="math/tex">\tau = 0.45</script> s）把状态铺开到整个包线——
+（$\sigma = 1.2$ m/s²，$\tau = 0.45$ s）把状态铺开到整个包线——
 用带限而不是全带白噪声，是因为全带信号会被姿态环滤掉，只留下推力抖动，
 状态反而铺不开。</p>
 <p><strong>采集为什么必须用纯几何控制器？</strong> 只有控制器按照标称模型行动，
@@ -1274,8 +1273,8 @@ RMSE 出现 4.52 m 的乱跳，而单独跑同一工况只有 0.02 m——全部
 <hr/>
 <h2 id="7">7. 四个控制器</h2>
 <p>四者<strong>共用同一套内环</strong>（姿态几何 PD、逆混控、限倾角、饱和处理），
-只差在期望加速度 <script type="math/tex">a_{\text{cmd}}</script> 怎么算。实现上把底座的几何控制器
-<script type="math/tex">K_p, K_d</script> 置零，让它退化为"加速度 → 推力/力矩"的执行器。因此性能差异
+只差在期望加速度 $a_{\text{cmd}}$ 怎么算。实现上把底座的几何控制器
+$K_p, K_d$ 置零，让它退化为"加速度 → 推力/力矩"的执行器。因此性能差异
 可以完全归因于外环与残差补偿，不会混入实现差异。</p>
 <table>
 <thead>
@@ -1296,8 +1295,7 @@ RMSE 出现 4.52 m 的乱跳，而单独跑同一工况只有 0.02 m——全部
 <tr>
 <td><code>geo</code></td>
 <td>SE(3) 几何控制 + 轨迹前馈</td>
-<td>静差 <script type="math/tex">= \Delta a / K_p</script>
-</td>
+<td>静差 $= \Delta a / K_p$</td>
 <td>反馈带宽内可压</td>
 </tr>
 <tr>
@@ -1318,11 +1316,11 @@ RMSE 出现 4.52 m 的乱跳，而单独跑同一工况只有 0.02 m——全部
 <p>底座的姿态增益是按 0.95 kg 空机整定的。挂到 +0.75 kg 时转动惯量涨约 1.6 倍，
 姿态环阻尼比从 0.41 掉到 0.32，起步的 35° 倾角阶跃会过冲到 50° 以上，
 进而触发翻机（实测倾角 177°）。</p>
-<p>对 12 组 <script type="math/tex">(K_r, K_w)</script> 缩放组合做了扫描，把角速率阻尼 <script type="math/tex">K_w</script> 加倍
-（<script type="math/tex">-0.10 \to -0.20</script>）后，<strong>0.95 ~ 1.7 kg 全载荷域稳定</strong>，且跟踪误差随载荷单调。</p>
+<p>对 12 组 $(K_r, K_w)$ 缩放组合做了扫描，把角速率阻尼 $K_w$ 加倍
+（$-0.10 \to -0.20$）后，<strong>0.95 ~ 1.7 kg 全载荷域稳定</strong>，且跟踪误差随载荷单调。</p>
 <div class="admonition warning">
 <p class="admonition-title">偏航力矩受混控预算约束</p>
-<p>合推力 <script type="math/tex">T</script> 下可用的偏航力矩上限是 <script type="math/tex">k_m\min(4T_{\max}-T,\;T)</script>，
+<p>合推力 $T$ 下可用的偏航力矩上限是 $k_m\min(4T_{\max}-T,\;T)$，
 标称档位悬停时只有 0.14 N·m。偏航误差超过约 13° 就会吃光混控预算，
 把滚转/俯仰的权限按比例压掉，无人机随即翻掉。因此<strong>所有轨迹都从轨迹
 自身的初始偏航起飞</strong>；从偏航误差 90° 的地方起飞实测倾角 177°、
@@ -1511,10 +1509,10 @@ RMSE 出现 4.52 m 的乱跳，而单独跑同一工况只有 0.02 m——全部
 <p>三条可直接读出的结论：</p>
 <ol>
 <li><strong>几何控制器的误差严格由载荷决定</strong>，与风况几乎无关（0.2598 / 0.2610 / 0.2794）。
-   这正是式 <script type="math/tex">|e_p|=\Delta a/K_p</script> 的预测：常值模型偏差直接映射成常值静差。</li>
+   这正是式 $|e_p|=\Delta a/K_p$ 的预测：常值模型偏差直接映射成常值静差。</li>
 <li><strong>残差网络把误差压到 1/4，但它不是免费的</strong>：在"无载荷 + 无风"这一格上
    <code>geo_res</code> = 0.0305 m，比不用网络的 <code>geo</code>（0.0098 m）还差。原因很直接——
-   网络自身的预测误差是 0.281 m/s²，除以 <script type="math/tex">K_p</script> 就是 0.02~0.03 m，
+   网络自身的预测误差是 0.281 m/s²，除以 $K_p$ 就是 0.02~0.03 m，
    这就是它的误差下限；没有扰动可补时，这一项反而成了主要误差来源。</li>
 <li><strong>在线自适应把整个表压平</strong>：<code>geo_rls</code> 在 12 格里落在 0.0187 ~ 0.0261，
    跨度只有 0.007 m；训练集外的 +0.75 kg 档（0.0261 m）与标称档（0.0187 m）
@@ -1573,7 +1571,7 @@ RMSE 出现 4.52 m 的乱跳，而单独跑同一工况只有 0.02 m——全部
 </tbody>
 </table>
 <p>几何控制器的误差随载荷<strong>严格线性</strong>增长（0.0917 → 0.4018），斜率
-0.55 m/kg 与解析值 <script type="math/tex">g/(m_{\text{nom}}K_{p,z}) = 0.516</script> m/kg 一致
+0.55 m/kg 与解析值 $g/(m_{\text{nom}}K_{p,z}) = 0.516$ m/kg 一致
 （差值来自阻力与风扰的贡献）。位置 PID 靠积分把常值偏置消掉，
 但在训练集外仍留下 0.112 m——积分对<strong>时变</strong>的风扰没有前馈能力。</p>
 <p><code>geo_res</code> 在训练集内的三个档位上表现很好（0.053 ~ 0.065 m），
@@ -1739,7 +1737,7 @@ ROS 侧可以独立导入。<code>--selftest</code> 里有一项把本包与底�
 <div class="admonition warning">
 <p class="admonition-title">两个只有上真链路才会暴露的坑</p>
 <p><strong>（1）必须复位到轨迹自身的起点。</strong> 仿真默认把无人机放在场景原点，
-而螺旋轨迹从 <script type="math/tex">(2, 0, 1.5)</script> 起、初始偏航 90°。直接开跑实测 1.6 s 内翻机
+而螺旋轨迹从 $(2, 0, 1.5)$ 起、初始偏航 90°。直接开跑实测 1.6 s 内翻机
 （见 7.1 节的偏航预算分析），而且翻过来之后<strong>无法自恢复</strong>：
 推力方向朝下、混控输出被限成 0，无人机躺在地上一动不动。</p>
 <p><strong>（2）<code>observe()</code> 不能漏。</strong> 残差网络的<strong>输入</strong>要用上一步下达的加速度、
@@ -1767,8 +1765,8 @@ ROS 侧可以独立导入。<code>--selftest</code> 里有一项把本包与底�
         <span class="k">return</span> <span class="o">-</span><span class="p">(</span><span class="n">f</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear</span> <span class="o">*</span> <span class="n">v</span><span class="p">)</span>
 </code></pre></div>
 <p>阻力在机体系定义、由调用方旋到世界系；同一组系数对任意姿态成立。
-OU 过程用精确离散化 <script type="math/tex">a = e^{-\Delta t/\tau}</script>、<script type="math/tex">s = \sigma\sqrt{1-a^2}</script>，
-自检里用 20 万步验证稳态标准差严格等于设定值 <script type="math/tex">\sigma</script>（设定 1.80，实测 1.794）。</p>
+OU 过程用精确离散化 $a = e^{-\Delta t/\tau}$、$s = \sigma\sqrt{1-a^2}$，
+自检里用 20 万步验证稳态标准差严格等于设定值 $\sigma$（设定 1.80，实测 1.794）。</p>
 <h3 id="112-coreplantpy">11.2 <code>core/plant.py</code> —— 不重写推进循环</h3>
 <div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">ResidualPlant</span><span class="p">(</span><span class="n">Quadrotor</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">apply_rotor_thrust</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">thrusts</span><span class="p">):</span>
@@ -1931,8 +1929,8 @@ ros2<span class="w"> </span>launch<span class="w"> </span>uav_neural_residual_co
   垂直方向只剩 4.3 m/s² 的加速余量。再重就要考虑饱和了。</li>
 <li><strong>未建模项缺少旋翼动力学。</strong> 桨叶的升力-转速非线性、电机一阶滞后都没有建模，
   真机上这部分会成为额外的残差来源。</li>
-<li><strong>全部实验在无噪声仿真里完成。</strong> 里程计噪声会直接进入 <script type="math/tex">\Delta a</script> 的差分估计
-  （<script type="math/tex">\Delta t = 10</script> ms，1 mm 的位置噪声就是 10 m/s² 的加速度噪声），
+<li><strong>全部实验在无噪声仿真里完成。</strong> 里程计噪声会直接进入 $\Delta a$ 的差分估计
+  （$\Delta t = 10$ ms，1 mm 的位置噪声就是 10 m/s² 的加速度噪声），
   真机上需要先做低通滤波或改用加速度计。</li>
 </ul>
 <hr/>

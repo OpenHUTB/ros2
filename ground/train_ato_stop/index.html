@@ -754,7 +754,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与制动 / Warehouse UAV Braking</a>
+<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与分级制动</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
 </li>
@@ -954,7 +954,7 @@
 把制动点推迟到距离不足的位置，ATP 会介入施加紧急制动，但仍然停不住——这才是曲线
 真正在防的东西。</p>
 <h2 id="_3">车辆模型</h2>
-<p>只算纵向。整车质量 <script type="math/tex">m</script>、回转质量系数 <script type="math/tex">\gamma</script> 把轮对转动惯量折算进平动质量：</p>
+<p>只算纵向。整车质量 $m$、回转质量系数 $\gamma$ 把轮对转动惯量折算进平动质量：</p>
 <p>
 <script type="math/tex; mode=display">
 \frac{dv}{dt} = \frac{F_t(v) - F_b - R(v) - F_g}{\gamma m}
@@ -972,7 +972,7 @@ F_t(v) = \min\left(F_{\max},\ \frac{P}{v}\right)
 R(v) = a + b v + c v^2
 </script>
 </p>
-<p>坡道附加阻力 <script type="math/tex">F_g = mg\sin\theta</script>，上坡为正。参数取国内 6 辆编组动车组的量级：
+<p>坡道附加阻力 $F_g = mg\sin\theta$，上坡为正。参数取国内 6 辆编组动车组的量级：
 300 t、启动牵引力 200 kN、牵引功率 3.2 MW、常用制动 1.0 m/s²、紧急制动 1.2 m/s²，
 Davis 系数 1500 N / 20 N·s·m⁻¹ / 6 N·s²·m⁻²。</p>
 <p>制动力不是瞬间建立的，执行机构用一阶滞后（时间常数 0.8 s）模拟空走时间和力上升过程。
@@ -986,7 +986,7 @@ Davis 系数 1500 N / 20 N·s·m⁻¹ / 6 N·s²·m⁻²。</p>
 v_{\text{env}}(x) = \min\left(v_{\lim}(x),\ \sqrt{v_{\text{env}}(x+\Delta x)^2 + 2 a_{\text{eff}} \Delta x}\right)
 </script>
 </p>
-<p>这里的 <script type="math/tex">a_{\text{eff}}</script> 不是常数，要把阻力和坡道分力算进去：</p>
+<p>这里的 $a_{\text{eff}}$ 不是常数，要把阻力和坡道分力算进去：</p>
 <p>
 <script type="math/tex; mode=display">
 a_{\text{eff}} = a_{\text{plan}} + \frac{R(v) + F_g}{\gamma m}
@@ -1012,10 +1012,10 @@ v_{\text{ref}}(x+\Delta x) = \min\left(v_{\text{env}}(x+\Delta x),\ \sqrt{v_{\te
 a = k_p \cdot e - k_d \cdot v,\qquad e = x_{\text{stop}} - x
 </script>
 </p>
-<p>其中 <script type="math/tex">k_p = 1.2\ \text{s}^{-2}</script>，<script type="math/tex">k_d = 1.6\ \text{s}^{-1}</script>。</p>
-<p>这里踩过一个坑：最早只写了距离项 <script type="math/tex">a = k_p e</script>，等于一个无阻尼弹簧，在 12‰ 下坡上
+<p>其中 $k_p = 1.2\ \text{s}^{-2}$，$k_d = 1.6\ \text{s}^{-1}$。</p>
+<p>这里踩过一个坑：最早只写了距离项 $a = k_p e$，等于一个无阻尼弹簧，在 12‰ 下坡上
 误差到 0.42 m，超标了。加上速度阻尼项之后才收敛，三组都进到 0.2 m 以内。</p>
-<p>速度跟踪段用的是最简单的比例控制 <script type="math/tex">a = k(v_{\text{target}} - v)</script>，<script type="math/tex">k = 1.2</script>。
+<p>速度跟踪段用的是最简单的比例控制 $a = k(v_{\text{target}} - v)$，$k = 1.2$。
 目标速度同时受三条约束：</p>
 <p>
 <script type="math/tex; mode=display">
@@ -1024,7 +1024,7 @@ v_{\text{target}} = \min\left(v_{\text{ref}}(x+\delta),\ \sqrt{2 a_{\text{plan}}
 </p>
 <p>最后一项是限速裕量。贴着限速跑，进限速区时因为制动力上升有滞后，车头会短暂压过
 限速线，实测 0.56 s。压低 2 km/h 之后这个超速就消失了。真实 ATO 也普遍这么做。</p>
-<p>前向预瞄 <script type="math/tex">\delta = 2</script> m 是为了避开曲线在 <script type="math/tex">x=0</script> 处取值为 0 的问题（那是发车状态，
+<p>前向预瞄 $\delta = 2$ m 是为了避开曲线在 $x=0$ 处取值为 0 的问题（那是发车状态，
 直接取当点目标速度会让车永远起不来）。</p>
 <h2 id="atp">ATP 超速监督</h2>
 <p>ATP 用满紧急制动能力（1.2 m/s²）反推允许速度，比 ATO 的规划曲线更"贴边"：</p>

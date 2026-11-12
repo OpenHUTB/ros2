@@ -768,7 +768,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与制动 / Warehouse UAV Braking</a>
+<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与分级制动</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
 </li>
@@ -897,8 +897,8 @@
 </ul>
 <h2 id="1">1. 方法</h2>
 <h3 id="11-allan">1.1 Allan 方差</h3>
-<p>设陀螺输出的角速率为 <script type="math/tex">y_k</script>，采样间隔 <script type="math/tex">dt</script>，簇长 <script type="math/tex">m</script>（相关时间 <script type="math/tex">\tau=m\,dt</script>），
-簇内均值为 <script type="math/tex">\bar y_k^{(m)}</script>，则重叠 Allan 方差为</p>
+<p>设陀螺输出的角速率为 $y_k$，采样间隔 $dt$，簇长 $m$（相关时间 $\tau=m\,dt$），
+簇内均值为 $\bar y_k^{(m)}$，则重叠 Allan 方差为</p>
 <p>
 <script type="math/tex; mode=display">
 \sigma^2(\tau)=\frac{1}{2(N-2m+1)}\sum_{k=1}^{N-2m+1}
@@ -911,17 +911,17 @@
 \sigma^2(\tau)=\frac{N^2}{\tau}+\big(0.664B\big)^2+\frac{K^2\tau}{3}
 </script>
 </p>
-<p>其中 <script type="math/tex">N</script> 是 ARW（deg/√h），<script type="math/tex">B</script> 是零偏不稳定性（deg/h），<script type="math/tex">K</script> 是速率随机游走（deg/h/√h）。</p>
+<p>其中 $N$ 是 ARW（deg/√h），$B$ 是零偏不稳定性（deg/h），$K$ 是速率随机游走（deg/h/√h）。</p>
 <h3 id="12">1.2 只保留可辨识的两项</h3>
-<p>一小时记录上，典型 MEMS 的速率随机游走项远低于 BI 平台（<script type="math/tex">\tau=400</script> s 时 <script type="math/tex">K</script> 的贡献不到平台的 1 %），
+<p>一小时记录上，典型 MEMS 的速率随机游走项远低于 BI 平台（$\tau=400$ s 时 $K$ 的贡献不到平台的 1 %），
 一并拟合只会把噪声当成参数。因此本模块的模型只保留 ARW 与 BI，写成线性形式</p>
 <p>
 <script type="math/tex; mode=display">
 \big(3600\,\sigma(\tau)\big)^2=\frac{N^2}{\tau_h}+\big(0.664B\big)^2,\qquad \tau_h=\tau/3600
 </script>
 </p>
-<p>对 <script type="math/tex">\big[1/\tau_h,\;1\big]</script> 做最小二乘即可解析求出两个参数，不需要迭代拟合。
-由于 <script type="math/tex">1/\tau_h</script> 在 1 h 记录上跨越 5 个数量级，求解前对设计矩阵按列归一化。</p>
+<p>对 $\big[1/\tau_h,\;1\big]$ 做最小二乘即可解析求出两个参数，不需要迭代拟合。
+由于 $1/\tau_h$ 在 1 h 记录上跨越 5 个数量级，求解前对设计矩阵按列归一化。</p>
 <h3 id="13">1.3 换算为滤波器的过程噪声</h3>
 <p>
 <script type="math/tex; mode=display">
@@ -929,7 +929,7 @@ n=\frac{N}{60}\ \text{deg/s/}\sqrt{\text{Hz}},\qquad
 Q_\theta=n^2\,dt
 </script>
 </p>
-<p>零偏按<strong>随机游走</strong>建模，其密度由 BI 换算出：1 h 内偏置漂移的 1σ 即 <script type="math/tex">B</script>，所以</p>
+<p>零偏按<strong>随机游走</strong>建模，其密度由 BI 换算出：1 h 内偏置漂移的 1σ 即 $B$，所以</p>
 <p>
 <script type="math/tex; mode=display">
 K_b=\frac{B}{3600\sqrt{3600}}\ \text{deg/s}/\sqrt{\text{s}}
@@ -941,10 +941,10 @@ K_b=\frac{B}{3600\sqrt{3600}}\ \text{deg/s}/\sqrt{\text{s}}
 Q=\begin{bmatrix}n^2dt+K_b^2dt^3/3 & K_b^2dt^2/2\\ K_b^2dt^2/2 & K_b^2dt\end{bmatrix}
 </script>
 </p>
-<p>这样 ARW 与 BI <strong>都真正进入了滤波器</strong>：<script type="math/tex">n^2</script> 决定角度过程噪声，<script type="math/tex">K_b^2</script> 决定偏置游走。
+<p>这样 ARW 与 BI <strong>都真正进入了滤波器</strong>：$n^2$ 决定角度过程噪声，$K_b^2$ 决定偏置游走。
 4.3 节的消融实验给出两者各自的影响。</p>
 <h3 id="14">1.4 两状态倾角滤波</h3>
-<p>状态 <script type="math/tex">[\theta,b]^\top</script>，陀螺预测、加速度计倾角观测：</p>
+<p>状态 $[\theta,b]^\top$，陀螺预测、加速度计倾角观测：</p>
 <p>
 <script type="math/tex; mode=display">
 \theta_{k+1}=\theta_k+(\omega_k-b_k)dt,\qquad b_{k+1}=b_k
@@ -958,7 +958,7 @@ R=\sigma_{\text{acc}}^2
 <p>一致性用 NEES 检验（2 自由度，期望值 2）。</p>
 <h3 id="15">1.5 仿真数据</h3>
 <p>静止记录与倾角扫描都由确定性生成器产生：高斯白噪声（ARW）+ 频域 1/f 分量（按目标 Allan 平台
-标定为 <script type="math/tex">0.664B</script>）+ 常值零偏。同一 seed 完全可复现。</p>
+标定为 $0.664B$）+ 常值零偏。同一 seed 完全可复现。</p>
 <h2 id="2-ros-2">2. ROS 2 接口</h2>
 <table>
 <thead>
@@ -1151,7 +1151,7 @@ python3<span class="w"> </span>-m<span class="w"> </span>unittest<span class="w"
 </tbody>
 </table>
 <p>两个参数都改变结果：把 ARW 缩小会让 NEES 从 1.61 涨到 7.82，把 BI 放大 60 倍会让 RMSE 从 0.0170 涨到 0.0195。
-这说明 BI 确实经 <script type="math/tex">K_b</script> 进入了滤波器，而不是只做诊断输出。</p>
+这说明 BI 确实经 $K_b$ 进入了滤波器，而不是只做诊断输出。</p>
 <p><img alt="滤波器一致性" src="../../img/ground/imu_allan_noise_identification/filter_consistency.png"/></p>
 <p>两种参数的 RMSE 只差 5 %，但 NEES 差 6 倍：偏小的过程噪声让协方差严重低估真实误差，
 滤波器"自以为很准"。NEES 1.61 略低于 2，说明按 Allan 整定的滤波器偏保守（协方差略大），

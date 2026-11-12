@@ -752,7 +752,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../mujoco_warehouse_uav_collision_braking/">仓储通道测距与制动 / Warehouse UAV Braking</a>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_warehouse_uav_collision_braking/">仓储通道测距与分级制动</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
 </li>
@@ -898,7 +898,7 @@ carlair_ros_bridge ──► 无人机
 <p>桥接必须以 <code>body_frame:=false</code> 启动，否则本模块输出的世界 ENU 速度会被错误地
 解释为机体系速度。</p>
 <h2 id="3">3. 五次最小加加速度</h2>
-<p>对一段从 <script type="math/tex">p_0</script> 到 <script type="math/tex">p_1</script>、时长 <script type="math/tex">T</script> 的轨迹，引入 <script type="math/tex">s=t/T</script>：</p>
+<p>对一段从 $p_0$ 到 $p_1$、时长 $T$ 的轨迹，引入 $s=t/T$：</p>
 <div class="highlight"><pre><span></span><code>p  = p0 + Δp(10s³ - 15s⁴ + 6s⁵)
 v  = Δp(30s² - 60s³ + 30s⁴) / T
 a  = Δp(60s - 180s² + 120s³) / T²

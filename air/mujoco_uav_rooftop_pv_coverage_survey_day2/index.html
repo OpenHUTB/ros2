@@ -750,7 +750,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../mujoco_warehouse_uav_collision_braking/">仓储通道测距与制动 / Warehouse UAV Braking</a>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_warehouse_uav_collision_braking/">仓储通道测距与分级制动</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
 </li>
@@ -891,7 +891,7 @@ python3<span class="w"> </span>src/air/mujoco_uav_rooftop_pv_coverage_survey/mai
 </code></pre></div>
 <p><code>manifest.jsonl</code> 将每帧图像、标签、相机位姿和专家指令关联起来。<code>splits.json</code> 以完整场景序列划分训练、验证、测试集；<code>quality_report.json</code> 检查缺失文件、掩码值、尺寸、序列泄漏与重复内容。训练与测试不随机混合相邻帧。</p>
 <h2 id="3">3. 感知、控制与端到端模型</h2>
-<p>轻量编码器–解码器接收归一化 RGB，输出单通道光伏像素 logits。训练目标由二元交叉熵和软 Dice 损失组成，其中 <script type="math/tex">p_i</script> 是 sigmoid 概率，<script type="math/tex">y_i</script> 是二值标签：</p>
+<p>轻量编码器–解码器接收归一化 RGB，输出单通道光伏像素 logits。训练目标由二元交叉熵和软 Dice 损失组成，其中 $p_i$ 是 sigmoid 概率，$y_i$ 是二值标签：</p>
 <p>
 <script type="math/tex; mode=display">
 L_{seg}=-\frac{1}{N}\sum_i[y_i\log p_i+(1-y_i)\log(1-p_i)]+1-\frac{2\sum_i p_i y_i+1}{\sum_i p_i+\sum_i y_i+1}.
@@ -913,7 +913,7 @@ IoU=\frac{TP}{TP+FP+FN},\qquad Dice=\frac{2TP}{2TP+FP+FN}.
 <h2 id="4-rgb-d-slam">4. RGB-D 地标 SLAM 与导航</h2>
 <p>场景中的彩色标记提供可重识别地标。检测器使用 RGB 颜色确定标记身份，使用深度与相机视场角将像素中心反投影为相机相对平面坐标。滤波器只接收相对观测和带噪声的指令里程计；仿真真值用于移动相机和统计误差，不作为 SLAM 观测。</p>
 <p><img alt="RGB-D 地标相机帧" src="../../img/air/mujoco_uav_rooftop_pv_coverage_survey/slam_camera.png"/></p>
-<p>固定航向平面状态由机器人位置和未知地标位置组成。相机相对观测满足 <script type="math/tex">z_j=m_j-r+v</script>；新地标由首次观测初始化，再观测联合修正机器人与地图：</p>
+<p>固定航向平面状态由机器人位置和未知地标位置组成。相机相对观测满足 $z_j=m_j-r+v$；新地标由首次观测初始化，再观测联合修正机器人与地图：</p>
 <p>
 <script type="math/tex; mode=display">
 x=[r_x,r_y,m_{1x},m_{1y},\ldots]^T,\quad S=HPH^T+R,\quad K=PH^TS^{-1}.

@@ -780,7 +780,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../mujoco_warehouse_uav_collision_braking/">仓储通道测距与制动 / Warehouse UAV Braking</a>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_warehouse_uav_collision_braking/">仓储通道测距与分级制动</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
 </li>
@@ -997,7 +997,7 @@ w_c = \left(\frac{\sum_{c'} n_{c'}}{n_c}\right)^{1/2},
 <p>类别极不平衡（地面与天空占多数像素），不加权时网络会把所有像素判成多数类，
 像素准确率看着很高而 mIoU 接近 0。权重归一化到均值为 1。</p>
 <h3 id="33">3.3 训练</h3>
-<p>Adam（<script type="math/tex">\text{lr}=2\times10^{-3}</script>，权重衰减 <script type="math/tex">10^{-6}</script>，梯度范数限幅 1.0），
+<p>Adam（$\text{lr}=2\times10^{-3}$，权重衰减 $10^{-6}$，梯度范数限幅 1.0），
 30 轮，每集最多取 150 帧。数据从仿真真值分割采，RGB 用分箱平均下采样到
 64×64，标签用最近邻。分箱平均会把类别索引平均成不存在的类别：训练 loss
 下降而 mIoU 停在随机水平（实测）。</p>
@@ -1042,7 +1042,7 @@ w_c = \left(\frac{\sum_{c'} n_{c'}}{n_c}\right)^{1/2},
 </tr>
 </tbody>
 </table>
-<p>三类无样本的类不参与 mIoU 统计（<script type="math/tex">0/0</script> 不是 0 分）。车辆只占 0.22% 像素，
+<p>三类无样本的类不参与 mIoU 统计（$0/0$ 不是 0 分）。车辆只占 0.22% 像素，
 是六类里最难的。</p>
 <p><img alt="" src="../../img/air/uav_semantic_mapping_nav/01_seg_samples.png"/></p>
 <hr/>
@@ -1058,7 +1058,7 @@ w_c = \left(\frac{\sum_{c'} n_{c'}}{n_c}\right)^{1/2},
 <tbody>
 <tr>
 <td><code>logodds</code></td>
-<td>射线穿过减 <script type="math/tex">l_{\text{free}}=-0.40</script>，命中加 <script type="math/tex">l_{\text{occ}}=+0.85</script>，限幅 ±4</td>
+<td>射线穿过减 $l_{\text{free}}=-0.40$，命中加 $l_{\text{occ}}=+0.85$，限幅 ±4</td>
 </tr>
 <tr>
 <td><code>votes[c]</code></td>
@@ -1094,8 +1094,7 @@ c_{\text{unknown}} & \text{未观测}
 <thead>
 <tr>
 <th>类别</th>
-<th>通行代价 <script type="math/tex">c</script>
-</th>
+<th>通行代价 $c$</th>
 </tr>
 </thead>
 <tbody>
@@ -1117,7 +1116,7 @@ c_{\text{unknown}} & \text{未观测}
 </tr>
 </tbody>
 </table>
-<p><strong>只有几何占据给 <script type="math/tex">\infty</script>。</strong> 语义是估计，把它当硬约束会让一次误分类直接堵死
+<p><strong>只有几何占据给 $\infty$。</strong> 语义是估计，把它当硬约束会让一次误分类直接堵死
 通路（见 §7.3）。</p>
 <p>代价定义在<strong>格</strong>上，8 邻域的边权取两端格代价的均值乘以步长：</p>
 <p>
@@ -1335,16 +1334,15 @@ ROS2 侧在 Ubuntu 20.04 + Humble 虚拟机中 <code>colcon build</code> 通过�
 <h3 id="81-nnpyim2col">8.1 <code>nn.py</code>：im2col 的维度顺序</h3>
 <p><code>as_strided</code> 的维度顺序与 reshape 的目标一致。顺序不一致时 reshape 按内存序
 重新分组；此时前向与反向仍互为转置、数值梯度校验通过，只有伴随恒等式
-<script type="math/tex">\langle A, \text{col2im}(B)\rangle = \langle \text{im2col}(A), B\rangle</script>
+$\langle A, \text{col2im}(B)\rangle = \langle \text{im2col}(A), B\rangle$
 能发现（自检含这一项）。</p>
 <h3 id="82-segdatapy">8.2 <code>segdata.py</code>：扫描航线的几何约束</h3>
 <p>航线按场景的<strong>实际可通行空间</strong>给。以 <code>urban_block</code> 为例：</p>
 <ul>
-<li>建筑中心在 <script type="math/tex">|y| \in [7, 13]</script>、半深 ≤ 1.75 → 建筑外沿 <script type="math/tex">|y| \ge 5.25</script>
-</li>
+<li>建筑中心在 $|y| \in [7, 13]$、半深 ≤ 1.75 → 建筑外沿 $|y| \ge 5.25$</li>
 <li>树冠顶约 5.1 m</li>
 </ul>
-<p>所以走廊取 <script type="math/tex">|y| \le 4.5</script>、<script type="math/tex">z \ge 6.0</script>。起始点落进障碍时几何控制器会发散
+<p>所以走廊取 $|y| \le 4.5$、$z \ge 6.0$。起始点落进障碍时几何控制器会发散
 （实测飞到 3.5 km 外），帧率与类别占比都正常；<code>collect_episode</code> 末尾因此加了
 范围守卫，超范围直接报错。</p>
 <p>换道段最初写成"位置平移 + 偏航阶跃"，速度和偏航在段边界同时跳变，姿态环饱和后
@@ -1357,7 +1355,7 @@ ROS2 侧在 Ubuntu 20.04 + Humble 虚拟机中 <code>colcon build</code> 通过�
 <span class="n">base</span><span class="p">[</span><span class="n">low</span><span class="p">]</span>  <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">base</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">unknown_cost</span>   <span class="c1"># 低置信度</span>
 <span class="n">base</span><span class="p">[</span><span class="n">probability</span> <span class="o">&gt;</span> <span class="mf">0.7</span><span class="p">]</span> <span class="o">=</span> <span class="n">inf</span>      <span class="c1"># 已知占据</span>
 </code></pre></div>
-<p>顺序不能反：先判占据再插值会把 <script type="math/tex">\infty</script> 插值成有限值，规划器就会往墙里走。</p>
+<p>顺序不能反：先判占据再插值会把 $\infty$ 插值成有限值，规划器就会往墙里走。</p>
 <hr/>
 <h2 id="9">9. 复现步骤</h2>
 <div class="highlight"><pre><span></span><code>python<span class="w"> </span>main.py<span class="w"> </span>--selftest<span class="w">                        </span><span class="c1"># 36 项，不需要 ROS</span>

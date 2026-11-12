@@ -806,7 +806,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与制动 / Warehouse UAV Braking</a>
+<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_warehouse_uav_collision_braking/">仓储通道测距与分级制动</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
 </li>
@@ -930,11 +930,11 @@
 <p>多传感器融合要先做两件事：<strong>空间对齐</strong>（外参）和<strong>时间对齐</strong>（时参）。外参错了，点云投不到图像上；时参错了，<strong>投上去的也是错的时刻</strong>——车在动，50 ms 就能让图像和点云差出半米。</p>
 <p>实际情况是相机与 IMU 的时间戳常常并不对齐：</p>
 <ul>
-<li>相机时间戳通常打在<strong>曝光中点</strong>或<strong>帧（曝光）开始</strong>，两者相差曝光时长的一半 <script type="math/tex">T_{exp}/2</script>，而 <script type="math/tex">T_{exp}</script> 一般小于帧周期（6.3 节有实测）；</li>
+<li>相机时间戳通常打在<strong>曝光中点</strong>或<strong>帧（曝光）开始</strong>，两者相差曝光时长的一半 $T_{exp}/2$，而 $T_{exp}$ 一般小于帧周期（6.3 节有实测）；</li>
 <li>图像经 USB/GMSL 传输、VIO 前端滑窗滤波，都会引入几毫秒到几十毫秒的延迟；</li>
 <li>相机与 IMU 往往来自不同时钟源，没有硬件同步线。</li>
 </ul>
-<p>这些延迟大多表现为一个<strong>常量偏移</strong> <script type="math/tex">d</script>，可以用"相机角速度"与"IMU 角速度"的互相关估出来：</p>
+<p>这些延迟大多表现为一个<strong>常量偏移</strong> $d$，可以用"相机角速度"与"IMU 角速度"的互相关估出来：</p>
 <div class="mermaid">flowchart TB
     A["解析角速度真值 ω(t)"] --&gt; B["IMU 分支<br/>200 Hz 采样 · 常值零偏 · 白噪声"]
     A --&gt; C["相机分支<br/>30 Hz 采样 · 帧内平均 · 尺度误差 · 白噪声<br/>时间戳滞后 d（未知）"]
@@ -984,9 +984,9 @@
 <h3 id="31">3.1 偏移的符号约定</h3>
 <p>这一点最容易搞反，所以先约定清楚：</p>
 <blockquote>
-<p><strong><script type="math/tex">d>0</script> 表示相机时间戳滞后于真值 <script type="math/tex">d</script> 秒</strong>，即第 <script type="math/tex">k</script> 帧的时间戳是 <script type="math/tex">t_k</script>，但它记录的姿态变化其实发生在 <script type="math/tex">t_k - d</script> 时刻。</p>
+<p><strong>$d&gt;0$ 表示相机时间戳滞后于真值 $d$ 秒</strong>，即第 $k$ 帧的时间戳是 $t_k$，但它记录的姿态变化其实发生在 $t_k - d$ 时刻。</p>
 </blockquote>
-<p>因此"补偿"就是把相机时间戳往前推 <script type="math/tex">d</script>；估计量 <script type="math/tex">\hat d</script> 的物理含义就是"要往前推多少"。若估计值符号弄反，补偿后误差会变成原来的两倍而不是接近零——这是第 7.1 节的排错依据。</p>
+<p>因此"补偿"就是把相机时间戳往前推 $d$；估计量 $\hat d$ 的物理含义就是"要往前推多少"。若估计值符号弄反，补偿后误差会变成原来的两倍而不是接近零——这是第 7.1 节的排错依据。</p>
 <h3 id="32">3.2 为什么用角速度而不是位置</h3>
 <p>IMU 直接给角速度，但相机不给。视觉里程计 / VIO 前端可以输出相邻帧之间的旋转增量，除以帧间隔就得到<strong>相机侧角速度</strong>。用角速度做互相关有三个好处：</p>
 <ol>
@@ -995,17 +995,17 @@
 <li><strong>与尺度解耦</strong>：相机角速度的尺度误差只是乘一个常数，不影响相关峰的<strong>位置</strong>（见 6.4）。</li>
 </ol>
 <h3 id="33">3.3 归一化互相关</h3>
-<p>把两路角速度在候选偏移 <script type="math/tex">\tau</script> 下重采样到同一时间轴，做去均值后的归一化内积：</p>
+<p>把两路角速度在候选偏移 $\tau$ 下重采样到同一时间轴，做去均值后的归一化内积：</p>
 <p>
 <script type="math/tex; mode=display">
 \rho(\tau)=\frac{\sum_{a}\sum_{i}\big(\omega_c^{a}(t_i)-\bar\omega_c^{a}\big)\big(\omega_i^{a}(t_i-\tau)-\bar\omega_i^{a}\big)}
 {\sqrt{\sum_{a}\sum_{i}\big(\omega_c^{a}(t_i)-\bar\omega_c^{a}\big)^2}\;\sqrt{\sum_{a}\sum_{i}\big(\omega_i^{a}(t_i-\tau)-\bar\omega_i^{a}\big)^2}}
 </script>
 </p>
-<p>其中 <script type="math/tex">a\in\{x,y,z\}</script> 为三个轴，<script type="math/tex">\bar\cdot</script> 为该窗口内的均值。<script type="math/tex">\rho(\tau)</script> 在 <script type="math/tex">\tau=d</script> 处取最大。</p>
-<p><strong>去均值这一步不是可有可无的。</strong> IMU 陀螺有常值零偏 <script type="math/tex">b</script>，如果不去均值，<script type="math/tex">\omega_i</script> 里始终含一个常数 <script type="math/tex">b</script>，它会和 <script type="math/tex">\omega_c</script> 的均值项耦合，把相关峰往"让两个均值更接近"的方向拉。减去均值后 <script type="math/tex">b</script> 作为常数项被完全消掉，所以零偏对估计<strong>没有任何影响</strong>——6.4 节里零偏加到 0.5 rad/s（相当于信号的一半）估计值仍然一动不动。</p>
+<p>其中 $a\in{x,y,z}$ 为三个轴，$\bar\cdot$ 为该窗口内的均值。$\rho(\tau)$ 在 $\tau=d$ 处取最大。</p>
+<p><strong>去均值这一步不是可有可无的。</strong> IMU 陀螺有常值零偏 $b$，如果不去均值，$\omega_i$ 里始终含一个常数 $b$，它会和 $\omega_c$ 的均值项耦合，把相关峰往"让两个均值更接近"的方向拉。减去均值后 $b$ 作为常数项被完全消掉，所以零偏对估计<strong>没有任何影响</strong>——6.4 节里零偏加到 0.5 rad/s（相当于信号的一半）估计值仍然一动不动。</p>
 <h3 id="34">3.4 两阶段搜索与分辨率</h3>
-<p><code>ρ(τ)</code> 的峰很宽：从 <code>correlation_peak.png</code> 左图看，<script type="math/tex">\tau</script> 偏离真值 100 ms，相关系数还有 0.88。宽峰意味着<strong>粗搜不需要很密</strong>，但<strong>峰值位置要精细</strong>，所以分两阶段：</p>
+<p><code>ρ(τ)</code> 的峰很宽：从 <code>correlation_peak.png</code> 左图看，$\tau$ 偏离真值 100 ms，相关系数还有 0.88。宽峰意味着<strong>粗搜不需要很密</strong>，但<strong>峰值位置要精细</strong>，所以分两阶段：</p>
 <table>
 <thead>
 <tr>
@@ -1032,14 +1032,14 @@
 </table>
 <p>粗搜的量化误差最大 2.5 ms，被 ±6 ms 的细搜窗口完全覆盖。细搜到 0.1 ms 后，实际能达到的精度由<strong>噪声</strong>决定而不是网格：30 Hz、0.010 rad/s 噪声下重复性 std 为 0.35 ms（6.2 节）。</p>
 <h3 id="35">3.5 姿态误差从哪来</h3>
-<p>把角速度积分成姿态 <script type="math/tex">q(t)</script>，与真值姿态比较得到夹角误差。对小时延 <script type="math/tex">d</script>，误差可近似为</p>
+<p>把角速度积分成姿态 $q(t)$，与真值姿态比较得到夹角误差。对小时延 $d$，误差可近似为</p>
 <p>
 <script type="math/tex; mode=display">
 \mathbf{e}(t)\;\approx\;\int_0^t\!\big[\boldsymbol\omega(s)-\boldsymbol\omega(s-d)\big]\,\mathrm{d}s\;\approx\;d\,\big[\boldsymbol\omega(t)-\boldsymbol\omega(0)\big]
 </script>
 </p>
-<p>也就是说，<strong>最大姿态误差 ≈ <script type="math/tex">d \times \max_t|\boldsymbol\omega(t)-\boldsymbol\omega(0)|</script></strong>，取决于角速度的<strong>变化范围</strong>而不是某一时刻的瞬时值。本轨迹 <script type="math/tex">\max_t|\boldsymbol\omega(t)-\boldsymbol\omega(0)|=2.197</script> rad/s，所以每 1000 ms 偏移对应约 125.9°；50 ms 对应 6.29°，实测 6.06°（比值 1.06，6.5 节验证）。</p>
-<p>这个式子也解释了为什么"轻微转动"的标定效果差：<script type="math/tex">\boldsymbol\omega</script> 变化范围小，同样的 <script type="math/tex">d</script> 只造成很小的姿态差，但也意味着<strong>观测里几乎没有可用于定位偏移的信息</strong>。</p>
+<p>也就是说，<strong>最大姿态误差 ≈ $d \times \max_t|\boldsymbol\omega(t)-\boldsymbol\omega(0)|$</strong>，取决于角速度的<strong>变化范围</strong>而不是某一时刻的瞬时值。本轨迹 $\max_t|\boldsymbol\omega(t)-\boldsymbol\omega(0)|=2.197$ rad/s，所以每 1000 ms 偏移对应约 125.9°；50 ms 对应 6.29°，实测 6.06°（比值 1.06，6.5 节验证）。</p>
+<p>这个式子也解释了为什么"轻微转动"的标定效果差：$\boldsymbol\omega$ 变化范围小，同样的 $d$ 只造成很小的姿态差，但也意味着<strong>观测里几乎没有可用于定位偏移的信息</strong>。</p>
 <h2 id="4">4. 系统组成</h2>
 <table>
 <thead>
@@ -1225,9 +1225,7 @@ ros2<span class="w"> </span>launch<span class="w"> </span>camera_imu_time_calibr
 <thead>
 <tr>
 <th>处理方式</th>
-<th>
-<script type="math/tex">\tau</script>
-</th>
+<th>$\tau$</th>
 <th>最大姿态误差</th>
 <th>RMS 姿态误差</th>
 </tr>
@@ -1304,8 +1302,7 @@ ros2<span class="w"> </span>launch<span class="w"> </span>camera_imu_time_calibr
 <th>帧数</th>
 <th>时间戳在曝光中点</th>
 <th>时间戳在帧开始</th>
-<th>理论半帧 <script type="math/tex">T/2</script>
-</th>
+<th>理论半帧 $T/2$</th>
 <th>补偿后姿态 RMS</th>
 </tr>
 </thead>
@@ -1363,17 +1360,16 @@ ros2<span class="w"> </span>launch<span class="w"> </span>camera_imu_time_calibr
 <p>两个结论：</p>
 <ol>
 <li><strong>帧率不是偏移估计的瓶颈</strong>：从 120 Hz 降到 10 Hz，误差都在 0.3 ms 以内。因为角速度最高只有 1.45 Hz，10 Hz 采样的奈奎斯特频率 5 Hz 已经够用。</li>
-<li><strong>时间戳约定会引入固定偏差</strong>。若时间戳打在<strong>帧开始</strong>而不是曝光中点，估计结果系统性少 <script type="math/tex">T_{exp}/2</script>：30 Hz、曝光等于帧周期时少 16.7 ms，10 Hz 时少 50 ms（此时估计值几乎为 0，看起来"没有延迟"）。实测偏差与理论值的最大差 0.25 ms。</li>
+<li><strong>时间戳约定会引入固定偏差</strong>。若时间戳打在<strong>帧开始</strong>而不是曝光中点，估计结果系统性少 $T_{exp}/2$：30 Hz、曝光等于帧周期时少 16.7 ms，10 Hz 时少 50 ms（此时估计值几乎为 0，看起来"没有延迟"）。实测偏差与理论值的最大差 0.25 ms。</li>
 </ol>
-<p><strong>但"半帧"只在曝光时长恰好等于帧周期时成立。</strong> 曝光时长 <script type="math/tex">T_{exp}</script> 与帧周期 <script type="math/tex">T</script> 是两个独立参数（30 Hz 的 <script type="math/tex">T</script> = 33.3 ms，而真实相机的 <script type="math/tex">T_{exp}</script> 常常只有 5~10 ms）。时间戳打在曝光开始时，等效测量时刻是 <script type="math/tex">t_{stamp}+T_{exp}/2</script>，所以偏差是 <script type="math/tex">-T_{exp}/2</script>。固定 30 Hz、把曝光从 0.1 帧扫到 1 帧（每档 10 次）：</p>
+<p><strong>但"半帧"只在曝光时长恰好等于帧周期时成立。</strong> 曝光时长 $T_{exp}$ 与帧周期 $T$ 是两个独立参数（30 Hz 的 $T$ = 33.3 ms，而真实相机的 $T_{exp}$ 常常只有 5~10 ms）。时间戳打在曝光开始时，等效测量时刻是 $t_{stamp}+T_{exp}/2$，所以偏差是 $-T_{exp}/2$。固定 30 Hz、把曝光从 0.1 帧扫到 1 帧（每档 10 次）：</p>
 <table>
 <thead>
 <tr>
 <th>曝光 / 帧周期</th>
 <th>曝光 [ms]</th>
 <th>帧首时间戳的偏差</th>
-<th>理论 <script type="math/tex">-T_{exp}/2</script>
-</th>
+<th>理论 $-T_{exp}/2$</th>
 <th>曝光中点时间戳的误差</th>
 </tr>
 </thead>
@@ -1416,7 +1412,7 @@ ros2<span class="w"> </span>launch<span class="w"> </span>camera_imu_time_calibr
 </tbody>
 </table>
 <ul>
-<li>帧首时间戳的偏差<strong>跟着曝光时长走</strong>，与理论 <script type="math/tex">-T_{exp}/2</script> 的最大差 0.11 ms，不是固定的"半帧"；</li>
+<li>帧首时间戳的偏差<strong>跟着曝光时长走</strong>，与理论 $-T_{exp}/2$ 的最大差 0.11 ms，不是固定的"半帧"；</li>
 <li>时间戳取<strong>曝光中点</strong>时，积分窗口关于时间戳对称，误差在全部曝光时长下都是 0.07 ms，与曝光长短无关。</li>
 </ul>
 <p>所以补偿时要不要加"半帧"取决于<strong>时间戳定义</strong>，而不是帧率：先确认你的相机驱动把时间戳打在曝光开始、曝光中点还是帧读出结束，再决定补偿量。这一点在 7.2 节有对应的排错流程。</p>
@@ -1459,11 +1455,11 @@ ros2<span class="w"> </span>launch<span class="w"> </span>camera_imu_time_calibr
 </tr>
 </tbody>
 </table>
-<p>最后一行值得单独说：激励降到 2% 时<strong>均值</strong>看起来还很准（0.36 ms），但<strong>单次结果的标准差已经 15.69 ms</strong>、相关系数掉到 0.64。只看一次运行的结果会得到"还行"的错觉，看散布才知道已经不可用。这也是判断标定数据"够不够格"的实用标准：<strong><script type="math/tex">\rho < 0.9</script> 就别信了</strong>。</p>
+<p>最后一行值得单独说：激励降到 2% 时<strong>均值</strong>看起来还很准（0.36 ms），但<strong>单次结果的标准差已经 15.69 ms</strong>、相关系数掉到 0.64。只看一次运行的结果会得到"还行"的错觉，看散布才知道已经不可用。这也是判断标定数据"够不够格"的实用标准：<strong>$\rho &lt; 0.9$ 就别信了</strong>。</p>
 <p><img alt="鲁棒性：四组参数下的偏移误差" src="../../img/ground/camera_imu_time_calibration/robustness.png"/></p>
 <h3 id="65">6.5 补偿前后的姿态误差</h3>
 <p>固定 30 Hz，真值偏移 0..200 ms，每档 5 次取均值：</p>
-<p>| 真值偏移 | 未补偿 max | 未补偿 RMS | 补偿后 max | 补偿后 RMS | 解析 <script type="math/tex">d\max|\omega(t)-\omega(0)|</script> | RMS 下降 |
+<p>| 真值偏移 | 未补偿 max | 未补偿 RMS | 补偿后 max | 补偿后 RMS | 解析 $d\max|\omega(t)-\omega(0)|$ | RMS 下降 |
 | --- | --- | --- | --- | --- | --- | --- |
 | 0 ms | 0.76° | 0.46° | 0.76° | 0.46° | 0.00° | — |
 | 10 ms | 1.47° | 0.88° | 0.77° | 0.46° | 1.26° | 48% |
@@ -1485,14 +1481,14 @@ ros2<span class="w"> </span>launch<span class="w"> </span>camera_imu_time_calibr
 <p>错位在匀速转动段几乎看不出来，只有在<strong>角速度快速变化</strong>处才明显——所以标定要选动态段的数据，不能用一段匀速直线行驶。</p>
 <h2 id="7">7. 排错</h2>
 <h3 id="71">7.1 补偿后误差反而变大了一倍</h3>
-<p><strong>符号搞反了。</strong> 若真值 <script type="math/tex">d>0</script> 而估计器输出 <script type="math/tex">-d</script> 并被当成"要往后推"，误差会变成 <script type="math/tex">2d</script>。检查方式：<code>main.py</code> 输出的真值与估计值应同号且接近；<code>offset_sweep.png</code> 左图的点应落在 <script type="math/tex">y=x</script> 上，若落在 <script type="math/tex">y=-x</script> 上就是符号问题。</p>
-<p>对应本模块的约定：<script type="math/tex">d>0</script> 表示相机时间戳<strong>滞后</strong>，补偿是把时间戳<strong>往前推</strong>。</p>
+<p><strong>符号搞反了。</strong> 若真值 $d&gt;0$ 而估计器输出 $-d$ 并被当成"要往后推"，误差会变成 $2d$。检查方式：<code>main.py</code> 输出的真值与估计值应同号且接近；<code>offset_sweep.png</code> 左图的点应落在 $y=x$ 上，若落在 $y=-x$ 上就是符号问题。</p>
+<p>对应本模块的约定：$d&gt;0$ 表示相机时间戳<strong>滞后</strong>，补偿是把时间戳<strong>往前推</strong>。</p>
 <h3 id="72">7.2 估计值比预期小一截（半帧或小半帧）</h3>
-<p>若相机时间戳打在<strong>帧（曝光）开始</strong>或<strong>帧读出时刻</strong>而非曝光中点，估计结果会系统性偏小，偏小量是 <strong><script type="math/tex">T_{exp}/2</script></strong>——曝光时长的一半，不是帧周期的一半。二者只在曝光恰好占满整帧时相等：30 Hz、曝光 33.3 ms 时偏小 16.7 ms；同一帧率下曝光只有 8.3 ms 时只偏小 4.2 ms（6.3 节实测表）。这不是算法错误，而是估计模型与时间戳定义不一致。</p>
+<p>若相机时间戳打在<strong>帧（曝光）开始</strong>或<strong>帧读出时刻</strong>而非曝光中点，估计结果会系统性偏小，偏小量是 <strong>$T_{exp}/2$</strong>——曝光时长的一半，不是帧周期的一半。二者只在曝光恰好占满整帧时相等：30 Hz、曝光 33.3 ms 时偏小 16.7 ms；同一帧率下曝光只有 8.3 ms 时只偏小 4.2 ms（6.3 节实测表）。这不是算法错误，而是估计模型与时间戳定义不一致。</p>
 <p>处理方式二选一：</p>
 <ol>
 <li>用曝光中点作为时间戳（多数相机驱动的推荐做法），此时对曝光长短<strong>完全免疫</strong>（6.3 节实测 0.07 ms）；</li>
-<li>保留帧首时间戳，但把估计量的"物理含义"明确为"帧首到 IMU 的延迟"，补偿时额外加 <script type="math/tex">T_{exp}/2</script>。</li>
+<li>保留帧首时间戳，但把估计量的"物理含义"明确为"帧首到 IMU 的延迟"，补偿时额外加 $T_{exp}/2$。</li>
 </ol>
 <p><code>core.simulate(timestamp_at='start', exposure=...)</code> 可以复现这两种情形；把 <code>exposure</code> 传给 <code>simulate</code> 才能区分"曝光时长"与"帧周期"。</p>
 <h3 id="73">7.3 估计值乱跳、相关系数很低</h3>
@@ -1500,9 +1496,7 @@ ros2<span class="w"> </span>launch<span class="w"> </span>camera_imu_time_calibr
 <table>
 <thead>
 <tr>
-<th>
-<script type="math/tex">\rho</script>
-</th>
+<th>$\rho$</th>
 <th>含义</th>
 <th>处理</th>
 </tr>
@@ -1525,8 +1519,7 @@ ros2<span class="w"> </span>launch<span class="w"> </span>camera_imu_time_calibr
 </tr>
 </tbody>
 </table>
-<p>
-<script type="math/tex">\rho<0.9</script> 的常见原因：</p>
+<p>$\rho&lt;0.9$ 的常见原因：</p>
 <ol>
 <li><strong>运动激励不足</strong>：车几乎不动或匀速直线行驶，旋转分量接近零，互相关没有信息（6.4 节实测 std 可达 15 ms）。标定时要走一段有转向、有加减速的路径；</li>
 <li><strong>相机角速度噪声过大</strong>：VIO 前端在弱纹理/低照度下输出的角速度抖动大，0.2 rad/s 时误差已到 1 ms 量级；</li>
@@ -1552,7 +1545,7 @@ ros2<span class="w"> </span>launch<span class="w"> </span>camera_imu_time_calibr
 <tr>
 <td>均值单向漂、std 随之增大</td>
 <td>时钟频差（ppm 级）</td>
-<td>窗口内仍可按常量处理——50 ppm 在 8 s 内只累积 0.4 ms，比半帧建模的系统效应小一个数量级以上；长实验则把模型升级成 <script type="math/tex">\text{offset}(t)=a+b\cdot t</script>，顺带把频差估出来</td>
+<td>窗口内仍可按常量处理——50 ppm 在 8 s 内只累积 0.4 ms，比半帧建模的系统效应小一个数量级以上；长实验则把模型升级成 $\text{offset}(t)=a+b\cdot t$，顺带把频差估出来</td>
 </tr>
 <tr>
 <td>std 大但均值不漂</td>
@@ -1571,8 +1564,8 @@ ros2<span class="w"> </span>launch<span class="w"> </span>camera_imu_time_calibr
 <h2 id="8">8. 未验证项与已知限制</h2>
 <ul>
 <li><strong>没有接真实相机与 IMU</strong>：相机侧角速度来自解析轨迹，不是真实 VIO 输出。真实 VIO 的角速度存在滑窗平滑、丢帧与时间戳抖动，本模块未建模这些效应。真实链路上估计到的更可能是"采样 + 传输 + 前端处理"合成的<strong>有效常量偏移</strong>，而不是纯曝光延迟——如果上游打时间戳用的是"消息到达后 <code>node.now()</code>"，那么估到的就是这个量。</li>
-<li><strong>相机模型是"整帧窗口平均"的理想化</strong>：模型假设一帧内的角速度是在 <script type="math/tex">T_{exp}</script> 上取平均、时间戳可指曝光中点或曝光开始（<code>core.simulate(exposure=...)</code> 已把曝光时长与帧周期拆成两个参数）。<strong>滚动快门</strong>的行间读出时间差、以及 VIO 前端"跨帧/滑窗平均"的时间标签语义，都没有建模——两者的共同点是"一帧对应一个时间上的模糊区间"，此时单帧的时间戳需要按前端定义重新解释，常量偏移只能吃掉其中一部分。这两项列为后续工作。</li>
-<li><strong>只估计常量偏移</strong>：不处理时钟频差（漂移率）与温度导致的时变偏移。量化一下：50 ppm 的频差在 8 s 窗口内只累积 0.4 ms，比 6.3 节的半帧系统效应小一个数量级以上，所以窗口内按常量处理是安全的；真正危险的是"不做滑动窗口、拿一段很长数据估一次"。节点输出的 <code>recent_std_ms</code> 就是给这件事做经验检验的（7.4 节），需要时把模型升级成 <script type="math/tex">\text{offset}(t)=a+b\cdot t</script> 即可把频差一并估出。</li>
+<li><strong>相机模型是"整帧窗口平均"的理想化</strong>：模型假设一帧内的角速度是在 $T_{exp}$ 上取平均、时间戳可指曝光中点或曝光开始（<code>core.simulate(exposure=...)</code> 已把曝光时长与帧周期拆成两个参数）。<strong>滚动快门</strong>的行间读出时间差、以及 VIO 前端"跨帧/滑窗平均"的时间标签语义，都没有建模——两者的共同点是"一帧对应一个时间上的模糊区间"，此时单帧的时间戳需要按前端定义重新解释，常量偏移只能吃掉其中一部分。这两项列为后续工作。</li>
+<li><strong>只估计常量偏移</strong>：不处理时钟频差（漂移率）与温度导致的时变偏移。量化一下：50 ppm 的频差在 8 s 窗口内只累积 0.4 ms，比 6.3 节的半帧系统效应小一个数量级以上，所以窗口内按常量处理是安全的；真正危险的是"不做滑动窗口、拿一段很长数据估一次"。节点输出的 <code>recent_std_ms</code> 就是给这件事做经验检验的（7.4 节），需要时把模型升级成 $\text{offset}(t)=a+b\cdot t$ 即可把频差一并估出。</li>
 <li><strong><code>recent_std_ms</code> 不是严格的收敛判据</strong>：滑窗逐秒滑动、相邻窗口样本高度重叠，标准差只能当指示器用，没有做统计意义上的置信区间。</li>
 <li><strong>没有处理丢帧与乱序</strong>：假设两路数据都是单调、完整的时间序列。滑窗裁剪按消息时间戳（7.6 节），不依赖节点时钟。</li>
 <li><strong>尺度比 <code>scale</code> 是"独立检查项"，不是标定量</strong>：它用逐轴去均值的最小二乘估计（与互相关同口径），因此对陀螺常值零偏免疫（零偏 0→0.2 rad/s 漂移 &lt; 0.001）；但它假设相机与 IMU 三轴共用同一个尺度、且忽略轴间非正交与安装误差，只适合当一致性检查，不要当作标定结果使用。</li>

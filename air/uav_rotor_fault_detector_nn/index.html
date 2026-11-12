@@ -782,7 +782,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../mujoco_warehouse_uav_collision_braking/">仓储通道测距与制动 / Warehouse UAV Braking</a>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_warehouse_uav_collision_braking/">仓储通道测距与分级制动</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
 </li>
@@ -1001,7 +1001,7 @@
 e_i = W - 1 + iS
 </script>
 </p>
-<p>窗口 <script type="math/tex">W = 100</script> 步（1 s），步长 <script type="math/tex">S = 10</script> 步。标签取窗口<strong>末帧</strong>的真值——检测任务关心
+<p>窗口 $W = 100$ 步（1 s），步长 $S = 10$ 步。标签取窗口<strong>末帧</strong>的真值——检测任务关心
 "现在这一刻四桨健康度是多少"，而不是这段时间的平均。</p>
 <div class="admonition warning">
 <p class="admonition-title">按 episode 切分</p>
@@ -1064,8 +1064,8 @@ w_i = \begin{cases} 4, & \min_j g_{i,j} < 0.9 \\ 1, & \text{否则} \end{cases}
 \end{cases}
 </script>
 </p>
-<p>四型故障的增益：<code>loss</code> / <code>degradation</code> 为 <script type="math/tex">1 - s\alpha</script>，<code>stuck</code> 与 <code>dual_loss</code> 为 <script type="math/tex">1 - \alpha</script>，
-<code>progressive</code> 为 <script type="math/tex">\max(0.05,\ 1 - s(t - t_0))</script>——注意这里的 <code>severity</code> 是<strong>衰减速率</strong>（1/s），
+<p>四型故障的增益：<code>loss</code> / <code>degradation</code> 为 $1 - s\alpha$，<code>stuck</code> 与 <code>dual_loss</code> 为 $1 - \alpha$，
+<code>progressive</code> 为 $\max(0.05,\ 1 - s(t - t_0))$——注意这里的 <code>severity</code> 是<strong>衰减速率</strong>（1/s），
 不是最终增益，0.25 表示 4 s 掉光。</p>
 <p>仿真主循环每步做四件事：控制器给出 <code>u_cmd</code> → 乘故障增益 → <code>quad.apply_rotor_thrust()</code> →
 <code>quad.step(1)</code>。坠机判据 <code>pos[2] &lt; 0.15</code>，默认 <code>stop_on_crash=True</code> 在触地时截断序列
