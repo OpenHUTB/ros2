@@ -325,6 +325,7 @@ nav:
     - 上游心跳看门狗: './ground/heartbeat_watchdog.md'
     - MuJoCo 地面无人车 SLAM 建图导航与神经网络控制: './ground/mujoco_ground_slam_nn_nav/README.md'
 - 空域载具:
+    - 四旋翼刚体动力学键盘遥控仿真: './air/uav_rigidbody_keyboard_teleop.md'
     - MuJoCo 城市屋顶光伏覆盖率测量: './air/mujoco_uav_rooftop_pv_coverage_survey.md'
     - MuJoCo 屋顶光伏覆盖率测量第二天: './air/mujoco_uav_rooftop_pv_coverage_survey_day2.md'
     - winter 场景无人机圆周飞行: './air/winter_circle.md'
@@ -555,3 +556,4 @@ markdown_extensions:
         - name: mermaid
           class: mermaid
           format: !!python/name:mermaid2.fence_mermaid
+
