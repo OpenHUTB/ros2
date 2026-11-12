@@ -1,0 +1,6 @@
+# 本机实验输出（CSV/PNG/GIF）；文档必要图表另存于 docs/img
+results/
+
+__pycache__/
+*.pyc
+.pytest_cache/

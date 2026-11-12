@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>mujoco_motor_sensor_recorder</name>
+  <version>0.1.0</version>
+  <description>Standalone reproducible motor sensor CSV recorder</description>
+  <maintainer email="fzy985211_2025@qq.com">sirius185</maintainer>
+  <license>Apache-2.0</license>
+  <buildtool_depend>ament_python</buildtool_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>ament_index_python</exec_depend>
+  <test_depend>python3-pytest</test_depend>
+  <export><build_type>ament_python</build_type></export>
+</package>

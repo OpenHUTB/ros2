@@ -227,8 +227,81 @@ def test_height_reference():
 
     only = rp.detect_rooftops(roof_only, max_planes=4,
                               rng=np.random.default_rng(0))
-    check("点云里只有屋顶时不会被相对基准误滤掉（只有一个水平面就不做过滤）",
-          len(only) == 1, "找到 %d 个" % len(only))
+    check("只检出 1 个水平面时默认**不产生候选**（分不清是地面还是屋顶，宁可继续搜索）",
+          len(only) == 0, "找到 %d 个" % len(only))
+
+    only_old = rp.detect_rooftops(roof_only, max_planes=4,
+                                  require_ground_reference=False,
+                                  rng=np.random.default_rng(0))
+    check("显式关掉 require_ground_reference 才恢复旧行为（不过滤）",
+          len(only_old) == 1, "找到 %d 个" % len(only_old))
+
+
+def make_ground_plus_strip_scene():
+    """复现评审在真机上量到的场景：地面 + 一块**只比地面高 1.9 m** 的细长条。
+
+    用默认 ``ground_margin=1.0`` 时它会被当成"屋顶"选中：面积 70.2 m²，但内切圆
+    半径只有 1.35 m（≈26×2.7 m 的细长条，不像屋面）；调成 4.0 后它被正确滤掉。
+    """
+    rng = np.random.default_rng(77)
+    ground = np.column_stack([rng.uniform(-40, 40, 4000),
+                              rng.uniform(-40, 40, 4000),
+                              rng.normal(0.0, 0.02, 4000)])
+    strip = np.column_stack([rng.uniform(0, 26, 2200),
+                             rng.uniform(-1.35, 1.35, 2200),
+                             rng.normal(1.9, 0.02, 2200)])
+    return np.vstack([ground, strip])
+
+
+def test_ground_margin_default():
+    pts = make_ground_plus_strip_scene()
+
+    loose = rp.detect_rooftops(pts, ground_margin=1.0, max_planes=8,
+                               rng=np.random.default_rng(0))
+    check("margin=1.0 时把 1.9 m 高的细长条当成了屋顶（复现评审量到的问题）",
+          len(loose) == 1 and abs(loose[0]["height"] - 1.9) < 0.3,
+          str([round(r["height"], 2) for r in loose]))
+    if loose:
+        check("细长条的内切圆半径确实很小（≈1.35 m，不像屋面）",
+              loose[0]["radius"] < 2.0, "%.2f m" % loose[0]["radius"])
+
+    strict = rp.detect_rooftops(pts, max_planes=8,
+                                rng=np.random.default_rng(0))
+    check("默认 ground_margin=4.0 会把这块细长条滤掉（只剩它自己就不该降）",
+          all(abs(r["height"] - 1.9) > 0.3 for r in strict),
+          str([round(r["height"], 2) for r in strict]))
+
+
+def make_ground_only_scene():
+    """只看得见地面、看不到任何屋顶（高空稀疏点云实测就是这种情况）。
+
+    这是评审点名的**隐蔽失败模式**：旧版在"只提出 1 个平面"时静默关掉高度过滤，
+    于是把地面当成屋顶、一路降到地面并报告 LANDED 成功。
+    """
+    rng = np.random.default_rng(99)
+    return np.column_stack([rng.uniform(-15, 15, 4000),
+                            rng.uniform(-15, 15, 4000),
+                            rng.normal(-13.0, 0.02, 4000)])
+
+
+def test_no_ground_reference():
+    pts = make_ground_only_scene()
+
+    info = {}
+    roofs = rp.detect_rooftops(pts, max_planes=15,
+                               rng=np.random.default_rng(0), info=info)
+    check("只有地面一个平面时**不产生候选**（不会把地面当屋顶误报成功）",
+          len(roofs) == 0, "找到 %d 个：%s" % (len(roofs),
+                                              [round(r["height"], 2) for r in roofs]))
+    check("info 里如实反映没有地面参考",
+          info.get("planes") == 1 and info.get("floor_ref") is None,
+          str(info))
+
+    old = rp.detect_rooftops(pts, max_planes=15, require_ground_reference=False,
+                             rng=np.random.default_rng(0))
+    check("关掉该开关后旧行为重现：地面被当成候选屋顶（这就是要修掉的坑）",
+          len(old) == 1 and abs(old[0]["height"] + 13.0) < 0.5,
+          str([round(r["height"], 2) for r in old]))
 
 
 # --------------------------------------------------------------------------- #
@@ -379,6 +452,10 @@ def test_cluster_robustness():
     不加这一步时，少数几个同高度的远处噪点就能把凸包撑开，
     「最大内切圆圆心」会落到真实屋顶之外 —— 实测：6900 个点里混进 4 个噪点，
     216 m² 的屋顶被撑成 1175 m²，降落点偏了 22 m（会掉到楼外的街上）。
+
+    本用例的场景里**看不到地面**（只有屋顶/只有两栋楼），所以显式传
+    ``require_ground_reference=False``：这里要验证的是凸包鲁棒性，
+    而不是「拿不到地面基准就不降落」那条安全规则（后者见 4.2）。
     """
     rng = np.random.default_rng(7)
     roof = np.column_stack([
@@ -392,7 +469,8 @@ def test_cluster_robustness():
         [-6.92, -18.25, 14.98]])
     pts = np.vstack([roof, noise])
 
-    roofs = rp.detect_rooftops(pts, rng=np.random.default_rng(0))
+    roofs = rp.detect_rooftops(pts, require_ground_reference=False,
+                               rng=np.random.default_rng(0))
     check("混入同高度远处噪点后仍能检测到屋顶", len(roofs) >= 1,
           "检测到 %d 个" % len(roofs))
     if not roofs:
@@ -416,13 +494,160 @@ def test_cluster_robustness():
     b2 = np.column_stack([rng2.uniform(30, 40, 1200), rng2.uniform(0, 10, 1200),
                           rng2.normal(12.0, 0.02, 1200)])
     roofs2 = rp.detect_rooftops(np.vstack([b1, b2]),
+                                require_ground_reference=False,
                                 rng=np.random.default_rng(0))
     check("同高度但不相连的两栋楼被拆成两个候选", len(roofs2) >= 2,
           "检测到 %d 个" % len(roofs2))
 
 
+# --------------------------------------------------------------------------- #
+# 9. 占据栅格 + 距离变换（凹形屋顶的基础件）
+# --------------------------------------------------------------------------- #
+def test_raster_and_edt():
+    # --- 距离变换：5×5 实心块，中心到最近空格应为 3 格 → 平方距离 9 ---
+    m = np.zeros((7, 7), dtype=bool)
+    m[1:6, 1:6] = True
+    d2 = rp.distance_transform(m)
+    check("距离变换：5×5 块中心 d^2=9", abs(float(d2[3, 3]) - 9.0) < 1e-9,
+          "%.3f" % d2[3, 3])
+    check("距离变换：块上边缘 d^2=1", abs(float(d2[1, 3]) - 1.0) < 1e-9,
+          "%.3f" % d2[1, 3])
+    check("距离变换：空格处为 0", float(d2[0, 0]) == 0.0, "%.3f" % d2[0, 0])
+
+    # --- 一维变换（Felzenszwalb 下包络）---
+    big = 1e12
+    d1 = rp._edt_1d(np.array([0.0, big, big, big, 0.0]))
+    check("1D 距离变换结果正确",
+          np.allclose(d1, [0.0, 1.0, 4.0, 1.0, 0.0]), str(d1))
+
+    # --- 栅格化：矩形屋顶的占据面积应接近真实面积 ---
+    xs, ys = np.meshgrid(np.arange(0, 10.01, 0.5), np.arange(0, 6.01, 0.5))
+    rect = np.column_stack([xs.ravel(), ys.ravel()])
+    grid = rp.rasterize_occupancy(rect, cell=0.5, close_iters=0)
+    check("栅格化：矩形占据面积≈60 m^2",
+          grid is not None and 50 < grid["area"] < 70, 
+          "%.1f" % (grid["area"] if grid else -1))
+    if grid:
+        mask = grid["mask"]
+        check("栅格化：最外圈强制为空（距离变换需要边界）",
+              not mask[0, :].any() and not mask[-1, :].any()
+              and not mask[:, 0].any() and not mask[:, -1].any())
+
+    # --- 闭运算：一格宽的缝要被填上，但 6 m 宽的空洞不能被填 ---
+    pts = rect
+    grid_open = rp.rasterize_occupancy(pts, cell=0.5, close_iters=1)
+    check("闭运算不会改变实心矩形面积",
+          grid_open is not None and abs(grid_open["area"] - grid["area"]) < 3.0,
+          "%.1f vs %.1f" % (grid_open["area"], grid["area"]))
+
+    # --- 落点：实心矩形上应在中心附近，半径接近短边的一半 ---
+    g = rp.grid_incenter(rect, cell=0.5)
+    check("栅格落点：实心矩形半径≈3 m",
+          g is not None and 2.4 < g["radius"] < 3.2,
+          "%.2f" % (g["radius"] if g else -1))
+
+
+# --------------------------------------------------------------------------- #
+# 10. 凹形 / 带天井屋顶的落点（凸包法的安全性缺陷回归）
+# --------------------------------------------------------------------------- #
+def _roof_on_mask(mask_fn, z=15.0, half=20.0, step=0.5, seed=3):
+    """按 mask_fn(x,y) 生成"屋顶点 + 地面点"的合成点云。"""
+    gx, gy = np.meshgrid(np.arange(-half, half + 1e-9, step),
+                         np.arange(-half, half + 1e-9, step))
+    gx, gy = gx.ravel(), gy.ravel()
+    keep = mask_fn(gx, gy)
+    roof = np.column_stack([gx[keep], gy[keep], np.full(int(keep.sum()), z)])
+    rng = np.random.RandomState(seed)
+    roof[:, 2] += rng.normal(0.0, 0.02, len(roof))
+    ground = np.column_stack([gx[::2], gy[::2], np.zeros(len(gx[::2]))])
+    return np.vstack([roof, ground])
+
+
+def _mask_rect(x, y):
+    return (np.abs(x) <= 12) & (np.abs(y) <= 8)
+
+
+def _mask_u(x, y):
+    """U 形：外框 24×16，南侧开 10×9 的内院（凹口）。"""
+    outer = (np.abs(x) <= 12) & (np.abs(y) <= 8)
+    courtyard = (np.abs(x) <= 5) & (y <= 1)
+    return outer & ~courtyard
+
+
+def _mask_hollow(x, y):
+    """回字形：外框 24×16，中央 8×6 天井。"""
+    outer = (np.abs(x) <= 12) & (np.abs(y) <= 8)
+    hole = (np.abs(x) <= 4) & (np.abs(y) <= 3)
+    return outer & ~hole
+
+
+def test_concave_roof_landing():
+    # ---------- A. 凸形对照组：行为必须与旧版本一致（不能"顺手改了老行为"）----------
+    roof_pts = _roof_on_mask(_mask_rect)
+    roofs = rp.detect_rooftops(roof_pts, rng=np.random.default_rng(0))
+    top = [r for r in roofs if r["height"] > 5]
+    check("凸形屋顶仍被检出", len(top) == 1, "检出 %d" % len(top))
+    if top:
+        r = top[0]
+        check("凸形屋顶走凸包路径（行为不变）", r["landing_mode"] == "hull",
+              r["landing_mode"])
+        check("凸形屋顶半径≈8 m", 7.0 < r["radius"] < 8.6, "%.2f" % r["radius"])
+
+    # ---------- B. U 形（凹口）：落点必须在真实屋顶上 ----------
+    roof_pts = _roof_on_mask(_mask_u)
+    roofs = rp.detect_rooftops(roof_pts, rng=np.random.default_rng(0))
+    top = [r for r in roofs if r["height"] > 5]
+    check("U 形屋顶被检出", len(top) >= 1)
+    if top:
+        r = top[0]
+        lx, ly = r["landing_point"]
+        check("U 形屋顶切换到栅格落点", r["landing_mode"] == "grid",
+              r["landing_mode"])
+        check("U 形落点真的在屋顶上（不在内院上方）",
+              rp.point_in_occupancy(lx, ly, r["grid"]), "(%.2f, %.2f)" % (lx, ly))
+        check("U 形落点不在内院区域（|x|>5 或 y>1）",
+              abs(lx) > 5.0 or ly > 1.0, "(%.2f, %.2f)" % (lx, ly))
+        check("U 形半径小于凸包半径（不虚报余量）", r["radius"] < 6.0,
+              "%.2f" % r["radius"])
+
+    # ---------- C. 回字形（中心天井）：落点不能落在天井里 ----------
+    roof_pts = _roof_on_mask(_mask_hollow)
+    roofs = rp.detect_rooftops(roof_pts, rng=np.random.default_rng(0))
+    top = [r for r in roofs if r["height"] > 5]
+    check("回字形屋顶被检出", len(top) >= 1)
+    if top:
+        r = top[0]
+        lx, ly = r["landing_point"]
+        in_hole = abs(lx) <= 4.0 and abs(ly) <= 3.0
+        check("回字形落点不在中央天井里", not in_hole, "(%.2f, %.2f)" % (lx, ly))
+        check("回字形落点在屋顶上",
+              rp.point_in_occupancy(lx, ly, r["grid"]), "(%.2f, %.2f)" % (lx, ly))
+
+    # ---------- D. 强制 hull：仍然复现旧缺陷（说明这条回归测得出来）----------
+    roofs_h = rp.detect_rooftops(_roof_on_mask(_mask_hollow),
+                                 landing_mode="hull",
+                                 rng=np.random.default_rng(0))
+    top_h = [r for r in roofs_h if r["height"] > 5]
+    if top_h:
+        lx, ly = top_h[0]["landing_point"]
+        check("landing_mode=hull 时落点确实会掉进天井（旧缺陷可复现）",
+              abs(lx) <= 4.0 and abs(ly) <= 3.0, "(%.2f, %.2f)" % (lx, ly))
+        check("landing_mode=hull 时半径被虚报为≈8 m",
+              7.0 < top_h[0]["radius"] < 8.6, "%.2f" % top_h[0]["radius"])
+
+    # ---------- E. 强制 grid 在凸形屋顶上也不应崩 ----------
+    roofs_g = rp.detect_rooftops(_roof_on_mask(_mask_rect),
+                                 landing_mode="grid",
+                                 rng=np.random.default_rng(0))
+    top_g = [r for r in roofs_g if r["height"] > 5]
+    if top_g:
+        check("landing_mode=grid 在凸形屋顶上同样可用",
+              top_g[0]["landing_mode"] == "grid"
+              and rp.point_in_occupancy(*top_g[0]["landing_point"], top_g[0]["grid"]),
+              "%.2f" % top_g[0]["radius"])
+
+
 def main():
-    print("=" * 68)
     print("rooftop_landing 本地回归测试（无需 ROS / 仿真器）")
     print("=" * 68)
     print("\n-- 1. 点云解析与坐标换算 --")
@@ -434,6 +659,10 @@ def main():
     test_detect_rooftops()
     print("\n-- 4. 高度基准（换地图回归）--")
     test_height_reference()
+    print("\n-- 4.1 地面余量默认值（真机量到的细长条）--")
+    test_ground_margin_default()
+    print("\n-- 4.2 无地面参考时不降落（隐蔽失败模式）--")
+    test_no_ground_reference()
     print("\n-- 5. 目标选择与安全半径 --")
     test_target_selection_safety()
     print("\n-- 6. 桥接状态字符串 --")
@@ -442,6 +671,10 @@ def main():
     test_project_layout()
     print("\n-- 8. 凸包鲁棒性回归 --")
     test_cluster_robustness()
+    print("\n-- 9. 占据栅格与距离变换 --")
+    test_raster_and_edt()
+    print("\n-- 10. 凹形 / 带天井屋顶落点 --")
+    test_concave_roof_landing()
 
     total = len(PASS) + len(FAIL)
     print("\n" + "=" * 68)

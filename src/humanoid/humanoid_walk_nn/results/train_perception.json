@@ -1,0 +1,99 @@
+{
+  "architecture": [
+    144,
+    160,
+    160,
+    72
+  ],
+  "augment_pairs": 7500,
+  "batch": 96,
+  "beams": 72,
+  "context": "circular median-5 lidar context, MLP predicts the correction from the median-filtered scan",
+  "epochs": 45,
+  "hidden": 160,
+  "history": [
+    {
+      "epoch": 1,
+      "noisy_rmse_norm": 0.09286,
+      "train_mse": 0.027653,
+      "val_rmse_norm": 0.05526
+    },
+    {
+      "epoch": 5,
+      "noisy_rmse_norm": 0.09286,
+      "train_mse": 0.003265,
+      "val_rmse_norm": 0.05511
+    },
+    {
+      "epoch": 10,
+      "noisy_rmse_norm": 0.09286,
+      "train_mse": 0.003263,
+      "val_rmse_norm": 0.05509
+    },
+    {
+      "epoch": 15,
+      "noisy_rmse_norm": 0.09286,
+      "train_mse": 0.003262,
+      "val_rmse_norm": 0.0551
+    },
+    {
+      "epoch": 20,
+      "noisy_rmse_norm": 0.09286,
+      "train_mse": 0.003264,
+      "val_rmse_norm": 0.05511
+    },
+    {
+      "epoch": 25,
+      "noisy_rmse_norm": 0.09286,
+      "train_mse": 0.003264,
+      "val_rmse_norm": 0.05508
+    },
+    {
+      "epoch": 30,
+      "noisy_rmse_norm": 0.09286,
+      "train_mse": 0.003261,
+      "val_rmse_norm": 0.05509
+    },
+    {
+      "epoch": 35,
+      "noisy_rmse_norm": 0.09286,
+      "train_mse": 0.003261,
+      "val_rmse_norm": 0.0551
+    },
+    {
+      "epoch": 40,
+      "noisy_rmse_norm": 0.09286,
+      "train_mse": 0.003261,
+      "val_rmse_norm": 0.05512
+    },
+    {
+      "epoch": 45,
+      "noisy_rmse_norm": 0.09286,
+      "train_mse": 0.003261,
+      "val_rmse_norm": 0.05511
+    }
+  ],
+  "lr": 0.0015,
+  "mae_m": 0.1202,
+  "mae_norm": 0.01532,
+  "median_baseline_improvement_pct": 35.78,
+  "median_baseline_rmse": 0.4681,
+  "model": "perception_mlp",
+  "rmse_denoised": 0.4326,
+  "rmse_denoised_norm": 0.05511,
+  "rmse_denoised_valid": 0.4083,
+  "rmse_improvement_pct": 40.65,
+  "rmse_improvement_valid_pct": 35.53,
+  "rmse_noisy": 0.729,
+  "rmse_noisy_norm": 0.09286,
+  "rmse_noisy_valid": 0.6334,
+  "seconds": 11.34,
+  "target": "residual (clean - noisy), output = noisy + residual clipped",
+  "task": "lidar denoising (72 beams), predicts residual clean-noisy",
+  "train_samples": 8532,
+  "val_episodes": [
+    0,
+    1
+  ],
+  "val_samples": 526
+}

@@ -1,0 +1,37 @@
+# 无人机航点导航模块参数
+#
+# 说明：
+#   - 航点坐标是「相对起飞点的东/北偏移」，单位米；代码在起飞后记录起飞点，
+#     再换算成 NED 绝对坐标，因此换了出生点/地图也能复用同一份配置。
+#   - 到达判定用三维误差（含高度），并要求连续 consecutive_hits 次采样命中，
+#     避免“刚进容差就判定到达”的假通过。
+
+simulator:
+  host: "127.0.0.1"        # AirSim RPC 所在主机（Windows 上就是本机）
+  airsim_port: 41451        # AirSim RPC 端口
+  carla_port: 2000          # 同一个进程里 CARLA RPC 也开着，用于拍取证照片（可选）
+  map: "Town10HD_Opt"
+
+flight:
+  takeoff_height: 6.0       # 起飞后悬停高度（米，NED 里是 -z）
+  speed: 4.0                # 巡航速度 m/s
+  waypoints:                # 相对起飞点的偏移（AirSim NED：x 指北、y 指东，单位米）
+    - [25.0, 0.0]
+    - [25.0, 25.0]
+    - [0.0, 25.0]
+    - [0.0, 0.0]
+  arrive_tolerance: 2.0     # 三维到达判定半径（米，含高度）
+  consecutive_hits: 3       # 连续多少次采样都在容差内才算到达
+  timeout_per_waypoint: 45.0
+  max_flight_time: 150.0    # 总飞行时限（秒），超时中止
+  log_interval: 0.1         # 全程采样间隔（秒）
+  settle_time: 1.5          # 到达判定满足后再悬停观察多久，取中位误差作为到达精度
+  fine_tolerance: 0.5       # 高于此误差时做稳态偏差修正（最多两次）
+
+evaluation:
+  pass_max_error: 0.6       # PASS 阈值：最大三维到达误差（米）；实测 0.45~0.53 m（含稳态偏差修正）
+
+output:
+  save_dir: "docs"
+  capture_images: true       # 用 simGetImages 抓机载视角图，供 PR 动图使用
+  image_interval: 1.0        # 截图间隔（秒）

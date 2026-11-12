@@ -1,0 +1,11 @@
+rtk_sim:
+  ros__parameters:
+    window_epochs: 20
+    windows: 0
+    seed: 0
+rtk_solver:
+  ros__parameters:
+    sigma_phase_cycles: 0.01
+    sigma_code_m: 0.30
+    ratio_threshold: 3.0
+    output_csv: /tmp/rtk_solver.csv

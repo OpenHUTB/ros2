@@ -1,5 +1,6 @@
 # 虚拟环境
 venv/
+.venv/
 
 # mkdocs 构建产物
 site/
@@ -13,9 +14,10 @@ __pycache__/
 
 # 构建时 hooks.py 自动生成
 docs/requirements.txt
- add-mujoco-aeb
 # MuJoCo 运行日志
-*.TXT
+# 注意：这里不要用 *.TXT。Windows/macOS 上 core.ignorecase 为 true 时它会把
+# LICENSE.txt、requirements.txt 这类真实文本一起吞掉（本仓库曾因此漏提交依赖清单）。
+# 需要忽略的垃圾文件请写到文末「编辑器 / 系统」段落里逐个列出。
 *.log
 
 # 只忽略仓库根目录下临时图片，保留子目录docs/img图片
@@ -40,8 +42,17 @@ devel/.built_by
 # colcon 构建产物
 log/
 
+# main.py 在仓库根目录创建的临时 colcon 工作区（可重建，不入库）
+build_quad_ws/
+
 # 行为克隆数据集（图像与标签，体积大不入库）
 data/
+# 包内自带/新采的样本数据要走版本库（示例：gesture_control_drone/data/*.npz）。
+# 注意 git 的规则：**父目录被排除时，不能反排除其中的文件**，所以必须先把
+# 目录本身反排除回来，下面那条文件级例外才会生效
+# （已用 `git add --dry-run` 实测：只写文件级例外不生效）。
+!src/air/gesture_control_drone/data/
+!src/air/gesture_control_drone/data/*.npz
 
 # 仿真与训练产物（二进制大文件不入库，改用网盘链接）
 *.mp4
@@ -64,26 +75,72 @@ trajectories/*.json
 # 但部署必需的权重文件要保留
 !**/models/*.npz
 
+# drl_drone_path_planning 的评估/汇总产物可重新生成，不入库
+src/air/drl_drone_path_planning/models/evaluations.npz
+src/air/drl_drone_path_planning/models/train_summary.json
+
+# uav_fault_emergency_landing：两个网络权重合计约 41 KB，必须入库，
+# 否则 neural 模式一启动就 FileNotFoundError；数据集（约 300 KB）不入库，用 --gen-data 现场生成
+!src/air/uav_fault_emergency_landing/results/*.pt
+!src/air/uav_fault_emergency_landing/results/*.json
+
 # 训练日志与轨迹中间数据（由 train.py / eval.py / plot_results.py 重新生成）
 *.log
 **/models/traj_*.csv
 
 # 例外：文档里要引用的动图必须入库（上面的 *.gif 会把它一起吞掉）
 !docs/img/**/*.gif
+!docs/water/images/**/*.gif
 !src/air/uav_dqn_nav/models/*.gif
+!docs/air/uav_spiral_search/images/*.gif
 
 # 例外：人形机器人 PPO 模块的 TorchScript 权重必须入库（187 KB，评测机免重训）
 !src/humanoid/humanoid_ppo_locomotion/weights/*.pt
 
+# 例外：无人机桨故障健康度估计的推理权重必须入库（167 KB）。
+# 数据集 7 MB 不入库，但这个权重不入库的话 --eval / --demo / ros2 launch
+# 一启动就 FileNotFoundError，评审只能先自己训 52 s。
+!src/air/uav_rotor_fault_detector_nn/results/detector.pt
+
+# 例外：无人机神经容错控制的分配残差网络权重必须入库（26 KB）。
+# 数据集 12 MB 由 --gen-data 现场生成，但这个权重不入库的话
+# --eval / --demo / ros2 launch 的 neural 模式一启动就报错。
+!src/air/uav_neural_fault_tolerant_control/results/allocator.pt
+
 # 例外：Autoencoder 雷达修复模块的离线训练权重必须入库（约 96 KB，免重训）
 !src/ground/lidar_autoencoder_repair/models/*.pt
 
-# 编辑器 / 系统
+# 例外：CARLA 神经网络模块的 PilotNet 端到端权重必须入库（约 1.3 MB，drive 直接推理）
+!src/ground/carla_nn_perception_control_slam/models/pilotnet.pt
+
+# 例外：人形 H1/H1_2 行走模块的 TorchScript 策略必须入库（137/143 KB，免重训）
+!src/humanoid/humanoid_h1_walk/weights/*.pt
+
+# 例外：语音指令模块的意图网络必须入库（304 KB，免重训）。
+# 只放行这一个文件：Whisper tiny（72 MB）走运行时下载，不进仓库。
+!src/humanoid/humanoid_voice_command/weights/intent_mlp.pt
+
+# 例外：G1 柔顺控制模块的策略权重必须入库（48.8 MB，免重训、免联网）
+!src/humanoid/humanoid_g1_compliance/weights/*.pt
+
+# 编辑器 / 系统（替代原来的 *.TXT：只列确认无用的文件，不再按扩展名一刀切）
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
+ehthumbs.db
+desktop.ini
 
 # 对比实验的逐次训练产物（模型可再训练不入库；eval_log.json / metrics.json 仍入库）
 **/results/runs/**/*.zip
- master
+
+# uav_camera_tracking 的曲线/对比图：每次训练都会重画，属生成物。
+# 文档引用的是 docs/img/air/uav_camera_tracking/ 下的稳定副本，
+# results/ 只保留指标 CSV（compare_summary.csv 仍入库）。
+src/air/uav_camera_tracking/results/*.png
+
+# uav_fault_e2e_thrust_policy 的三个策略权重（合计约 700 KB）必须入库，
+# 否则 neural 模式一启动就 FileNotFoundError；DAgger 数据集约 6 MB 不入库，
+# 用 `python main.py --gen-data` 现场生成（约 1 分钟）。
+!src/air/uav_fault_e2e_thrust_policy/results/*.pt
+!src/air/uav_fault_e2e_thrust_policy/results/*.json

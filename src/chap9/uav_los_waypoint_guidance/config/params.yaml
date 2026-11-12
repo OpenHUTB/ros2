@@ -1,0 +1,11 @@
+uav_los_waypoint_guidance:
+  ros__parameters:
+    speed: 1.5            # 巡航速度 (m/s)
+    lookahead: 2.0        # LOS 前视距离 (m)
+    accept_radius: 0.8    # 航点接受半径 (m)
+    log_period: 0.5       # 日志与状态发布周期 (s)
+    control_rate_hz: 20.0 # 控制循环频率 (Hz)
+    yaw_gain: 1.2         # 航向误差 -> 偏航角速度的增益
+    max_yaw_rate: 0.8     # 偏航角速度限幅 (rad/s)
+    # 航点按 x, y 顺序成对排列
+    waypoints: [4.0, 0.0, 8.0, 3.0, 12.0, 0.0, 16.0, -3.0]

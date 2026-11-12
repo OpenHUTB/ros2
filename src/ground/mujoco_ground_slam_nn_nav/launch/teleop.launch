@@ -1,0 +1,19 @@
+<launch>
+  <!-- Keyboard teleoperation demo: MuJoCo physics + OpenCV viewer. -->
+  <arg name="scene" default="warehouse"/>
+  <arg name="seed" default="20261026"/>
+  <arg name="noise" default="true"/>
+  <arg name="teleop" default="true"/>
+  <arg name="viewer" default="true"/>
+
+  <node pkg="mujoco_ground_slam_nn_nav" type="sim_node.py" name="gvnn_sim" output="screen">
+    <param name="scene" value="$(arg scene)"/>
+    <param name="seed" value="$(arg seed)"/>
+    <param name="noise" value="$(arg noise)"/>
+  </node>
+
+  <node if="$(arg viewer)" pkg="mujoco_ground_slam_nn_nav" type="viewer_node.py" name="gvnn_viewer" output="screen">
+    <param name="scene" value="$(arg scene)"/>
+    <param name="teleop" value="$(arg teleop)"/>
+  </node>
+</launch>

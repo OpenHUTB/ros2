@@ -1,0 +1,5 @@
+scenario,controller,start_x_m,wall_x_m,initial_speed_m_s,height_m,steps,collision_steps,min_clearance_m,final_speed_m_s,invalid_sensor_steps,max_height_error_m
+scenario_000,range,-8.0,0.0,0.0,1.2,1000,0,0.6683193000877852,4.3626513629881616e-08,0,0.0
+scenario_001,range,-8.0,0.0,1.5,1.2,1000,0,0.6682422141825342,3.3976456359648167e-09,0,0.0
+scenario_002,range,-7.0,0.0,0.0,1.2,1000,0,0.6683622649959169,3.4410558197765757e-09,0,0.0
+scenario_003,range,-7.0,0.0,1.5,1.2,1000,0,0.6683314968328444,2.678894077001709e-10,0,0.0

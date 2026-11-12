@@ -1,0 +1,116 @@
+{
+  "algorithms": {
+    "dqn_2x64": {
+      "algorithm": "DQN",
+      "best_epoch": 50,
+      "episodes": 250,
+      "final_recent_success": 0.8,
+      "hidden": [
+        64,
+        64
+      ],
+      "mean_collisions": 0.07,
+      "mean_falls": 0.27,
+      "mean_return": 20.526,
+      "mean_steps": 30.3,
+      "success_rate": 0.767,
+      "train_seconds": 3.37,
+      "train_steps": 9733
+    },
+    "dqn_3x64": {
+      "algorithm": "DQN",
+      "best_epoch": 50,
+      "episodes": 250,
+      "final_recent_success": 0.833,
+      "hidden": [
+        64,
+        64,
+        64
+      ],
+      "mean_collisions": 2.7,
+      "mean_falls": 0.1,
+      "mean_return": 17.66,
+      "mean_steps": 24.3,
+      "success_rate": 0.833,
+      "train_seconds": 3.6,
+      "train_steps": 8935
+    },
+    "pg_2x64": {
+      "algorithm": "REINFORCE",
+      "episodes": 250,
+      "final_recent_success": 0.2,
+      "hidden": [
+        64,
+        64
+      ],
+      "mean_collisions": 0.5,
+      "mean_falls": 0.27,
+      "mean_return": 0.748,
+      "mean_steps": 84.3,
+      "success_rate": 0.067,
+      "train_seconds": 2.39,
+      "train_steps": 17980
+    }
+  },
+  "env": {
+    "action_table": [
+      [
+        1.0,
+        0.0
+      ],
+      [
+        0.9,
+        0.35
+      ],
+      [
+        0.9,
+        -0.35
+      ],
+      [
+        0.6,
+        0.85
+      ],
+      [
+        0.6,
+        -0.85
+      ],
+      [
+        0.3,
+        0.0
+      ],
+      [
+        0.0,
+        0.0
+      ],
+      [
+        1.0,
+        0.9
+      ]
+    ],
+    "actions": 8,
+    "dt": 0.5,
+    "max_steps": 90,
+    "penalties": "collision -1.5, fall -3.0, step -0.02",
+    "random_start": true,
+    "scene": "hall",
+    "state": "9x9 local occupancy + goal polar + speed + balance (86 dims)"
+  },
+  "eval_episodes": 30,
+  "hidden_layer_comparison": {
+    "algorithm": "DQN",
+    "three_hidden_layers": {
+      "mean_return": 17.66,
+      "success_rate": 0.833,
+      "train_seconds": 3.6
+    },
+    "two_hidden_layers": {
+      "mean_return": 20.526,
+      "success_rate": 0.767,
+      "train_seconds": 3.37
+    }
+  },
+  "seconds": 9.78,
+  "seed": 2026,
+  "state_dim": 86,
+  "task": "reach the goal in the hall floor plan (discrete action abstraction, walking speed / turn-rate limits and lateral balance falls)"
+}

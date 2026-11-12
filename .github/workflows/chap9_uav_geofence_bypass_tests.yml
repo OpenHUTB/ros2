@@ -1,0 +1,27 @@
+name: chap9 uav_geofence_bypass tests
+
+on:
+  push:
+    paths:
+      - 'src/chap9/uav_geofence_bypass/**'
+      - '.github/workflows/chap9_uav_geofence_bypass_tests.yml'
+  pull_request:
+    paths:
+      - 'src/chap9/uav_geofence_bypass/**'
+      - '.github/workflows/chap9_uav_geofence_bypass_tests.yml'
+
+jobs:
+  unit-tests:
+    name: unittest (no ROS)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.8'
+      - name: Install test dependencies
+        run: python3 -m pip install --upgrade pip pytest pyyaml
+      - name: Run unit tests
+        env:
+          PYTHONPATH: src/chap9/uav_geofence_bypass
+        run: python3 -m pytest src/chap9/uav_geofence_bypass/test -q
