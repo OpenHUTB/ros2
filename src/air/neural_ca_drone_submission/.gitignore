@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Generated artefacts
+runs/
+results/*.csv
+data/*.npz
+weights_test/
+train_log.txt
+train_e2e_log.txt
+debug_*.png
+dist/
+site/
+*.log
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+.dsh-office-*/
+report/_bd_backup.py
+tools/_toc_pages2.py
+
+.rm*.txt
+.mkdocs.log
+
+neural_ca_drone_submission.zip

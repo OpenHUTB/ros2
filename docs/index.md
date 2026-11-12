@@ -482,6 +482,14 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 
 * [MuJoCo无人机幕墙定距扫描](air/mujoco_facade_capture/index.md)
 
+* [基于神经网络的无人机感知—规划—控制避障](./air/neural_ca_drone_submission/docs/index.md) —— 深度图 CNN 感知、神经启发式 A* 规划与模仿学习控制的分层避障，附端到端对照
+  * [任务与方案](./air/neural_ca_drone_submission/docs/overview.md)
+  * [模块一 感知：深度图 → 占用栅格](./air/neural_ca_drone_submission/docs/perception.md)
+  * [模块二 规划：神经启发式 A*](./air/neural_ca_drone_submission/docs/planning.md)
+  * [模块三 控制：模仿学习控制器](./air/neural_ca_drone_submission/docs/control.md)
+  * [模块四 端到端：深度图 → 速度](./air/neural_ca_drone_submission/docs/e2e.md)
+  * [实验与结果](./air/neural_ca_drone_submission/docs/results.md)
+  * [演示动图与录制](./air/neural_ca_drone_submission/docs/gifs.md)
 * [AirSim 无人机抗风扰补偿（MLP）](./air/uav_airsim_wind_rejection.md) —— IMU 时序加位置误差进 MLP，直接输出 xy 补偿速度；侧风下平均偏移从 14.68 m 降到 3.42 m（-77%），验证 R² 0.997
 
 * [AirSim 无人机深度避障（CNN 端到端控制）](./air/uav_airsim_depth_obstacle_avoidance.md) —— 前视深度 64×64 进手写 CNN，出偏航角速率与目标高度，验证集 MSE 0.0640 / R² 0.298
