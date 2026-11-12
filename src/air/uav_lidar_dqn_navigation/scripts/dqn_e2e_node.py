@@ -8,6 +8,7 @@
 发布到 /drone/cmd_vel。整条链路不经过雷达特征，属于纯视觉端到端控制。
 """
 
+import math
 import os
 import sys
 
@@ -46,6 +47,8 @@ class DQNE2ENode(object):
         self.goal = (rospy.get_param('~goal_x', 15.0),
                      rospy.get_param('~goal_y', 10.0),
                      rospy.get_param('~goal_z', -4.0))
+        self.goal_tolerance = float(rospy.get_param('~goal_tolerance', 1.5))
+        self.reached_goal = False
         self.state = None
         self.image = None
         self.last_action = 0
@@ -92,8 +95,14 @@ class DQNE2ENode(object):
                 rate.sleep()
                 continue
 
+            distance = math.hypot(self.goal[0] - self.state[0],
+                                  self.goal[1] - self.state[1])
+            if not self.reached_goal and distance <= self.goal_tolerance:
+                self.reached_goal = True
+                rospy.loginfo('端到端控制到达目标：水平误差 %.2f m，保持悬停', distance)
+
             action = 0
-            if os.path.exists(self.model_path):
+            if not self.reached_goal and os.path.exists(self.model_path):
                 action = self.agent.act(self._state_pair(), epsilon=0.0)
 
             vx, yaw_rate = ACTIONS[action]
