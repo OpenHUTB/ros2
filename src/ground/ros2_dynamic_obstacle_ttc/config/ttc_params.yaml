@@ -1,0 +1,11 @@
+dynamic_obstacle_ttc:
+  ros__parameters:
+    scan_topic: /scan
+    warning_topic: /collision_warning
+    marker_topic: /moving_obstacles
+    max_range: 6.0
+    max_ttc: 10.0
+    on_ttc: 2.5
+    off_ttc: 3.5
+    robot_radius: 0.25
+    safety_margin: 0.10

@@ -1,0 +1,16 @@
+rooftop_pv_controller:
+  ros__parameters:
+    image_topic: /camera/image_raw
+    pose_topic: /uav/pose
+    route_topic: /uav/route
+    command_topic: /cmd_vel
+    status_topic: /rooftop_pv/status
+    control_checkpoint: ""
+    segmentation_checkpoint: ""
+    planning_checkpoint: ""
+    end_to_end_checkpoint: ""
+    max_speed: 1.0
+    max_yaw_rate: 1.2
+    waypoint_tolerance: 0.5
+    input_timeout: 1.0
+    control_period: 0.1

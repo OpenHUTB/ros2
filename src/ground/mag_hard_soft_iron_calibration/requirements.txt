@@ -1,0 +1,3 @@
+numpy>=1.21
+# optional, only for figures
+matplotlib>=3.5

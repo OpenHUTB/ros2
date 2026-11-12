@@ -32,10 +32,18 @@ install(FILES
   scripts/drone_client.py
   scripts/gesture_dataset.py
   scripts/gesture_session.py
+  scripts/gesture_mlp_classifier.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
 install(DIRECTORY launch config data
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
   USE_SOURCE_PERMISSIONS
+)
+
+# 演示模型是可选的：可能还没训练、也可能被删掉。用 OPTIONAL 避免
+# `catkin_make install` 因为目录不存在而失败（git 不跟踪空目录）。
+install(FILES models/gesture_mlp.npz
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/models
+  OPTIONAL
 )
