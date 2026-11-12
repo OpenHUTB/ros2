@@ -47,7 +47,8 @@ ros2 launch uav_vertiport_queue main.launch.py   # 启动在线排队节点
 ```
 
 运行结果自动写入 `results/vertiport_queue_result.json`，配图写入
-`images/capacity_curve.png` 与 `images/wait_comparison.png`。
+`docs/img/air/uav_vertiport_queue_capacity.png` 与
+`docs/img/air/uav_vertiport_queue_wait.png`。
 
 **ROS 节点**：`queue_node` 订阅 `<prefix>1..N/request`
 （std_msgs/String，JSON：`{"uid","kind","t_request","priority"}`），
@@ -89,7 +90,7 @@ medical 场景体现**优先级抢占**：急救机 UAV-3（priority=10）请求
 
 **饱和点：80 架次/h**（离场间隔 60 s 与进场间隔 90 s 交替决定的容量
 上限；请求率 88 时平均等待 87.95 s、出现 4 架次积压）。曲线见
-`images/capacity_curve.png`。
+`docs/img/air/uav_vertiport_queue_capacity.png`。
 
 ### MuJoCo 闭环真飞（每场景抽 3 架：2 离场 + 1 进场，排队前后各飞一遍）
 
@@ -139,6 +140,6 @@ uav_vertiport_queue/
 │   └── ros/queue_node.py            # 在线排队节点（薄壳）
 ├── test/                            # 37 项 pytest（含 3 项 MuJoCo 冒烟）
 ├── tools/make_figures.py            # 从结果 JSON 重新生成配图
-├── results/vertiport_queue_result.json
-└── images/capacity_curve.png, wait_comparison.png
+├── results/vertiport_queue_result.json   # 基线结果（有意入库）
+└──（配图统一放 docs/img/air/uav_vertiport_queue_*.png）
 ```

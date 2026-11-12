@@ -16,6 +16,7 @@ import sys
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _PKG = os.path.dirname(_HERE)
 _AIR = os.path.dirname(_PKG)
+_REPO = os.path.dirname(os.path.dirname(_AIR))  # <repo>/src/air/<pkg> -> <repo>
 for _p in (_PKG, os.path.join(_AIR, "uav_mujoco_sim")):
     if os.path.isdir(_p) and _p not in sys.path:
         sys.path.insert(0, _p)
@@ -36,7 +37,8 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="从结果 JSON 生成配图")
     ap.add_argument("--json", default=os.path.join(
         _PKG, "results", "vertiport_queue_result.json"))
-    ap.add_argument("--out-dir", default=os.path.join(_PKG, "images"))
+    ap.add_argument("--out-dir", default=os.path.join(_REPO, "docs", "img", "air"),
+                    help="默认直接写到文档站用的 docs/img/air，避免模块里再存一份重复图")
     args = ap.parse_args(argv)
 
     with open(args.json, encoding="utf-8") as fh:
@@ -44,9 +46,9 @@ def main(argv=None) -> int:
 
     cap = capacity_figure(data["capacity"]["scan"],
                           data["capacity"]["saturation"],
-                          os.path.join(args.out_dir, "capacity_curve.png"))
+                          os.path.join(args.out_dir, "uav_vertiport_queue_capacity.png"))
     wait = wait_figure([_Row(d) for d in data["scenarios"]],
-                       os.path.join(args.out_dir, "wait_comparison.png"))
+                       os.path.join(args.out_dir, "uav_vertiport_queue_wait.png"))
     print("已生成", cap)
     print("已生成", wait)
     return 0
