@@ -155,6 +155,7 @@ nav:
     - R2D2小车 航点巡航: './ground/r2d2_waypoint_cruise.md'
     - 路径点发布器: './ground/waypoint.md'
     - 激光雷达建图与神经网络规划导航: './ground/carla_mapping_navigation.md'
+    - MuJoCo 差速车建图与导航同步仿真（EKF-SLAM + 神经网络局部规划）: './ground/mujoco_slam_nav_sync.md'
     - 激光雷达点云 3D 目标检测与召回率评估: './ground/carla_lidar_obstacle_detection.md'
     - 自动驾驶代理: './ground/ad_agent.md'
     - 端到端神经网络图像驾驶: './ground/carla_end_to_end_nn.md'
