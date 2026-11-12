@@ -1,0 +1,8 @@
+sim_node:
+  ros__parameters:
+    odom_rate: 20.0
+dock_node:
+  ros__parameters:
+    weights_path: ""
+    dock_x: 3.0
+    dock_y: 0.0

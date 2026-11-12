@@ -1,0 +1,10 @@
+/**:
+  ros__parameters:
+    use_sim_time: false
+
+muscle_synergy_node:
+  ros__parameters:
+    k: 3               # 协同数（在线固定，配合离线 scan 选）
+    window: 200        # 参与一次分解的采样点数
+    iters: 200         # NMF 乘性更新迭代次数
+    rate: 0.2          # 分解与发布频率 Hz
