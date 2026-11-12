@@ -63,7 +63,7 @@
 | 字段 | 说明 |
 |---|---|
 | `reported_traction_energy_kwh` | 仿真主循环报告的牵引能耗 |
-| `traction_work_kwh` | 独立按需求牵引力和位移积分的结果 |
+| `traction_work_kwh` | 按需求牵引力与 `v·dt` 独立积分的结果 |
 | `traction_limit_shortfall_kwh` | 需求力超过可用牵引力的积分缺口 |
 | `retarding_work_kwh` | 未回收的制动/阻滞机械功 |
 | `net_inertial_work_kwh` | 净惯性功（加速减减速） |
