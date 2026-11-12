@@ -1,4 +1,5 @@
 import csv
+from pathlib import Path
 
 import pytest
 
@@ -56,3 +57,17 @@ def test_recorder_rejects_same_input_and_output_path(tmp_path):
     with pytest.raises(ValueError, match="must be different"):
         record_csv(source, source)
     assert source.read_bytes() == original
+
+
+def test_sample_csv_has_stable_six_decimal_output(tmp_path):
+    source = Path(__file__).resolve().parents[1] / "config" / "motor_state.csv"
+    output = tmp_path / "samples.csv"
+    assert record_csv(source, output, seed=7) == 5
+    assert output.read_text(encoding="utf-8").splitlines() == [
+        "time_s,speed_mps,left_temperature_c,right_temperature_c,left_current_a,right_current_a,ambient_c",
+        "0.000000,0.200000,24.969294,25.161372,1.240956,2.237397,24.000000",
+        "0.100000,0.240000,24.988398,25.174404,1.405588,2.044744,24.000000",
+        "0.200000,0.290000,25.324425,25.429868,1.488013,1.924080,24.000000",
+        "0.300000,0.310000,25.200072,25.702630,1.659144,1.825508,24.000000",
+        "0.400000,0.340000,25.397036,25.590733,1.769971,1.675717,24.000000",
+    ]

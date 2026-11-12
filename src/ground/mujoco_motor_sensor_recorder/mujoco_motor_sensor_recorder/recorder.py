@@ -45,7 +45,7 @@ def record_csv(
             for row in reader:
                 left_torque = float(row["left_torque_nm"])
                 right_torque = float(row["right_torque_nm"])
-                writer.writerow({
+                observations = {
                     "time_s": float(row["time_s"]),
                     "speed_mps": float(row["speed_mps"]),
                     "left_temperature_c": float(row["left_temperature_c"]) + rng.gauss(0, temperature_noise_c),
@@ -53,6 +53,9 @@ def record_csv(
                     "left_current_a": max(0.0, abs(left_torque) / torque_constant_nm_per_a + idle_current_a + rng.gauss(0, current_noise_a)),
                     "right_current_a": max(0.0, abs(right_torque) / torque_constant_nm_per_a + idle_current_a + rng.gauss(0, current_noise_a)),
                     "ambient_c": float(row["ambient_c"]),
-                })
+                }
+                # CSV precision is part of the output contract: suppress
+                # insignificant libm differences in random.gauss across OSes.
+                writer.writerow({field: f"{value:.6f}" for field, value in observations.items()})
                 count += 1
     return count

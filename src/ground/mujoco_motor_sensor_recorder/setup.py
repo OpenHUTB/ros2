@@ -14,7 +14,6 @@ setup(
         ("share/" + package_name + "/config", glob("config/*.csv")),
     ],
     install_requires=["setuptools"],
-    tests_require=["pytest"],
     zip_safe=True,
     maintainer="sirius185",
     maintainer_email="fzy985211_2025@qq.com",
