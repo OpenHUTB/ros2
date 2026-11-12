@@ -1,0 +1,6 @@
+mujoco_mppi_neural_tracker:
+  ros__parameters:
+    controller: nn       # nn | mppi | pp
+    weights: ""          # 空则用包内 models/policy.npz
+    rate_hz: 20.0
+    max_steps: 1200

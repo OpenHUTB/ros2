@@ -1,0 +1,60 @@
+[31m[ERROR] [1794466694.906287639]: getifaddr() failed[0m
+[31m[ERROR] [1794466694.906364705]: getifaddr() failed[0m
+QStandardPaths: XDG_RUNTIME_DIR not set, defaulting to '/tmp/runtime-root'
+[31m[ERROR] [1794466694.937241429]: getifaddr() failed[0m
+[31m[ERROR] [1794466694.937317493]: getifaddr() failed[0m
+START pid=61 source=/work/build_ws/install/lib/turtle_waypoint_patrol/main.py sha256=ca4ebe41a970f0c912ab034f089e94721ce3e3f963468de14617707286a836b2
+[31m[ERROR] [1794466695.227203898]: getifaddr() failed[0m
+[31m[ERROR] [1794466695.227690844]: getifaddr() failed[0m
+[31m[ERROR] [1794466695.227731040]: getifaddr() failed[0m
+[31m[ERROR] [1794466695.261113907]: getifaddr() failed[0m
+[31m[ERROR] [1794466695.525332266]: getifaddr() failed[0m
+[31m[ERROR] [1794466695.526752138]: getifaddr() failed[0m
+EXIT cleanup_begin monotonic=1961.723957
+EXIT trace_closed monotonic=1961.725314
+[31m[ERROR] [1794466695.667051523]: getifaddr() failed[0m
+EXIT handles_released monotonic=1961.828998
+EXIT ros_shutdown_begin monotonic=1961.829017
+[31m[ERROR] [1794466695.867563686]: getifaddr() failed[0m
+[31m[ERROR] [1794466696.268098871]: getifaddr() failed[0m
+EXIT ros_shutdown_done monotonic=1962.431666
+... logging to /work/installed_launch_results/ros_logs/6e4d7b9a-de66-11f1-abf5-4be9c04971f2/roslaunch-ed29a1b93305-29.log
+Checking log directory for disk usage. This may take a while.
+Press Ctrl-C to interrupt
+Done checking log file disk usage. Usage is <1GB.
+]2;/work/build_ws/install/share/turtle_waypoint_patrol/launch/main.launch
+[1mstarted roslaunch server http://localhost:42877/[0m
+
+SUMMARY
+========
+
+CLEAR PARAMETERS
+ * /waypoint_patrol/
+
+PARAMETERS
+ * /rosdistro: noetic
+ * /rosversion: 1.17.4
+ * /waypoint_patrol/trace_path: 
+ * /waypoint_patrol/waypoints: [[7, 5.5], [7, 7]...
+
+NODES
+  /
+    turtlesim (turtlesim/turtlesim_node)
+    waypoint_patrol (turtle_waypoint_patrol/main.py)
+
+auto-starting new master
+[1mprocess[master]: started with pid [39][0m
+[1mROS_MASTER_URI=http://127.0.0.1:43663[0m
+]2;/work/build_ws/install/share/turtle_waypoint_patrol/launch/main.launch http://127.0.0.1:43663
+[1msetting /run_id to 6e4d7b9a-de66-11f1-abf5-4be9c04971f2[0m
+[1mprocess[rosout-1]: started with pid [52][0m
+started core service [/rosout]
+[1mprocess[turtlesim-2]: started with pid [56][0m
+[1mprocess[waypoint_patrol-3]: started with pid [61][0m
+[waypoint_patrol-3] killing on exit
+[turtlesim-2] killing on exit
+[rosout-1] killing on exit
+[master] killing on exit
+shutting down processing monitor...
+... shutting down processing monitor complete
+[1mdone[0m

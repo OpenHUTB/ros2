@@ -42,6 +42,27 @@ TTC = |r|² / (-r · v_rel),  r · v_rel < 0
 `skipped_points`、`skipped_tracks` 和 `invalid_class_points` 暴露时间失配与未知
 类别；无任何有效轨迹时 `overall_risk=no_data`。
 
+## 碰撞体与 CPA 模式
+
+`python main.py --mode swept` 会把自车与 VRU 视为圆形碰撞体，计算最近接近点
+（CPA）、最小净空和表面接触时间。默认自车半径 1.0 m，行人/儿童/骑行者为
+0.30/0.25/0.50 m。
+
+```text
+t_cpa = max(0, -(r·v) / |v|²)
+CPA = |r + v·t_cpa|
+clearance = CPA - (r_ego + r_vru)
+```
+
+默认预测时域 5 s：碰撞时间 ≤2 s 为 critical，≤5 s 为 caution；无表面碰撞但
+时域内最小净空 ≤1 m 也为 caution。输出同时提供原始 `collision_ttc_s` 与
+`collision_within_horizon`，避免把远期匀速外推误当成当前紧急事件。
+
+![VRU 碰撞体、CPA 与净空分析](../img/ground/vru_swept_conflict_demo.png)
+
+图中半透明圆为自车与 VRU 的合并碰撞体尺度，标注给出预测时域内最小净空和
+解析碰撞时间。该图由 `scripts/plot_swept_demo.py` 从随包 CSV 重新生成。
+
 ## 数据格式
 
 自车 CSV 字段：`timestamp,x,y,speed_mps`。

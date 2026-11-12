@@ -2,7 +2,9 @@
 <!-- 矩形巡航专用空场景：不含障碍墙体，避免 AUV 航路穿墙 -->
 <sdf version="1.6">
 <world name="default">
-  <plugin name="gazebo_ros_init" filename="libgazebo_ros_init.so"/>
+  <!-- /clock 由 launch 里的 gzserver -s libgazebo_ros_init.so 提供 -->
+  <!-- 中性浮力：关闭重力，详见 underwater.world 中的说明 -->
+  <gravity>0 0 0</gravity>
   <physics type="ode">
     <max_step_size>0.001</max_step_size>
     <real_time_factor>1</real_time_factor>
@@ -51,10 +53,8 @@
           <izz>0.05</izz>
         </inertia>
       </inertial>
-      <velocity_decay>
-        <linear>0.997 0.997 0.997</linear>
-        <angular>1.02 1.02 1.02</angular>
-      </velocity_decay>
+      <!-- 不启用 velocity_decay：其单位是「每秒衰减比例」，
+           填 0.997 会让模型每秒丢掉 99.7% 速度，几乎无法前进 -->
       <collision name="base_collision">
         <geometry><box><size>1.0 0.6 0.4</size></box></geometry>
       </collision>
