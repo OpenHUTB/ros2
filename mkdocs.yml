@@ -130,6 +130,7 @@ nav:
     - 人形机器人跑步牛顿第二定律理论计算与演示: './humanoid/humanoid_newton_running.md'
     - 人形机器人全身柔顺控制: './humanoid/humanoid_g1_compliance.md'
     - 人形机器人 MuJoCo 建图导航与神经网络控制: './humanoid/humanoid_mujoco_slam_nn_nav.md'
+    - 人形上下台阶步态仿真：ZMP 预瞄控制与台阶参数扫描: './humanoid/humanoid_stair_zmp_preview.md'
 
 - 四足机器人:
     - MuJoCo 四足机器人运动控制与步态评估: './quadruped_mujoco_rl.md'
