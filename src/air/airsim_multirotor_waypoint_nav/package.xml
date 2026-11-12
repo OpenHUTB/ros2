@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>airsim_multirotor_waypoint_nav</name>
+  <version>0.1.0</version>
+  <description>多旋翼无人机航点飞行：AirSim RPC + 航点到达误差评估（OpenHUTB 空地一体模式）</description>
+  <maintainer email="cx3238842481@qq.com">chenxi</maintainer>
+  <license>MIT</license>
+
+  <exec_depend>ros2launch</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-matplotlib</exec_depend>
+  <exec_depend>python3-yaml</exec_depend>
+  <exec_depend>python3-msgpack-rpc</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
