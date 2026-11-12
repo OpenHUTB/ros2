@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """靠泊可视化与 GIF 导出。"""
 
 import argparse
@@ -28,6 +29,18 @@ def _ensure_scripts_on_path():
 
 
 _ensure_scripts_on_path()
+
+def _default_model_dir():
+    """模型目录：源码空间取 <包>/models；安装空间经 rospkg 取 share/<包>/models。"""
+    here = os.path.dirname(os.path.abspath(__file__))
+    try:
+        import rospkg
+        cand = os.path.join(rospkg.RosPack().get_path("usv_docking_nn"), "models")
+        if os.path.isdir(cand):
+            return cand
+    except Exception:
+        pass
+    return os.path.abspath(os.path.join(here, "..", "models"))
 from sim_core import DockSim, ANGLE_MIN, ANGLE_MAX, thrust_from_twist, BERTH_X, TOL_Y
 from oracle import DockExpert, build_path
 from nn import MLP
@@ -102,7 +115,7 @@ def main():
     args = ap.parse_args()
 
     here = os.path.dirname(os.path.abspath(__file__))
-    model_dir = os.path.join(here, "..", args.model_dir)
+    model_dir = _default_model_dir() if args.model_dir == "models" else args.model_dir
 
     sim = DockSim(seed=args.seed)
     obs = sim.reset(seed=args.seed)
