@@ -177,7 +177,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [激光雷达点云 3D 目标检测与召回率评估](./ground/carla_lidar_obstacle_detection.md) —— 语义点云按实例分组 + 多帧累积；逐帧平均召回率 0.43（precision 0.65）
 * [自动驾驶代理](./ground/ad_agent.md)
 * [端到端神经网络图像驾驶](./ground/carla_end_to_end_nn.md)
-* [环岛汇入端到端驾驶（图像→控制）](./ground/carla_nn_roundabout_entry.md)
+* [Carla PilotNet 端到端控制（离线仿真演示）](./ground/carla_pilotnet_ros.md)
 * [自动驾驶示例](./ground/ad_demo.md)
 * [rostopic 手动驱动](./ground/rostopic_cruise.md)
 * [作业综合整合与性能评价](./ground/carla_benchmark_suite.md)
