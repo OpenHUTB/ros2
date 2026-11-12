@@ -384,29 +384,61 @@
 </li>
 <li class="toctree-l1 current"><a class="reference internal current" href="#">MuJoCo 两轮自平衡小车</a>
 <ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="#_1">项目目的</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#_2">项目介绍</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#_3">环境依赖</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#_4">运行方式</a>
+<li class="toctree-l2"><a class="reference internal" href="#1">1. 项目介绍</a>
 <ul>
-<li class="toctree-l3"><a class="reference internal" href="#_5">一键运行</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#_6">手动运行</a>
+<li class="toctree-l3"><a class="reference internal" href="#11">1.1 与仓库已有模块的区别</a>
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_7">操作说明</a>
+<li class="toctree-l2"><a class="reference internal" href="#2">2. 计算原理</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#21">2.1 为什么双环而不是单环</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_8">运行效果</a>
+<li class="toctree-l3"><a class="reference internal" href="#22-pid-pd">2.2 级联 PID 与全状态 PD 等价（调参的关键认识）</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_9">效果说明</a>
+<li class="toctree-l3"><a class="reference internal" href="#23">2.3 电机符号：为什么底层要取反</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_10">系统控制原理</a>
+<li class="toctree-l3"><a class="reference internal" href="#24">2.4 位置控制是非最小相位系统</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_11">调参经验</a>
+<li class="toctree-l3"><a class="reference internal" href="#25">2.5 两个实测踩到的实现细节</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#3">3. 源码解析</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#4">4. 仿真运行步骤</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#41">4.1 环境依赖（本机实测）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#42">4.2 一键运行（默认离线批跑，无需图形界面）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#43">4.3 可视化窗口（可选）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#44-ros-2-launch">4.4 通过 ROS 2 launch 启动（可选）</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#5">5. 运行效果</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#50">5.0 可视化窗口演示（动图）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#51">5.1 三场景闭环响应</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#52">5.2 可恢复初始倾角</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#53">5.3 实测指标</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#6">6. 调参记录</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#61">6.1 整定顺序（现场经验）</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#7">7. 常见问题</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#8">8. 已知限制</a>
 </li>
 </ul>
 </li>
@@ -1081,26 +1113,205 @@
 <div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
 <div class="section" itemprop="articleBody">
 <div><h1 id="mujoco-pid">MuJoCo 两轮自平衡小车 PID 控制仿真</h1>
-<h2 id="_1">项目目的</h2>
-<p>本项目旨在通过 MuJoCo 物理仿真引擎，验证双环串级 PID 控制算法在两轮自平衡小车上的有效性。通过不断优化参数，提升了系统的动态响应速度与抗扰动精度，为后续复杂的机器人控制提供可靠的理论与算法验证平台。</p>
-<h2 id="_2">项目介绍</h2>
-<p>基于 MuJoCo 物理引擎实现的两轮自平衡小车仿真项目，采用双环 PID 控制算法实现倒立摆动态平衡与位置保持。纯 Python 实现，无 ROS 依赖，可直接在 Ubuntu 虚拟机运行。</p>
-<h2 id="_3">环境依赖</h2>
+<blockquote>
+<p>地面载具选题：倒立摆两轮车的<strong>双环级联 PID</strong>控制。
+本文重点不是"能让它站住"，而是<strong>把控制品质变成可复算的数字</strong>：
+稳定时间、超调、稳态误差、抗扰恢复时间、可恢复倾角边界。</p>
+</blockquote>
+<h2 id="1">1. 项目介绍</h2>
+<p>基于 MuJoCo 物理引擎实现两轮倒立摆小车：底盘沿 x 滑移、两个车轮由电机驱动、
+摆杆绕 y 轴自由转动（模型见
+<a href="https://github.com/OpenHUTB/ros2/blob/master/src/ground/mujoco_balance_car/balance_car.xml"><code>balance_car.xml</code></a>）。
+控制采用<strong>双环级联 PID</strong>：</p>
+<p>
+<script type="math/tex; mode=display">
+\underbrace{e_x = x^\* - x}_{\text{位置误差}}
+\ \xrightarrow[\text{位置环}]{\text{PID}}\
+\theta^\* \in [-0.25, 0.25]\ \text{rad}
+\ \xrightarrow[\text{倾角环}]{\text{PID}}\
+\tau \in [-2, 2]\ \text{N·m}
+</script>
+</p>
+<p>外环把"位置误差"翻译成"该往哪个方向倾、倾多少"（输出限幅相当于限速），内环负责把
+倾角追到这个期望值。<strong>平衡靠内环，位置保持靠外环慢慢把倾角目标收回来。</strong></p>
+<p>模块<strong>不依赖 ROS</strong>，只依赖 <code>mujoco</code> + <code>numpy</code>；<code>launch</code> 只是多一种启动方式。
+原因：评测机常没有图形界面，<code>python3 main.py</code> 必须在任何机器上都能直接跑通。</p>
+<h3 id="11">1.1 与仓库已有模块的区别</h3>
+<table>
+<thead>
+<tr>
+<th>模块</th>
+<th>控制算法</th>
+<th>是否给离线指标</th>
+<th>是否需要 ROS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="../balance_bot/"><code>balance_bot</code></a></td>
+<td>倾角 PD + MLP 策略克隆</td>
+<td>是（另一套口径）</td>
+<td>是</td>
+</tr>
+<tr>
+<td><strong>本模块</strong></td>
+<td><strong>双环级联 PID</strong></td>
+<td><strong>是（稳定时间 / 超调 / 稳态误差 / 抗扰 / 倾角边界）</strong></td>
+<td><strong>否</strong></td>
+</tr>
+<tr>
+<td><a href="../mujoco_car_avoidance/"><code>mujoco_car_avoidance</code></a></td>
+<td>射线感知 + 分级减速</td>
+<td>是</td>
+<td>是</td>
+</tr>
+</tbody>
+</table>
+<h2 id="2">2. 计算原理</h2>
+<h3 id="21">2.1 为什么双环而不是单环</h3>
+<p>单环直接把位置误差映射成力矩，只能把车"推向目标"，没法同时保证摆杆不倒——摆杆倒下
+以后位置再准也没有意义。级联把两件事分开：外环决定倾角目标（被限幅，相当于限速），
+内环负责平衡。</p>
+<h3 id="22-pid-pd">2.2 级联 PID 与全状态 PD 等价（调参的关键认识）</h3>
+<p>把两级 PID 展开，并记底层 <code>ctrl = −τ</code>：</p>
+<p>
+<script type="math/tex; mode=display">
+\mathrm{ctrl} = k_\theta\,\theta + k_\omega\,\dot\theta
++ k_x\,(x - x^\*) + k_v\,\dot x,
+\qquad k_x = k_p^{a}k_p^{p},\ \ k_v = k_p^{a}k_d^{p}
+</script>
+</p>
+<p>也就是说，<strong>级联 PID 在代数上就是全状态 PD</strong>。实用的结论：调参不必在两个外环增益上
+盲试，可以直接对 <script type="math/tex">(k_\theta, k_\omega, k_x, k_v)</script> 做网格搜索，再按
+<code>k_p^p = k_x/k_\theta</code>、<code>k_d^p = k_v/k_\theta</code> 反解回级联形式。</p>
+<h3 id="23">2.3 电机符号：为什么底层要取反</h3>
+<p>底盘只能沿 x 平移。给车轮<strong>正力矩</strong>时，地面反作用力把底盘推向 <strong>+x</strong>，摆杆因惯性向
+<strong>−x</strong> 后仰（开环实测：<code>ctrl=+1</code> → <code>vx=+2.85 m/s</code>，<code>angle=−0.78 rad</code>）。因此平衡律为
+<code>ctrl ∝ +θ</code>，而内环 PID 输出的是"平衡力矩"，在底层统一取一次反号 <code>ctrl = −τ</code>。
+该符号集中在 <code>env.py</code> 的 <code>MOTOR_SIGN</code> 并由单测保护，避免"调出来的负号"散落在循环里。</p>
+<h3 id="24">2.4 位置控制是非最小相位系统</h3>
+<p>想<strong>后退</strong>必须先让摆杆<strong>后仰</strong>，而后仰的初始力矩方向却是<strong>向前</strong>——非最小相位。
+直接后果：位置环必须比倾角环<strong>慢得多</strong>。实测把 <code>kp_pos</code> 从 0.5 加到 2~8 时，会出现
+周期约 10 s、幅度逐渐增大的慢振荡（见 §5 调参记录）。</p>
+<h3 id="25">2.5 两个实测踩到的实现细节</h3>
 <ul>
-<li>Ubuntu 22.04（虚拟机兼容）</li>
-<li>Python 3.10+</li>
-<li>依赖库：mujoco、mujoco-python-viewer、numpy</li>
+<li><strong>微分对测量值求导</strong>（derivative on measurement）。若对"误差"求导，外环给出的目标
+  倾角变化率会混进微分项，位置误差快速变化时踢出力矩尖峰——实测直接导致上面的慢振荡。</li>
+<li><strong>积分限幅（anti-windup）</strong>。输出饱和时积分项继续累加，退出饱和要很久才退回来，
+  表现为"冲过目标再慢慢爬回"。</li>
 </ul>
-<h2 id="_4">运行方式</h2>
-<h3 id="_5">一键运行</h3>
-<div class="highlight"><pre><span></span><code>chmod<span class="w"> </span>+x<span class="w"> </span>main.sh
-./main.sh
+<h2 id="3">3. 源码解析</h2>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>main.py</code></td>
+<td>课程约定的入口（薄壳），转发到 <code>mujoco_balance_car/cli.py</code></td>
+</tr>
+<tr>
+<td><code>cli.py</code></td>
+<td>命令行：<code>--headless</code>（默认）/ <code>--gui</code> / <code>--selftest</code> / <code>--launch</code></td>
+</tr>
+<tr>
+<td><code>config.py</code></td>
+<td>PID 与场景参数集中定义（含默认增益的来源说明）</td>
+</tr>
+<tr>
+<td><code>env.py</code></td>
+<td>模型封装：按文件位置解析 XML、复位、步进、扰动、状态读取、<code>MOTOR_SIGN</code></td>
+</tr>
+<tr>
+<td><code>pid.py</code></td>
+<td>PID：积分限幅 + 微分对测量值可切换</td>
+</tr>
+<tr>
+<td><code>controller.py</code></td>
+<td>双环级联：位置环 → 目标倾角 → 倾角环 → 力矩</td>
+</tr>
+<tr>
+<td><code>metrics.py</code></td>
+<td>纯函数指标：<code>settle_time</code> / <code>peak_overshoot</code> / <code>steady_state_error</code> 等</td>
+</tr>
+<tr>
+<td><code>runner.py</code></td>
+<td>三个场景 + 倾角扫描 + 指标/序列 CSV 导出</td>
+</tr>
+<tr>
+<td><code>plotting.py</code></td>
+<td>matplotlib 可选出图（缺依赖时只写 CSV，退出码仍为 0）</td>
+</tr>
+<tr>
+<td><code>launch/main.launch.py</code></td>
+<td><code>ros2 launch</code> 入口，<code>save_dir</code> / <code>duration</code> / <code>lean</code> 全部透传</td>
+</tr>
+<tr>
+<td><code>test/test_balance_logic.py</code></td>
+<td>22 项单测：PID / 指标 / 控制器 + 仿真集成 + 仓库约定</td>
+</tr>
+</tbody>
+</table>
+<p><code>metrics.settle_time</code> 的口径值得单独说明：它返回<strong>进入判据带并一直保持到结束</strong>的最早
+时刻，全程未进带则返回 <code>nan</code>（而不是 0）。这样"没收敛"不会被统计成"0 秒稳定"。</p>
+<h2 id="4">4. 仿真运行步骤</h2>
+<h3 id="41">4.1 环境依赖（本机实测）</h3>
+<table>
+<thead>
+<tr>
+<th>组件</th>
+<th>实测版本 / 说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>操作系统</td>
+<td>Windows 11 原生（Linux/macOS 同样可用）</td>
+</tr>
+<tr>
+<td>Python</td>
+<td>3.12.14</td>
+</tr>
+<tr>
+<td>MuJoCo</td>
+<td><strong>3.2.7</strong>（3.17.0 的 DLL 在本机被 Smart App Control 拦截，见 FAQ）</td>
+</tr>
+<tr>
+<td>numpy</td>
+<td>2.3.5</td>
+</tr>
+<tr>
+<td>matplotlib</td>
+<td>3.11.2（可选，只用于出图）</td>
+</tr>
+<tr>
+<td>图形界面</td>
+<td>默认不需要；<code>--gui</code> 才需要 <code>mujoco-python-viewer</code> + <code>glfw</code></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>src/ground/mujoco_balance_car
+pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt<span class="w">      </span><span class="c1"># mujoco&gt;=3.0.0 + numpy</span>
+pip<span class="w"> </span>install<span class="w"> </span>matplotlib<span class="w">               </span><span class="c1"># 可选：需要 PNG 曲线时</span>
 </code></pre></div>
-<h3 id="_6">手动运行</h3>
-<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
-python3<span class="w"> </span>main.py
+<h3 id="42">4.2 一键运行（默认离线批跑，无需图形界面）</h3>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>main.py<span class="w">                      </span><span class="c1"># 等价于 --headless，产物写到 ./shots</span>
+bash<span class="w"> </span>main.sh<span class="w">                         </span><span class="c1"># Linux/macOS 包装脚本</span>
+main.bat<span class="w">                             </span><span class="c1"># Windows 包装脚本</span>
 </code></pre></div>
-<h2 id="_7">操作说明</h2>
+<p>可调参数：</p>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>main.py<span class="w"> </span>--duration<span class="w"> </span><span class="m">8</span><span class="w"> </span>--lean<span class="w"> </span><span class="m">0</span>.1<span class="w"> </span>--save_dir<span class="w"> </span>shots
+python3<span class="w"> </span>main.py<span class="w"> </span>--kp-angle<span class="w"> </span><span class="m">30</span><span class="w"> </span>--kd-angle<span class="w"> </span><span class="m">3</span>.5<span class="w"> </span>--kp-pos<span class="w"> </span><span class="m">0</span>.2<span class="w"> </span>--kd-pos<span class="w"> </span><span class="m">0</span>.2
+python3<span class="w"> </span>main.py<span class="w"> </span>--selftest<span class="w">           </span><span class="c1"># 22 项单元测试（约 1 s）</span>
+python3<span class="w"> </span>main.py<span class="w"> </span>--no-plot<span class="w">            </span><span class="c1"># 只出 CSV，不画图</span>
+</code></pre></div>
+<h3 id="43">4.3 可视化窗口（可选）</h3>
+<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>mujoco-python-viewer<span class="w"> </span>glfw
+python3<span class="w"> </span>main.py<span class="w"> </span>--gui
+</code></pre></div>
 <table>
 <thead>
 <tr>
@@ -1110,50 +1321,214 @@ python3<span class="w"> </span>main.py
 </thead>
 <tbody>
 <tr>
-<td>R</td>
-<td>重置仿真状态</td>
+<td><code>R</code></td>
+<td>复位仿真（倾角回到初始值）</td>
 </tr>
 <tr>
-<td>方向键 ↑</td>
-<td>给小车施加向前速度扰动</td>
+<td><code>↑</code></td>
+<td>给底盘一个向前的速度脉冲（1.5 m/s）</td>
 </tr>
 <tr>
-<td>方向键 ↓</td>
-<td>给小车施加向后速度扰动</td>
+<td><code>↓</code></td>
+<td>给底盘一个向后的速度脉冲（−1.5 m/s）</td>
 </tr>
 <tr>
-<td>ESC</td>
-<td>关闭仿真窗口</td>
+<td><code>ESC</code></td>
+<td>关闭窗口</td>
 </tr>
 </tbody>
 </table>
-<h2 id="_8">运行效果</h2>
-<p><img alt="两轮自平衡小车运行效果" src="../../img/mujoco_balance_car.gif"/></p>
-<h2 id="_9">效果说明</h2>
+<h3 id="44-ros-2-launch">4.4 通过 ROS 2 launch 启动（可选）</h3>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/ros2_ws
+colcon<span class="w"> </span>build<span class="w"> </span>--packages-select<span class="w"> </span>mujoco_balance_car<span class="w"> </span>--symlink-install
+<span class="nb">source</span><span class="w"> </span>install/setup.bash
+ros2<span class="w"> </span>launch<span class="w"> </span>mujoco_balance_car<span class="w"> </span>main.launch.py<span class="w"> </span>duration:<span class="o">=</span><span class="m">8</span><span class="w"> </span>lean:<span class="o">=</span><span class="m">0</span>.15<span class="w"> </span>save_dir:<span class="o">=</span>/tmp/balance_shots
+</code></pre></div>
+<blockquote>
+<p>本模块不依赖 ROS：以上只是"用统一方式启动"的便利入口。<strong>只想验证算法时不需要
+<code>colcon</code></strong>，直接 <code>python3 main.py</code> 即可。</p>
+</blockquote>
+<h2 id="5">5. 运行效果</h2>
+<h3 id="50">5.0 可视化窗口演示（动图）</h3>
+<p><img alt="两轮自平衡小车运行效果" src="../../img/ground/mujoco_balance_car.gif"/></p>
+<p>动图为本机实际运行窗口录制：启动后摆杆从微小偏移自动恢复垂直并保持平衡；用 <code>↑</code>/<code>↓</code>
+给底盘一个 ±1.5 m/s 的速度脉冲，小车会自行回到初始位置、摆杆维持直立。</p>
+<h3 id="51">5.1 三场景闭环响应</h3>
+<p><img alt="三场景闭环响应" src="../../img/ground/mujoco_balance_car_responses.png"/></p>
+<p>上图：蓝=初始倾角 0.05 rad 的平衡恢复；绿=第 1 s 位置阶跃到 1.0 m；红=第 2 s 被
+1.5 m/s 推一把。下图是对应底盘位置。平衡恢复几乎瞬间完成（0.19 s）；位置阶跃有约
+3% 超调后收住；被推之后先被顶出约 0.7 m、摆杆最大后仰 15°，约 4 s 内回到原位。</p>
+<h3 id="52">5.2 可恢复初始倾角</h3>
+<p><img alt="初始倾角扫描" src="../../img/ground/mujoco_balance_car_lean_sweep.png"/></p>
+<p>稳定时间随初始倾角近似线性增长：1.15° → 0.036 s，17.19° → 0.996 s；8 档全部成功
+（红带用于标记失败档，本次没有出现）。</p>
+<h3 id="53">5.3 实测指标</h3>
+<p>口径：判据带宽为<strong>倾角 0.01 rad（0.57°）、位置 0.02 m</strong>；数值可由 <code>balance_metrics.csv</code>
+与各 <code>*_series.csv</code> 复算。仿真为定步长 0.002 s、无随机扰动，因此结果可逐位复现。</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>指标</th>
+<th>数值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>平衡恢复（初始 0.05 rad）</td>
+<td>稳定时间</td>
+<td><strong>0.194 s</strong></td>
+</tr>
+<tr>
+<td></td>
+<td>最大倾角</td>
+<td>0.050 rad（未超调）</td>
+</tr>
+<tr>
+<td></td>
+<td>末态倾角 / 位置误差</td>
+<td>−1.1e−5 rad / 1.2e−5 m</td>
+</tr>
+<tr>
+<td>位置阶跃 1.0 m</td>
+<td>到位时间（自阶跃起）</td>
+<td><strong>3.752 s</strong></td>
+</tr>
+<tr>
+<td></td>
+<td>超调</td>
+<td><strong>3.23%</strong></td>
+</tr>
+<tr>
+<td></td>
+<td>稳态位置误差</td>
+<td>0.004 m</td>
+</tr>
+<tr>
+<td></td>
+<td>过程最大倾角</td>
+<td>0.192 rad</td>
+</tr>
+<tr>
+<td>速度扰动 1.5 m/s</td>
+<td>最大位移偏离</td>
+<td>0.706 m</td>
+</tr>
+<tr>
+<td></td>
+<td>位置 / 倾角恢复时间</td>
+<td><strong>3.86 s / 3.37 s</strong></td>
+</tr>
+<tr>
+<td></td>
+<td>过程最大倾角</td>
+<td>0.253 rad</td>
+</tr>
+<tr>
+<td>初始倾角扫描</td>
+<td>成功率</td>
+<td><strong>8/8（1.15°~17.19°）</strong></td>
+</tr>
+<tr>
+<td></td>
+<td>稳定时间范围</td>
+<td>0.036 ~ 0.996 s</td>
+</tr>
+</tbody>
+</table>
+<p>终端输出示例（本机实测）：</p>
+<div class="highlight"><pre><span></span><code>环境: mujoco 3.2.7 / numpy 2.3.5 / Python 3.12.14
+
+=== 场景指标 ===
+scenario         metric                        value
+----------------------------------------------------
+balance          angle_settle                 0.19400
+balance          angle_max_abs                0.05000
+balance          angle_steady_err             0.00002
+balance          pos_steady_err               0.00001
+balance          final_angle                 -0.00001
+balance          upright                        True
+position_step    pos_settle                   3.75200
+position_step    pos_overshoot_pct            3.22942
+position_step    pos_steady_err               0.00407
+position_step    final_pos                    1.00143
+position_step    angle_max_abs                0.19226
+position_step    reached                        True
+disturbance      pos_max_dev                  0.70568
+disturbance      pos_recover_time             3.86000
+disturbance      angle_recover_time           3.37200
+disturbance      angle_max_abs                0.25339
+disturbance      final_pos                   -0.01860
+disturbance      recovered                      True
+
+可恢复倾角：8/8 档成功（最大成功倾角 0.300 rad）
+</code></pre></div>
+<h2 id="6">6. 调参记录</h2>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>现象</th>
+<th>原因 / 处理</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>原参数（<code>kp_angle=12, kd=3.5, kp_pos=0.5, kd_pos=0.1</code>）</td>
+<td>平衡场景<strong>不收敛</strong>：倾角停在 −0.086 rad，位置缓慢振荡</td>
+<td>只闭合了倾角环，外环增益与内环不匹配</td>
+</tr>
+<tr>
+<td>加大 <code>kp_pos</code> 到 2~8</td>
+<td>出现周期约 10 s、幅度递增的慢振荡</td>
+<td>位置控制是非最小相位，外环必须显著慢于内环</td>
+</tr>
+<tr>
+<td>内环微分改为对测量值求导</td>
+<td>慢振荡消失</td>
+<td>原实现把外环目标倾角的变化率也微分了进去</td>
+</tr>
+<tr>
+<td>四维增益网格搜索</td>
+<td>得到 <code>kθ=30, kω=3.5, kx=6, kv=6</code></td>
+<td>反解为 <code>kp_angle=30, kd_angle=3.5, kp_pos=0.2, kd_pos=0.2</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="61">6.1 整定顺序（现场经验）</h3>
 <ol>
-<li>启动后摆杆从微小偏移自动恢复垂直，保持动态平衡。</li>
-<li>施加前后扰动后，小车可自动回到初始位置，摆杆维持直立。</li>
-<li>可通过调整 main.py 中 PID 参数优化平衡响应速度与稳定性。</li>
+<li><strong>先调内环（角度环）</strong>：把外环输出固定为 0 单独调整角度环。先设 <code>ki=0, kd=0</code>，
+   逐渐增大 <code>kp</code> 直到倒立摆能勉强立住但出现剧烈等幅振荡；再增大 <code>kd</code> 把振荡压下去。
+   为消除静差角度环取 <code>ki=0.05</code>，并对积分项做限幅。</li>
+<li><strong>后调外环（位置环）</strong>：角度环能稳定直立后加入位置环。外环输出必须严格限幅
+   （本项目 ±0.15 rad），否则一次大偏差就会把内环打崩。</li>
+<li><strong>抗积分饱和</strong>：积分项在真实系统中容易无限累加，退出饱和要很久。<code>pid_controller.py</code>
+   与包内 <code>pid.py</code> 都对积分项做了 ±1.0 限幅；当前 <code>ki</code> 较小时它几乎不起作用，
+   主要是为将来调大 <code>ki</code> 留的安全边界。</li>
 </ol>
-<h2 id="_10">系统控制原理</h2>
-<p>本项目采用<strong>双环串级 PID</strong> 控制算法实现两轮自平衡。外环为位置环，控制小车的前进后退；内环为角度环，控制倒立摆的平衡。</p>
-<div class="mermaid">graph TD
-    TargetPos[目标位置] --&gt;|误差| PosPID[位置环 PID]
-    PosPID --&gt;|输出目标倾角| AnglePID[角度环 PID]
-    CurrentPos[当前位置] --&gt;|反馈| PosPID
-    CurrentAngle[当前倾角] --&gt;|反馈| AnglePID
-    AnglePID --&gt;|输出电机力矩| Motor[左右驱动电机]
-    Motor --&gt;|驱动| Car[平衡车物理模型]
-    Car --&gt; CurrentPos
-    Car --&gt; CurrentAngle
-</div>
-<h2 id="_11">调参经验</h2>
-<p>双环 PID 的调试极其讲究顺序，本项目的参数整定过程如下：</p>
-<ol>
-<li>先调内环（角度环）：将 pos_pid 的输出固定为 0，单独调 angle_pid。先设 ki=0, kd=0，逐渐增大 kp 直到倒立摆能勉强立住但会有剧烈等幅震荡；随后逐渐增加 kd 抑制震荡。为了消除静差，角度环取 ki=0.05，并在 pid_controller.py 中对积分项做了限幅；位置环取 ki=0，因为外环输出已限幅在 ±0.15 弧度，不需要积分补偿。</li>
-<li>后调外环（位置环）：在角度环能完美保持直立后，加入 pos_pid。为了避免外环输出过大导致内环崩溃，pos_pid 的输出需要做严格的限幅（本项目限制在 -0.15 ~ 0.15 弧度之间）。</li>
-<li>抗积分饱和：在真实的物理系统中，积分项容易无限累加。本项目在 pid_controller.py 中对积分项做了 ±1.0 的限幅。当前 ki=0.05 下积分项贡献较小，该限幅主要用于后续调大 ki 时避免积分饱和。</li>
-</ol></div>
+<h2 id="7">7. 常见问题</h2>
+<p><strong>Q1：<code>import mujoco</code> 报 <code>OSError: [WinError 4551] 应用程序控制策略阻止了此文件</code>？</strong>
+Windows Smart App Control 拦截了该版本 DLL。换 <code>pip install "mujoco==3.2.7"</code> 即可
+（本机实测通过）；或自行关闭智能应用控制（该开关不可逆，请评估后再动）。</p>
+<p><strong>Q2：<code>--gui</code> 报缺少 <code>mujoco_viewer</code> / <code>glfw</code>？</strong>
+GUI 是可选依赖：<code>pip install mujoco-python-viewer glfw</code>。无图形界面请直接
+<code>python3 main.py</code>（默认 headless）。</p>
+<p><strong>Q3：<code>ros2 launch</code> 找不到可执行文件？</strong>
+需要先 <code>colcon build --packages-select mujoco_balance_car</code> 并 <code>source install/setup.bash</code>。
+不装 ROS 也能验证算法：<code>python3 main.py</code>。</p>
+<p><strong>Q4：为什么默认不弹窗，和旧文档写的不一样？</strong>
+仓库约定要求 <code>main</code> 脚本能直接跑通，而评测机常无图形界面，所以默认改为离线批跑；
+交互式可视化改由 <code>--gui</code> 提供，功能与原来一致（R 复位、↑/↓ 扰动、ESC 退出）。</p>
+<p><strong>Q5：指标里的"稳定时间"是从 0 开始算的吗？</strong>
+不是。位置阶跃与速度扰动的时间都<strong>已减去事件时刻</strong>，读到的就是"事件发生后多久稳定"。</p>
+<h2 id="8">8. 已知限制</h2>
+<ul>
+<li>只做一维平衡（底盘沿 x 滑移），没有转向自由度，不是完整的差速机器人。</li>
+<li>电机力矩当作理想输入，未建模电流环、轮胎打滑与传感器噪声。</li>
+<li>指标在 MuJoCo 定步长 0.002 s 的仿真里成立；真实系统上稳定时间会明显变长。</li>
+<li>可恢复倾角只验证到 0.30 rad（17.2°）；更大初值会因力矩饱和（±2 N·m）直接倒。</li>
+<li>可视化窗口需要图形界面与额外依赖，本次未在无头环境中截图验证（只用 <code>--headless</code>）。</li>
+</ul></div>
 </div>
 </div><footer>
 <div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
@@ -1196,5 +1571,5 @@ python3<span class="w"> </span>main.py
             SphinxRtdTheme.Navigation.enable(true);
         });
     </script>
-<script>mermaid.initialize({});</script></body>
+</body>
 </html>
