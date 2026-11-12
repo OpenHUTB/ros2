@@ -21,6 +21,10 @@ class UavMessagePayload:
 def build_message_payload(row: Mapping[str, object]) -> UavMessagePayload:
     """Project one simulation row into the documented ROS message values."""
 
+    sensor_valid = float(row["sensor_valid"])
+    if sensor_valid not in (0.0, 1.0):
+        raise ValueError("sensor_valid 必须为 0 或 1")
+
     return UavMessagePayload(
         front_range_m=float(row["sensor_range_m"]),
         braking_accel_m_s2=float(row["accel_m_s2"]),

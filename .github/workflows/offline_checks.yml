@@ -1,0 +1,81 @@
+name: offline checks
+
+# 这批测试只 import Python 标准库（argparse / math / unittest 等），
+# 不依赖 numpy / mujoco / rclpy，因此在干净的 runner 上无需安装任何包。
+# 每个文件既能独立运行，也能被 pytest 收集；这里按仓库现有习惯直接执行。
+on:
+  push:
+    paths:
+      - "tests/test_braking_distance_check_local.py"
+      - "tests/test_gear_shift_policy_local.py"
+      - "tests/test_lane_change_feasibility_local.py"
+      - "tests/test_no_fly_zone_check_local.py"
+      - "tests/test_speed_profile_check_local.py"
+      - "tests/test_turning_sweep_check_local.py"
+      - "src/ground/braking_distance_check/**"
+      - "src/ground/gear_shift_policy/**"
+      - "src/ground/lane_change_feasibility/**"
+      - "src/no_fly_zone_check/**"
+      - "src/ground/speed_profile_check/**"
+      - "src/ground/turning_sweep_check/**"
+      - ".github/workflows/offline_checks.yml"
+  pull_request:
+    paths:
+      - "tests/test_braking_distance_check_local.py"
+      - "tests/test_gear_shift_policy_local.py"
+      - "tests/test_lane_change_feasibility_local.py"
+      - "tests/test_no_fly_zone_check_local.py"
+      - "tests/test_speed_profile_check_local.py"
+      - "tests/test_turning_sweep_check_local.py"
+      - "src/ground/braking_distance_check/**"
+      - "src/ground/gear_shift_policy/**"
+      - "src/ground/lane_change_feasibility/**"
+      - "src/no_fly_zone_check/**"
+      - "src/ground/speed_profile_check/**"
+      - "src/ground/turning_sweep_check/**"
+      - ".github/workflows/offline_checks.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  offline-checks:
+    name: offline checks (ubuntu-22.04 / py3.10)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: braking_distance_check
+        env:
+          PYTHONIOENCODING: utf-8
+        run: python3 tests/test_braking_distance_check_local.py
+
+      - name: gear_shift_policy
+        env:
+          PYTHONIOENCODING: utf-8
+        run: python3 tests/test_gear_shift_policy_local.py
+
+      - name: lane_change_feasibility
+        env:
+          PYTHONIOENCODING: utf-8
+        run: python3 tests/test_lane_change_feasibility_local.py
+
+      - name: no_fly_zone_check
+        env:
+          PYTHONIOENCODING: utf-8
+        run: python3 tests/test_no_fly_zone_check_local.py
+
+      - name: speed_profile_check
+        env:
+          PYTHONIOENCODING: utf-8
+        run: python3 tests/test_speed_profile_check_local.py
+
+      - name: turning_sweep_check
+        env:
+          PYTHONIOENCODING: utf-8
+        run: python3 tests/test_turning_sweep_check_local.py
