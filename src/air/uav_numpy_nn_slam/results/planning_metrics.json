@@ -1,0 +1,57 @@
+{
+  "scenes": {
+    "city": {
+      "path_found": true,
+      "waypoints": 9,
+      "length_m": 181.114,
+      "straight_line_m": 161.22,
+      "detour_ratio": 1.123,
+      "min_clearance_m": 1.8,
+      "plan_ms": 646.37
+    },
+    "canyon": {
+      "path_found": true,
+      "waypoints": 6,
+      "length_m": 80.281,
+      "straight_line_m": 68.0,
+      "detour_ratio": 1.181,
+      "min_clearance_m": 2.203,
+      "plan_ms": 147.83
+    },
+    "airport": {
+      "path_found": true,
+      "waypoints": 5,
+      "length_m": 169.651,
+      "straight_line_m": 164.012,
+      "detour_ratio": 1.034,
+      "min_clearance_m": 2.059,
+      "plan_ms": 415.18
+    }
+  },
+  "planner_source": "GridPlanner",
+  "dwa_city": {
+    "scene": "city",
+    "source": "DWAPlanner",
+    "done": false,
+    "start_goal_distance_m": 9.57,
+    "final_distance_m": 2.616,
+    "collisions": 0,
+    "nfz_violations": 0,
+    "seconds": 40.0,
+    "altitude_m": 32.0,
+    "altitude_start_m": 32.0
+  },
+  "dwa_pool": {
+    "scene": "city",
+    "source": "DWAPlanner",
+    "done": false,
+    "start_goal_distance_m": 9.57,
+    "final_distance_m": 2.616,
+    "collisions": 0,
+    "nfz_violations": 0,
+    "seconds": 40.0,
+    "altitude_m": 32.0,
+    "altitude_start_m": 32.0
+  },
+  "generated": "2026-11-10T15:47:39"
+}

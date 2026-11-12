@@ -1,0 +1,82 @@
+{
+  "algorithms": {
+    "dqn_2x64": {
+      "algorithm": "DQN",
+      "best_epoch": 50,
+      "episodes": 250,
+      "final_recent_success": 1.0,
+      "hidden": [
+        64,
+        64
+      ],
+      "mean_collisions": 0.0,
+      "mean_nfz_violations": 0.0,
+      "mean_return": 38.592,
+      "mean_steps": 20.5,
+      "success_rate": 1.0,
+      "train_seconds": 41.99,
+      "train_steps": 7781
+    },
+    "dqn_3x64": {
+      "algorithm": "DQN",
+      "best_epoch": 50,
+      "episodes": 250,
+      "final_recent_success": 1.0,
+      "hidden": [
+        64,
+        64,
+        64
+      ],
+      "mean_collisions": 0.0,
+      "mean_nfz_violations": 0.0,
+      "mean_return": 38.559,
+      "mean_steps": 20.5,
+      "success_rate": 1.0,
+      "train_seconds": 126.85,
+      "train_steps": 7721
+    },
+    "pg_2x64": {
+      "algorithm": "REINFORCE",
+      "episodes": 250,
+      "final_recent_success": 0.933,
+      "hidden": [
+        64,
+        64
+      ],
+      "mean_collisions": 0.0,
+      "mean_nfz_violations": 0.0,
+      "mean_return": 37.211,
+      "mean_steps": 40.4,
+      "success_rate": 0.933,
+      "train_seconds": 33.41,
+      "train_steps": 10867
+    }
+  },
+  "env": {
+    "actions": 8,
+    "max_steps": 70,
+    "nfz_penalty": "reward -0.05 per step inside, count violations",
+    "random_start": true,
+    "scene": "city",
+    "state": "7x7 local occupancy + goal polar + NFZ (55 dims)",
+    "step_size": 1.0
+  },
+  "eval_episodes": 30,
+  "hidden_layer_comparison": {
+    "algorithm": "DQN",
+    "three_hidden_layers": {
+      "mean_return": 38.559,
+      "success_rate": 1.0,
+      "train_seconds": 126.85
+    },
+    "two_hidden_layers": {
+      "mean_return": 38.592,
+      "success_rate": 1.0,
+      "train_seconds": 41.99
+    }
+  },
+  "seconds": 225.1,
+  "seed": 2026,
+  "state_dim": 55,
+  "task": "reach goal in the city airspace (discrete action abstraction, buildings blocked, no-fly zone penalised)"
+}

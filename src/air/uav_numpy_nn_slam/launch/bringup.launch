@@ -1,0 +1,32 @@
+<launch>
+  <!-- UVNN top-level bringup (desktop demo): keyboard teleoperation by default -->
+  <arg name="scene"          default="city"/>
+  <arg name="seed"           default="20261110"/>
+  <arg name="noise"          default="true"/>
+  <arg name="display"        default=":0"/>
+  <arg name="viewer"         default="true"/>
+  <arg name="keyboard"       default="true"/>
+  <arg name="viewer_teleop"  default="false"/>
+  <arg name="duration"       default="0.0"/>
+  <arg name="auto_snapshot"  default=""/>
+  <arg name="script"         default="r:2.5,a:1.5,f:2.0,w:1.2,d:1.5,q:1.0,e:1.0,r:1.5,w:1.2,a:1.5,s:1.2,f:1.5,d:1.5,r:1.0,q:1.0,w:1.2,a:1.5,s:1.2,f:1.5,d:1.5,e:1.2"/>
+  <arg name="script_loop"    default="false"/>
+  <arg name="snapshot_delay" default="3.0"/>
+  <arg name="render_width"   default="820"/>
+
+  <include file="$(find uav_numpy_nn_slam)/launch/teleop.launch">
+    <arg name="scene"         value="$(arg scene)"/>
+    <arg name="seed"          value="$(arg seed)"/>
+    <arg name="noise"         value="$(arg noise)"/>
+    <arg name="display"       value="$(arg display)"/>
+    <arg name="viewer"        value="$(arg viewer)"/>
+    <arg name="keyboard"      value="$(arg keyboard)"/>
+    <arg name="viewer_teleop" value="$(arg viewer_teleop)"/>
+    <arg name="duration"      value="$(arg duration)"/>
+    <arg name="auto_snapshot" value="$(arg auto_snapshot)"/>
+    <arg name="script"        value="$(arg script)"/>
+    <arg name="script_loop"   value="$(arg script_loop)"/>
+    <arg name="snapshot_delay" value="$(arg snapshot_delay)"/>
+    <arg name="render_width"  value="$(arg render_width)"/>
+  </include>
+</launch>

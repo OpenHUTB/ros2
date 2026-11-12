@@ -1,0 +1,50 @@
+{
+  "action_counts": {
+    "0": 156,
+    "1": 18,
+    "2": 14,
+    "3": 0,
+    "4": 0,
+    "5": 0,
+    "6": 15,
+    "7": 125
+  },
+  "beams": 72,
+  "clean_scan_shape": [
+    328,
+    72
+  ],
+  "cmd_shape": [
+    328,
+    4
+  ],
+  "collisions": 0,
+  "episode_success_rate": 1.0,
+  "episodes": 3,
+  "feature_shape": [
+    328,
+    46
+  ],
+  "image_shape": [
+    328,
+    48,
+    64,
+    3
+  ],
+  "label_mean": [
+    0.6407,
+    -0.2357,
+    -0.315
+  ],
+  "nfz_violations": 0,
+  "random_start": true,
+  "sample_hz": 10.0,
+  "samples": 328,
+  "scan_shape": [
+    328,
+    72
+  ],
+  "scene": "canyon",
+  "seconds_wall": 14.86,
+  "seed": 20261110
+}

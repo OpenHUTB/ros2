@@ -690,3 +690,4 @@ ___
 
 ## 参考文献
 * [MuJoCo 失落公园无人机端到端视觉转向](./air/mujoco_abandoned_park_uav_visual_steering.md)
+* [四旋翼无人机物理仿真、激光 SLAM 与禁飞区规避](./air/uav_numpy_nn_slam.md) —— 城市/峡谷/机场三场景、72 波束激光 SLAM、A* 绕禁飞区、纯 NumPy 神经网络与端到端 CNN
