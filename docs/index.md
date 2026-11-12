@@ -125,6 +125,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 ## 3. 肌肉骨骼人 <span id='musculoskeletal'></span>
 
 * [肌肉骨骼人基础](./musculoskeletal/musculoskeletal_basics.md)
+* [肌肉骨骼人肌骨手臂仿真、工作空间建图与纯 NumPy 神经网络肌肉控制](./musculoskeletal/msk_arm_nn.md)
 * [基于关节状态与肌腱力反馈的 MuJoCo 肌肉骨骼肘关节神经网络轨迹控制](./musculoskeletal/mujoco_musculoskeletal_elbow_nn_control.md)
 * [肌肉-肌腱串联弹性实验](./musculoskeletal/msk_tendon_basics.md) —— 单关节 + 拮抗肌，肌腱储能/传力/释放三组实验
 * [肌肉协同降维与恢复质量评估](./musculoskeletal/muscle_synergy_lab.md) —— NMF 求协同数，用 VAF 与子空间夹角区分“重建得像”与“协同是真的”，13 项测试
