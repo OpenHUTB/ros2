@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>uav_downview_centerline_track_nn</name>
+  <version>0.0.1</version>
+  <description>下视摄像头神经网络标线循迹：机载下视图像提取横向偏移与航向误差，两层 MLP 策略输出前飞与偏航指令，闭环跟踪地面参考标线。</description>
+  <maintainer email="799628765@qq.com">wqs159</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <depend>rclpy</depend>
+  <depend>nav_msgs</depend>
+  <depend>std_msgs</depend>
+
+  <test_depend>pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
