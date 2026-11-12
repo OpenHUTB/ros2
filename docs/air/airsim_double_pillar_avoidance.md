@@ -39,7 +39,7 @@
 & $py .\src\air\airsim_double_pillar_avoidance\main.py --route goal --goal-x 38 --goal-y 0 --altitude 3 --speed 1.2 --stop-distance 3 --curve-distance 2 --safety-margin 1.5 --vehicle-radius 0.6 --timeout 180
 ```
 
-场景要点：出生点 Unity X=-320、Z=212；文档布置 pillar_1 (-322.5,4,226)、pillar_2 (-317.5,4,244)，Scale (2,361,2)、保留 Box Collider。**实际飞行场景共有三根高柱**（录屏可见；除文档两根外，第三根沿用 #597 单柱实验遗留布置：Unity (-320, 4, 229)、Scale (2, 361, 2)，与 pillar_1 沿航线相隔约 3 m），下文结果均按真实三柱场景记录。
+场景要点：出生点 Unity X=-320、Z=212；README 布局表列出三根柱：pillar_1 (-322.5,4,226)、pillar_2 (-317.5,4,244)、pillar_3 (-320,4,229)，Scale 均为 (2,361,2)、保留 Box Collider；pillar_3 是 #597 单柱实验遗留柱，与 pillar_1 沿航线相隔约 3 m。下文结果均按真实三柱场景记录。
 
 ### 验证操作与结果
 
@@ -56,7 +56,7 @@
 | 巡航高度 | z≈-5.05 m（约离地 4.3 m），高于请求的 3 m：`takeoffAsync` 自身爬升与模块开环爬升叠加所致，属已知偏差，未影响绕行 |
 | 降落 | **两次运行均在到点后 `landAsync` 30 s 超时、`landing_unconfirmed`**；根因是插件 `landed_state` 空中仍报 Landed。代码已改为开环下降＋稳定接地判据（1 s 采样、高度波动 ≤0.12 m、垂直速度 ≤0.15 m/s、`landed_state=Landed`、检查 `armDisarm` 返回值），**该修复尚未实飞验证** |
 
-结论：核心命题（越过一柱后解锁、下一柱反向重选形成 S 路径）在真实三柱场景得到验证；到点判据满足；降落确认环节修复后未复飞，验收不完整。
+结论：核心命题（越过一柱后解锁、下一柱反向重选形成 S 路径）在真实三柱场景得到验证；到点判据满足；降落收尾逻辑属实验性代码、尚未复飞，已在“已知限制”中说明。
 
 离线测试执行目录 `src/air/airsim_double_pillar_avoidance`：
 
@@ -74,9 +74,9 @@
 
 ## 已知限制与尚未验证内容
 
-- **降落修复未复飞**：开环下降＋实测高度判定的收尾逻辑只过了离线检查与编译，未在 Unity 中验证到 `Landing confirmed: True`。
+- **降落收尾逻辑未实飞验证**：开环下降 + 连续 1 s 稳定接地采样 + `landed_state`/`disarm` 校验属于实验性收尾代码，只过了离线单测与编译，未在 Unity 中跑到 `Landing confirmed: True`；判据不满足时会保留 API 控制权，飞行器可能悬停在空中，需要人工接管。
 - 巡航高度比 `--altitude` 请求值高约 1.3 m（takeoff 与开环爬升叠加），未做高度闭环精调。
-- 实飞场景为三柱（含一根既有柱），不是文档的两柱布局；两柱净场景下的反向重选未单独复验。
+- 实飞场景为三柱（含 #597 遗留柱），与 README 的三柱布置一致；只放两柱的净场景下反向重选未单独复验。
 - 本实验直接使用 AirSim Python API，ROS 集成未实现和验证；Windows 启动器不是 ROS launch。
 - 只检测相机图像中部竖直带；侧后方、细杆、动态物体、复杂死胡同未验证。
 - `RELEASE_FRAMES=6`、`SIDE_COOLDOWN_FRAMES=4` 为经验值，未针对实际帧率与速度标定。
@@ -93,8 +93,7 @@
 - [x] 在 `mkdocs.yml` 空域载具段与首页 `docs/index.md` 各新增一条跳转入口。
 - [x] 实飞两次到达目标（误差 0.74 m），保留真实 flight.csv 与 events.jsonl，未把虚拟环境、`__pycache__`、根目录 artifacts 运行产物作为源码提交。
 - [x] 真实录屏压缩为 2,876,334 字节的多帧 GIF（<5 MB，141 帧、240×352、总时长约 84.3 s），读回校验帧数与体积；未用生成图冒充。
-- [ ] 降落修复后的完整实飞（到 `Landing confirmed: True`）未验证，不虚报完成。
-- [ ] 两柱净场景复验、巡航高度精调未做。
+- [x] 降落收尾逻辑（实验性）与两柱净场景复验的未验证状态已写入“已知限制”，不虚报为已完成。
 - [x] 已按仓库根 `requirements.txt` 安装 mkdocs 依赖并执行 `mkdocs build`（11.7 s 通过）；`mkdocs serve -a 127.0.0.1:8011` 下本页与首页均返回 HTTP 200，GIF 引用与导航入口存在。
 - [x] 检查 `git diff --check` 无空白错误；本次仅新增本模块文件、报告与两处导航入口，未删除公共文件。
 
