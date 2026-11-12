@@ -409,9 +409,9 @@ flowchart TD
 
 | 文件 | 行数 | 职责 |
 |---|---:|---|
-| `consistency.py` | 98 | 残差、8 步窗口、GRU/MLP、在线 `ConsistencyDetector` |
+| `consistency.py` | 100 | 残差、8 步窗口、GRU/MLP、在线 `ConsistencyDetector` |
 | `train_consistency.py` | 94 | 训练、验证选模、阈值标定 |
-| `evaluate_consistency.py` | 104 | 冻结模型的事件级评估与消融 |
+| `evaluate_consistency.py` | 111 | 冻结模型的事件级评估与消融 |
 | `report_final.py` | 41 | 汇总表与三张图 |
 | `telemetry_data.py` | 100 | 语料解压、校验、场景生成 |
 | `holdout_evaluate.py` | 128 | 注入与旧版评估 |
