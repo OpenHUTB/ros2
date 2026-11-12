@@ -1,0 +1,9 @@
+{
+  "launch_pass": true,
+  "roslaunch_exit_code": 0,
+  "observed_states": [
+    "CANCELED",
+    "PAUSED",
+    "RUNNING"
+  ]
+}

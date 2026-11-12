@@ -4,13 +4,51 @@
 
 ## 环境配置
 
-运行 [`serve.bat`](https://github.com/OpenHUTB/ros2/blob/master/serve.bat)（即运行`mkdocs serve`，所做的修改同样需要运行该脚本验证[网页中](http://127.0.0.1:8000/)所修改内容的正确性），会打开浏览器显示主页，详情请参考[serve.bat](https://github.com/OpenHUTB/.github/blob/master/serve.bat)，文档撰写的约定请参考 [doc](https://github.com/OpenHUTB/doc) 仓库首页。
+### 本地文档预览 / Local documentation preview
+
+仓库根目录提供 `serve.bat`：它通过 curl 下载 [OpenHUTB/.github](https://github.com/OpenHUTB/.github/blob/master/serve.bat) 中的脚本保存为 `mkdocs_serve.bat` 并执行（等价于 `mkdocs serve`），运行后在 <http://127.0.0.1:8000/> 查看页面。
+
+The repository root provides `serve.bat`: it downloads the script from [OpenHUTB/.github](https://github.com/OpenHUTB/.github/blob/master/serve.bat) via curl as `mkdocs_serve.bat` and runs it (equivalent to `mkdocs serve`), then open <http://127.0.0.1:8000/>.
+
+也可以在仓库根目录手动安装文档依赖并启动本地预览：
+
+Install the documentation dependencies from the repository root and start the local preview manually:
+
+```bash
+python3 -m pip install -r requirements.txt
+python3 -m mkdocs serve --dev-addr 127.0.0.1:8000
+```
+
+Windows 用户可在 PowerShell 中使用 `py -m pip install -r requirements.txt` 和 `py -m mkdocs serve --dev-addr 127.0.0.1:8000`。MkDocs 会监视文件变化并自动重新生成页面。
+
+On Windows PowerShell, use `py -m pip install -r requirements.txt` and `py -m mkdocs serve --dev-addr 127.0.0.1:8000`. MkDocs watches for file changes and rebuilds the pages automatically.
+
+### ROS 2 示例开发 / ROS 2 example development
+
+构建仓库中的 ROS 2 示例前，先载入对应发行版环境，再按目标功能包的 README 安装依赖并构建。Humble 功能包可使用以下工作区流程：
+
+Before building a ROS 2 example in this repository, source the matching ROS distribution, then follow the target package README to install dependencies and build. For a Humble package, use this workspace workflow:
+
+```bash
+source /opt/ros/humble/setup.bash
+cd ~/ros2
+rosdep install --from-paths src --ignore-src -r -y
+colcon build --packages-select <package_name>
+source install/setup.bash
+ros2 launch <package_name> <launch_file>
+```
+
+发行版安装步骤见 [Ubuntu 20.04 与 ROS Noetic](docs/ubuntu20.04.md)，ROS 2 概念与教程见 [第 9 章](docs/chapter/chap9.md)。流程中的 `~/ros2` 为示例工作区路径，请替换为实际工作区；使用 `rosdep` 前需完成 `sudo rosdep init` 与 `rosdep update` 初始化。运行某个示例时，请使用该模块 README 中列出的包名、launch 文件和额外依赖。
+
+See [Ubuntu 20.04 and ROS Noetic setup](docs/ubuntu20.04.md) for the existing distribution setup guide and [Chapter 9](docs/chapter/chap9.md) for ROS 2 concepts and tutorials. `~/ros2` in the workflow is an example workspace path; replace it with your actual workspace. Before using `rosdep`, complete `sudo rosdep init` and `rosdep update`. For a specific example, use the package name, launch file, and additional dependencies documented by that module's README.
+
+文档撰写约定请参考 [OpenHUTB/doc](https://github.com/OpenHUTB/doc)。
 
 
 ## 注意事项
 
 * 提交 Pull Request 前请检查：
-    * **一定**要用 **`mkdocs serve --livereload`** 检查网页的是否为想要的修改效果后再提交
+    * **一定**要用 **`mkdocs serve`**（或根目录 `serve.bat`）检查网页的是否为想要的修改效果后再提交
     * Pull Request 的标题和提交信息不能随意，需要说明为什么修改，而不仅仅是修改了什么
     * Pull Request 页面的 File changed 下的内容是否为想要的修改
     * 检查 Pull Request 页面是否有红色的提示（有冲突），如果有请先合并仓库最新修改再新建 Pull Request
@@ -23,8 +61,13 @@
     * 每个模块的相关文件放在以模块命名的文件夹内，必须支持 launch 启动，入口为main.开头，比如：main.py、main.cpp、main.bat、main.sh等
     * 每个模块需要在导航栏和首页添加跳转的链接
     * 模块名不能宽泛，需要具体，不然就和其他人的容易重复
-    * 仓库尽量保存文本文件，二进制文件需要慎重，图片约定使用.png且小于 3 MB，动图使用.gif且小于 5 MB，如运行需要示例数据，可以保存少量数据，大量数据可以通过提供永久网盘链接并说明下载链接和运行说明
+    * 仓库尽量保存文本文件，二进制文件需要慎重，图片约定使用.png且小于 3 MB，动图使用.gif且小于 10 MB，如运行需要示例数据，可以保存少量数据，大量数据可以通过提供永久网盘链接并说明下载链接和运行说明
 
 
 * 每次合并到主分支之前需要至少一名其他人 测试并同意（另一台机器修改部分的运行结果）
 * Github访问不稳定可以[使用Stem++、fastgithub进行加速（也可使用其他代理）](https://gitee.com/OpenHUTB/sw/releases/tag/up).
+
+## 肌肉骨骼肘关节神经控制
+
+第二阶段提供轻量 MLP 训练、按轨迹和负载分组评价，以及 ROS 2 在线推理节点。模型参数由训练命令写入 JSON，运行时通过包共享目录加载。
+

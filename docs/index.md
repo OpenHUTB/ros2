@@ -359,6 +359,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [无人机航向角 PD 稳定控制与阶跃转向仿真](./air/uav_yaw_stabilize.md) —— 阵风力矩与往复风扰下的航向保持精度、阵风恢复时间，附实现动图
 * [AirSim ROS 1 Noetic PPO 联调](./air/airsim_rl_planner_ros1.md)
 * [无人机制动旧入口](./ground/mujoco_drone_distance_stop.md)
+* [城市道路地面载具：二维自行车动力学、激光 SLAM 与纯 NumPy 神经网络导航](./ground/road_numpy_nn_slam.md)
 
 
 * [Town10 立面自主巡航与图像采集](./air/town10_facade_cruise_capture/index.md)
@@ -441,6 +442,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [无人机深度相机建图与自主导航（深度反投影 + A* + 纯追踪）](./air/uav_depth_mapping_nav.md) —— 深度相机反投影建图、A* 规划与纯追踪控制的完整闭环（原 uav_slam_nav 更名，避免与已合并模块重名）
 * [AirSim ROS 2 Humble 最小桥接](./air/airsim_ros2_bringup.md)
 * [AirSim ROS 2 Humble GNSS 桥接](./air/airsim_ros2_gnss.md)
+* [AirSim ROS 2 Humble 磁力计桥接](./air/airsim_ros2_magnetometer.md)
 * [无人机 LiDAR 地面/障碍分割](./air/uav_lidar_ground_filter.md)
 * [无人机屋顶降落](./air/rooftop_landing.md) —— 用机载 LiDAR 检测屋顶平面，取轮廓的最大内切圆圆心作为降落点，自主飞抵其上方后垂直降落
 * [无人机屋顶降落（学习型落点选择）](./air/rooftop_landing_nn.md) —— 用点云高度图 + 小 CNN 直接回归屋顶落点；凹形屋顶（U/L/天井）与稀疏点云下比凸包最大内切圆更稳，附三组消融对比

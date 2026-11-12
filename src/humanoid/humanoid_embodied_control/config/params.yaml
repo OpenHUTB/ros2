@@ -1,0 +1,28 @@
+# 具身人形控制 —— 参数配置（ROS 参数服务器同名键可直接覆盖）
+humanoid_walk_node:
+  ros__parameters:
+    # --- 任务 ---
+    goal: [4.5, 0.0]          # 目标点（米）
+    # --- 步态 ---
+    # stride/lift/period 的可行区间由 MuJoCo 实测扫描得出，详见 README
+    stride: 0.20              # 单腿前后摆幅（弧度）
+    lift: 0.10                # 摆动腿额外屈膝量（弧度）
+    period: 1.3               # 一个完整步态周期的名义长度（秒）
+    arm_swing: 0.25           # 手臂反相摆动幅度
+    # --- 平衡 ---
+    kp_balance: 3200.0        # 横滚/俯仰恢复力矩增益（N·m/rad）
+    kd_balance: 640.0         # 角速度阻尼（N·m·s/rad）
+    kp_z: 330.0               # 竖直高度保持比例项
+    kd_z: 96.0                # 竖直高度保持微分项
+    z_hold: 0.946             # 躯干目标高度（米）
+    fz_scale: 1.0             # 竖直支撑开关（0 = 关）
+    # --- 感知 ---
+    n_rays: 96                # 一帧扫描的射线数
+    angle_span: 2.4           # 扫描覆盖角度（弧度）
+    range_max: 3.0            # 最大量程（米）
+    obstacle_slow: 1.2        # 低于此距离开始降速（米）
+    obstacle_stop: 0.65       # 低于此距离进入 AVOID（米）
+    avoid_clear: 1.0          # 退出 AVOID 需要的净空（米，必须 > obstacle_stop）
+    # --- 频率 ---
+    ctrl_hz: 100.0            # 步态/平衡下发频率（低于 100 会摔倒）
+    decision_hz: 20.0         # 感知 + 决策频率

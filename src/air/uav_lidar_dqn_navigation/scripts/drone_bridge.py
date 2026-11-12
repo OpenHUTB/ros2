@@ -65,6 +65,11 @@ class DroneBridge(object):
         self.client = airsim.MultirotorClient(ip=self.airsim_ip, timeout_value=10)
         self.client.confirmConnection()
         rospy.loginfo('AirSim 已连接')
+        vehicles = self.client.listVehicles()
+        if self.vehicle not in vehicles:
+            raise RuntimeError(
+                'AirSim 中没有机体 %s（当前车辆: %s）。请用 -settings 指向本模块 '
+                'config/settings.json 启动 Blocks。' % (self.vehicle, vehicles))
 
         self.odom_pub = rospy.Publisher('/drone/odom', Odometry, queue_size=10)
         self.state_pub = rospy.Publisher('/drone/state', Float32MultiArray, queue_size=10)

@@ -1,0 +1,5 @@
+include requirements.txt
+include README.md
+recursive-include launch *.launch.py
+recursive-include models *
+recursive-include resource *

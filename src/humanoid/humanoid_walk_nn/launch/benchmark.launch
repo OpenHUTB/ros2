@@ -1,0 +1,34 @@
+<launch>
+  <!-- HNN headless benchmark: humanoid sim + metrics, no viewer, auto shutdown -->
+  <arg name="scene"     default="hall"/>
+  <arg name="seed"      default="20261111"/>
+  <arg name="noise"     default="true"/>
+  <arg name="duration"  default="90.0"/>
+  <arg name="mode"      default="BENCHMARK"/>
+  <arg name="goal_x"    default=""/>
+  <arg name="goal_y"    default=""/>
+  <arg name="timeout"   default="90.0"/>
+
+  <node pkg="humanoid_walk_nn" type="sim_node.py" name="sim_node" output="screen">
+    <env name="HNN_ROOT" value="$(find humanoid_walk_nn)"/>
+    <param name="scene"    value="$(arg scene)"/>
+    <param name="seed"     value="$(arg seed)"/>
+    <param name="noise"    value="$(arg noise)"/>
+    <param name="duration" value="$(arg duration)"/>
+    <param name="mode"     value="$(arg mode)"/>
+    <param name="state_hz" value="20.0"/>
+    <param name="sensor_hz" value="10.0"/>
+    <param name="camera_hz" value="5.0"/>
+  </node>
+
+  <node pkg="humanoid_walk_nn" type="metrics_node.py" name="metrics_node"
+        output="screen" required="true">
+    <env name="HNN_ROOT" value="$(find humanoid_walk_nn)"/>
+    <param name="scene"      value="$(arg scene)"/>
+    <param name="mode"       value="benchmark"/>
+    <param name="goal_x"     value="$(arg goal_x)"/>
+    <param name="goal_y"     value="$(arg goal_y)"/>
+    <param name="timeout"    value="$(arg timeout)"/>
+    <param name="shutdown"   value="true"/>
+  </node>
+</launch>

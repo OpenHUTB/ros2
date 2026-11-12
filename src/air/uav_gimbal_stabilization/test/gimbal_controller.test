@@ -1,0 +1,6 @@
+<launch>
+  <test test-name="uav_gimbal_stabilization_unittest"
+        pkg="uav_gimbal_stabilization"
+        type="test_gimbal_controller.py"
+        time-limit="60.0"/>
+</launch>

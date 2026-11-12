@@ -1,0 +1,19 @@
+<launch>
+  <arg name="wind_x" default="3.0"/>
+  <arg name="wind_y" default="1.0"/>
+  <arg name="target_x" default="5.0"/>
+  <arg name="target_y" default="2.0"/>
+  <arg name="compensate" default="true"/>
+
+  <node pkg="uav_wind_aware_delivery" type="sim_node.py" name="uav_sim" output="screen">
+    <param name="wind_x" value="$(arg wind_x)"/>
+    <param name="wind_y" value="$(arg wind_y)"/>
+  </node>
+  <node pkg="uav_wind_aware_delivery" type="control_node.py" name="uav_control" output="screen"/>
+  <node pkg="uav_wind_aware_delivery" type="predictor_node.py" name="uav_predictor" output="screen"/>
+  <node pkg="uav_wind_aware_delivery" type="mission_node.py" name="uav_mission" output="screen">
+    <param name="target_x" value="$(arg target_x)"/>
+    <param name="target_y" value="$(arg target_y)"/>
+    <param name="compensate" value="$(arg compensate)"/>
+  </node>
+</launch>

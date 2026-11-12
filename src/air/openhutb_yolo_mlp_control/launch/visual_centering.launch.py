@@ -19,6 +19,7 @@ def generate_launch_description():
         'yolo_model_path': ('yolo11n.pt', str),
         'show_window': (True, bool),
         'start_topmost': (True, bool),
+        'window_width': (640, int),
         'dry_run': (True, bool),
         'control_backend': ('auto', str),
         'control_dt': (0.05, float),
@@ -42,20 +43,23 @@ def generate_launch_description():
                           "'", LaunchConfiguration('dry_run'), "'.lower() == 'false'"
                       ]), value_type=bool),
                       'auto_takeoff': False, 'arm_on_start': False,
-                      'hold_heading': True, 'command_smoothing': 1.0,
+                      'hold_heading': True,
+                      'command_smoothing': 1.0,
                       'async_image_capture': True,
                       'command_duration': param('control_dt'), 'command_timeout': 0.5,
                       'min_dispatch_distance': 0.0,
                       'max_dispatch_distance': param('max_dispatch_distance'),
                       'control_backend': param('control_backend'),
                       'image_hz': 5.0, 'state_hz': 20.0,
+                      'image_width': 640,
                   }])
     detector = Node(package=package, executable='yolo_detector', name='yolo_detector',
                     output='screen', parameters=[{
                         'model_path': param('yolo_model_path'),
                         'show_window': param('show_window'),
                         'start_topmost': param('start_topmost'),
-                        'confidence': param('confidence'),
+                        'window_width': param('window_width'),
+                        'confidence': param('tracking_confidence'),
                     }])
     controller = Node(package=package, executable='visual_centering',
                       name='visual_centering', output='screen', parameters=[{

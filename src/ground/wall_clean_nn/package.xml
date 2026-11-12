@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>wall_clean_nn</name>
+  <version>0.1.0</version>
+  <description>
+    MuJoCo 室内清扫车沿墙清扫：激光雷达 + 神经网络贴墙跟随，ROS Noetic 封装。
+    注意：MuJoCo 本体通过 pip 安装（pip3 install mujoco==3.2.3），不属于 rosdep 可解析依赖。
+  </description>
+
+  <maintainer email="2789697997@qq.com">jydw121</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>rospkg</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-matplotlib</exec_depend>
+  <exec_depend>python3-pil</exec_depend>
+  <exec_depend>python3-yaml</exec_depend>
+</package>

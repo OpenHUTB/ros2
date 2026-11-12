@@ -28,7 +28,8 @@ src/water/rov_mujoco/
 ├── launch/
 │   └── ekf_nav.launch.py      # 仿真 + 噪声传感器 + EKF 一键启动
 ├── test/
-│   └── test_ekf.py            # 无头自动评测：RMSE / 漂移 / NEES
+│   ├── test_ekf.py            # 无头自动评测：RMSE / 漂移 / NEES
+│   └── test_dvl_gate.py       # DVL 门限回归：恢复、分类、默认兼容性
 └── setup.py                   # [修改] 新增 sensor_sim_node、ekf_nav_node 入口
 
 docs/
@@ -127,7 +128,9 @@ $$
 | `/rov/ground_truth` | `nav_msgs/Odometry` | 输出（真值，评测用） |
 
 参数：`init_delay`（传感器上线后等待多久再初始化滤波器，默认 0.1 s）、
-`sigma_acc/sigma_gyro/sigma_dvl/sigma_depth/sigma_att`（滤波器噪声）。
+`sigma_acc/sigma_gyro/sigma_dvl/sigma_depth/sigma_att`（滤波器噪声）、
+`max_dvl_jump/max_dvl_speed`（DVL 门限）、`max_dvl_gap`（超时重捕获间隔）、
+`dvl_jump_reset_count`（连续跳变拒绝后重置基准的次数）。
 
 ## 6. 运行
 
@@ -148,6 +151,8 @@ python3 src/water/rov_mujoco/test/test_ekf.py --duration 60 --out /tmp/ekf_eval.
 
 常用参数：`--dropout 0.3`（DVL 丢包率）、`--current 0`（关闭洋流）、
 `--seed 11`（换随机种子）、`--facc/--fgyro/--fdvl/--fdepth`（滤波器噪声）。
+launch 还可传入 `max_dvl_jump/max_dvl_speed/max_dvl_gap`、
+`dvl_jump_reset_count` 以及 `dvl_outlier_ratio/dvl_outlier_scale`。
 
 ## 7. 实验结果
 
@@ -170,12 +175,74 @@ python3 src/water/rov_mujoco/test/test_ekf.py --duration 60 --out /tmp/ekf_eval.
 
 ![四场景对比](../img/water/ekf_scenarios.png)
 
-### 关于 NEES
+### 7.1 NEES 一致性
 
 NEES（归一化估计误差平方）检验"误差是否与滤波器宣称的协方差相符"：
 3 自由度下理想均值为 3，95% 上界 7.815。**调参前 NEES 均值 34.8（只有 12.4% 落在界内），
 说明滤波器过度自信；把过程噪声与量测噪声调到与真实噪声匹配后为 4.19 / 98.4%**。
 这一项比 RMSE 更能说明滤波器是否"可信"。
+
+### 7.2 鲁棒 DVL 更新（简单跳变门限）
+
+真实 DVL 偶尔会输出"野值"（水声干扰、底跟踪跳变），一次异常速度量测就可能把滤波器带偏。
+本模块提供一个**物理合理性门限**，在更新前检查：
+
+- 相邻两次可接受 DVL 量测的速度差 `||v_k - v_{k-1}|| > max_dvl_jump` → 跳过本次更新；
+- 量测速度模长 `||v_k|| > max_dvl_speed` → 跳过本次更新；
+- 两个门限默认都是 `0`（关闭），不改变原有行为；被拒绝的次数会分类累加，
+  并在 ROS 节点里按 5 s 节流打印告警；
+- 相邻两次 DVL 量测到达间隔超过 `max_dvl_gap` 时重新捕获跳变基准；
+- 跳变门限连续拒绝 `dvl_jump_reset_count` 次后重新捕获基准，避免真实速度阶跃导致永久失效。
+
+`max_dvl_speed` 是绝对上限，应大于机器人最大航速与洋流速度之和。不能依靠
+`dvl_jump_reset_count` 绕过它；若正常航速超过该值，应调整配置或使用速度自适应门限。
+`max_dvl_gap` 必须大于 DVL 的正常输出周期，否则正常低频量测也会被当成丢包恢复；
+默认 `2.0 s` 可覆盖低至 0.5 Hz 的设备，`0` 表示完全关闭时间重捕获（包括时间倒流）。
+若驱动未填写 `header.stamp`，EKF 节点会使用 ROS 时钟或本地单调时钟，并节流提示。
+
+| 参数 | 默认 | 说明 |
+| --- | --- | --- |
+| `max_dvl_jump` | 0.0 | 相邻量测跳变门限 (m/s)；0 = 关闭 |
+| `max_dvl_speed` | 0.0 | 速度模长门限 (m/s)；0 = 关闭 |
+| `max_dvl_gap` | 2.0 | 超过该到达间隔后重新捕获跳变基准 (s)；0 = 关闭 |
+| `dvl_jump_reset_count` | 10 | 连续跳变拒绝后重置基准的次数；0 = 关闭 |
+| `dvl_outlier_ratio` | 0.0 | 仿真注入野值的概率；0 = 关闭 |
+| `dvl_outlier_scale` | 2.0 | 注入野值的基础幅值 (m/s) |
+
+复现（注入 3% 野值，开启 1.5 m/s 跳变门限）：
+
+```bash
+python3 test/test_ekf.py --duration 60 --dvl-outlier-ratio 0.03 \
+    --dvl-outlier-scale 5.0 --max-dvl-jump 1.5 --max-dvl-speed 1.5 \
+    --out /tmp/ekf_gate.json
+```
+
+也可以直接一键启动仿真并开启门限：
+
+```bash
+ros2 launch rov_mujoco ekf_nav.launch.py \
+    max_dvl_jump:=1.5 max_dvl_speed:=1.5 \
+    dvl_outlier_ratio:=0.03 dvl_outlier_scale:=5.0
+```
+
+门限回归测试不依赖 ROS / MuJoCo：
+
+```bash
+python3 test/test_dvl_gate.py
+```
+
+实测（60 s，洋流 + 10% 丢包；野值按 3% 概率注入、基础幅值 5 m/s）：
+
+| 配置 | EKF RMSE | 最大误差 | 漂移率 | NEES | 95% 界内 | 拒绝次数 |
+| --- | --- | --- | --- | --- | --- | --- |
+| 干净基线（无野值） | 0.0725 m | 0.122 m | 0.45 % | 4.19 | 98.4 % | 0 |
+| 3% 野值，无门限 | 0.1662 m | 0.283 m | 1.12 % | **79.04** | 9.9 % | 0 |
+| 3% 野值，门限 `max_dvl_jump=1.5` / `max_dvl_speed=1.5` | **0.0694 m** | 0.115 m | 0.43 % | **4.24** | 99.9 % | 81 |
+
+81 次拒绝约占 2451 次 DVL 量测的 3.3%，与注入比例一致；NEES 从 79.04 回到 4.24，
+说明异常量测没有进入滤波器，协方差一致性也恢复到基线水平。
+
+![DVL 跳变门限对比](../img/water/ekf_dvl_gate.png)
 
 ## 8. 与已有模块的关系
 

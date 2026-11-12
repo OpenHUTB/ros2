@@ -339,6 +339,10 @@ class SimpleCNN:
         W2 = (W1 - ksize + 1) // pool
         self.fc_flat = H2 * W2 * hidden   # 全局平均池化后为 hidden 维
         self.fc = self._init_dense(hidden, out, seed=seed + 2)
+        # 逐 epoch 的留出集 MSE（train 时传了 x_val/y_val 才有内容）。
+        # 单独放一个属性而不是塞进返回值，是为了不破坏 train() 原有的
+        # "返回 list" 契约（已有调用方与测试都按 list 用）。
+        self.val_history = []
 
     def _init_conv(self, cin, cout, k, seed):
         rng = np.random.RandomState(seed)
@@ -440,8 +444,14 @@ class SimpleCNN:
         out, _ = self.forward(x)
         return out
 
-    def train(self, images, targets, epochs=200, lr=0.1, batch=16, verbose=20):
-        """images:(N,H,W,C) uint8, targets:(N,). 回归 MSE + relu conv + tanh fc。"""
+    def train(self, images, targets, epochs=200, lr=0.1, batch=16, verbose=20,
+              x_val=None, y_val=None):
+        """images:(N,H,W,C) uint8, targets:(N,). 回归 MSE + relu conv + tanh fc。
+
+        传入 `x_val` / `y_val` 时，每个 epoch 结束会额外算一次**留出集 MSE**
+        并记到 `self.val_history`（不参与梯度更新）。存在的意义：只在训练集上
+        看损失无法判断是否过拟合——训练损失一直降，留出集可能早已发散。
+        """
         N = len(images)
         X = np.asarray(images, dtype=np.float32)
         Y = np.asarray(targets, dtype=np.float32).reshape(-1, 1)
@@ -485,8 +495,16 @@ class SimpleCNN:
                 self.c2 = (self.c2[0] - lr * dW2, self.c2[1] - lr * db2)
                 self.fc = (self.fc[0] - lr * d_fcW, self.fc[1] - lr * d_fcb)
             hist.append(float(np.mean(losses)))
+            # 留出集曲线：与训练损失同为 MSE，可直接画在同一张图上比较
+            if x_val is not None and y_val is not None:
+                pv = self.predict(np.asarray(x_val, dtype=np.float32)).ravel()
+                yv = np.asarray(y_val, dtype=np.float32).ravel()
+                self.val_history.append(float(np.mean((pv - yv) ** 2)))
             if verbose and ep % verbose == 0:
-                print(f"  cnn epoch {ep:3d} loss={hist[-1]:.5f}")
+                msg = f"  cnn epoch {ep:3d} loss={hist[-1]:.5f}"
+                if self.val_history:
+                    msg += f" val_mse={self.val_history[-1]:.5f}"
+                print(msg)
         return hist
 
     def save(self, path):

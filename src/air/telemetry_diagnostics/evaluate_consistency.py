@@ -21,7 +21,14 @@ def main():
     for path, digest in protocol['model_hashes'].items():
         assert hashlib.sha256(Path(path).read_bytes()).hexdigest() == digest
     files = sorted(Path('data/final_raw').glob('*.csv'))
-    assert len(files) == 10
+    if len(files) != 10:
+        raise SystemExit(
+            'data/final_raw 需要 10 段 final 飞行，当前找到 %d 段。\n'
+            '这 10 段由 collect_holdout.py 在 AirSim + Unreal 上采集，data/ 不入库，'
+            '干净克隆上必然缺失。\n'
+            '要核对文档第 7 节的数字，请直接看 results/final/summary.json。'
+            % len(files))
+
     development = set(r['episode'] for r in json.loads((folders[0]/'development_split.json').read_text()))
     assert not development.intersection(p.stem for p in files)
     details = []; manifest = []

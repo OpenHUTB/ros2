@@ -1,0 +1,89 @@
+{
+  "module": "mag_hard_soft_iron_calibration",
+  "version": "0.1.0",
+  "generated_utc": "2026-11-10T17:11:56+00:00",
+  "environment": {
+    "python": "3.12.14",
+    "numpy": "2.3.5",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "config": {
+    "field_norm_ut": 48.0,
+    "inclination_deg": 60.0,
+    "hard_iron_ut": [
+      20.0,
+      -15.0,
+      8.0
+    ],
+    "soft_diagonal": [
+      1.28,
+      0.84,
+      1.12
+    ],
+    "soft_cross": 0.1,
+    "noise_ut": 0.5,
+    "calibration_samples": 1200,
+    "heading_rate_hz": 50.0,
+    "heading_duration_s": 120.0
+  },
+  "calibration": {
+    "offset_error_ut": 0.8951703063279013,
+    "matrix_relative_error": 0.010637848545647645,
+    "field_norm_ut": 48.0,
+    "residual_rms_ut": 0.4641170466788368,
+    "hard_iron_only_offset": [
+      17.641553030645287,
+      -21.069953516113216,
+      11.635635094144348
+    ],
+    "fitted": {
+      "offset": [
+        20.021246628069957,
+        -14.971543643651762,
+        8.894465591238829
+      ],
+      "matrix": [
+        [
+          0.787103867184855,
+          -0.09006895155365145,
+          -0.02663712627653682
+        ],
+        [
+          -0.09006895155365142,
+          1.2071046042815883,
+          -0.10149330494341718
+        ],
+        [
+          -0.026637126276536808,
+          -0.1014933049434172,
+          0.8870122845776929
+        ]
+      ],
+      "field_norm": 48.0,
+      "residual_rms": 0.4641170466788368,
+      "samples": 1200
+    }
+  },
+  "heading": {
+    "raw": {
+      "rmse_deg": 42.64886494337756,
+      "max_deg": 91.50916921758909,
+      "bias_deg": 20.449506386395342
+    },
+    "hard_iron_only": {
+      "rmse_deg": 10.52910854036343,
+      "max_deg": 22.412057951633408,
+      "bias_deg": -2.0759911432194587
+    },
+    "ellipsoid_calibrated": {
+      "rmse_deg": 1.261272650799134,
+      "max_deg": 4.509313932568116,
+      "bias_deg": 0.055569206368834986
+    },
+    "fused": {
+      "rmse_deg": 0.32978165362471296,
+      "max_deg": 1.1683032800656536,
+      "bias_deg": 0.2763663743978776
+    }
+  }
+}

@@ -1,0 +1,49 @@
+# Unitree H1 / H1_2 行走策略的运行参数。
+#
+# 全部数值照抄 unitree_rl_gym 的 deploy/deploy_mujoco/configs/{h1,h1_2}.yaml。
+# 这些量决定了观测的归一化尺度和 PD 增益，任何一项改动都会让策略偏离训练
+# 时的输入分布，表现为步态变僵、原地踏步或直接倒地，因此不要随手调参。
+
+# 策略训练时的步态周期（秒）。观测最后两维是它的正弦/余弦相位。
+gait_period: 0.8
+
+# 速度指令的允许范围，超出后策略跟踪不上、容易失稳
+cmd_min: [-0.5, 0.0, -1.0]
+cmd_max: [1.0, 0.0, 1.0]
+
+robots:
+  h1:
+    description: "Unitree H1：10 自由度双腿人形（髋 3 + 膝 1 + 踝 1，无踝侧摆）"
+    model: assets/h1/scene.xml
+    weights: weights/h1_motion.pt
+    simulation_dt: 0.002
+    control_decimation: 10
+    num_obs: 41
+    num_actions: 10
+    # 关节顺序：左髋偏航/侧摆/俯仰、左膝、左踝、右髋偏航/侧摆/俯仰、右膝、右踝
+    kps: [150, 150, 150, 200, 40, 150, 150, 150, 200, 40]
+    kds: [2, 2, 2, 4, 2, 2, 2, 2, 4, 2]
+    default_angles: [0.0, 0.0, -0.1, 0.3, -0.2, 0.0, 0.0, -0.1, 0.3, -0.2]
+    ang_vel_scale: 0.25
+    dof_pos_scale: 1.0
+    dof_vel_scale: 0.05
+    action_scale: 0.25
+    cmd_scale: [2.0, 2.0, 0.25]
+
+  h1_2:
+    description: "Unitree H1_2：12 自由度双腿人形（髋 3 + 膝 1 + 踝 2，带踝侧摆）"
+    model: assets/h1_2/scene.xml
+    weights: weights/h1_2_motion.pt
+    simulation_dt: 0.002
+    control_decimation: 10
+    num_obs: 47
+    num_actions: 12
+    # 关节顺序：左髋偏航/侧摆/俯仰、左膝、左踝俯仰/侧摆、右侧同理
+    kps: [200, 200, 200, 300, 40, 40, 200, 200, 200, 300, 40, 40]
+    kds: [2.5, 2.5, 2.5, 4, 2, 2, 2.5, 2.5, 2.5, 4, 2, 2]
+    default_angles: [0.0, -0.16, 0.0, 0.36, -0.2, 0.0, 0.0, -0.16, 0.0, 0.36, -0.2, 0.0]
+    ang_vel_scale: 0.25
+    dof_pos_scale: 1.0
+    dof_vel_scale: 0.05
+    action_scale: 0.25
+    cmd_scale: [2.0, 2.0, 0.25]
