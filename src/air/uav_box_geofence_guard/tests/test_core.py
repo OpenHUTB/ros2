@@ -23,3 +23,22 @@ class Checks(unittest.TestCase):
    for axis in range(3):
     self.assertGreaterEqual(p[axis]+v[axis]*.5,(-4.85,-4.85,.15)[axis]-1e-12)
     self.assertLessEqual(p[axis]+v[axis]*.5,(4.85,4.85,3.85)[axis]+1e-12)
+
+ def test_positive_yaw_clamp_reports_limited(self):
+  for vx in (0.,1.):
+   with self.subTest(vx=vx):
+    values,state=guard((0,0,2),(vx,0,0,2),0,0)
+    self.assertEqual(values,(vx,0.,0.,1.))
+    self.assertEqual(state,'LIMITED')
+ def test_negative_yaw_clamp_reports_limited(self):
+  for vx in (0.,1.):
+   with self.subTest(vx=vx):
+    values,state=guard((0,0,2),(vx,0,0,-2),0,0)
+    self.assertEqual(values,(vx,0.,0.,-1.))
+    self.assertEqual(state,'LIMITED')
+ def test_yaw_within_limits_reports_clear(self):
+  for yaw in (-1.,-.2,0.,.2,1.):
+   with self.subTest(yaw=yaw):
+    values,state=guard((0,0,2),(1,0,0,yaw),0,0)
+    self.assertEqual(values,(1.,0.,0.,yaw))
+    self.assertEqual(state,'CLEAR')

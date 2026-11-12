@@ -17,4 +17,6 @@ def guard(pose, command, age_pose, age_command, horizon=.5, margin=.15):
     clearance=min(min(v-lo,hi-v) for v,lo,hi in zip(pose,low,high))
     allowed=min(1.5,clearance/horizon)
     scale=min(1.,allowed/speed) if speed else 1.
-    return (vx*scale,vy*scale,vz*scale,max(-1.,min(1.,yaw))), ('LIMITED' if scale<1 else 'CLEAR')
+    yaw_safe=max(-1.,min(1.,yaw))
+    limited=scale<1 or yaw_safe!=yaw
+    return (vx*scale,vy*scale,vz*scale,yaw_safe), ('LIMITED' if limited else 'CLEAR')

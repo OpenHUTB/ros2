@@ -2,11 +2,11 @@
 
 用保守可达距离约束三维速度指令，处理位姿和指令超时；只是 ROS 安全接口示例，未接入飞控。
 
-**验证状态：已有 2026-11-04 的独立 catkin 构建、ROS Noetic 合成话题联调及退出清理日志；本轮仅复核离线测试与文档。另一位同学在独立 Noetic 环境复现尚未完成，真实飞行与飞控/模拟器闭环未验证。**
+**验证状态：已有 2026-11-04 的独立 catkin 构建、ROS Noetic 合成话题联调及退出清理日志；本轮修复偏航限幅状态并完成离线复核。另一位同学在独立 Noetic 环境复现尚未完成，真实飞行与飞控/模拟器闭环未验证。**
 
 ## 环境与依赖
 
-核心算法与 8 项单元测试仅使用 Python 标准库；离线绘图入口需要 matplotlib，不涉及神经网络训练。
+核心算法与 11 项单元测试仅使用 Python 标准库；离线绘图入口需要 matplotlib，不涉及神经网络训练。
 历史离线环境为 Ubuntu 24.04 / Python 3.12.14 / matplotlib 3.10.8。
 历史 ROS 记录为 VirtualBox Ubuntu 20.04.6 / Python 3.8.10 / ROS Noetic，见下方原始日志；这与本轮离线文档复核、待完成的独立复测是不同验证范围。
 
@@ -42,7 +42,7 @@ Ctrl+C 结束本模块。话题演示不要连接实机飞控，先完成受控�
 
 输入位姿和速度必须属于世界 ENU 坐标系：x/y 水平、z 向上。ROS frame_id 固定为 `world`。本模块不接受 AirSim 原生 NED 或机体系速度；桥接前必须显式转换。
 教学围栏 x/y 为 [-5,5] 米，z 为 [0,4] 米，内部再留 0.15 米裕量。
-取当前位置到六个围栏面的最小距离 d，用 `min(1.5,d/0.5)` 限制三维速度模长，各轴按同一比例缩放，偏航速度限为 1 rad/s。
+取当前位置到六个围栏面的最小距离 d，用 `min(1.5,d/0.5)` 限制三维速度模长，各轴按同一比例缩放，偏航速度限为 1 rad/s。线速度或偏航速度任一被限幅时状态均为 LIMITED；二者均未被限幅时为 CLEAR。
 
 这是 0.5 秒内恒速、理想运动学条件下的保守可达球约束，不是含惯性的制动距离模型。
 与逐轴限幅相比，不利用某个方向更大的余量，容易在边界附近过早减速，这是安全裕量与机动性的教学取舍。
@@ -78,7 +78,7 @@ rostopic echo /velocity_safe
 
 ## 本次实际结果
 
-离线单元测试：**8/8 通过**。原始输出位于本模块 tests_result.txt。
+当前离线单元测试：**11/11 通过**（原有 8 项及新增的正偏航限幅、负偏航限幅、边界内偏航状态 3 项）。原始输出位于本模块 tests_result.txt。
 
 ```json
 {
@@ -127,10 +127,14 @@ roslaunch uav_box_geofence_guard main.launch
 
 必须检查 `devel/setup.bash` 与 `devel/lib/uav_box_geofence_guard/main.py` 存在。旧脚本曾在错误工作空间构建，旧 BUILD=PASS 无效；所链接历史记录来自修正版的独立工作空间。
 
-原始证据：[构建](../../../docs/air/uav_box_geofence_guard/validation/build.txt)、[launch](../../../docs/air/uav_box_geofence_guard/validation/launch.log)、[ROS 测试](../../../docs/air/uav_box_geofence_guard/validation/ros_test.txt)、[结构化结果](../../../docs/air/uav_box_geofence_guard/validation/ros_result.json)、[离线测试](../../../docs/air/uav_box_geofence_guard/validation/offline.txt)、[源码 SHA256](../../../docs/air/uav_box_geofence_guard/validation/source_sha256.json)。历史哈希记录保留不变，用于标识当时的文件。程序源码、测试、构建及 launch 文件与记录逐项核对；README 是后续修订文档，其当前哈希不再代表历史 README。
+原始证据：[构建](../../../docs/air/uav_box_geofence_guard/validation/build.txt)、[launch](../../../docs/air/uav_box_geofence_guard/validation/launch.log)、[ROS 测试](../../../docs/air/uav_box_geofence_guard/validation/ros_test.txt)、[结构化结果](../../../docs/air/uav_box_geofence_guard/validation/ros_result.json)、[离线测试](../../../docs/air/uav_box_geofence_guard/validation/offline.txt)、[源码 SHA256](../../../docs/air/uav_box_geofence_guard/validation/source_sha256.json)。历史哈希记录保留不变，用于标识当时的文件。在提交 2180c29 时，程序源码、测试、构建及 launch 文件已与历史记录逐项核对。本次修改 core.py 和 tests/test_core.py 后，这两个文件及 README 与历史哈希不再相同；历史 ROS 日志不能作为本次修复版本的运行证明，新版仍需独立 Noetic 复测。
 
 仍未验证真实硬件/飞行与另一人另一台机器复测。PR 保持正式待审核状态，外部复测标为待完成，是否合并由维护者结合验证范围决定。
 
 仓库中其他模块的 `build-and-test` 绿色检查不能证明本模块的构建或 ROS 通信通过。本模块的离线复核与历史 ROS 证据分别说明，不将二者混同为模块 CI。
 
 独立复测请记录复测人、日期、Ubuntu/Python/ROS 版本、被测提交 SHA，以及独立工作空间的 `catkin_make`（或 `catkin build`）和 `roslaunch` 日志。按上方话题步骤确认中心指令、边界限速、围栏外零输出、错误 frame、超时停车及退出清理；完成前不勾选外部复测。使用 OpenAI Codex 辅助日志核验、文档与提交整理。
+
+## 偏航限幅状态修复（2026-11-12）
+
+修复了仅偏航速度被限制时仍报告 CLEAR 的问题。yaw=2 和 yaw=-2 分别输出 1 和 -1 rad/s，状态均为 LIMITED；恰好 ±1 rad/s 且线速度未限幅时仍为 CLEAR。新增测试同时覆盖纯偏航与带平移的指令。本轮未重新执行 ROS Noetic；独立复测仍待完成。
