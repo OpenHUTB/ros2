@@ -7,11 +7,30 @@
 
 from __future__ import annotations
 
+from typing import Any, Dict
+
 import numpy as np
 
 NODE_NAME = "uav_fault_e2e_thrust_policy"
 DEFAULT_CHECKPOINT = "results/policy_cnn.pt"
-PUBLISH_RATE = 20.0
+
+# 参数默认值的**唯一真源**：config/policy.yaml、launch/policy.launch.py 里的默认值
+# 都必须和这张表一致（test/test_entry.py 会三方比对，改一处忘另一处直接失败）。
+# 之前 publish_rate 既在常量里又在参数里、fault 在三处各写一个值，就是这张表缺位的后果。
+DEFAULT_PARAMETERS: Dict[str, Any] = {
+    "scene": "corridor",
+    "seed": 0,
+    "dt": 0.01,
+    "substeps": 4,
+    "fault": "degradation",
+    "rotor": 2,
+    "onset": 2.5,
+    "severity": 0.5,
+    "mode": "neural",
+    "checkpoint": DEFAULT_CHECKPOINT,
+    "duration": 30.0,
+    "publish_rate": 20.0,
+}
 
 
 def _resolve_checkpoint(value: str) -> str:
@@ -47,21 +66,15 @@ def build_node_class():
 
     from . import _compat
     from . import data as D
+    from . import expert as T
     from . import policy as P
     from .env import ThrustEnv
 
     class E2EThrustNode(Node):
         def __init__(self) -> None:
             super().__init__(NODE_NAME)
-            self.declare_parameter("fault", "degradation")
-            self.declare_parameter("rotor", 2)
-            self.declare_parameter("onset", 2.5)
-            self.declare_parameter("severity", 0.5)
-            self.declare_parameter("seed", 0)
-            self.declare_parameter("mode", "neural")   # neural / expert
-            self.declare_parameter("duration", 20.0)
-            self.declare_parameter("publish_rate", PUBLISH_RATE)
-            self.declare_parameter("checkpoint", DEFAULT_CHECKPOINT)
+            for name, value in DEFAULT_PARAMETERS.items():
+                self.declare_parameter(name, value)
 
             spec = {"kind": str(self.get_parameter("fault").value),
                     "rotor": int(self.get_parameter("rotor").value),
@@ -73,8 +86,16 @@ def build_node_class():
             self.spec = spec
             self.plan = D.make_plan(spec)
 
+            # scene / dt / substeps 也走参数：否则 yaml 里写了这三项节点却不认，
+            # 和 PR2 踩过的"yaml 静默失效"是同一类问题。
+            task = T.TaskConfig(
+                scene=str(self.get_parameter("scene").value),
+                dt=float(self.get_parameter("dt").value),
+                substeps=int(self.get_parameter("substeps").value),
+                duration=self.duration,
+            )
             api = _compat.load_base()
-            self.env = ThrustEnv(api, plan=self.plan,
+            self.env = ThrustEnv(api, task=task, plan=self.plan,
                                  seed=int(self.get_parameter("seed").value))
             self.module = None
             if self.mode == "neural":
@@ -92,7 +113,7 @@ def build_node_class():
 
             self.obs = self.env.reset()
             self.history = [self.obs["depth"][-1].copy()] * P.DEPTH_STACK
-            self._finished = False
+            self.finished = False
             self._last_goal = None
             self.timer = self.create_timer(1.0 / max(self.rate, 1.0), self.on_tick)
             self.get_logger().info(
@@ -116,7 +137,7 @@ def build_node_class():
             return np.clip(act, 0.0, 1.0)
 
         def on_tick(self) -> None:
-            if self._finished:
+            if self.finished:
                 return
             steps = max(1, int(round((1.0 / max(self.rate, 1.0)) / self.env.task.dt)))
             info = None
@@ -130,7 +151,7 @@ def build_node_class():
                     break
             self._publish(info)
             if info is not None and (info.done or self.env.t >= self.duration):
-                self._finished = True
+                self.finished = True
                 status = "到达" if info.success else ("坠机" if info.crashed else "超时")
                 self.get_logger().info(
                     f"飞行结束：t={info.t:.2f}s x={info.position[0]:.2f}m 结果={status}")
@@ -177,7 +198,7 @@ def main(argv=None) -> int:
     node_cls = build_node_class()
     node = node_cls()
     try:
-        while rclpy.ok() and not node._finished:
+        while rclpy.ok() and not node.finished:
             rclpy.spin_once(node, timeout_sec=0.02)
     finally:
         node.env.close()

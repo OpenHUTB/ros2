@@ -31,7 +31,7 @@ setup(
     maintainer="Fortranquility",
     maintainer_email="2920111320@qq.com",
     description="桨故障下的端到端推力策略（深度图 + 健康度 -> 四桨推力），对应课程任务④",
-    license="Apache-2.0",
+    license="MIT",
     entry_points={
         "console_scripts": [
             "main = uav_fault_e2e_thrust_policy.cli:main",

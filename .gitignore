@@ -14,7 +14,6 @@ __pycache__/
 
 # 构建时 hooks.py 自动生成
 docs/requirements.txt
- add-mujoco-aeb
 # MuJoCo 运行日志
 # 注意：这里不要用 *.TXT。Windows/macOS 上 core.ignorecase 为 true 时它会把
 # LICENSE.txt、requirements.txt 这类真实文本一起吞掉（本仓库曾因此漏提交依赖清单）。
@@ -125,7 +124,6 @@ desktop.ini
 
 # 对比实验的逐次训练产物（模型可再训练不入库；eval_log.json / metrics.json 仍入库）
 **/results/runs/**/*.zip
- master
 
 # uav_camera_tracking 的曲线/对比图：每次训练都会重画，属生成物。
 # 文档引用的是 docs/img/air/uav_camera_tracking/ 下的稳定副本，

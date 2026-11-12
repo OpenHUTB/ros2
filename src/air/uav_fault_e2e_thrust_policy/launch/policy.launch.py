@@ -1,6 +1,8 @@
 """启动端到端推力策略节点。
 
-参数分两层：``config/policy.yaml`` 是默认值真源，这里的 launch 参数只覆盖常用的几个。
+参数分两层：``config/policy.yaml`` 是默认值真源，这里的 launch 参数只覆盖常用的几个；
+两处的默认值（以及 ``ros_node.DEFAULT_PARAMETERS``）由 test/test_entry.py 比对，
+避免出现"改了 yaml 但 launch 又盖回去"的假象。
 """
 
 import os
@@ -25,9 +27,9 @@ def generate_launch_description() -> LaunchDescription:
         DeclareLaunchArgument(
             "params_file", default_value=default_params,
             description="参数文件路径（默认取包内 config/policy.yaml）"),
-        DeclareLaunchArgument("fault", default_value="healthy",
-                              description="注入的桨故障类型"),
-        DeclareLaunchArgument("rotor", default_value="0",
+        DeclareLaunchArgument("fault", default_value="degradation",
+                              description="注入的桨故障类型（看基线用 healthy）"),
+        DeclareLaunchArgument("rotor", default_value="2",
                               description="故障桨序号 0~3"),
         DeclareLaunchArgument("onset", default_value="2.5",
                               description="故障注入时刻 s"),

@@ -9,7 +9,7 @@
     对应课程任务④（每种机器人端到端模型：输入图像、输出控制指令）。
   </description>
   <maintainer email="2920111320@qq.com">Fortranquility</maintainer>
-  <license>Apache-2.0</license>
+  <license>MIT</license>
 
   <buildtool_depend>ament_python</buildtool_depend>
 
@@ -23,6 +23,9 @@
   <exec_depend>uav_mujoco_sim</exec_depend>
 
   <test_depend>python3-pytest</test_depend>
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
 
   <export>
     <build_type>ament_python</build_type>
