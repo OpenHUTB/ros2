@@ -289,6 +289,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [ROS2 A* 全局路径平滑（Catmull-Rom）](./ground/ros2_path_smoothing.md)
 * [多车协同编队（CARLA）](./ground/carla_platoon.md) —— Leader 沿参考轨迹领航，3 辆 follower 沿同轨迹保持恒定弧长间距跟进的一字纵队编队
 * [ROS2 2D 激光占据栅格建图](./ground/ros2_occupancy_mapping.md)
+* [神经网络感知 / 控制 / SLAM 四任务仿真（CARLA）](./ground/carla_nn_perception_control_slam.md) —— 键盘运动控制、YOLOv5 感知与给定轨迹纯跟踪、激光 log-odds 栅格建图与 A* 导航、PilotNet 端到端驾驶（图像 → 控制量）
 * [多传感器融合跟踪（LiDAR+Radar+Camera+IMU）2D 合成仿真与离线验证](./ground/carla_sensor_fusion.md) —— 外参标定 + 时间同步 + EKF 融合；2D 仿真提升约 32%，离线回放 30 s 融合 578 次、RMSE 0.053 m（均可复现；CARLA 为未验证的参考实现）
 * [高精度定位与重定位（AMCL 式粒子滤波）](./ground/turtlebot3_relocalization.md)
 
