@@ -28,7 +28,6 @@ setup(
                 "closed-loop verification. 目标地理定位与多站交会：单站视线 "
                 "vs 双站交会精度评估，MuJoCo 闭环复核。",
     license="MIT",
-    tests_require=["pytest"],
     entry_points={
         "console_scripts": [
             "main = uav_target_geolocation.cli:main",
