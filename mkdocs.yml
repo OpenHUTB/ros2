@@ -318,6 +318,7 @@ nav:
     - 转弯扫掠校验: './ground/turning_sweep_check.md'
     - 爬坡能力与牵引力余量核算: './ground/vehicle_gradeability_check.md'
     - 涉水深度与浮力裕度核算: './ground/vehicle_wading_check.md'
+    - 半挂车折叠风险与倒车限速保护: './ground/trailer_jackknife_guard.md'
     - 车辆几何通过性核算（接近角/离去角/纵向通过角）: './ground/passability_check.md'
     - 高精度定位与重定位（AMCL 式粒子滤波）: './ground/turtlebot3_relocalization.md'
     - 速度指令安全监督: './ground/cmd_vel_guard.md'
