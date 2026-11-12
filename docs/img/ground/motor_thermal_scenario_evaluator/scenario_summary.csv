@@ -1,0 +1,7 @@
+scenario,mode,ambient_c,peak_temperature_c,mean_speed_mps,derated_percent
+cool_cruise,fixed_speed,20.0,30.648,0.55,0.0
+cool_cruise,derated,20.0,30.648,0.55,0.0
+warm_turn,fixed_speed,28.0,55.681,0.75,0.0
+warm_turn,derated,28.0,55.681,0.75,0.0
+hot_high_load,fixed_speed,35.0,69.951,0.8,0.0
+hot_high_load,derated,35.0,65.889,0.758,32.65

@@ -51,6 +51,8 @@ class SensorSimNode(Node):
         self.declare_parameter('bias_acc', 0.05)
         self.declare_parameter('bias_gyro', 0.003)
         self.declare_parameter('bias_dvl', 0.005)
+        self.declare_parameter('dvl_outlier_ratio', 0.0)
+        self.declare_parameter('dvl_outlier_scale', 2.0)
 
         self.sensor = SensorModel(
             seed=int(self.get_parameter('seed').value),
@@ -60,6 +62,10 @@ class SensorSimNode(Node):
             bias_acc=float(self.get_parameter('bias_acc').value),
             bias_gyro=float(self.get_parameter('bias_gyro').value),
             bias_dvl=float(self.get_parameter('bias_dvl').value),
+            dvl_outlier_ratio=float(
+                self.get_parameter('dvl_outlier_ratio').value),
+            dvl_outlier_scale=float(
+                self.get_parameter('dvl_outlier_scale').value),
         )
 
         self.pub_imu = self.create_publisher(Imu, '/rov/imu_noisy', 20)

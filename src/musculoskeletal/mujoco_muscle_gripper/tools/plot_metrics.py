@@ -12,6 +12,9 @@ import matplotlib
 matplotlib.use("Agg")  # noqa: E402
 import matplotlib.pyplot as plt
 
+plt.rcParams["font.sans-serif"] = ["WenQuanYi Zen Hei", "Microsoft YaHei", "SimHei", "DejaVu Sans"]
+plt.rcParams["axes.unicode_minus"] = False
+
 
 def plot_g1(d, outdir):
     lv = d["g1"]["levels"]
@@ -19,9 +22,9 @@ def plot_g1(d, outdir):
     f = [x["grip_force_n"] for x in lv]
     fig, ax = plt.subplots(figsize=(5.6, 3.4))
     ax.plot(a, f, "o-", color="#4c78a8")
-    ax.set_xlabel("muscle activation")
-    ax.set_ylabel("contact normal force (N, two fingers)")
-    ax.set_title("activation -> contact normal force (0 below contact)")
+    ax.set_xlabel("肌肉激活指令")
+    ax.set_ylabel("双指接触法向力（牛顿）")
+    ax.set_title("肌肉激活与真实接触法向力")
     ax.grid(alpha=0.3)
     fig.tight_layout()
     p = os.path.join(outdir, "g1_force_vs_activation.png")
@@ -37,9 +40,9 @@ def plot_g2(d, outdir):
     colors = ["#54a24b" if x["gripped"] else "#e45756" for x in lv]
     fig, ax = plt.subplots(figsize=(5.8, 3.4))
     ax.bar([f"{x:.2f}" for x in a], h, color=colors)
-    ax.set_xlabel("muscle activation")
-    ax.set_ylabel("lift height (mm)")
-    ax.set_title("grasp threshold (green = gripped, red = slipped)")
+    ax.set_xlabel("肌肉激活指令")
+    ax.set_ylabel("抬升高度（毫米）")
+    ax.set_title("抓取阈值：绿色夹住，红色滑脱")
     ax.grid(alpha=0.3, axis="y")
     fig.tight_layout()
     p = os.path.join(outdir, "g2_lift_threshold.png")
@@ -58,11 +61,11 @@ def plot_g3(d, outdir):
         vals = [next(x["lift_mm"] for x in lv
                      if x["friction"] == mu and x["activation"] == act) for mu in mus]
         xs = [i + (k - (len(acts) - 1) / 2) * width for i in range(len(mus))]
-        ax.bar(xs, vals, width=width, label=f"act={act}")
+        ax.bar(xs, vals, width=width, label=f"激活={act}")
     ax.set_xticks(range(len(mus)))
-    ax.set_xticklabels([f"mu={m}" for m in mus])
-    ax.set_ylabel("lift height (mm)")
-    ax.set_title("friction vs lift")
+    ax.set_xticklabels([f"摩擦系数={m}" for m in mus])
+    ax.set_ylabel("抬升高度（毫米）")
+    ax.set_title("摩擦系数对抓取抬升的影响")
     ax.legend()
     ax.grid(alpha=0.3, axis="y")
     fig.tight_layout()
@@ -77,9 +80,9 @@ def plot_g5(d, outdir):
     targets = [x["target_n"] for x in lv]
     acts = [x["final_activation"] for x in lv]
     fig, ax = plt.subplots(figsize=(5.4, 3.2))
-    ax.bar([f"{t:.0f} N" for t in targets], acts, color="#4c78a8")
-    ax.set_ylabel("final activation")
-    ax.set_title("force loop: activation needed per target")
+    ax.bar([f"{t:.0f} 牛顿" for t in targets], acts, color="#4c78a8")
+    ax.set_ylabel("最终肌肉激活指令")
+    ax.set_title("真实接触力闭环的目标与所需激活")
     ax.grid(alpha=0.3, axis="y")
     fig.tight_layout()
     p = os.path.join(outdir, "g5_force_loop.png")
@@ -92,9 +95,9 @@ def plot_g6(d, outdir):
     a = d["g6"]["no_reflex"]["lift_mm"]
     b = d["g6"]["with_reflex"]["lift_mm"]
     fig, ax = plt.subplots(figsize=(4.8, 3.2))
-    ax.bar(["no reflex", "with reflex"], [a, b], color=["#e45756", "#54a24b"])
-    ax.set_ylabel("lift height (mm)")
-    ax.set_title("slip reflex recovery")
+    ax.bar(["无滑移反射", "有滑移反射"], [a, b], color=["#e45756", "#54a24b"])
+    ax.set_ylabel("抬升高度（毫米）")
+    ax.set_title("滑移反射提高抓取抬升高度")
     ax.grid(alpha=0.3, axis="y")
     fig.tight_layout()
     p = os.path.join(outdir, "g6_reflex.png")

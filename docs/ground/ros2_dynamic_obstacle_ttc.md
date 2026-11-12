@@ -46,7 +46,27 @@ $$
 
 `TTC < 2.5 s` 触发，`TTC > 3.5 s` 解除，避免阈值附近来回抖动。
 
+## 文件结构
+
+```text
+src/ground/ros2_dynamic_obstacle_ttc/
+├── ros2_dynamic_obstacle_ttc/  # ttc_core.py / sim.py / main_ttc.py
+├── config/ttc_params.yaml
+├── launch/main_launch.py
+├── results/benchmark.json
+├── test/                       # 11 项单元测试
+└── README.md
+```
+
 ## 2. 运行
+
+### 运行环境
+
+| 项目 | 版本 |
+| --- | --- |
+| ROS 2 | Ubuntu 20.04.6 + Foxy 0.9.2 |
+| Python | 3.8.10 |
+| 离线基准 | Windows 11 + Python 3.12 + NumPy 2.x |
 
 ```bash
 cd ~/hutb_ws
@@ -63,6 +83,16 @@ ros2 launch ros2_dynamic_obstacle_ttc main_launch.py
 
 参数在 `config/ttc_params.yaml`：`on_ttc`、`off_ttc`、`robot_radius`、
 `safety_margin`、`max_range`。
+
+## 参数说明
+
+| 参数 | 含义 | 默认 |
+| --- | --- | --- |
+| `scan_topic` / `warning_topic` / `marker_topic` | 输入/告警/可视化话题 | `/scan` / `/collision_warning` / `/moving_obstacles` |
+| `max_range` | 激光有效量程 | 6.0 m |
+| `max_ttc` | TTC 上限 | 10.0 s |
+| `on_ttc` / `off_ttc` | 告警迟滞阈值 | 2.5 s / 3.5 s |
+| `robot_radius` / `safety_margin` | 自车半径/安全裕度 | 0.25 m / 0.10 m |
 
 ## 3. 离线复现
 
@@ -86,15 +116,20 @@ python3 -m ros2_dynamic_obstacle_ttc.sim    # 5 个场景
 - 2 个无威胁场景（平行通过、远离）**0 误报**；
 - parallel 场景的 TTC 为 `null`：多帧最小二乘速度拟合后横向速度接近 0，不再出现 3.97 s 的数值伪值。
 
-![TTC 与告警状态](../img/ground/ros2_dynamic_obstacle_ttc/ttc_timeline.png)
-
 节点实跑日志（headless 环境，用合成 `/scan` 让障碍从 5 m 处正面接近；
 2.49 s 时触发 WARN，障碍通过后恢复 clear）：
 
-![节点运行日志](../img/ground/ros2_dynamic_obstacle_ttc/node_run.png)
-
 图中红色竖带是告警区间：head_on 的 TTC 在约 2.7 s 跌破 2.5 s 后保持告警，
 parallel 的 TTC 始终高于阈值。
+
+## 运行效果
+
+5 个场景中 3 个真实威胁在碰撞前 **2.6–2.8 s** 告警，2 个无威胁场景 0 误报；
+节点实跑日志中 2.49 s 触发 WARN、障碍通过后恢复 clear：
+
+![TTC 与告警状态](../img/ground/ros2_dynamic_obstacle_ttc/ttc_timeline.png)
+
+![节点运行日志](../img/ground/ros2_dynamic_obstacle_ttc/node_run.png)
 
 ## 5. 与规划器的关系
 
@@ -111,7 +146,7 @@ parallel 的 TTC 始终高于阈值。
 * 稀疏点云会把一个障碍拆成多个簇，跟踪门限需按雷达分辨率调；
 * 只在合成数据上验证，尚未接真实雷达。
 
-## 7. 大模型声明
+## 大模型使用声明
 
 代码与文档在编写过程中使用了 AI 大模型辅助。作者已实际运行 11 项单元测试、
 5 个离线场景，并对提交内容的正确性与完整性负全部责任。
