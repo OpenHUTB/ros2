@@ -568,6 +568,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 ### 感知
 
 * [水下声呐 SLAM 占据栅格建图与自主避障导航](./water/rov_sonar_slam_navigation.md)
+* [MuJoCo 水下 ROV 串级定深控制](./water/mujoco_rov_depth_control.md) —— 浮力/阻尼显式建模，三段定深稳态误差 0.013 m
 
 * [水下 ROV AprilTag 视觉定位与定点巡航仿真](./water/rov_apriltag_cruise.md)
 
