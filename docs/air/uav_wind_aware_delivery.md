@@ -205,11 +205,11 @@ repeat 4:
 
 平均误差降低 **74.6%**。
 
-固定风 `(3.0, 1.0) m/s` 的 ROS 全链：
+固定风 `(3.0, 1.0) m/s` 的 ROS 全链（旧记录按修正后的物理时钟换算）：
 
 ```text
-takeoff t=0.05 → cruise t=3.17 → align t=12.19
-released t=13.00 → done t=14.54
+takeoff t=0.03 → cruise t=1.59 → align t=6.10
+released t=6.50 → done t=7.27
 payload landing error 0.13 m
 ```
 
