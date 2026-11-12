@@ -129,34 +129,39 @@ ros2 action send_goal /fibonacci fibonacci_action/action/Fibonacci "{order: 10}"
 
 ### 运行截图
 
-> 待补充：本页的终端截图需在 Ubuntu + ROS 2 Humble 上实际执行 `colcon build` 与 `ros2 launch` 后截图替换。此前版本的截图与代码不一致，已移除。
+Ubuntu 22.04 + ROS 2 Humble（VMware 虚拟机）实际运行：
+
+![ROS 2 Action 斐波那契数列运行截图](../img/chap2/fibonacci_action_run.png)
+
+图中依次是：`colcon build` 成功（`Summary: 1 package finished [0.6s]`）→ `ros2 launch` 拉起 server 与 client → 服务端推送 2/11 至 10/11 的 Feedback → 服务端返回 Result → 客户端打印最终结果后正常退出（`process has finished cleanly`）。
 
 ### 日志解读
 
-一次完整运行的日志（`order=10`，`ros2 run` 分别启动服务端与客户端时的输出）：
+同一次运行（`order=10`，`ros2 launch` 启动）的日志，注意数列是 `int32` 数组，打印出来带 `array('i', ...)` 包装：
 
 ```text
-[INFO] [1763000000.100000000] [fibonacci_action_server]: Fibonacci Action 服务端已就绪，等待客户端请求...
-[INFO] [1763000000.200000000] [fibonacci_action_client]: 客户端启动，目标阶数: 10
-[INFO] [1763000000.300000000] [fibonacci_action_client]: 已连接服务端，发送 goal (order=10)
-[INFO] [1763000000.310000000] [fibonacci_action_server]: 接受请求：计算 10 阶斐波那契数列
-[INFO] [1763000000.320000000] [fibonacci_action_server]: 开始计算 10 阶斐波那契数列
-[INFO] [1763000000.330000000] [fibonacci_action_client]: Goal 已接受，等待结果...
-[INFO] [1763000000.630000000] [fibonacci_action_server]: 进度 2/11: [0, 1, 1]
-[INFO] [1763000000.640000000] [fibonacci_action_client]: 收到反馈: 当前数列长度=3, 最新项=1
-[INFO] [1763000000.940000000] [fibonacci_action_server]: 进度 3/11: [0, 1, 1, 2]
-[INFO] [1763000000.950000000] [fibonacci_action_client]: 收到反馈: 当前数列长度=4, 最新项=2
+[INFO] [1794963011.646274248] [fibonacci_action_server]: Fibonacci Action 服务端已就绪，等待客户端请求...
+[INFO] [1794963011.707076705] [fibonacci_action_client]: 客户端启动，目标阶数: 10
+[INFO] [1794963011.707076705] [fibonacci_action_client]: 已连接服务端，发送 goal (order=10)
+[INFO] [1794963011.728284605] [fibonacci_action_server]: 接受请求：计算 10 阶斐波那契数列
+[INFO] [1794963011.737904497] [fibonacci_action_server]: 开始计算 10 阶斐波那契数列
+[INFO] [1794963011.781533864] [fibonacci_action_client]: Goal 已接受，等待结果...
+[INFO] [1794963011.783862885] [fibonacci_action_server]: 进度 2/11: array('i', [0, 1, 1])
+[INFO] [1794963011.784497064] [fibonacci_action_client]: 收到反馈: 当前数列长度=3, 最新项=1
+[INFO] [1794963012.083152273] [fibonacci_action_server]: 进度 3/11: array('i', [0, 1, 1, 2])
+[INFO] [1794963012.083762633] [fibonacci_action_client]: 收到反馈: 当前数列长度=4, 最新项=2
 ...（略）
-[INFO] [1763000003.040000000] [fibonacci_action_server]: 进度 10/11: [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]
-[INFO] [1763000003.050000000] [fibonacci_action_client]: 收到反馈: 当前数列长度=10, 最新项=34
-[INFO] [1763000003.350000000] [fibonacci_action_server]: 计算完成！结果: [0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55]
-[INFO] [1763000003.360000000] [fibonacci_action_client]: 最终结果: [0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55]
+[INFO] [1794963014.120353425] [fibonacci_action_server]: 进度 10/11: array('i', [0, 1, 1, 2, 3, 5, 8, 13, 21, 34])
+[INFO] [1794963014.120988863] [fibonacci_action_client]: 收到反馈: 当前数列长度=10, 最新项=34
+[INFO] [1794963014.505509859] [fibonacci_action_server]: 计算完成！结果: array('i', [0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55])
+[INFO] [1794963014.505703642] [fibonacci_action_client]: 最终结果: array('i', [0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55])
+[INFO] [client-2]: process has finished cleanly [pid 21906]
 ```
 
 注意两点：
 
 - Feedback 的进度分母是 `order + 1`（数列长度），`order=10` 时最后一次 Feedback 是 `10/11`，不会出现 `11/11`——第 11 项是计算完成后随 Result 一起返回的。
-- 日志前缀由节点名决定：`ros2 run` 下是 `[fibonacci_action_server]` / `[fibonacci_action_client]`；用 `ros2 launch` 启动时会再套一层 `[fibonacci_action_server-1]` 这类进程名前缀。
+- 日志前缀由节点名决定：`ros2 run` 下是 `[fibonacci_action_server]` / `[fibonacci_action_client]`；用 `ros2 launch` 启动时会再套一层 `[server-1]` / `[client-2]` 这类进程名前缀。
 
 ### Action 四阶段图示
 
@@ -311,9 +316,9 @@ self._send_goal_future.add_done_callback(self.goal_response_callback)  # 3. 注�
 
 - 本包用 `ament_cmake` 构建（因为需要在同一个包里生成自定义 action 接口），因此不使用 `setup.py` 的 `console_scripts`；两个入口由 `CMakeLists.txt` 的 `install(PROGRAMS ... RENAME server|client)` 显式安装到 `lib/${PROJECT_NAME}/`
 - 服务端与客户端脚本首行带 `#!/usr/bin/env python3`，`ros2 run` 直接以可执行文件方式调用
-- 本文档的构建步骤按 ROS 2 Humble 编写，已在 Ubuntu 22.04 + ROS 2 Humble 上验证 `colcon build --packages-select fibonacci_action` 通过（18 s 左右），`ros2 launch` 也能正常拉起服务端与客户端
+- 本文档的构建步骤按 ROS 2 Humble 编写，已在 Ubuntu 22.04 + ROS 2 Humble 上验证 `colcon build --packages-select fibonacci_action` 通过（首次 18.3 s，增量重建 0.6 s），`ros2 launch` 也能正常拉起服务端与客户端
 - `execute_callback` 使用同步写法，原因见第 7 节的 warning；在 `MultiThreadedExecutor` 下改用 `async def` + `asyncio.sleep` 会抛 `no running event loop`
-- 运行效果截图待补充：需要一次完整跑通后的终端截图，当前页面仅给出日志文本
+- 运行环境为 Ubuntu 22.04 + ROS 2 Humble（VMware 虚拟机），`colcon build`、`ros2 launch` 与完整的 Goal → Feedback → Result 流程均已跑通，截图见第 5 节
 
 ---
 
