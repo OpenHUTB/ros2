@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>rov_handling_eval</name>
+  <version>1.0.0</version>
+  <description>
+    水下 ROV 六自由度手操与抗流能力评测：MuJoCo 内核解算浮力/配重/各向异性二次阻力/
+    三层洋流，键盘发布 6-DOF 速度设定值，评测节点输出漂移率、操控权限利用率与净浮力。
+  </description>
+
+  <maintainer email="2334936626@qq.com">lxy020208</maintainer>
+  <license>MIT</license>
+
+  <depend>rclpy</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>tf2_ros</depend>
+  <depend>python3-numpy</depend>
+  <exec_depend>python3-yaml</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>ament_index_python</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

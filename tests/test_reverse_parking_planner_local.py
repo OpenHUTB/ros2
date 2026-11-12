@@ -4,6 +4,7 @@
 
 不需要 ROS、不需要 CARLA、不需要显示器，只要 Python 2.7 或 Python 3.x：
     python3 tests/test_reverse_parking_planner_local.py
+    python3 -m pytest tests/test_reverse_parking_planner_local.py -q
 测试脚本自己在仓库根目录找包，找不到时按 tests/ 旁的目录找，两种布局都支持。
 """
 
@@ -424,16 +425,23 @@ else:
     check("K41 测试脚本位于 tests 目录下", os.path.basename(HERE) == "tests")
     check("K42 核心模块仍然可导入", hasattr(core, "build_plan"))
 
-# ------------------------------------------------------------ 汇总
 
-print("=" * 60)
-if FAILED:
-    for name in FAILED:
-        print("  [FAIL] %s" % name)
+def test_offline_regression():
+    """pytest 入口：顶层检查已在导入时执行，这里只断言结果。"""
+    assert not FAILED, "失败 %d 项: %s" % (len(FAILED), "; ".join(FAILED))
+    assert PASSED, "未执行任何检查"
+
+
+if __name__ == "__main__":
+    # ------------------------------------------------------------ 汇总
     print("=" * 60)
-print("通过 %d 项，失败 %d 项" % (len(PASSED), len(FAILED)))
-if FAILED:
-    print("共有 %d 项失败" % len(FAILED))
-    sys.exit(1)
-print("全部通过")
-sys.exit(0)
+    if FAILED:
+        for name in FAILED:
+            print("  [FAIL] %s" % name)
+        print("=" * 60)
+    print("通过 %d 项，失败 %d 项" % (len(PASSED), len(FAILED)))
+    if FAILED:
+        print("共有 %d 项失败" % len(FAILED))
+        sys.exit(1)
+    print("全部通过")
+    sys.exit(0)

@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>mujoco_warehouse_uav_collision_braking</name>
+  <version>0.1.0</version>
+  <description>仓储无人机测距与制动 / Warehouse UAV ranging and braking</description>
+  <maintainer email="3189043344@qq.com">S3189043344</maintainer>
+  <license>Apache-2.0</license>
+  <buildtool_depend>ament_python</buildtool_depend>
+  <exec_depend>rclpy</exec_depend><exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend><exec_depend>std_msgs</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <export><build_type>ament_python</build_type></export>
+</package>
