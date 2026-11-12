@@ -94,3 +94,30 @@ def test_progress_state_milestone(rect_path):
     head = progress_state(rect_path, rect_path.lines[0].points[0])
     assert head["line_id"] == 0
     assert head["area_percent"] == pytest.approx(0.0, abs=1.0)
+
+
+def test_convex_no_gap_at_noninteger_spacing():
+    # extent=10、spacing=2.4 → 4.167 行，round 会取 4 行使实际行距 2.5>2.4 漏喷；
+    # 取 ceil 保证实际行距 ≤ spacing、覆盖率接近 1
+    from uav_agri_spray.core.checker import assess
+    rect = np.array([[0.0, 0.0], [40.0, 0.0], [40.0, 10.0], [0.0, 10.0]])
+    path = plan_field((rect,), (), SprayConfig())
+    assert len(path.lines) >= 5
+    _, met = assess(path, rect, SprayConfig())
+    assert met.coverage_ratio > 0.99
+
+
+def test_detour_arc_connects_when_endpoint_inside_buffer():
+    # 障碍贴边、扫描线端点落扩圆内时，绕行弧首点必须接上端点（曾悬空约 2.8 m）
+    from uav_agri_spray.core.planner import _detour_segment
+    cfg = SprayConfig()
+    a, b = np.array([-3.0, 0.0]), np.array([10.0, 0.0])
+    _, arcs = _detour_segment(a, b, CircleObstacle(0.0, 0.0, 0.8),
+                              cfg.obstacle_margin, cfg.arc_step_deg)
+    assert arcs
+    assert np.linalg.norm(a - arcs[0][0]) < 1e-6
+
+
+def test_progress_reaches_100_at_end(rect_path):
+    st = progress_state(rect_path, rect_path.points[-1])
+    assert st["area_percent"] == pytest.approx(100.0, abs=0.2)

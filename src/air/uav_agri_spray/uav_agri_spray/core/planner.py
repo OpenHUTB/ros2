@@ -110,8 +110,10 @@ def _detour_segment(a: np.ndarray, b: np.ndarray, obs: CircleObstacle,
     if abs(h) < 1e-9:
         h = 0.0
     half = math.sqrt(max(R * R - h * h, 0.0))
-    t0 = max(0.0, min(1.0, (tf - half) / L))
-    t1 = max(0.0, min(1.0, (tf + half) / L))
+    t0_raw = (tf - half) / L
+    t1_raw = (tf + half) / L
+    t0 = max(0.0, min(1.0, t0_raw))
+    t1 = max(0.0, min(1.0, t1_raw))
     if t1 - t0 < 1e-6:
         return [(a, b)], []
     e_pt = a + t0 * L * u
@@ -126,6 +128,12 @@ def _detour_segment(a: np.ndarray, b: np.ndarray, obs: CircleObstacle,
         arc = _arc_points(c, R, ang_e, ang_e + ccw, step_deg)
     else:
         arc = _arc_points(c, R, ang_x, ang_x + cw, step_deg)[::-1]
+    # 端点落扩圆内（障碍贴田边）：t0_raw<0 时弧首点悬在 R 处、与 a 断开，
+    # 把 a 径向补进弧首；t1_raw>1 时弧尾与 b 断开，把 b 补进弧尾，保证路径连续
+    if t0_raw < 0.0:
+        arc = np.vstack([a.reshape(1, 2), arc])
+    if t1_raw > 1.0:
+        arc = np.vstack([arc, b.reshape(1, 2)])
     straights = []
     if np.linalg.norm(a - e_pt) > 1e-6:
         straights.append((a, e_pt))
@@ -162,7 +170,9 @@ def plan_convex(polygon: np.ndarray, obstacles: Sequence[CircleObstacle],
     proj = poly @ nvec
     w0, w1 = float(proj.min()), float(proj.max())
     extent = w1 - w0
-    n_lines = max(1, int(round(extent / cfg.spacing)))
+    # 用 ceil 保证实际行距 s_eff ≤ spacing（round 会在小数部分 <0.5 时向下
+    # 取整，s_eff 反而大于配置间距，行间出现漏喷带）
+    n_lines = max(1, int(math.ceil(extent / cfg.spacing)))
     s_eff = extent / n_lines
     center = poly.mean(axis=0)
     pc = float(center @ nvec)
@@ -269,11 +279,21 @@ def progress_state(path: SprayPath, position: Sequence[float]) -> dict:
     p = np.asarray(position[:2], dtype=float)
     pts = path.points
     d2 = ((pts - p) ** 2).sum(axis=1)
-    i = int(np.argmin(d2))
-    i = min(i, len(path.seg_line) - 1)
+    i_raw = int(np.argmin(d2))
+    i = min(i_raw, len(path.seg_line) - 1)
     cur = int(path.seg_line[i])
     done = sum(ln.strip_area for ln in path.lines if ln.line_id < cur)
     total = sum(ln.strip_area for ln in path.lines)
+    # 当前行按已走弧长比例计入，末端能到 100%（此前只累加已完成行，
+    # 最后一行永不计数，进度封顶在 (n-1)/n）
+    if 0 <= cur < len(path.lines) and total > 0:
+        line = path.lines[cur]
+        if line.length > 1e-9:
+            first_idx = int(np.argmax(np.asarray(path.seg_line) == cur))
+            walked = 0.0
+            for j in range(first_idx, min(i_raw, len(pts) - 1)):
+                walked += float(np.linalg.norm(pts[j + 1] - pts[j]))
+            done += line.strip_area * float(np.clip(walked / line.length, 0.0, 1.0))
     pct = 100.0 * done / total if total > 0 else 0.0
     return {"line_id": cur, "num_lines": len(path.lines),
             "area_percent": round(pct, 1),
