@@ -5,10 +5,14 @@ import argparse
 import math
 import pathlib
 
-import matplotlib
+try:  # 绘图是可选依赖：没装 matplotlib 时仍然能跑数值、出指标表
+    import matplotlib
 
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+except ImportError:  # pragma: no cover - 取决于运行环境
+    matplotlib = None
+    plt = None
 
 from ros2_usv_station_keeping.pilot import PilotConfig
 
@@ -17,6 +21,8 @@ from .scenarios import SCENARIOS, get_scenario
 
 
 def _style() -> None:
+    if plt is None:
+        return
     plt.rcParams.update(
         {
             "figure.dpi": 130,
@@ -32,6 +38,8 @@ def _style() -> None:
 
 
 def plot_trajectories(results: dict[str, tuple[EpisodeMetrics, object]], path: pathlib.Path) -> None:
+    if plt is None:
+        return
     fig, axes = plt.subplots(2, 3, figsize=(10.5, 6.2))
     for ax, scenario in zip(axes.ravel(), SCENARIOS):
         _, trace = results[scenario.key]
@@ -50,6 +58,8 @@ def plot_trajectories(results: dict[str, tuple[EpisodeMetrics, object]], path: p
 
 
 def plot_errors(results: dict[str, tuple[EpisodeMetrics, object]], path: pathlib.Path) -> None:
+    if plt is None:
+        return
     fig, ax = plt.subplots(figsize=(7.6, 3.6))
     for scenario in SCENARIOS:
         _, trace = results[scenario.key]
@@ -66,6 +76,8 @@ def plot_errors(results: dict[str, tuple[EpisodeMetrics, object]], path: pathlib
 
 
 def plot_control(trace, path: pathlib.Path) -> None:
+    if plt is None:
+        return
     fig, axes = plt.subplots(3, 1, figsize=(8.2, 6.0), sharex=True)
     axes[0].plot(trace.time, trace.distance, color="#1f77b4", lw=1.2)
     axes[0].set_ylabel("error [m]")
@@ -82,6 +94,8 @@ def plot_control(trace, path: pathlib.Path) -> None:
 
 
 def plot_compare(path: pathlib.Path) -> None:
+    if plt is None:
+        return
     keys = ["cross_current", "oblique_current"]
     labels = ["cross 0.25", "oblique 0.25"]
     on_vals, off_vals = [], []
@@ -108,6 +122,8 @@ def plot_compare(path: pathlib.Path) -> None:
 
 
 def plot_sweep(path: pathlib.Path) -> None:
+    if plt is None:
+        return
     speeds = [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40]
     on_vals, off_vals = [], []
     for speed in speeds:
@@ -174,7 +190,10 @@ def main(argv: list[str] | None = None) -> int:
             f"{key:22s}{m.rms_error:9.3f}{m.max_error:9.2f}{settle:>11s}"
             f"{m.energy:9.1f}{m.mean_crab_deg:11.1f}{m.final_health:>10s}"
         )
-    print(f"\n图片已写入 {outdir.resolve()}")
+    if plt is None:
+        print("\n未安装 matplotlib，跳过绘图（指标表照常输出）")
+    else:
+        print(f"\n图片已写入 {outdir.resolve()}")
     return 0
 
 
