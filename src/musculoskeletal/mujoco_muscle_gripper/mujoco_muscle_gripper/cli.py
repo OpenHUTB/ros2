@@ -1,4 +1,5 @@
-"""命令行入口：check / run / bench / gif。"""
+"""命令行入口：模型自检、实验、键盘控制和神经网络训练评估。"""
+"""命令行入口：夹爪实验、键盘控制、学习策略和移动底座建图导航。"""
 
 import argparse
 import json
@@ -95,6 +96,15 @@ def main(argv=None):
     p = sub.add_parser("manual", help="键盘调节肌肉激活与抬升")
     p.add_argument("--keys", default=None, help="可重复按键序列；省略时读取交互终端")
     p.set_defaults(func=lambda args: __import__(__package__ + ".manual", fromlist=["run"]).run(args.keys))
+
+    p = sub.add_parser("neural", help="训练和评估神经网络夹持策略")
+    p.add_argument("--out", default="out/neural")
+    p.set_defaults(func=lambda args: __import__(__package__ + ".neural", fromlist=["benchmark"]).benchmark(args.out))
+
+    p = sub.add_parser("slam", help="移动底座神经网络建图与导航同步仿真")
+    p.add_argument("--out", default="out/slam")
+    p.add_argument("--seed", type=int, default=21)
+    p.set_defaults(func=lambda args: __import__(__package__ + ".slam_navigation", fromlist=["benchmark"]).benchmark(args.out, seed=args.seed))
 
     args = ap.parse_args(argv)
     args.func(args)
