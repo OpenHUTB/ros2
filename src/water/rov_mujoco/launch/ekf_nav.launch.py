@@ -19,6 +19,10 @@ def generate_launch_description():
     current = LaunchConfiguration('use_ocean_current')
     max_dvl_jump = LaunchConfiguration('max_dvl_jump')
     max_dvl_speed = LaunchConfiguration('max_dvl_speed')
+    max_dvl_gap = LaunchConfiguration('max_dvl_gap')
+    dvl_jump_reset_count = LaunchConfiguration('dvl_jump_reset_count')
+    dvl_outlier_ratio = LaunchConfiguration('dvl_outlier_ratio')
+    dvl_outlier_scale = LaunchConfiguration('dvl_outlier_scale')
 
     return LaunchDescription([
         DeclareLaunchArgument('dvl_dropout', default_value='0.10',
@@ -29,6 +33,14 @@ def generate_launch_description():
                               description='相邻 DVL 速度跳变门限 (m/s, 0 = 关闭)'),
         DeclareLaunchArgument('max_dvl_speed', default_value='0.0',
                               description='DVL 速度模长门限 (m/s, 0 = 关闭)'),
+        DeclareLaunchArgument('max_dvl_gap', default_value='0.5',
+                              description='超过该间隔后重新捕获 DVL 跳变基准 (s)'),
+        DeclareLaunchArgument('dvl_jump_reset_count', default_value='10',
+                              description='连续跳变拒绝后重置基准的次数，0 = 关闭'),
+        DeclareLaunchArgument('dvl_outlier_ratio', default_value='0.0',
+                              description='仿真 DVL 野值注入概率 (0-1)'),
+        DeclareLaunchArgument('dvl_outlier_scale', default_value='2.0',
+                              description='仿真 DVL 野值基础幅值 (m/s)'),
 
         Node(
             package='rov_mujoco',
@@ -50,6 +62,10 @@ def generate_launch_description():
             output='screen',
             parameters=[{
                 'dvl_dropout': ParameterValue(dropout, value_type=float),
+                'dvl_outlier_ratio': ParameterValue(
+                    dvl_outlier_ratio, value_type=float),
+                'dvl_outlier_scale': ParameterValue(
+                    dvl_outlier_scale, value_type=float),
             }],
         ),
         Node(
@@ -60,6 +76,9 @@ def generate_launch_description():
             parameters=[{
                 'max_dvl_jump': ParameterValue(max_dvl_jump, value_type=float),
                 'max_dvl_speed': ParameterValue(max_dvl_speed, value_type=float),
+                'max_dvl_gap': ParameterValue(max_dvl_gap, value_type=float),
+                'dvl_jump_reset_count': ParameterValue(
+                    dvl_jump_reset_count, value_type=int),
             }],
         ),
     ])
