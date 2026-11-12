@@ -177,7 +177,13 @@ def install_stubs():
 
     rospy.Publisher = _Publisher
     rospy.init_node = lambda name, **k: rospy.NODE_STATE.setdefault("name", name)
-    rospy.get_param = lambda name, default=None: default
+
+    def _get_param(name, default=None):
+        key = name[1:] if name.startswith("~") else name
+        return rospy.PARAMS.get(key, default)
+
+    rospy.PARAMS = {}
+    rospy.get_param = _get_param
     rospy.Subscriber = lambda topic, typ, cb, **k: rospy.SUBSCRIBED.append(
         (topic, cb))
     rospy.loginfo = lambda msg, *a, **k: rospy.LOGS.append(("info", msg))
@@ -262,6 +268,7 @@ import gesture_detection as gd  # noqa: E402
 import gesture_gate             # noqa: E402
 import gesture_map as gm        # noqa: E402
 import gesture_ros_node         # noqa: E402
+import gesture_mlp_classifier as gmc   # noqa: E402
 import drone_control_node       # noqa: E402
 
 FakeString = String
@@ -436,6 +443,67 @@ def test_classification():
 # --------------------------------------------------------------------------- #
 # 4. 指令闸门
 # --------------------------------------------------------------------------- #
+def test_palm_thumb_abduction():
+    """张开手掌：拇指朝侧面时 x 偏移判据失效，要用拇指张开角兜底。
+
+    真实录制数据（121 个样本）：张开手掌 44.3°~62.2°、握拳 0.1°~136.6°；
+    阈值取 40° 时手掌 63/63 命中、非手掌误判 0 帧（因为只有四指伸直才走兜底分支）。
+    """
+
+    def hand(thumb_mcp, thumb_ip, thumb_tip, curled=False):
+        pts = [(0.0, 0.0)] * 21
+        pts[0] = (0.0, 0.0)                       # 腕
+        for mcp, x in ((5, -30), (9, 0), (13, 15), (17, 28)):
+            pts[mcp] = (x, -10.0)
+            pts[mcp + 1] = (x, -30.0)             # PIP
+            pts[mcp + 2] = (x, -40.0)             # DIP
+            pts[mcp + 3] = (x, -50.0)             # TIP（y 更小 = 伸直）
+        if curled:                                # 握拳：指尖落到 PIP 下方
+            for mcp in (5, 9, 13, 17):
+                pts[mcp + 3] = (pts[mcp][0], pts[mcp + 1][1] + 20.0)
+        pts[1] = (-5.0, 5.0)                      # 拇指 CMC
+        pts[2] = thumb_mcp
+        pts[3] = thumb_ip
+        pts[4] = thumb_tip
+        return pts
+
+    # 掌心朝镜头、四指伸直、拇指朝侧面：x 偏移只有 1 px（掌宽 10），但张开角 ~76°
+    palm = hand((-5.0, 5.0), (-19.0, 16.0), (-20.0, 20.0))
+    states = gd.finger_states(palm)
+    check("掌宽按腕->中指根算", abs(gd.palm_scale(palm) - 10.0) < 1e-6,
+          "%.2f" % gd.palm_scale(palm))
+    check("拇指朝侧面时旧判据认为拇指没伸", states[0] is False, str(states))
+    check("四指伸直", all(states[1:]), str(states))
+    check("张开角 >= 阈值", gd.thumb_abduction_deg(palm) >= gd.PALM_ABDUCTION_MIN_DEG,
+          "%.1f°" % gd.thumb_abduction_deg(palm))
+    check("补丁后判为 PALM_OPEN", gd.classify_landmarks(palm) == gm.GESTURE_PALM,
+          str(gd.classify_landmarks(palm)))
+
+    # 握拳：四指全弯 -> extended==0，不应被"张开角兜底"改坏
+    fist = hand((-5.0, 5.0), (-19.0, 16.0), (-20.0, 20.0), curled=True)
+    check("握拳时四指全弯", not any(gd.finger_states(fist)[1:]),
+          str(gd.finger_states(fist)))
+    check("握拳仍判为 FIST", gd.classify_landmarks(fist) == gm.GESTURE_FIST,
+          str(gd.classify_landmarks(fist)))
+
+    # 张开角不够大（拇指贴向食指方向）时不应误判成手掌
+    tight = hand((-5.0, 5.0), (-14.0, 0.0), (-15.0, 2.0))
+    check("贴合姿势的张开角 < 阈值",
+          gd.thumb_abduction_deg(tight) < gd.PALM_ABDUCTION_MIN_DEG,
+          "%.1f°" % gd.thumb_abduction_deg(tight))
+    check("拇指没张开时不判 PALM_OPEN",
+          gd.classify_landmarks(tight) != gm.GESTURE_PALM,
+          str(gd.classify_landmarks(tight)))
+
+    # numpy 数组输入（classify_landmarks 里 `if not landmarks` 会抛 ValueError）
+    try:
+        ok = gd.classify_landmarks(np.asarray(palm, dtype=np.float32)) == gm.GESTURE_PALM
+        detail = ""
+    except Exception as exc:                      # noqa: BLE001
+        ok, detail = False, str(exc)
+    check("numpy 数组输入也能正常分类", ok, detail)
+
+
 def test_command_gate():
     gate = gesture_gate.CommandGate(stable_frames=3, cooldown=1.0,
                                     release_frames=2, clock=lambda: 0.0)
@@ -1157,6 +1225,133 @@ class FakeDroneExecutor(object):
         self.closed = True
 
 
+def test_mlp_classifier_node():
+    """classifier:=mlp 接进感知节点：加载成功用模型、失败回退规则法（不崩）。"""
+    # 替身模块是在 install_stubs() 里装的，这里从 sys.modules 取回来
+    rospy = sys.modules["rospy"]
+    hand = np.zeros((21, 2), dtype=np.float32)
+    for i in range(21):
+        hand[i] = (float(i % 4) * 10.0, float(i) * 2.0)
+
+    class StubModel(object):
+        """固定判 FIST 的替身模型（0.9 / 0.1）。"""
+
+        classes = ["PALM_OPEN", "FIST", "POINT", "VICTORY",
+                   "THUMB_DOWN", "THUMB_UP", "OK"]
+
+        def predict_proba(self, X):
+            p = np.zeros((X.shape[0], 7), dtype=np.float32)
+            p[:, 1] = 0.9
+            p[:, 0] = 0.1
+            return p
+
+    def build():
+        return gesture_ros_node.GestureControlNode(
+            camera=FakeCamera(), detector=FakeDetector(gm.GESTURE_PALM))
+
+    # (1) 默认 rules：不加载模型
+    node = build()
+    check("默认 classifier=rules 且不加载模型",
+          node.classifier_name == "rules" and node.mlp is None,
+          str((node.classifier_name, node.mlp)))
+
+    # (2) classifier=mlp 且模型存在 -> 加载成功
+    rospy.PARAMS["classifier"] = "mlp"
+    rospy.PARAMS.pop("mlp/model_path", None)
+    node2 = build()
+    check("classifier=mlp 时加载到模型",
+          node2.classifier_name == "mlp" and node2.mlp is not None,
+          str((node2.classifier_name, type(node2.mlp).__name__)))
+    check("加载的模型类别数是 7", len(node2.mlp.classes) == 7,
+          str(node2.mlp.classes))
+
+    # (3) 模型缺失 -> 回退 rules，且记了 warning
+    rospy.PARAMS["mlp/model_path"] = "models/definitely_missing.npz"
+    rospy.LOGS.clear()
+    node3 = build()
+    check("模型缺失时回退到 rules",
+          node3.classifier_name == "rules" and node3.mlp is None,
+          str((node3.classifier_name, node3.mlp)))
+    check("回退时给出可读的告警",
+          any("回退" in msg for _, msg in rospy.LOGS), str(rospy.LOGS[:3]))
+    warn_txt = " ".join(msg for _, msg in rospy.LOGS if "没找到模型" in msg)
+    check("显式路径的告警里带上了路径",
+          "definitely_missing" in warn_txt, warn_txt)
+    # 路径留空时（自动查找）的文案：不能是空括号，要说明是自动查找
+    empty_desc = gesture_ros_node.describe_model_path("")
+    check("路径留空时文案不出现空括号（）", "（）" not in empty_desc, empty_desc)
+    check("路径留空时文案说明是自动查找", "自动查找" in empty_desc, empty_desc)
+    check("显式路径时原样显示",
+          gesture_ros_node.describe_model_path("models/x.npz") == "models/x.npz",
+          gesture_ros_node.describe_model_path("models/x.npz"))
+
+    # (4) mlp 覆盖规则法的判定
+    rospy.PARAMS.pop("mlp/model_path", None)
+    node4 = build()
+    node4.mlp = gmc.MLPClassifier(model=StubModel(), threshold=0.5)
+    node4.pub_state.sent.clear()
+    node4.pub_cmd.sent.clear()
+    for i in range(3):
+        node4.handle_result(
+            gd.GestureResult(gesture=gm.GESTURE_PALM, command=gm.CMD_TAKEOFF,
+                             landmarks=hand), now=float(i))
+    states = [m.data for m in node4.pub_state.sent]
+    cmds = [m.data for m in node4.pub_cmd.sent]
+    check("mlp 把 PALM 改判成 FIST（覆盖规则法）",
+          bool(states) and states[-1] == "FIST", str(states))
+    check("mlp 判定后不再发布 takeoff", gm.CMD_TAKEOFF not in cmds, str(cmds))
+
+    # (5) 置信度低于阈值 -> 当作没识别出
+    node5 = build()
+    node5.mlp = gmc.MLPClassifier(model=StubModel(), threshold=0.95)
+    gesture, conf = node5.mlp.predict(hand)
+    check("低于阈值按 NONE 处理",
+          gesture == gm.GESTURE_NONE and conf < 0.95, str((gesture, conf)))
+
+    # (6) 损坏的模型文件：0 字节 / 截断 —— 不能把节点带崩
+    import tempfile
+    tmpdir = tempfile.mkdtemp(prefix="bad_model_")
+    zero = os.path.join(tmpdir, "zero.npz")
+    open(zero, "wb").close()
+    good = gmc.find_model_path()
+    with open(good, "rb") as fh:
+        blob = fh.read()
+    truncated = os.path.join(tmpdir, "trunc.npz")
+    with open(truncated, "wb") as fh:
+        fh.write(blob[:len(blob) // 3])
+
+    for path, what in ((zero, "0 字节"), (truncated, "截断的 npz")):
+        rospy.PARAMS["classifier"] = "mlp"
+        rospy.PARAMS["mlp/model_path"] = path
+        rospy.LOGS.clear()
+        try:
+            node_bad = build()
+            ok = node_bad.classifier_name == "rules" and node_bad.mlp is None
+            detail = "%s -> %s" % (what, node_bad.classifier_name)
+        except Exception as exc:                   # noqa: BLE001
+            ok, detail = False, "%s -> %s: %s" % (what, type(exc).__name__, exc)
+        check("坏模型（%s）回退到 rules 而不是崩" % what, ok, detail)
+
+    # (7) 类别顺序不一致的模型：拒绝加载并回退
+    import numpy as np2
+    with np2.load(good, allow_pickle=False) as data:
+        payload = {k: data[k] for k in data.files}
+    payload["classes"] = np2.array(list(reversed(["PALM_OPEN", "FIST", "POINT",
+                                                  "VICTORY", "THUMB_DOWN",
+                                                  "THUMB_UP", "OK"])))
+    bad_cls = os.path.join(tmpdir, "bad_cls.npz")
+    np2.savez_compressed(bad_cls, **payload)
+    rospy.PARAMS["classifier"] = "mlp"
+    rospy.PARAMS["mlp/model_path"] = bad_cls
+    node_cls = build()
+    check("类别顺序不一致时回退到 rules",
+          node_cls.classifier_name == "rules" and node_cls.mlp is None,
+          str(node_cls.classifier_name))
+
+    # 收尾：清掉参数，避免影响后续用例
+    rospy.PARAMS.clear()
+
+
 def test_nodes():
     node = gesture_ros_node.GestureControlNode(
         camera=FakeCamera(), detector=FakeDetector(gm.GESTURE_PALM))
@@ -1387,6 +1582,7 @@ def main():
             ("1. 语法与静态约定", test_syntax_and_static),
             ("2. 词表一致性", test_vocabulary_contract),
             ("3. 手势分类", test_classification),
+            ("3.5 张开手掌（拇指张开角兜底）", test_palm_thumb_abduction),
             ("4. 指令闸门（去抖/边沿/冷却）", test_command_gate),
             ("5. 摄像头（跨平台后端）", test_camera),
             ("6. AirSim 封装（动作/限幅/超时/状态）", test_drone_client),
@@ -1397,6 +1593,7 @@ def main():
             ("6.8 confirmConnection 返回 None", test_confirm_none),
             ("7. 端到端：手势 -> 指令 -> AirSim", test_end_to_end),
             ("8. 两个节点的契约 + 状态回传", test_nodes),
+            ("8.5 MLP 分类器接进节点（classifier:=mlp）", test_mlp_classifier_node),
             ("9. 叠加层不丢帧", test_overlay_not_lost),
             ("10. 工程文件约定", test_project_layout)]:
         print("\n-- %s --" % title)

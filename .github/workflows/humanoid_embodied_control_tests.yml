@@ -1,0 +1,39 @@
+name: Humanoid embodied control tests
+
+# 人形具身控制模块的离线 + MuJoCo 冒烟测试：纯函数层、平衡参数校验、
+# CLI 端到端，以及有 MuJoCo 时的站立/行走硬断言。不安装 ROS（rclpy 节点
+# 只做话题胶水，控制链路在纯 Python 层已被这套用例覆盖）。
+
+on:
+  push:
+    paths:
+      - 'src/humanoid/humanoid_embodied_control/**'
+      - 'tests/test_humanoid_embodied/**'
+      - 'docs/humanoid/embodied_humanoid_control.md'
+      - '.github/workflows/humanoid_embodied_control_tests.yml'
+  pull_request:
+    paths:
+      - 'src/humanoid/humanoid_embodied_control/**'
+      - 'tests/test_humanoid_embodied/**'
+      - 'docs/humanoid/embodied_humanoid_control.md'
+      - '.github/workflows/humanoid_embodied_control_tests.yml'
+
+jobs:
+  test:
+    name: pytest humanoid embodied
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install numpy pytest mujoco scipy
+
+      - name: Run humanoid embodied tests
+        run: python3 -m pytest tests/test_humanoid_embodied/ -q

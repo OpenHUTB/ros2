@@ -2,17 +2,27 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>auv_end2end</name>
-  <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="liahn@todo.todo">liahn</maintainer>
-  <license>TODO: License declaration</license>
+  <version>0.1.0</version>
+  <description>水下机器人 AUV 端到端仿真功能包，提供矩形巡航与基于单目图像暗区检测的视觉避障两个节点</description>
+  <maintainer email="xxxuuaa@users.noreply.github.com">liahn</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
 
   <depend>rclpy</depend>
   <depend>sensor_msgs</depend>
   <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
   <depend>cv_bridge</depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>ament_index_python</exec_depend>
+  <exec_depend>gazebo_ros</exec_depend>
+  <exec_depend>gazebo_plugins</exec_depend>
+  <exec_depend>rviz2</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-opencv</exec_depend>
 
-  <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
   <test_depend>ament_pep257</test_depend>
   <test_depend>python3-pytest</test_depend>
@@ -21,3 +31,4 @@
     <build_type>ament_python</build_type>
   </export>
 </package>
+

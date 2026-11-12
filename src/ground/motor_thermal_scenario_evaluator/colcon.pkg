@@ -1,0 +1,5 @@
+{
+  "hooks": [
+    "share/motor_thermal_scenario_evaluator/hook/ament_prefix_path.dsv"
+  ]
+}

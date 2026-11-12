@@ -1,0 +1,10 @@
+<launch>
+    <!-- 启动底层运动学仿真节点 -->
+    <node name="robot_odom_sim" pkg="robot_odom_sim" type="main.py" output="screen" />
+    
+    <!-- 启动键盘控制 (使用 xterm 弹出独立窗口) -->
+    <node name="teleop_test" pkg="robot_odom_sim" type="teleop_test.py" output="screen" launch-prefix="xterm -e" />
+
+    <!-- 启动 Rviz 并自动加载配置 -->
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find robot_odom_sim)/rviz/robot_odom.rviz" />
+</launch>

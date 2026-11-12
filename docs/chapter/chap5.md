@@ -371,5 +371,10 @@ roslaunch robot_vision mbot_intelligence.launch
   - 任务：把每条扫描分类为 `near` / `far` / `free` 三类
   - 源代码：[`src/chap5/lidar_obstacle_nn/`](https://github.com/OpenHUTB/ros2/tree/master/src/chap5/lidar_obstacle_nn)
 
+- [行人隐私脱敏视觉检测节点](../privacy_mask/README.md)
+  - 功能包：`src/chap5/privacy_mask/`
+  - 模型：Ultralytics YOLOv8n 目标检测（COCO person 类，权重按文档第 5 节准备，不入版本库）
+  - 任务：检测静态图片中的行人并对包围盒做高斯模糊，发布 `/image_raw/compressed` 与 `/image_masked/compressed`
+
 后续规划方向（占位）：相机目标检测（YOLOv8 + Gazebo 仿真相机）、深度相机避障 NN、
 激光雷达 + 相机融合感知、感知→运动控制闭环。

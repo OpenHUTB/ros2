@@ -27,10 +27,31 @@ class CarEnv:
         self.load(scene_name, xml_path)
 
     # ---------- 加载与重置 ----------
+    # 只对「路径打不开」类错误回退；XML 语法错误应当直接抛出，不能被静默重试
+    _PATH_ERRORS = ('resource not found', 'Error opening file', 'No such file', 'cannot open')
+
+    @classmethod
+    def _load_model(cls, xml_path):
+        """加载场景 XML。
+
+        MuJoCo 默认走 OS 文件系统读取，路径含非 ASCII 字符（例如中文目录）时会报
+        「resource not found」。此时退回「读文本 + from_xml_string」，本模块的场景不引用
+        外部网格/纹理，因此内联解析是等价的。
+        """
+        try:
+            return mujoco.MjModel.from_xml_path(str(xml_path))
+        except ValueError as exc:
+            message = str(exc)
+            if not any(token in message for token in cls._PATH_ERRORS):
+                raise
+            from pathlib import Path
+            text = Path(xml_path).read_text(encoding="utf-8")
+            return mujoco.MjModel.from_xml_string(text)
+
     def load(self, scene_name=None, xml_path=None):
         if xml_path is None:
             xml_path = self.cfg.scene_path(scene_name)
-        self.model = mujoco.MjModel.from_xml_path(str(xml_path))
+        self.model = self._load_model(xml_path)
         self.data = mujoco.MjData(self.model)
         self.model.opt.timestep = self.cfg.timestep
         # 固定 id 缓存
@@ -52,6 +73,8 @@ class CarEnv:
     def reset(self):
         mujoco.mj_resetData(self.model, self.data)
         mujoco.mj_forward(self.model, self.data)
+        # 每个 episode 重置传感器噪声序列，保证同一配置下可复现
+        self._sensor_rng = None
         # 起步静置：先零轮速推进，让轮胎接触稳定建立，避免空转与偏航
         n = max(1, int(round(self.cfg.settle_s / self.cfg.timestep)))
         self.data.ctrl[self.drive_l_id] = 0.0
