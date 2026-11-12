@@ -1,0 +1,22 @@
+# Python runtime dependencies for lidar_obstacle_nn.
+#
+# Install into the ROS 2 Python environment (not a separate venv) so
+# that rclpy is importable:
+#
+#     python3 -m pip install --user -r requirements.txt
+#
+# CPU-only machines (no NVIDIA GPU): the default PyPI build of torch
+# already runs on CPU, so the pinned line below is all you need.
+#
+# Machines with an NVIDIA GPU: install the CUDA wheel that matches
+# your driver instead (see https://pytorch.org/get-started/locally/),
+# e.g.:
+#
+#     python3 -m pip install --user torch --index-url https://download.pytorch.org/whl/cu121
+
+# The numpy floor matches the version shipped with ROS 2 Humble
+# (1.21.x) so that `pip install -r requirements.txt` never upgrades
+# the system numpy underneath ROS 2 (a newer numpy in ~/.local would
+# shadow the one rclpy/sensor_msgs were built against).
+numpy>=1.21,<2.0
+torch>=2.0,<3.0

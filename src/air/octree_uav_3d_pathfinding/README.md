@@ -117,19 +117,38 @@ AirSim 接进 ROS 之后，RViz 里可以看到激光点云，以及桥接节点
 
 ![建图统计输出](docs/octomap_terminal.png)
 
+地图建起来之后，向 `/uav/goal` 下发目标点，规划节点会在八叉树上做一次 A\* 搜索。
+下图为离线验证场景：飞行器从房间左上角规划到右下角，
+**路径必须穿过两道错开墙壁的缺口，形成一个 S 形**
+（31.36 m，而两点直线距离只有 21.2 m）：
+
+![A\* 规划路径](docs/astar_rviz.png)
+
+规划节点每次规划输出统计信息 —— 展开节点数、航点数、路径长度与耗时：
+
+![规划统计输出](docs/astar_terminal.png)
+
 ### 不需要模拟器的离线自检
 
-`scripts/mock_cloud_publisher.py` 会发布一个 20×20×6 m 的假房间点云（含一个悬空方块），
-用来**单独验证"点云 → 八叉树 → RViz"这半条链路**。
-排障时非常有用 —— 能把"桥接/模拟器的问题"和"建图/RViz 的问题"分开：
+`scripts/mock_cloud_publisher.py` 发布一个确定不变的房间场景 ——
+20×20×6 m 的封闭房间，里面立着两道错开的墙（**从地面一直顶到天花板**）和几根柱子。
+它用来**单独验证"点云 → 八叉树 → A\* 寻路 → RViz"整条链路**，
+排障时能把"桥接 / 模拟器的问题"和"建图 / 寻路 / RViz 的问题"分开。
 
-    # 终端 1：只起建图与 RViz，不起桥接
-    roslaunch octree_uav_3d_pathfinding main.launch bridge:=false check:=false
+**传感器会依次驻留房间的四个角**：激光雷达是单视角的，障碍物背后会留下永远扫不到的
+"阴影"，而规划器把未知区域一律当障碍 —— 只有多视角扫描才能把这些阴影填掉。
+
+    # 终端 1：起建图、规划与 RViz，但不起桥接
+    #         （离线场景只广播 world -> lidar_link，所以体坐标系要指到它）
+    roslaunch octree_uav_3d_pathfinding main.launch bridge:=false check:=false body_frame:=lidar_link
 
     # 终端 2：喂假点云
     python3 scripts/mock_cloud_publisher.py
 
-应在 RViz 中看到一个彩色的空心房间。
+    # 等约 60 秒让传感器巡游一圈把地图扫满，再发目标点（左上角 → 右下角）
+    rostopic pub -1 /uav/goal geometry_msgs/Point "{x: 7.5, y: -7.5, z: 0.0}"
+
+应在 RViz 中看到彩色的房间与障碍柱，以及一条穿过两个缺口的 S 形绿色路径。
 
 ## 模块组成
 
@@ -171,6 +190,26 @@ AirSim 接进 ROS 之后，RViz 里可以看到激光点云，以及桥接节点
 
 不依赖模拟器，生成一个封闭房间的点云并发到 `/cloud_in`，用于排障与离线演示。
 
+### A* 规划节点 astar_planner
+
+在八叉树地图上做 A\* 全局寻路。**核心算法在
+`include/octree_uav_3d_pathfinding/astar.h`，与 ROS 完全解耦**（只依赖 octomap 与 STL），
+因此可以离线单元测试 —— `tests/test_astar.cpp` 里有 5 个用例，
+编译一次就能跑，**不需要 ROS 运行时、不需要模拟器**。
+
+* 订阅 `/octomap_full` 与 `/uav/goal`，由 TF 查 `world ← base_link` 取起点
+* 输出 `/uav/path`（`nav_msgs/Path`）与 `/uav/explored_markers`（展开节点，按尺寸着色）
+* **只做规划、不控制飞行** —— 把路径喂给控制器是后续阶段的事
+
+关键设计（详见站点文档《八叉树上的 A\* 全局寻路》）：
+
+* **邻接用"探测点法"**：沿 26 个方向从自身中心挪出 `边长/2 + 分辨率/2`，
+  该点必定落在紧贴的邻居体内；邻居更细时按接触面展开（用 `k_max` 限制计算量）
+* **代价用两节点中心的欧氏距离**，不能数"步数" —— 跨一个大节点和跨一个小节点，
+  实际位移可能差两个数量级
+* **未知区域一律当障碍** —— octomap 里未知区域根本没有节点对象，
+  这是保守且唯一干净的选择
+
 ## 坐标系约定
 
 **这是本模块最容易出错的地方**，因为 AirSim 与 ROS 用的坐标系完全不同：
@@ -191,11 +230,13 @@ AirSim 接进 ROS 之后，RViz 里可以看到激光点云，以及桥接节点
 |---|---|---|---|
 | /cloud_in | sensor_msgs/PointCloud2 | 桥接发布 | 激光雷达点云（`lidar_link` 系） |
 | /ground_truth/odom | nav_msgs/Odometry | 桥接发布 | 位姿与速度（ENU） |
-| /uav/goal | geometry_msgs/Point | 桥接订阅 | 目标点（ROS 世界系 ENU） |
+| /uav/goal | geometry_msgs/Point | 桥接 + 规划订阅 | 目标点（ROS 世界系 ENU） |
 | /tf | tf2_msgs/TFMessage | 桥接发布 | `world → base_link → lidar_link` |
 | /uav/status | std_msgs/String | 桥接发布 | 运行状态 |
 | /octomap_full | octomap_msgs/Octomap | 建图发布 | 完整八叉树地图（latched） |
 | /occupied_cells_vis_array | visualization_msgs/MarkerArray | 建图发布 | 占用体素可视化 |
+| /uav/path | nav_msgs/Path | 规划发布 | 规划出的路径（latched） |
+| /uav/explored_markers | visualization_msgs/MarkerArray | 规划发布 | A\* 展开过的节点，按尺寸着色（latched） |
 
 ## 参数配置
 
@@ -243,7 +284,7 @@ AirSim 接进 ROS 之后，RViz 里可以看到激光点云，以及桥接节点
 | cloud_topic / world_frame / sensor_frame | /cloud_in / world / lidar_link | 输入话题与坐标系 |
 | resolution | 0.3 | 八叉树叶节点分辨率（m），**最关键的一个参数** |
 | max_range / min_range | 30.0 / 0.5 | 射线量程范围（m） |
-| point_stride | 2 | 抽稀：每隔 N 个点取一个做射线投射 |
+| point_stride | 1 | 抽稀：每隔 N 个点取一个做射线投射 |
 | prob_hit / prob_miss | 0.7 / 0.4 | 占用概率模型 |
 | clamp_min / clamp_max | 0.12 / 0.97 | 占用概率上下限 |
 | publish_rate | 1.0 | 地图与可视化发布频率（Hz） |
@@ -251,8 +292,9 @@ AirSim 接进 ROS 之后，RViz 里可以看到激光点云，以及桥接节点
 | max_markers | 20000 | 单帧可视化的最大体素个数 |
 
 > **性能提示**：AirSim 一帧约有一万个点，每点一条射线，射线长度除以分辨率就是
-> 要更新的体素数量。逐点投射在虚拟机上跟不上，所以默认抽稀 2 倍、分辨率取 0.3 m、
-> 量程收到 30 m。机器的性能富裕时可以把 `point_stride` 调回 1、`resolution` 调到 0.2。
+> 要更新的体素数量。逐点投射在虚拟机上跟不上，所以分辨率取 0.3 m、量程收到 30 m；
+> `point_stride` 保持 1，不再抽稀（采样点之间的缝比体素大时，射线会穿过去把障碍物内部
+> 误标成空闲）。机器的性能富裕时可以把 `resolution` 调到 0.2。
 
 ## 目录结构
 

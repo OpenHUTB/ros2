@@ -1,0 +1,82 @@
+name: control modules tests
+
+# 这 5 个模块是纯解析计算，除 main_node.py 外不 import rclpy，
+# 所以 CI 不安装 ROS：既避开 apt 源的网络抖动（曾导致 "Temporary failure resolving
+# 'azure.archive.ubuntu.com'" 让整条流水线在 setup 阶段就失败），又把耗时从 6~10 分钟
+# 压到 1 分钟以内。构建与测试仍然真实执行 colcon。
+on:
+  push:
+    paths:
+      - 'src/ground/can_signal_decode/**'
+      - 'src/ground/control_discretization/**'
+      - 'src/ground/drivetrain_torsion_state_feedback/**'
+      - 'src/ground/wheel_speed_observer/**'
+      - 'src/air/uav_hover_throttle/**'
+      - '.github/workflows/control_modules_tests.yml'
+  pull_request:
+    paths:
+      - 'src/ground/can_signal_decode/**'
+      - 'src/ground/control_discretization/**'
+      - 'src/ground/drivetrain_torsion_state_feedback/**'
+      - 'src/ground/wheel_speed_observer/**'
+      - 'src/air/uav_hover_throttle/**'
+      - '.github/workflows/control_modules_tests.yml'
+
+jobs:
+  test:
+    name: colcon build + test
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install colcon and pytest
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install colcon-common-extensions pytest
+
+      - name: Build the modules present in this tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          packages=""
+          for p in can_signal_decode control_discretization \
+                   drivetrain_torsion_state_feedback wheel_speed_observer \
+                   uav_hover_throttle; do
+            if [ -d "src/ground/$p" ] || [ -d "src/air/$p" ]; then
+              packages="$packages $p"
+            fi
+          done
+          echo "待构建:$packages"
+          test -n "$packages"
+          colcon build --packages-select $packages
+
+      # 纯 pip 环境里 colcon 的 python test 任务不会自动跑 pytest（会报 0 tests），
+      # 所以这里直接对每个包的 test/ 目录跑 pytest；Humble 虚拟机上用 colcon test
+      # 是另一条路径，两者跑的是同一批用例。
+      - name: Run unit tests (pytest)
+        shell: bash
+        run: |
+          set -euo pipefail
+          ran=0
+          for p in can_signal_decode control_discretization \
+                   drivetrain_torsion_state_feedback wheel_speed_observer \
+                   uav_hover_throttle; do
+            for base in src/ground src/air; do
+              if [ -d "$base/$p/test" ]; then
+                echo "::group::pytest $p"
+                PYTHONPATH="$base/$p" python3 -m pytest "$base/$p/test" -q
+                echo '::endgroup::'
+                ran=$((ran + 1))
+              fi
+            done
+          done
+          if [ "$ran" -eq 0 ]; then
+            echo '没有找到任何可测试的模块'
+            exit 1
+          fi
+          echo "共测试 $ran 个模块"

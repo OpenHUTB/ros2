@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>carla_auto_light</name>
+  <version>0.1.0</version>
+  <description>CARLA 地面载具灯光自动控制：自动大灯、雾灯、转向灯（回正自熄灭）、刹车灯</description>
+  <maintainer email="openhutb@example.com">OpenHUTB</maintainer>
+  <license>MIT</license>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

@@ -1,0 +1,18 @@
+mujoco_auto_parking_simulation:
+  ros__parameters:
+    model_file: models/parking_lot.xml
+    wheel_radius: 0.08
+    track_width: 0.48
+    max_wheel_speed: 8.0
+    command_timeout: 0.5
+    publish_tf: true
+    sim_rate: 200.0
+    publish_rate: 50.0
+    enable_camera: true
+    camera_width: 320
+    camera_height: 240
+    enable_depth: true
+    lidar_beams: 120
+    lidar_range: 8.0
+    sensor_publish_divider: 5
+    use_sim_time: false

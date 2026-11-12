@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>camera_imu_time_calibration</name>
+  <version>0.1.0</version>
+  <description>
+    ROS 2 Humble module for camera-IMU temporal (time offset) calibration.
+    Estimates the constant time offset between a camera-derived angular rate
+    and an IMU gyro by normalized cross-correlation on synthetic data with
+    known ground truth, and reports the attitude error caused by leaving the
+    offset uncompensated.
+  </description>
+
+  <maintainer email="lichenlin525@qq.com">lcl52555</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>ros2launch</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+  <test_depend>python3-numpy</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

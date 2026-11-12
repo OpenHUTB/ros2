@@ -1,0 +1,10 @@
+build/
+install/
+log/
+site-day1-check/
+site-day2-check/
+.git/
+data/
+models/weights/
+__pycache__/
+*.pyc

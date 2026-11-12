@@ -1,0 +1,26 @@
+<mujoco model="scene_ball">
+  <!-- 场景 3：拨球离台（食指推拨托柱顶端的球使其滚落，评估接触力控制与任务成功率） -->
+  <include file="hand_model.xml"/>
+
+  <asset>
+    <texture name="grid" type="2d" builtin="checker" rgb1="0.35 0.4 0.45" rgb2="0.4 0.45 0.5"
+             width="256" height="256"/>
+    <material name="floor" texture="grid" texuniform="true" reflectance="0.2"/>
+    <material name="stand" rgba="0.4 0.4 0.45 1" specular="0.4"/>
+    <material name="ball_mat" rgba="0.15 0.45 0.9 1" specular="0.7" shininess="0.6"/>
+  </asset>
+
+  <worldbody>
+    <geom name="floor" type="plane" size="0.6 0.6 0.05" material="floor" condim="3"/>
+
+    <!-- 托柱：顶面 z=0.040，球静置其上（y=0.155 对准食指卷曲弧线的最低段） -->
+    <geom name="g_pedestal" type="cylinder" pos="0.017 0.155 0.020" size="0.018 0.020"
+          material="stand" mass="0.4" contype="1" conaffinity="1"/>
+    <!-- 目标球（自由体） -->
+    <body name="ball" pos="0.017 0.155 0.051">
+      <freejoint name="j_ball"/>
+      <geom name="g_ball" type="sphere" size="0.011" material="ball_mat" mass="0.03"
+            friction="1.0 0.02 0.001"/>
+    </body>
+  </worldbody>
+</mujoco>

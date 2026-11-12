@@ -1,0 +1,9 @@
+# pip 依赖（MuJoCo 不在 apt 仓库里，ROS 1 运行与独立运行共用这一份）
+# 安装：pip3 install --user -r requirements.txt
+# 版本范围按实测放宽：MuJoCo 3.17.0（Windows 11 / Python 3.11）与 3.2.3（Ubuntu / Python 3.12）
+# 上三种模式（ik / swing / clear）均全部通过，故取 3.2–4.0；4.0 及以后未做验证。
+# GIF 的文件内帧数与字节数可能随 Pillow 版本变化
+# （本次实测 450 个时间片 / 文件内 368 帧 / 13.50 s / 2.64 MB）。
+mujoco>=3.2,<4.0
+numpy>=1.26.4,<3.0
+pillow>=10.4.0,<14.0
