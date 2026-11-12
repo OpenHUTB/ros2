@@ -97,6 +97,11 @@ src/air/drl_drone_path_planning/models/train_summary.json
 # 一启动就 FileNotFoundError，评审只能先自己训 52 s。
 !src/air/uav_rotor_fault_detector_nn/results/detector.pt
 
+# 例外：无人机神经容错控制的分配残差网络权重必须入库（26 KB）。
+# 数据集 12 MB 由 --gen-data 现场生成，但这个权重不入库的话
+# --eval / --demo / ros2 launch 的 neural 模式一启动就报错。
+!src/air/uav_neural_fault_tolerant_control/results/allocator.pt
+
 # 例外：Autoencoder 雷达修复模块的离线训练权重必须入库（约 96 KB，免重训）
 !src/ground/lidar_autoencoder_repair/models/*.pt
 

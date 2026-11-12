@@ -60,14 +60,17 @@ class DQNAgent(object):
         self.loss_fn = nn.SmoothL1Loss()
         self.memory = ReplayBuffer(capacity)
 
-    def act(self, state, epsilon=0.0):
-        if random.random() < epsilon:
-            return random.randrange(self.action_dim)
+    def q_values(self, state):
+        """返回 6 个动作的 Q 值，供安全层做动作筛选。"""
         with torch.no_grad():
             tensor = torch.as_tensor(state, dtype=torch.float32,
                                      device=self.device).unsqueeze(0)
-            q = self.online(tensor)
-            return int(q.argmax(dim=1).item())
+            return self.online(tensor)[0].cpu().numpy()
+
+    def act(self, state, epsilon=0.0):
+        if random.random() < epsilon:
+            return random.randrange(self.action_dim)
+        return int(self.q_values(state).argmax())
 
     def remember(self, state, action, reward, next_state, done):
         self.memory.push(state, action, reward, next_state, done)

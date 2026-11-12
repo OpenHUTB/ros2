@@ -55,3 +55,21 @@ def select_action(q_values, sectors, front_m=1.0, side_m=0.9):
     mask = action_mask(sectors, front_m=front_m, side_m=side_m)
     q[~mask] = -np.inf
     return int(np.argmax(q))
+
+
+def front_distance_m(sectors):
+    """Return the nearest obstacle in the forward 60-degree field, in metres."""
+    d = np.asarray(sectors, dtype=np.float32).reshape(-1)
+    if d.size != NUM_SECTORS or not np.all(np.isfinite(d)):
+        return 0.0  # Missing/invalid perception must not authorize forward flight.
+    return float(np.min(d[FRONT])) * MAX_RANGE
+
+
+def recovery_turn(sectors):
+    """Turn toward the more open half of the forward lidar field."""
+    d = np.asarray(sectors, dtype=np.float32).reshape(-1)
+    if d.size != NUM_SECTORS or not np.all(np.isfinite(d)):
+        return HOVER
+    left_clearance = float(np.min(d[LEFT]))
+    right_clearance = float(np.min(d[RIGHT]))
+    return TURN_LEFT if left_clearance >= right_clearance else TURN_RIGHT

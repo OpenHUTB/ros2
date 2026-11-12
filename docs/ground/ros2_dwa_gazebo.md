@@ -51,6 +51,18 @@ TurtleBot3 burger 差速底盘
 * `ros2_dwa_gazebo/verify_nav.py`：订阅 `/odom`、`/scan`、`/cmd_vel`，
   检查位移、最小激光距离和非零指令。
 
+## 文件结构
+
+```text
+src/ground/ros2_dwa_gazebo/
+├── ros2_dwa_gazebo/verify_nav.py  # 位移/激光/指令验证
+├── config/gazebo_params.yaml      # burger 低速参数
+├── launch/main_launch.py          # Gazebo world + DWA 节点
+├── worlds/                        # TurtleBot3 世界
+├── test/
+└── README.md
+```
+
 ## 3. 运行
 
 ```bash
@@ -75,6 +87,18 @@ ros2 run ros2_dwa_gazebo verify_nav --ros-args \
 `timeout` 和 `elapsed_s` 用 `/odom` 的仿真时间，RTF < 1 时不会误报超时；
 无 odom 时节点初始化即开始墙钟兜底。
 
+## 参数说明
+
+| 参数 | 含义 | 默认 |
+| --- | --- | --- |
+| `use_sim_time` | 使用 Gazebo 仿真时间 | true |
+| `goal_x` / `goal_y` | 目标点 | 2.5 / 0.0 |
+| `max_v` / `max_w` | burger 速度上限 | 0.22 m/s / 1.0 rad/s |
+| `max_acc_v` / `max_acc_w` | 加速度上限 | 0.8 m/s² / 2.0 rad/s² |
+| `robot_radius` / `safety_margin` | burger 半径/安全裕度 | 0.12 m / 0.04 m |
+| `goal_tolerance` | 到点容差 | 0.20 m |
+| `map_half_size` | 局部栅格半边长 | 6.0 m |
+
 ## 4. 结果
 
 在 Ubuntu 20.04 + ROS 2 Foxy + Gazebo 11 的 headless `gzserver` 中实跑：
@@ -93,11 +117,16 @@ RESULT {"success": true, "displacement_m": 4.008, "min_scan_m": 0.132,
 | Gazebo 仿真时间 | 21.08 s |
 | DWA 日志 | `stop: goal reached`，无碰撞 |
 
-![TurtleBot3 + A*+DWA 在 Gazebo 中的轨迹](../img/ground/ros2_dwa_gazebo/gazebo_trajectory.png)
-
 两次运行的墙钟时间差异较大，因为 headless Gazebo 的实时因子会波动；上表的
 `elapsed_s` 是**仿真时间**。多次运行的 min_scan 在 0.128–0.189 m，低于配置的
 `robot_radius+safety_margin=0.16 m`，说明安全余量不能保证。
+
+## 运行效果
+
+headless Gazebo 中起点 `(-2.0, 0.0)` → 目标 `(2.5, 0.0)`，实际位移 4.008 m、
+仿真时间 21.08 s、最小激光距离 0.132 m，日志为 `stop: goal reached`：
+
+![TurtleBot3 + A*+DWA 在 Gazebo 中的轨迹](../img/ground/ros2_dwa_gazebo/gazebo_trajectory.png)
 
 ## 5. 与二维仿真的差异
 
@@ -118,7 +147,7 @@ RESULT {"success": true, "displacement_m": 4.008, "min_scan_m": 0.132,
 * 三维物理参数（摩擦、轮滑）未辨识，速度取得保守；
 * 依赖 #1077，合并顺序在 #1077 之后。
 
-## 7. 大模型声明
+## 大模型使用声明
 
 代码与文档在编写过程中使用了 AI 大模型辅助。作者已在 Ubuntu 20.04 + ROS 2 Foxy +
 Gazebo 11 中实际运行本模块，并对提交内容的正确性与完整性负全部责任。
