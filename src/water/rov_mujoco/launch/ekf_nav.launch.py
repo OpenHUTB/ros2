@@ -17,12 +17,18 @@ def generate_launch_description():
 
     dropout = LaunchConfiguration('dvl_dropout')
     current = LaunchConfiguration('use_ocean_current')
+    max_dvl_jump = LaunchConfiguration('max_dvl_jump')
+    max_dvl_speed = LaunchConfiguration('max_dvl_speed')
 
     return LaunchDescription([
         DeclareLaunchArgument('dvl_dropout', default_value='0.10',
                               description='DVL 丢包率 (0-1)'),
         DeclareLaunchArgument('use_ocean_current', default_value='true',
                               description='是否启用三层洋流扰动'),
+        DeclareLaunchArgument('max_dvl_jump', default_value='0.0',
+                              description='相邻 DVL 速度跳变门限 (m/s, 0 = 关闭)'),
+        DeclareLaunchArgument('max_dvl_speed', default_value='0.0',
+                              description='DVL 速度模长门限 (m/s, 0 = 关闭)'),
 
         Node(
             package='rov_mujoco',
@@ -51,5 +57,9 @@ def generate_launch_description():
             executable='ekf_nav_node',
             name='ekf_nav_node',
             output='screen',
+            parameters=[{
+                'max_dvl_jump': ParameterValue(max_dvl_jump, value_type=float),
+                'max_dvl_speed': ParameterValue(max_dvl_speed, value_type=float),
+            }],
         ),
     ])

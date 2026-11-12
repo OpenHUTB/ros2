@@ -1,0 +1,52 @@
+name: Weather adaptive perception replay tests
+
+# 这个模块只依赖 numpy + opencv-python + matplotlib，不需要 CARLA / ROS / GPU，
+# 所以可以在 PR 级 CI 里真跑：先跑不依赖权重的离线断言，再用真实下载的权重跑 main.py，
+# 最后带权重再跑一次完整断言（含端到端召回率）。
+on:
+  push:
+    paths:
+      - 'src/ground/weather_adaptive_perception_replay/**'
+      - 'tests/test_weather_adaptive_perception_replay_local.py'
+      - '.github/workflows/weather_adaptive_perception_replay_tests.yml'
+  pull_request:
+    paths:
+      - 'src/ground/weather_adaptive_perception_replay/**'
+      - 'tests/test_weather_adaptive_perception_replay_local.py'
+      - '.github/workflows/weather_adaptive_perception_replay_tests.yml'
+
+jobs:
+  test:
+    name: pytest + main.py smoke (no CARLA / GPU)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        working-directory: src/ground/weather_adaptive_perception_replay
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install -r requirements.txt pytest
+
+      # 模型还没下载时，端到端用例会 skip，其余断言照跑
+      - name: Offline assertions (no weights)
+        run: python3 -m pytest tests/test_weather_adaptive_perception_replay_local.py -v
+
+      # 真下载一次权重：同时验证字节数 + sha256 校验链路在 CI 里可用
+      - name: Smoke run main.py
+        working-directory: src/ground/weather_adaptive_perception_replay
+        run: |
+          python3 main.py
+          test -s results/adaptive_perception.png
+          test -s results/summary.json
+
+      # 权重已就绪，带 WEATHER_AP_REPLAY_MODEL_DIR 再跑一次，端到端断言一并执行
+      - name: Full assertions (with weights)
+        env:
+          WEATHER_AP_REPLAY_MODEL_DIR: ${{ github.workspace }}/src/ground/weather_adaptive_perception_replay/model
+        run: python3 -m pytest tests/test_weather_adaptive_perception_replay_local.py -v
