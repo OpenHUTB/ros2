@@ -32,8 +32,8 @@ mujoco_auto_parking/
 ## 构建与运行 / Build and Run
 
 ```bash
-# 把本包放进 ROS 2 工作空间的 src/ 下
-cd ~/auto_parking_ws
+# 把本包放进 ROS 2 工作空间的 src/ 下（下文以 ~/ros2_ws 为例，路径可自行替换）
+cd ~/ros2_ws
 source /opt/ros/humble/setup.bash
 colcon build --packages-select mujoco_auto_parking --symlink-install
 source install/setup.bash
@@ -41,6 +41,14 @@ source install/setup.bash
 cd src/ground/mujoco_auto_parking
 ./main.sh --launch
 ```
+
+`main.sh` 会自动 source 工作空间，优先级为：
+
+1. 本模块所在的工作空间（从脚本路径向上查找 `install/setup.bash`）；
+2. `~/ros2_ws`；
+3. `~/auto_parking_ws`。
+
+因此本机同时存在多个工作空间时，默认使用编译了本模块的那一个，不会 source 到别处的旧安装。若希望显式指定，先手动 `source <你的工作空间>/install/setup.bash` 再执行 `./main.sh`。
 
 发送速度指令：
 
