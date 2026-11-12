@@ -2,9 +2,10 @@
 
 > 项目类型：机器人课程设计 / 技术复盘
 > 平台：Ubuntu 22.04（VMware 虚拟机）· 终端操作
-> 上一篇：[二连杆机械臂肌肉骨骼建模与 MuJoCo 仿真](./muscle_arm_mujoco_simulation.md)
+> 前一份 MuJoCo 肌肉骨骼仿真（二连杆臂建模）见 PR #538；本文所用模型文件已随本 PR 提交为
+> `docs/muscle_arm.xml`，无需另行获取。
 
-在上一篇 MuJoCo 肌肉骨骼二连杆臂（`muscle_arm.xml`，4 条肌腱驱动肌肉）的基础上，
+在 MuJoCo 肌肉骨骼二连杆臂（`muscle_arm.xml`，4 条肌腱驱动肌肉）的基础上，
 用 ROS2（Humble）把仿真状态发布成标准话题，让 rviz / robot_state_publisher 等
 ROS2 标准工具可以直接订阅。
 
@@ -18,7 +19,7 @@ ROS2 标准工具可以直接订阅。
 | ROS2 | Humble（`/opt/ros/humble`） |
 | 物理引擎 | mujoco 3.2.3（`pip install mujoco`，清华源） |
 | Python | 3.10（系统自带 `python3`） |
-| 模型文件 | `muscle_arm.xml`（同上一篇文档的模型） |
+| 模型文件 | `docs/muscle_arm.xml`（随本 PR 提交） |
 
 > 排错记录：conda 环境里的 Python 3.14 与 `rclpy` 不兼容（`import rclpy` 直接失败），
 > 因此本节点改用系统自带的 `python3`（3.10）运行，conda 环境只用来跑纯 MuJoCo / 绘图脚本。
@@ -34,20 +35,60 @@ ROS2 标准工具可以直接订阅。
 | `/muscle_force` | `std_msgs/Float64MultiArray` | 发布 | 4 条肌肉的执行器力（N） |
 
 关节状态特意使用标准话题名 `/joint_states`、标准消息 `sensor_msgs/JointState`，
-这样 `ros2 topic echo`、rviz 的 TF/关节显示、`robot_state_publisher` 都能直接订阅，
-不需要再写自定义消息或额外转换节点。
+这样 `ros2 topic echo`、rviz 的关节/TF 显示、`robot_state_publisher` 都能直接订阅，
+不需要额外写自定义消息或转换节点。`/joint_states` 里的关节名为 `sh_pitch`、`el_pitch`。
 
 ---
 
-## 3 源码
+## 3 源码与模型
 
-桥接节点源码随文档一起提交：**`docs/muscle_ros_publisher.py`**。
+| 文件 | 说明 |
+|------|------|
+| `docs/muscle_ros_publisher.py` | ROS2 桥接节点源码（随本 PR 提交） |
+| `docs/muscle_arm.xml` | MuJoCo 肌肉骨骼模型（MJCF，随本 PR 提交） |
 
 本节点使用标准消息类型，因此**不需要 colcon 构建**，直接用 `python3` 运行即可；
-（如果希望用 `ros2 run` 启动，需要先把脚本放进一个 ROS2 功能包并 `colcon build`，
+（若希望用 `ros2 run` 启动，需要先把脚本放进一个 ROS2 功能包并 `colcon build`，
 本作业为文档 + 单文件脚本，未提交功能包，故用 `python3` 直接运行。）
 
-完整代码：
+`docs/muscle_arm.xml` 的内容（4 条肌肉：`sh_flex`/`sh_ext`/`el_flex`/`el_ext`）：
+
+```xml
+<mujoco model="muscle_arm">
+  <option timestep="0.002"/>
+  <compiler angle="radian"/>
+
+  <worldbody>
+    <light diffuse="0.8 0.8 0.8" pos="0 -1 2" dir="0 1 -1"/>
+    <geom name="ground" type="plane" size="1.5 1.5 0.1" rgba="0.9 0.9 0.9 1"/>
+    <body name="shoulder" pos="0 0 0">
+      <joint name="sh_pitch" type="hinge" axis="0 1 0" pos="0 0 0" range="-3.0 3.0"/>
+      <geom name="upperarm" type="capsule" fromto="0 0 0 0.40 0 0" size="0.05" mass="2.0"/>
+      <body name="elbow" pos="0.40 0 0">
+        <joint name="el_pitch" type="hinge" axis="0 1 0" pos="0 0 0" range="-3.0 3.0"/>
+        <geom name="forearm" type="capsule" fromto="0 0 0 0.35 0 0" size="0.04" mass="1.2"/>
+        <geom name="hand" type="sphere" pos="0.35 0 0" size="0.06" mass="0.4"/>
+      </body>
+    </body>
+  </worldbody>
+
+  <tendon>
+    <fixed name="t_sh_flex"><joint joint="sh_pitch" coef="-1"/></fixed>
+    <fixed name="t_sh_ext" ><joint joint="sh_pitch" coef="1"/></fixed>
+    <fixed name="t_el_flex"><joint joint="el_pitch" coef="-1"/></fixed>
+    <fixed name="t_el_ext" ><joint joint="el_pitch" coef="1"/></fixed>
+  </tendon>
+
+  <actuator>
+    <muscle name="sh_flex" tendon="t_sh_flex" force="1500" lengthrange="0.05 1.2"/>
+    <muscle name="sh_ext"  tendon="t_sh_ext"  force="1500" lengthrange="0.05 1.2"/>
+    <muscle name="el_flex" tendon="t_el_flex" force="500" lengthrange="0.05 1.2"/>
+    <muscle name="el_ext"  tendon="t_el_ext"  force="500" lengthrange="0.05 1.2"/>
+  </actuator>
+</mujoco>
+```
+
+桥接节点完整代码（与 `docs/muscle_ros_publisher.py` 一致）：
 
 ```python
 #!/usr/bin/env python3
@@ -61,10 +102,15 @@ ROS2 标准工具可以直接订阅。
   /muscle_state    std_msgs/Float64MultiArray  4 条肌肉的激活度
   /muscle_force    std_msgs/Float64MultiArray  4 条肌肉的执行器力
 
-运行：python3 muscle_ros_publisher.py
+运行方式（不需 colcon 构建，全部使用标准消息类型）：
+
+    python3 docs/muscle_ros_publisher.py
+
 依赖：mujoco 3.2.3、rclpy（ROS2 Humble）、numpy
+模型：docs/muscle_arm.xml（随本 PR 一起提交，与脚本放在同一目录）
 """
 
+import os
 import numpy as np
 import mujoco
 import rclpy
@@ -72,13 +118,18 @@ from rclpy.node import Node
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Float64MultiArray
 
-XML_PATH = "muscle_arm.xml"
+HERE = os.path.dirname(os.path.abspath(__file__))
+XML_PATH = os.environ.get("MUSCLE_ARM_XML", os.path.join(HERE, "muscle_arm.xml"))
 DT = 0.002  # 仿真步长 2 ms（名义 500 Hz）
 
 
 class MuscleArmBridge(Node):
     def __init__(self):
         super().__init__("muscle_arm_bridge")
+        if not os.path.isfile(XML_PATH):
+            raise FileNotFoundError(
+                "找不到模型文件 %s，请把 docs/muscle_arm.xml 放在脚本同一目录，"
+                "或用环境变量 MUSCLE_ARM_XML 指定路径" % XML_PATH)
         self.model = mujoco.MjModel.from_xml_path(XML_PATH)
         self.data = mujoco.MjData(self.model)
         self.n_joint = self.model.njnt
@@ -90,16 +141,19 @@ class MuscleArmBridge(Node):
         self.t = 0.0
         self.create_timer(DT, self.step)
         self.get_logger().info(
-            "muscle_arm.xml 已加载：%d 个关节、%d 个肌肉执行器"
-            % (self.model.njnt, self.model.nu))
+            "模型 %s 已加载：%d 个关节、%d 个肌肉执行器"
+            % (os.path.basename(XML_PATH), self.model.njnt, self.model.nu))
+        # 打印关节名，方便与 /joint_states.name 对照
+        names = [self.model.joint(i).name for i in range(self.n_joint)]
+        self.get_logger().info("关节名：%s" % ", ".join(names))
 
     def ctrl(self, t):
         """前 1.5 s 激励伸肌使手臂伸展，之后切到屈肌使手臂屈曲"""
         c = np.zeros(self.model.nu)
         if t < 1.5:
-            c[1::2] = 0.8  # 伸肌
+            c[1::2] = 0.8  # sh_ext / el_ext（伸肌）
         else:
-            c[0::2] = 0.8  # 屈肌
+            c[0::2] = 0.8  # sh_flex / el_flex（屈肌）
         return c
 
     def step(self):
@@ -139,6 +193,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 ```
 
 ---
@@ -149,11 +204,18 @@ if __name__ == "__main__":
 # 0. 载入 ROS2 环境
 source /opt/ros/humble/setup.bash
 
-# 1. 准备模型与脚本（把上一篇的 muscle_arm.xml 放在同一目录）
-ls muscle_arm.xml muscle_ros_publisher.py
+# 1. 确认模型与脚本都在（仓库里已经自带，无需自己再造模型）
+ls docs/muscle_arm.xml docs/muscle_ros_publisher.py
 
 # 2. 启动桥接节点（无需 colcon 构建）
-python3 muscle_ros_publisher.py
+python3 docs/muscle_ros_publisher.py
+```
+
+启动时终端会打印已加载的关节名，例如：
+
+```
+[INFO] [muscle_arm_bridge]: 模型 muscle_arm.xml 已加载：2 个关节、4 个肌肉执行器
+[INFO] [muscle_arm_bridge]: 关节名：sh_pitch, el_pitch
 ```
 
 另开一个终端（同样先 `source /opt/ros/humble/setup.bash`）：
@@ -162,10 +224,10 @@ python3 muscle_ros_publisher.py
 # 3. 查看话题列表，应能看到 3 个话题
 ros2 topic list
 
-# 4. 查看关节状态（value 会随仿真持续变化）
+# 4. 查看关节状态（sh_pitch / el_pitch 的角度会随仿真持续变化）
 ros2 topic echo /joint_states
 
-# 5. 查看肌肉激活度（伸展阶段接近 0.6 与 0.45，切换后回到 0，交替变化）
+# 5. 查看肌肉激活度（伸展 / 屈曲两个阶段交替变化）
 ros2 topic echo /muscle_state
 
 # 6. 查看发布频率（发布在仿真步进后同步触发，DT = 0.002 s）
@@ -189,18 +251,14 @@ ros2 topic hz /joint_states
   多终端同时运行只要 `ROS_DOMAIN_ID` 一致即可互相发现，`ROS_LOCALHOST_ONLY=1` 也能正常工作。
 - 首次运行前务必 `source /opt/ros/humble/setup.bash`，否则 `ros2 topic` 相关命令不可用。
 - 若 `import rclpy` 失败，先确认当前 `python3` 是系统 3.10 而不是 conda 的 3.14。
-- 节点与 `muscle_arm.xml` 必须放在同一工作目录，否则 `from_xml_path` 会报找不到文件。
+- 脚本默认在同目录找 `muscle_arm.xml`，模型放在别处时用环境变量指定：
+  `MUSCLE_ARM_XML=/path/to/muscle_arm.xml python3 docs/muscle_ros_publisher.py`。
 
 ---
 
 ## 7 验证结果
 
 - `ros2 topic list` 中出现 `/joint_states`、`/muscle_state`、`/muscle_force` 三个话题；
-- `ros2 topic echo /joint_states` 的角度值随仿真持续变化；
+- `ros2 topic echo /joint_states` 的 `sh_pitch`、`el_pitch` 角度值随仿真持续变化；
 - `ros2 topic echo /muscle_state` 的激活度在伸展 / 屈曲两个阶段之间切换；
 - 停止节点（Ctrl+C）后话题消失，节点退出正常。
-
-| 文件 | 说明 |
-|------|------|
-| `docs/muscle_ros_publisher.py` | ROS2 桥接节点源码 |
-| `muscle_arm.xml` | MuJoCo 肌肉骨骼模型（见上一篇文档） |

@@ -140,9 +140,8 @@ nav:
 
 - 机械臂操作:
     - MuJoCo 单臂抓取与 π0 推理接口复现（CPU 演示）: './manipulation/pi0_mujoco_grasp.md'
-- ROS2 话题桥接（二连杆机械臂肌肉骨骼仿真）: manipulation/muscle_arm_ros2_bridge.md
-- 二连杆机械臂 OpenSim 建模与 PD 控制仿真: manipulation/two_link_arm_opensim_simulation.md
-
+    - 二连杆机械臂 OpenSim 建模与 PD 控制仿真: './two_link_arm_opensim_simulation.md'
+    - ROS2 话题桥接（二连杆机械臂肌肉骨骼仿真）: './muscle_arm_ros2_bridge.md'
 - 地面载具:
     - 小海龟多航点巡航与暂停恢复: 'chapter/chap1/turtle_waypoint_patrol/index.md'
     - 离线测试接入 GitHub Actions: './ground/offline_checks.md'
@@ -344,6 +343,7 @@ nav:
     - AirLib 传感器消息回归: './air/airlib_message_regression.md'
     - 无人机 GPS 欺骗与定位完整性监测: './air/uav_gps_integrity_guard.md'
     - UAV mission energy budget: './air/uav_energy_budget.md'
+    - AirSim 多旋翼航点飞行与到达误差评估: './air/airsim_multirotor_waypoint_nav.md'
     - 无人机电芯健康与不平衡预警: './air/uav_battery_health_guard.md'
     - 电机推力不对称监测与紧急降落触发: './air/uav_motor_thrust_imbalance_monitor.md'
     - 无人机飞行轨迹类型识别与 ROS2 自动任务日志: './air/flight_pattern_recognition.md'

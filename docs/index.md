@@ -517,6 +517,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [禁飞区检测模块](no_fly_zone_check/index.md)
 
 * [MuJoCo无人机幕墙定距扫描](air/mujoco_facade_capture/index.md)
+* [AirSim 多旋翼航点飞行与到达误差评估](air/airsim_multirotor_waypoint_nav.md) —— 起飞 → 4 航点（相对起飞点偏移）→ 降落；悬停中位误差最大 0.41 m，含机载视角动图
 
 * [基于神经网络的无人机感知—规划—控制避障](./air/neural_ca_drone_submission/docs/index.md) —— 深度图 CNN 感知、神经启发式 A* 规划与模仿学习控制的分层避障，附端到端对照
   * [任务与方案](./air/neural_ca_drone_submission/docs/overview.md)
@@ -619,8 +620,9 @@ ___
 
 * [MuJoCo 单臂抓取与 π0 推理接口复现（CPU 演示）](./manipulation/pi0_mujoco_grasp.md) —— 基于 MuJoCo 的单臂抓取/放置仿真，含 π0 观测→动作块接口（CPU 策略替身）
 
-* [ROS2 话题桥接（二连杆机械臂肌肉骨骼仿真）](./muscle_arm_ros2_bridge.md)
-=======
 * [二连杆机械臂 OpenSim 建模与 PD 控制仿真](./two_link_arm_opensim_simulation.md)
+
+* [ROS2 话题桥接（二连杆机械臂肌肉骨骼仿真）](./muscle_arm_ros2_bridge.md)
+
 ## 参考文献
 * [MuJoCo 失落公园无人机端到端视觉转向](./air/mujoco_abandoned_park_uav_visual_steering.md)
