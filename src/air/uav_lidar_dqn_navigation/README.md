@@ -90,7 +90,7 @@ rosrun uav_lidar_dqn_navigation main.py --mode scan     # 雷达扫描发布
 | `maxUrange` | 39 m | 必须略大于有效量程，否则 30~40 m 的回波被丢弃 |
 | `particles` | 50 | 稀疏雷达下比默认 30 更稳 |
 | `linearUpdate` / `angularUpdate` | 0.2 m / 0.1 rad | 触发一次更新的位姿增量 |
-| `delta` | 0.05 m | 新运行的 gmapping 地图分辨率；仓库旧 PGM 为 0.1 m，不能当作本配置的输出 |
+| `delta` | 0.05 m | 与本次实测地图 YAML 的分辨率一致 |
 
 hector_slam 不做里程计融合、依赖扫描匹配初值，在本场景的稀疏 180° 雷达上
 曾观察到跟丢、地图呈扇形，因此改用 gmapping；当前仓库地图仍需重采。
@@ -203,12 +203,15 @@ launch/main.launch           统一启动入口（本阶段支持 teleop / scan 
 | 键盘遥控 | 2 m/s 前进位移 / 高度波动 | 13.4 m / ±0.1 m |
 | 雷达 + DQN | 末 50 / 末 20 回合成功率 | 94% / 100% |
 | DQN 导航部署 | 距目标误差 | 0.83 m（目标 (15, 10)） |
-| 仓库旧地图（待重采） | 实际尺寸 / 占用格 | 1104×1136 / 1503；不可作为当前 `slam.launch` 的建图结果 |
-| 建图路线配置 | 依次发布航点 | (0,20) → (16,20)；等待 AirSim 实机验证 |
+| 建图（2026-11-12 实机复测） | 地图尺寸 / 占用格 | 2208×2272 / 5472；0.05 m/格，连续墙体可见 |
+| 建图航点（同次运行） | 第二目标 / 运行中位置 | (16,20) / (16.49,19.62)，误差约 0.62 m |
 
-训练日志见 `models/train_nav_log.csv`。`maps/uav_map.pgm` 是旧运行遗留的诊断文件，
-其 0.1 m 分辨率、[-55,-55] 原点与当前 launch 参数不符，且缺乏连续墙体；
-应重新运行 `slam.launch`，用 `map_saver` 保存并核验新地图后再用作效果证据。
+训练日志见 `models/train_nav_log.csv`。本次在 Windows Blocks + WSL ROS Noetic
+运行 `main.launch mode:=slam`，从 ROS `/map` 用 `map_saver` 保存原始 PGM，
+无损转成 `maps/uav_map.png`（72 KB）并以 `maps/uav_map.yaml` 指向它；
+`map_server` 已验证可按 YAML 读回 2208×2272、0.05 m/格地图。
+预览见 `docs/img/air/uav_lidar_dqn_navigation/uav_map_verified.png`。
+旧地图的 1503 个占用格与先前写的 5751 均不是本次运行结果。
 
 ## 大模型使用声明
 

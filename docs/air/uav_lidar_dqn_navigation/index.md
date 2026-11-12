@@ -179,21 +179,25 @@ roslaunch uav_lidar_dqn_navigation dqn.launch goal_x:=10 goal_y:=15
 | `maxRange` | 40 m | 与 `lidar_features.MAX_RANGE` 保持一致 |
 | `particles` | 50 | 稀疏雷达下比默认 30 稳定 |
 | `linearUpdate` / `angularUpdate` | 0.2 m / 0.1 rad | 位姿增量触发更新 |
-| `delta` | 0.05 m | 新运行的分辨率；仓库旧地图为 0.1 m，不能作为本配置的结果 |
+| `delta` | 0.05 m | 与 2026-11-12 实测地图的 YAML 一致 |
 
 选择 gmapping 而不是 hector_slam 的原因：hector 不做里程计融合、依赖扫描匹配
 初值，在 180° 稀疏雷达 + 快速偏航下实测会跟丢，地图呈扇形；gmapping 用里程计
-做运动先验、粒子滤波修正。仓库现有 `uav_map.pgm` 的实际尺寸是
-1104×1136，只有 1503 个占用格，未形成可辨认的连续墙体；它是旧运行
-诊断文件，不能当成当前 `slam.launch` 的建图成果。需要实机重采并复核。
+做运动先验、粒子滤波修正。2026-11-12 在 Blocks + WSL ROS Noetic 下重新运行，
+从 `/map` 保存的地图为 2208×2272、0.05 m/格、5472 个占用格，
+预览中可见连续墙体。旧地图的 1503 个占用格与此前文档中的 5751
+都不是本次运行结果。
 
-`waypoint_goal_node.py` 配置为先到 (0,20)，达到 1.5 m 容差后再到
-(16,20)。这是启动配置，不代表已实测完成绕行：
+`waypoint_goal_node.py` 先发布 (0,20)，达到 1.5 m 容差后切换到
+(16,20)。同次运行日志记录了航点切换；第二航点附近的运行中状态为
+(16.49,19.62)，水平误差约 0.62 m：
 
 ```bash
 roslaunch uav_lidar_dqn_navigation main.launch mode:=slam
 rosrun map_server map_saver -f ~/uav_map   # 或订阅 /map 自行保存
 ```
+
+![本次重新运行的 gmapping 地图，连续墙体可见](../../img/air/uav_lidar_dqn_navigation/uav_map_verified.png)
 
 ## 8 话题与服务
 
