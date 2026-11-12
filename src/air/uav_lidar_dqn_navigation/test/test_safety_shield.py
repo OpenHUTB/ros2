@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)),
 
 from safety_shield import (  # noqa: E402
     FORWARD, FORWARD_LEFT, FORWARD_RIGHT, HOVER, TURN_LEFT, TURN_RIGHT,
-    action_mask, select_action,
+    action_mask, select_action, front_distance_m, recovery_turn,
 )
 
 
@@ -53,6 +53,14 @@ class TestActionMask(unittest.TestCase):
 
 
 class TestSelectAction(unittest.TestCase):
+    def test_side_wall_does_not_trigger_front_stop(self):
+        sectors = sectors_with(left=0.3)
+        self.assertAlmostEqual(front_distance_m(sectors), 40.0)
+
+    def test_near_front_wall_turns_toward_open_side(self):
+        sectors = sectors_with(front=0.4, left=0.3, right=2.0)
+        self.assertEqual(recovery_turn(sectors), TURN_RIGHT)
+
     def test_forward_kept_when_clear(self):
         q = np.array([0.0, 10.0, 1.0, 1.0, 1.0, 1.0], dtype=np.float32)
         self.assertEqual(select_action(q, sectors_with()), FORWARD)
