@@ -15,8 +15,9 @@ def generate_launch_description() -> LaunchDescription:
         DeclareLaunchArgument("steps", default_value="600"),
         DeclareLaunchArgument("linear", default_value="0.55"),
         DeclareLaunchArgument("angular", default_value="0.0"),
+        DeclareLaunchArgument("ambient", default_value="25.0"),
         ExecuteProcess(
-            cmd=[sys.executable, str(executable), "--steps", LaunchConfiguration("steps"), "--linear", LaunchConfiguration("linear"), "--angular", LaunchConfiguration("angular")],
+            cmd=[sys.executable, str(executable), "--steps", LaunchConfiguration("steps"), "--linear", LaunchConfiguration("linear"), "--angular", LaunchConfiguration("angular"), "--ambient", LaunchConfiguration("ambient")],
             output="screen",
         ),
     ])

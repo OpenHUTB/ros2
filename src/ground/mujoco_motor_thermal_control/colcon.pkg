@@ -1,5 +1,0 @@
-{
-  "hooks": [
-    "share/mujoco_motor_thermal_control/hook/ament_prefix_path.dsv"
-  ]
-}

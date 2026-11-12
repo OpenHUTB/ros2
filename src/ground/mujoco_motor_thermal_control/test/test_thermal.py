@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from mujoco_motor_thermal_control.thermal import MotorThermalModel
 
 
@@ -12,7 +14,5 @@ def test_temperature_rises_under_load_and_cools_at_idle() -> None:
 
 
 def test_thermal_model_rejects_non_positive_time_step() -> None:
-    import pytest
-
     with pytest.raises(ValueError, match="positive"):
         MotorThermalModel().update(1.0, 0.0)
