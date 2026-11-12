@@ -52,6 +52,14 @@ The node publishes `/uav/front_range_m` (`Float32`, forward range in metres), `/
 ros2 topic echo /uav/state
 ```
 
+在已安装依赖并加载 ROS 2 Humble 的环境中，可在模块目录运行真实启动回归测试：
+
+```
+python3 -m pytest -q test_ros_launch.py
+```
+
+测试分别启动 `reference`、`range`、`mlp` 三种控制器，从其他目录通过绝对 launch 路径运行节点，接收三个话题并检查状态字段、时间递增、加速度范围和 10 秒仿真结束后的进程正常退出。没有 ROS 2 的环境会跳过该项。节点在定时器回调返回后关闭 ROS，避免在回调内部执行关闭时阻塞退出。
+
 原路径 `src/ground/mujoco_drone_distance_stop/main.py` 继续转发至本模块。 / The original entry point forwards to this module.
 
 ## 结果与文档 / Results and documentation

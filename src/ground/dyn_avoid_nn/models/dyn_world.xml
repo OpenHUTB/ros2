@@ -1,0 +1,58 @@
+<mujoco model="dyn_world">
+  <compiler angle="radian" autolimits="true"/>
+  <option timestep="0.01" gravity="0 0 -9.81" integrator="Euler"/>
+
+  <visual>
+    <global offwidth="1280" offheight="720"/>
+    <quality shadowsize="1024"/>
+  </visual>
+
+  <asset>
+    <texture name="texfloor" type="2d" builtin="checker" rgb1="0.88 0.88 0.86" rgb2="0.83 0.83 0.81"
+             width="512" height="512"/>
+    <material name="matfloor" texture="texfloor" texrepeat="12 10" reflectance="0.02"/>
+    <material name="matrobot" rgba="0.20 0.55 0.85 1"/>
+    <material name="matwall"  rgba="0.35 0.34 0.32 1"/>
+    <material name="matstatic" rgba="0.55 0.45 0.35 1"/>
+    <material name="matmoving" rgba="0.85 0.25 0.20 1"/>
+  </asset>
+
+  <worldbody>
+    <light name="light" pos="0 0 14" dir="0 0 -1" diffuse="0.9 0.9 0.9"/>
+
+    <!-- 场地 16 m x 12 m -->
+    <geom name="floor" type="plane" size="9 7 0.1" material="matfloor" condim="1"/>
+
+    <geom name="wall_n" type="box" pos="0  6 0.5" size="8 0.3 0.5" material="matwall"/>
+    <geom name="wall_s" type="box" pos="0 -6 0.5" size="8 0.3 0.5" material="matwall"/>
+    <geom name="wall_e" type="box" pos=" 8 0 0.5" size="0.3 6 0.5" material="matwall"/>
+    <geom name="wall_w" type="box" pos="-8 0 0.5" size="0.3 6 0.5" material="matwall"/>
+
+    <!-- 静止障碍 -->
+    <geom name="stat0" type="box" pos="-4.0  1.5 0.5" size="1.2 0.9 0.5" material="matstatic"/>
+    <geom name="stat1" type="box" pos=" 1.0 -2.5 0.5" size="1.0 1.4 0.5" material="matstatic"/>
+    <geom name="stat2" type="box" pos=" 5.0  2.0 0.5" size="0.9 0.9 0.5" material="matstatic"/>
+
+    <!-- 移动障碍：沿 y 方向往复扫描 -->
+    <body name="mov0" pos="-1.5 0 0.5">
+      <joint name="mov0_y" type="slide" axis="0 1 0" damping="40"/>
+      <geom name="mov0_geom" type="cylinder" size="0.55 0.5" material="matmoving"/>
+    </body>
+    <body name="mov1" pos="3.0 0 0.5">
+      <joint name="mov1_y" type="slide" axis="0 1 0" damping="40"/>
+      <geom name="mov1_geom" type="cylinder" size="0.55 0.5" material="matmoving"/>
+    </body>
+
+    <!-- 差速车 -->
+    <body name="robot" pos="0 0 0.12">
+      <joint name="rx" type="slide" axis="1 0 0" damping="16" limited="true" range="-8.5 8.5"/>
+      <joint name="ry" type="slide" axis="0 1 0" damping="16" limited="true" range="-6.5 6.5"/>
+      <joint name="ryaw" type="hinge" axis="0 0 1" damping="4"/>
+
+      <geom name="body" type="box" size="0.35 0.30 0.10" material="matrobot" density="180"/>
+      <site name="lidar" pos="0 0 0.26" size="0.02" rgba="1 0 0 1"/>
+      <site name="thr_l" pos="-0.30 -0.22 0" size="0.02"/>
+      <site name="thr_r" pos="-0.30  0.22 0" size="0.02"/>
+    </body>
+  </worldbody>
+</mujoco>

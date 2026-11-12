@@ -51,17 +51,23 @@
 
 ### 编译与运行
 
+> 注意：v0.2 起键盘节点已重写为 ROS 2 ament_python 包，不能在 ROS 1 的 `source ~/bridge_ws/devel/setup.bash` 环境里直接 `ros2 launch`。
+> 正确流程请见 [uav_keyboard_control.md](uav_keyboard_control.md) 第 3 节「三终端启动与桥接验证」：
+> ROS 1 侧启 roscore + ros1_bridge，ROS 2 侧另开终端 source galactic/humble 后跑 `ros2 run uav_keyboard_control keyboard`。
+
 ```shell
-# 终端 1：桥接（连仿真 + 执行 + 自动起飞悬停）
+# ROS 1 侧：桥接层（连仿真 + 执行 + 自动起飞悬停）
+source /opt/ros/noetic/setup.bash
 source ~/bridge_ws/devel/setup.bash
 roslaunch carlair_ros_bridge main.launch
 
-# 终端 2：键盘控制
-source ~/bridge_ws/devel/setup.bash
-roslaunch uav_keyboard_control main.launch
+# ROS 2 侧：键盘控制（另开终端，不要和上面 source 同一个终端）
+source /opt/ros/galactic/setup.bash  # 或 humble
+source ~/ros2_ws/install/setup.bash
+ros2 run uav_keyboard_control keyboard
 ```
 
-把焦点放在键盘控制终端，按 `W/A/S/D/R/F/Q/E` 操控，松开即悬停，`ESC` 退出。
+把焦点放在键盘控制终端，按 `W/A/S/D/R/F/Q/E` 操控，松开即悬停，`Ctrl-C` 退出。
 
 ### 实现要点
 
@@ -172,7 +178,7 @@ rostopic echo -n 1 /uav/odom/pose/pose/position     # 确认 z ≈ 15
 export ROS_MASTER_URI=http://localhost:11311
 source /opt/ros/noetic/setup.bash
 source ~/uav_ws/devel/setup.bash
-roslaunch uav_keyboard_control main.launch
+ros2 launch uav_keyboard_control keyboard.launch.py
 # 在弹出的 xterm 窗口里按 W/A/S/D/R/F/Q/E 操控，松开悬停，ESC 退出
 ```
 
@@ -241,7 +247,7 @@ roslaunch uav_keyboard_control main.launch
 
 ##### 先看清语义：一个字节只产生一条速度指令
 
-`src/air/uav_keyboard_control/scripts/keyboard_control.py` 的主循环：
+`src/air/uav_keyboard_control/uav_keyboard_control/keyboard_node.py` 的主循环：
 
 ```python
 def spin(self):
@@ -320,7 +326,7 @@ import select
 import sys
 import time
 
-CMD = ["rosrun", "uav_keyboard_control", "main.py"]
+CMD = ["ros2", "run", "uav_keyboard_control", "keyboard"]
 
 
 def main():

@@ -1,0 +1,16 @@
+# 核心依赖
+numpy>=1.21
+
+# 绘图（仅生成文档配图，缺失时自动跳过）
+matplotlib>=3.5
+
+# 测试
+pytest>=7.0
+
+# ROS2 环境（不装 ROS2 时可保留注释，离线仿真不需要）
+# rclpy>=3.3
+# geometry-msgs>=3.3
+# nav-msgs>=3.3
+# sensor-msgs>=3.3
+# std-msgs>=3.3
+# std-srvs>=3.3
