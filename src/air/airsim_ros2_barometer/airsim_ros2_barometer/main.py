@@ -36,21 +36,25 @@ class AirSimBarometerBridge(Node):
                 "pressure_topic",
                 "/uav/barometer/pressure",
             ).value
+            or "/uav/barometer/pressure"
         )
         self.altitude_topic = str(
             self.declare_parameter(
                 "altitude_topic",
                 "/uav/barometer/altitude",
             ).value
+            or "/uav/barometer/altitude"
         )
         self.qnh_topic = str(
             self.declare_parameter(
                 "qnh_topic",
                 "/uav/barometer/qnh",
             ).value
+            or "/uav/barometer/qnh"
         )
         self.frame_id = str(
             self.declare_parameter("frame_id", "base_link").value
+            or "base_link"
         )
         self.publish_rate = float(
             self.declare_parameter("publish_rate", 20.0).value
@@ -81,6 +85,8 @@ class AirSimBarometerBridge(Node):
             raise ValueError("rpc_timeout must be positive")
         if self.pressure_variance < 0.0:
             raise ValueError("pressure_variance must be non-negative")
+        if not 1 <= self.port <= 65535:
+            raise ValueError("port must be in the range 1..65535")
 
         self._client = None
         self._next_connect_time = 0.0
@@ -128,7 +134,8 @@ class AirSimBarometerBridge(Node):
             except ImportError:
                 self.get_logger().error(
                     "AirSim Python client is not installed; run "
-                    "python3 -m pip install -r requirements.txt",
+                    "python3 -m pip install -r "
+                    "~/hutb_ws/src/airsim_ros2_barometer/requirements.txt",
                     throttle_duration_sec=5.0,
                 )
                 return False
@@ -255,12 +262,14 @@ class AirSimBarometerBridge(Node):
 
 def main(args=None) -> None:
     rclpy.init(args=args)
-    node = AirSimBarometerBridge()
+    node = None
     try:
+        node = AirSimBarometerBridge()
         rclpy.spin(node)
     except (KeyboardInterrupt, ExternalShutdownException):
         pass
     finally:
-        node.destroy_node()
+        if node is not None:
+            node.destroy_node()
         if rclpy.ok():
             rclpy.shutdown()

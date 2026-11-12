@@ -70,6 +70,19 @@ def _make_node(factory=None):
     return rclpy, AirSimBarometerBridge(client_factory=factory)
 
 
+def test_invalid_port_is_rejected() -> None:
+    import rclpy
+    from airsim_ros2_barometer.main import AirSimBarometerBridge
+
+    rclpy.init(args=["--ros-args", "-p", "port:=0"])
+    try:
+        with pytest.raises(ValueError, match="port"):
+            AirSimBarometerBridge()
+    finally:
+        if rclpy.ok():
+            rclpy.shutdown()
+
+
 def test_four_failures_keep_client_and_next_sample_recovers() -> None:
     client = FailingClient(failures=4)
     rclpy, node = _make_node()
@@ -213,7 +226,7 @@ def test_missing_airsim_client_reports_install_hint(monkeypatch) -> None:
         assert node._client is None
         message = log_error.call_args.args[0]
         assert "not installed" in message
-        assert "pip install -r requirements.txt" in message
+        assert "airsim_ros2_barometer/requirements.txt" in message
     finally:
         node.destroy_node()
         if rclpy.ok():

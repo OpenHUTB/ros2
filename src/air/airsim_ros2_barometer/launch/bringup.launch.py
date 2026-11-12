@@ -61,7 +61,7 @@ def generate_launch_description() -> LaunchDescription:
                 parameters=[
                     str(config_file),
                     {
-                        "host": host,
+                        "host": ParameterValue(host, value_type=str),
                         "port": ParameterValue(port, value_type=int),
                         "vehicle_name": ParameterValue(
                             vehicle_name,
@@ -71,10 +71,19 @@ def generate_launch_description() -> LaunchDescription:
                             barometer_name,
                             value_type=str,
                         ),
-                        "pressure_topic": pressure_topic,
-                        "altitude_topic": altitude_topic,
-                        "qnh_topic": qnh_topic,
-                        "frame_id": frame_id,
+                        "pressure_topic": ParameterValue(
+                            pressure_topic,
+                            value_type=str,
+                        ),
+                        "altitude_topic": ParameterValue(
+                            altitude_topic,
+                            value_type=str,
+                        ),
+                        "qnh_topic": ParameterValue(
+                            qnh_topic,
+                            value_type=str,
+                        ),
+                        "frame_id": ParameterValue(frame_id, value_type=str),
                         "publish_rate": ParameterValue(
                             publish_rate,
                             value_type=float,
@@ -83,7 +92,10 @@ def generate_launch_description() -> LaunchDescription:
                             rpc_timeout,
                             value_type=float,
                         ),
-                        "use_sim_time": use_sim_time,
+                        "use_sim_time": ParameterValue(
+                            use_sim_time,
+                            value_type=bool,
+                        ),
                     },
                 ],
             ),

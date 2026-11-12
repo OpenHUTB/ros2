@@ -37,13 +37,13 @@ AirSim 的连接和读取 RPC 在同一个后台工作线程执行，`rpc_timeou
 ```bash
 source /opt/ros/humble/setup.bash
 mkdir -p ~/hutb_ws/src
-ln -s /path/to/ros2/src/air/airsim_ros2_barometer \
+ln -sfn ~/ros2/src/air/airsim_ros2_barometer \
   ~/hutb_ws/src/airsim_ros2_barometer
+python3 -m pip install -r \
+  ~/hutb_ws/src/airsim_ros2_barometer/requirements.txt
 cd ~/hutb_ws
 colcon build --symlink-install --packages-select airsim_ros2_barometer
 source install/setup.bash
-python3 -m pip install -r \
-  src/air/airsim_ros2_barometer/requirements.txt
 ```
 
 ## 运行
@@ -70,14 +70,16 @@ ros2 topic hz /uav/barometer/pressure
 ## 测试
 
 ```bash
-python3 -m pytest src/air/airsim_ros2_barometer/tests -q
+python3 -m pytest ~/hutb_ws/src/airsim_ros2_barometer/test -q
 colcon test --packages-select airsim_ros2_barometer
+colcon test-result --verbose
 ```
 
-测试覆盖有效样本、非法压力/高度/QNH、消息字段映射、AirSim 客户端缺失提示
-和启动检查。启动测试会执行 launch，确认 AirSim 不在线时节点保持运行，并能
-发现三个气压计话题。连接测试覆盖 1–4 次读取失败、第 5 次断开、后台重连
-恢复，以及连接和读取阻塞时 ROS 定时器不被占用。
+20 个用例覆盖有效样本、非法压力/高度/QNH、消息字段映射、AirSim 客户端
+缺失提示和启动检查。启动测试会执行 launch，确认 AirSim 不在线时节点保持
+运行，并能发现三个气压计话题。连接测试覆盖 1–4 次读取失败、第 5 次断开、
+后台重连恢复，以及连接和读取阻塞时 ROS 定时器不被占用。仓库 Air bridge
+workflow 会在 Humble 容器中构建并测试本包。
 
 ## 范围与限制
 
