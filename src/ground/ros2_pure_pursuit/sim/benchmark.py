@@ -21,12 +21,19 @@ RESULTS = os.path.join(ROOT, "results")
 
 
 def main() -> int:
+    import argparse
+
+    ap = argparse.ArgumentParser(description="纯追踪 + 避障基准矩阵")
+    ap.add_argument("--curve-gain", type=float, default=2.5,
+                    help="曲率自适应前视增益；0 = 只用速度自适应（旧行为）")
+    args = ap.parse_args()
+
     os.makedirs(RESULTS, exist_ok=True)
     rows = []
     for name in PATH_BUILDERS:
         for avoid in (True, False):
             metrics, traj, pts, ctes, risks, obstacles = run(
-                name, 0.9, avoid, max_steps=3000
+                name, 0.9, avoid, max_steps=3000, curve_gain=args.curve_gain
             )
             tag = name if avoid else f"{name}_noavoid"
             plot(name, traj, pts, ctes, risks, obstacles,
@@ -59,8 +66,9 @@ def main() -> int:
         )
     lines += [
         "",
-        "**结论**：关闭避障时四条路径全部发生碰撞；开启避障后全部安全通过，"
-        "且 RMS 横向误差保持在 0.12 m 以内。",
+        "**结论**：关闭避障时五条路径全部发生碰撞；开启避障后全部安全通过。"
+        "稠密路径的 RMS 横向误差在 0.12 m 以内；稀疏路点（每 1.5 m 一个点）参考几何更粗糙，"
+        "RMS 升到 0.22 m，但仍在安全范围内（见文档 7.5 节讨论）。",
         "",
     ]
     out = os.path.join(RESULTS, "benchmark.md")
