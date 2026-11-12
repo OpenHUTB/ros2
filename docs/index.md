@@ -410,6 +410,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [无人机降落过程监控（指令-运动一致性）](./air/uav_landing_monitor.md) —— 在线校验「速度指令 vs 实际高度变化」，抓“喊了不动 / 掉得没人管 / 超时没落地”这类静默故障，输出告警、状态 JSON 与 CSV 报告
 * [移动平台（车/船）精准降落](./air/uav_moving_platform_landing.md) —— 只吃一路带延迟的平台位置，在线估速度、预测相遇点，落点误差 0.03 m（追实测位置的朴素做法 0.48 m 且落不准），附四种制导策略的定量对照
 * [无人机键盘控制](./air/uav_keyboard_control.md)
+* [无人机行为克隆模型对比基准（网络结构与数据增强）](./air/uav_bc_bench.md) —— 三种网络结构 × 有无数据增强的对照实验，按圈分组切分，含恒零基线
 
 * [基于 PPO 的无人机导航避障](./air/uav_ppo_nav.md)
 * [uav_ppo_nav 本地测试（pytest）](./air/uav_ppo_nav_local_test.md) —— 缺 gymnasium 时 `test_env` 干净跳过，pytest 1 passed / 1 skipped，直接运行 14 项通过
