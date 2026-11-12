@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>px4_ros2_opencv_tracking</name>
+  <version>0.1.0</version>
+  <description>PX4 + ROS2 + OpenCV 视觉检测与 Offboard 速度控制演示（合成图像输入）</description>
+  <maintainer email="chenjunhua@users.noreply.github.com">Chenjunhua</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>cv_bridge</exec_depend>
+  <!-- px4_msgs 不是合法 rosdep key（PX4 未发布二进制包，humble/distribution.yaml 中只有 source/doc 段），
+       因此不声明 exec_depend：请在构建前从 PX4/PX4-Autopilot 源码 clone 并 colcon build，
+       详见 README「依赖 / 构建」。 -->
+  <exec_depend>python3-opencv</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

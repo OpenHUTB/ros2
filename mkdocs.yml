@@ -467,6 +467,7 @@ nav:
     - 无人机视觉端到端控制（CNN 行为克隆）: './air/uav_vision_nn.md'
     - 基于 ROS 2 的禁飞区（电子围栏）动态检测与安全预警系统: './air/geofence.md'
     - 无人机深度相机轨迹跟踪（CNN 行为克隆）: './air/uav_depth_track_nn.md'
+    - PX4+ROS2+OpenCV 视觉目标追踪: 'air/px4_ros2_opencv_tracking/index.md'
     - 基于神经网络的无人机感知—规划—控制避障:
         - 首页: 'air/neural_ca_drone_submission/docs/index.md'
         - 任务与方案: 'air/neural_ca_drone_submission/docs/overview.md'
