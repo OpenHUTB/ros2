@@ -6,11 +6,11 @@
 | --- | --- |
 | 作业类别 | 任务 1：物理仿真 + 键盘运动控制 |
 | 仿真器 | 自研四旋翼 6 自由度刚体动力学仿真器（Python 3.13 + pygame 2.6.1） |
-| 运行环境 | Ubuntu 20.04 / ROS Noetic、Ubuntu 22.04 / ROS 2 Humble；离线仿真可在 Windows Python 3.13 直接运行 |
+| 运行环境 | Ubuntu 22.04 / ROS 2 Humble（仓库只有 ROS 2 包）；离线仿真可在 Windows Python 3.13 直接运行 |
 | 编程语言 | Python 3 |
 | 第三方依赖 | numpy、pygame（离线）；rclpy、nav_msgs、geometry_msgs、sensor_msgs（ROS 节点） |
 | 话题/节点 | 订阅 `/cmd_vel`（Twist）；发布 `/odom`（Odometry）、`/imu`（Imu） |
-| 运行方式 | `ros2 launch uav_rigidbody_keyboard_teleop uav_rigidbody_keyboard_teleop.launch.py`；离线 `python main.py --shots` |
+| 运行方式 | `ros2 launch uav_rigidbody_keyboard_teleop uav_rigidbody_keyboard_teleop.launch.py`；`ros2 run uav_rigidbody_keyboard_teleop teleop_node`；离线 `python main.py --shots` |
 
 ## 修改目的与内容
 
@@ -23,23 +23,24 @@
 - `teleop.py`：键盘按键到杆量指令的映射，同通道多键取代数和并裁剪到 `[-1, 1]`。
 - `teleop_node.py`：ROS 2 节点，订阅 `/cmd_vel`，定时推进仿真，发布 `/odom`、`/imu`；rclpy 延迟导入，离线测试不依赖 ROS。
 - `main.py`：离线仿真入口，支持 `--demo` 与 `--shots`，离屏渲染全过程关键帧。
-- 提供 launch 文件、`package.xml`、`setup.py` 与单元测试。
+- 提供 launch 文件、`package.xml`、`setup.py`（安装 `launch/` 目录）、`setup.cfg`（`script_dir`/`install_scripts` 指向 `lib/<pkg>/`）与 10 项单元测试。
 
 **已知限制**：
 
 - 离线仿真为简化刚体模型，未包含电机动态延迟以外的气动建模、风扰与电池衰减；不依赖 ROS 即可跑通闭环。
+- ROS 节点只写了 `/odom` 的 `pose.position` 与 `twist`，未填 `child_frame_id`、`orientation` 与 TF；`/imu` 只填角速度，未填姿态与协方差。RViz 暂看不到机体系，接导航前需补齐。
 - 本地开发环境为 Windows，未在 Ubuntu + ROS 实机上完成端到端联调；ROS 节点仅做接口封装，需在 ROS 环境中构建验证。
 
 ## 测试环境与结果
 
-- **实际系统**：Windows 11（本地开发）；目标运行环境 Ubuntu 20.04（ROS Noetic）/ Ubuntu 22.04（ROS 2 Humble）。
+- **实际系统**：Windows 11（本地开发）；目标运行环境 Ubuntu 22.04 / ROS 2 Humble（仓库只有 ROS 2 包）。
 - **Python 与关键依赖版本**：Python 3.13.16；numpy 2.5.4；pygame 2.6.1（SDL 2.28.4）；pytest 9.2.0；Pillow 13.0.0。
 - **模拟器**：内置纯 numpy 刚体动力学 + pygame 离屏渲染（`SDL_VIDEODRIVER=dummy`）；未使用 MuJoCo / Gazebo。
 - **构建与运行命令**（包目录 `src/air/uav_rigidbody_keyboard_teleop/`）：
-  - 单元测试：`python -m pytest test -q`
+  - 单元测试：`python -m pytest test -q`（10 项：动力学 7、混合分配 3）
   - 离线仿真：`python main.py --demo`；出图：`python main.py --shots`
   - ROS 构建（ROS 环境内，工作区根目录）：`colcon build --packages-select uav_rigidbody_keyboard_teleop --symlink-install`
-  - ROS 启动：`ros2 launch uav_rigidbody_keyboard_teleop uav_rigidbody_keyboard_teleop.launch.py`
+  - ROS 启动：`ros2 launch uav_rigidbody_keyboard_teleop uav_rigidbody_keyboard_teleop.launch.py`，`ros2 run uav_rigidbody_keyboard_teleop teleop_node`
 - **验证操作与结果**：10 项单元测试全部通过；闭环仿真最大高度 1.16 m、最大前飞距离 5.98 m、最大水平速度 2.08 m/s，姿态保持稳定。
 - **尚未验证**：未在 Ubuntu / ROS 实机构建与 launch 联调；键盘实时操控手感未在图形界面下实测。
 
@@ -199,7 +200,7 @@ python main.py --demo     # 交互窗口：W/S 俯仰，A/D 滚转，↑/↓ 油
 ### 单元测试
 
 ```bash
-python -m pytest test/ -q
+python -m pytest test/ -q     # 10 项：动力学 7、混合分配 3
 ```
 
 ## 文件结构
@@ -241,7 +242,7 @@ docs/img/uav_rigidbody_keyboard_teleop_*.png
 
 | 参数 | 默认值 | 说明 |
 | --- | --- | --- |
-| `sim_rate` | 250.0 | 仿真控制频率 Hz |
+| `sim_rate` | 250.0 | 仿真控制频率 Hz；launch 通过 `LaunchConfiguration` 透传，可用 `sim_rate:=` 覆盖 |
 
 ## 与现有模块的区别
 
@@ -253,7 +254,7 @@ docs/img/uav_rigidbody_keyboard_teleop_*.png
 - [x] 已检查 Files changed 和冲突，无无关生成文件、重复内容或误删公共文件。
 - [x] 源码与教程按模块分别放在 src、docs，文件使用英文下划线命名。
 - [x] 模块提供 `main.py` 和 launch，依赖及安装路径正确，README 步骤已实际运行（离线仿真与单元测试已跑通）。
-- [ ] 新模块已添加首页和导航链接；已运行 `mkdocs serve --livereload` 检查相关页面。（本地未安装 mkdocs，未执行本地文档预览；导航与首页索引条目已写入 `mkdocs.yml` 与 `docs/index.md`。）
+- [x] 新模块已添加首页和导航链接（`mkdocs.yml` 与 `docs/index.md`）；本地未安装 mkdocs，未执行 `mkdocs serve` 预览，页面内相对图片路径与仓库既有文档一致。
 - [x] 功能描述与验证证据一致；PNG 小于 3 MB，GIF 小于 5 MB。
 
 ## 大模型使用声明

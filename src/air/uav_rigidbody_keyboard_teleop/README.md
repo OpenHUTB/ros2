@@ -7,10 +7,10 @@
 | 项目 | 内容 |
 | --- | --- |
 | 话题类别 | 任务 1：物理仿真 + 键盘运动控制 |
-| 平台 | Ubuntu 20.04 ROS Noetic / Ubuntu 22.04 ROS 2 Humble（离线仿真可在 Windows Python 3.13 运行） |
+| 平台 | Ubuntu 22.04 / ROS 2 Humble（仓库只有 ROS 2 包，无 ROS 1 版本）；离线仿真可在 Windows Python 3.13 运行 |
 | 语言 | Python 3 |
 | 依赖 | rclpy、nav_msgs、geometry_msgs、sensor_msgs；离线仅依赖 numpy、pygame |
-| 运行方式 | `ros2 launch uav_rigidbody_keyboard_teleop uav_rigidbody_keyboard_teleop.launch.py`；离线 `python main.py --shots` |
+| 运行方式 | `ros2 launch uav_rigidbody_keyboard_teleop uav_rigidbody_keyboard_teleop.launch.py`；`ros2 run uav_rigidbody_keyboard_teleop teleop_node`；离线 `python main.py --shots` |
 | 仿真器 | 自研四旋翼 6-DOF 刚体动力学仿真器（Python + pygame 离屏/窗口渲染） |
 
 ## 原理
@@ -29,6 +29,10 @@
 colcon build --packages-select uav_rigidbody_keyboard_teleop --symlink-install
 source install/setup.bash
 ros2 launch uav_rigidbody_keyboard_teleop uav_rigidbody_keyboard_teleop.launch.py
+# 等价地直接起节点
+ros2 run uav_rigidbody_keyboard_teleop teleop_node
+# 覆盖仿真频率（launch 参数透传给节点）
+ros2 launch uav_rigidbody_keyboard_teleop uav_rigidbody_keyboard_teleop.launch.py sim_rate:=100.0
 ```
 
 ### 离线仿真（无需 ROS）
@@ -41,7 +45,7 @@ python main.py --demo     # 打开交互窗口：W/S 俯仰，A/D 滚转，↑/�
 ## 测试
 
 ```bash
-python -m pytest test/ -q
+python -m pytest test/ -q     # 10 项：动力学 7、混合分配 3
 ```
 
 ## 文件结构
@@ -57,8 +61,13 @@ uav_rigidbody_keyboard_teleop/
 ├── test/                # 动力学与混合分配单元测试
 ├── main.py              # 离线一键实验入口
 ├── package.xml
-└── setup.py
+├── setup.py
+└── setup.cfg
 ```
+
+## 大模型使用声明
+
+过程中借助大模型工具辅助代码编写、整理包目录结构与本描述排版，核心逻辑与操作、场景参数设定与实际运行调试为本人完成，作者对提交内容负责。
 
 ## 许可
 
