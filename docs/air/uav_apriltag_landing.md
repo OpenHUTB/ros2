@@ -34,7 +34,8 @@ flowchart TD
 ## 运行
 
 ```bash
-# 先在工作空间编译并加载环境
+# 先在工作空间根目录（含 src/ 的那一层）编译并加载环境
+cd ~/ros2_ws
 colcon build --packages-select uav_apriltag_landing
 source install/setup.bash
 
