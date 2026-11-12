@@ -965,6 +965,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="air/uav_airsim_wind_rejection/">AirSim 无人机抗风扰补偿（MLP）</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="air/mujoco_uav_moving_pad_landing/">MuJoCo 无人机移动平台着陆</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="air/uav_airsim_depth_obstacle_avoidance/">AirSim 无人机深度避障（CNN 端到端控制）</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="air/drone_charging_nest/">无人机自主充电/机巢仿真</a>
@@ -1027,12 +1029,6 @@
 <li class="toctree-l1"><a class="reference internal" href="water/mjc_rov_current_teleop/">动态洋流 ROV 键盘遥操与 MLP 巡航控制</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="water/rov_gazebo_sonar_cnn/">水下 ROV 声呐图像 CNN 目标分类（Gazebo 训练链路）</a>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="water/mjc_rov_sonar_cnn/">侧扫声呐图像仿真与 CNN 海底目标分类</a>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="water/mjc_rov_ppo_tracking/">手写 PPO 强化学习 ROV 轨迹跟踪与 PID 基线对比</a>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="water/mjc_rov_docking_nav/">水下 ROV 对接任务：声呐扫描 + CNN 标记检测 + 逼近导航</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="water/mjc_rov_rl_compare/">同一 ROV 任务 PPO 与 SAC 强化学习算法对比</a>
 </li>
@@ -1513,6 +1509,7 @@
 <li><a href="air/uav_mujoco_depth_avoidance/">无人机深度相机神经网络避障飞行（MuJoCo）</a> —— 64×64 机载深度图 → numpy CNN → 三扇区通行度 → 速度/偏航闭环，3 场景 × 5 实例共 15/15 成功</li>
 <li><a href="air/uav_grid_navigation/">MuJoCo 无人机栅格激光建图与路径重规划</a></li>
 <li><a href="air/landing_assessment/">无人机着陆阶段识别与接地载荷预测</a></li>
+<li><a href="air/mujoco_uav_moving_pad_landing/">MuJoCo 无人机移动平台着陆</a></li>
 <li>
 <p><a href="air/air_ground_detection_benchmark/">高度与倾角检测评估</a> —— 统计不同相机高度和俯仰角下的检测精度、召回率与小目标召回率</p>
 </li>
