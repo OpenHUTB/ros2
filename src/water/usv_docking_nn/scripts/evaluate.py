@@ -7,11 +7,33 @@ import sys
 
 import numpy as np
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+def _ensure_scripts_on_path():
+    """把运行期模块目录放进 sys.path。
 
+    源码空间就是本文件所在目录；安装空间（rosrun/roslaunch 调用 lib/<包>/ 下的
+    副本）则通过 rospkg 定位到 share/<包>/scripts，否则 from sim_core import 会失败。
+    """
+    here = os.path.dirname(os.path.abspath(__file__))
+    try:
+        import rospkg
+        cand = os.path.join(rospkg.RosPack().get_path("usv_docking_nn"), "scripts")
+        if os.path.isdir(cand):
+            here = cand
+    except Exception:
+        pass
+    if here not in sys.path:
+        sys.path.insert(0, here)
+
+
+_ensure_scripts_on_path()
 from sim_core import DockSim, thrust_from_twist, TOL_Y, TOL_YAW, TOL_V
 from oracle import DockExpert, build_path
 from nn import MLP
+
+
+# 评测 seeds 与训练 seeds（0, 1000, 2000, ...）刻意错开，
+# 避免测试起点出现在训练数据里。
+EVAL_SEED_START = 100
 
 
 class NNPilot(object):
@@ -76,7 +98,7 @@ def main():
 
     report = {}
     for name, mk in (("expert", lambda: None), ("nn", lambda: NNPilot(model_dir))):
-        recs = [run(mk(), s) for s in range(args.seeds)]
+        recs = [run(mk(), EVAL_SEED_START + i) for i in range(args.seeds)]
         report[name] = {
             "episodes": len(recs),
             "success_rate": round(float(np.mean([r["success"] for r in recs])), 4),

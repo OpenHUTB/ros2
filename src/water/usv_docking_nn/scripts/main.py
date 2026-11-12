@@ -9,6 +9,25 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon, Rectangle
 
+def _ensure_scripts_on_path():
+    """把运行期模块目录放进 sys.path。
+
+    源码空间就是本文件所在目录；安装空间（rosrun/roslaunch 调用 lib/<包>/ 下的
+    副本）则通过 rospkg 定位到 share/<包>/scripts，否则 from sim_core import 会失败。
+    """
+    here = os.path.dirname(os.path.abspath(__file__))
+    try:
+        import rospkg
+        cand = os.path.join(rospkg.RosPack().get_path("usv_docking_nn"), "scripts")
+        if os.path.isdir(cand):
+            here = cand
+    except Exception:
+        pass
+    if here not in sys.path:
+        sys.path.insert(0, here)
+
+
+_ensure_scripts_on_path()
 from sim_core import DockSim, ANGLE_MIN, ANGLE_MAX, thrust_from_twist, BERTH_X, TOL_Y
 from oracle import DockExpert, build_path
 from nn import MLP

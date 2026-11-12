@@ -6,13 +6,38 @@
 
 import argparse
 import os
+import sys
 import time
 
 import numpy as np
 
+def _ensure_scripts_on_path():
+    """把运行期模块目录放进 sys.path。
+
+    源码空间就是本文件所在目录；安装空间（rosrun/roslaunch 调用 lib/<包>/ 下的
+    副本）则通过 rospkg 定位到 share/<包>/scripts，否则 from sim_core import 会失败。
+    """
+    here = os.path.dirname(os.path.abspath(__file__))
+    try:
+        import rospkg
+        cand = os.path.join(rospkg.RosPack().get_path("usv_docking_nn"), "scripts")
+        if os.path.isdir(cand):
+            here = cand
+    except Exception:
+        pass
+    if here not in sys.path:
+        sys.path.insert(0, here)
+
+
+_ensure_scripts_on_path()
 from sim_core import DockSim, thrust_from_twist
 from oracle import DockExpert, build_path
 from nn import MLP
+
+
+# 训练起点种子：0, 1000, 2000, ...（与评测 seeds 100–119 不相交）
+TRAIN_SEED_BASE = 0
+TRAIN_SEED_STRIDE = 1000
 
 
 def features(obs):
@@ -28,7 +53,7 @@ def gen(episodes, seed, verbose=True):
     X, Y = [], []
     t0 = time.time()
     for ep in range(episodes):
-        obs = sim.reset(seed=seed * 1000 + ep)
+        obs = sim.reset(seed=TRAIN_SEED_BASE + TRAIN_SEED_STRIDE * ep + seed)
         expert = DockExpert(build_path(sim.start))
         for step in range(1100):
             e = obs["berth"]
