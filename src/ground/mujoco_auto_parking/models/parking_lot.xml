@@ -52,6 +52,9 @@
     <!-- 目标车位：绿色区域 + site / target slot -->
     <geom name="target_slot_geom" type="box" pos="0.25 3.75 0.004" size="1.2 1.7 0.004" rgba="0.15 0.85 0.25 0.45" contype="0" conaffinity="0"/>
     <site name="target_slot" pos="0.25 3.75 0.02" size="0.04" rgba="0 1 0 1"/>
+    <!-- 目标车位入口的两根绿色立柱：供激光雷达/相机感知 -->
+    <geom name="slot_post_left" type="cylinder" pos="-0.95 2.0 0.3" size="0.05 0.3" rgba="0.1 0.9 0.2 1"/>
+    <geom name="slot_post_right" type="cylinder" pos="1.45 2.0 0.3" size="0.05 0.3" rgba="0.1 0.9 0.2 1"/>
 
     <!-- 相邻车位里停着的两辆车（静态障碍） / parked cars -->
     <geom name="parked_car_left" type="box" pos="-4.75 3.75 0.55" size="0.85 1.55 0.55" rgba="0.55 0.57 0.60 1"/>
