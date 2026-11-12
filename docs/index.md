@@ -255,6 +255,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [MuJoCo 侧方停车仿真](./ground/mujoco_parallel_parking.md)
 * [MuJoCo 动态障碍局部避障仿真](./ground/mujoco_dynamic_avoidance.md)
 * [CARLA 停车场场景生成（附带不依赖 CARLA 的倒车入库规划器）](./ground/carla_parking_lot.md) —— 在 CARLA 里画 6 个车位，另提供一个纯 Python 的倒车入库轨迹规划器，4 条断言可直接跑回归
+* [reverse_parking_planner 离线回归测试接入 pytest](./ground/reverse_parking_planner_pytest.md) —— 把 197 项顶层检查改为 pytest 可收集入口，修复 `SystemExit: 0`
 * [MuJoCo 红绿灯启停小车仿真](./ground/mujoco_traffic_light_stop.md)
 * [MuJoCo 小车跟车仿真](./ground/mujoco_car_follow.md)
 * [MuJoCo 小车滑斜坡](./ground/mujoco_slope_car.md)
