@@ -83,3 +83,7 @@ python -m pytest test/ -q      # 14 项
 | `uav_waypoint_tracking` | PID 跟静止航点 | 参考点随移动目标连续变化 |
 | `uav_moving_platform_landing` | 相对导航落到平台 | 只跟随不降落，关注 standoff 几何 |
 | `uav_poi_orbit` | 绕固定点盘旋 | 目标本身在移动，偏移方向要限速旋转 |
+
+## 大模型使用声明
+
+使用了 AI 大模型辅助进行代码编写与自查。作者对提交内容负责。
