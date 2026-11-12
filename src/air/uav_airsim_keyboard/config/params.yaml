@@ -1,0 +1,24 @@
+# uav_airsim_keyboard 参数文件
+# 用法：ros2 run uav_airsim_keyboard main --ros-args --params-file config/params.yaml
+#
+# 虚拟机（VirtualBox NAT）访问 Windows 宿主机上的 AirSim，网关固定为 10.0.2.2；
+# 若使用「桥接网卡」或 AirSim 与 ROS 同机，请改成实际 IP（如 192.168.1.10 或 127.0.0.1）。
+uav_airsim_keyboard:
+  ros__parameters:
+    airsim_ip: 10.0.2.2
+    airsim_port: 41451
+    vehicle_name: ''
+    control_rate: 10.0      # 控制循环频率 (Hz)，位置设定点按该频率推进
+    pose_rate: 20.0         # 位姿发布频率 (Hz)
+    cmd_timeout: 0.3        # 超过该时间没收到 cmd_vel 就停车 (s)
+    cmd_duration: 0.2       # 每条速度指令的持续时间 (s)
+    takeoff_height: 1.5     # 起飞目标高度 (m，相对当前位置)
+    enable_keyboard: true   # 同一进程内是否启动键盘读取
+
+# 键盘节点的参数（ros2 run ... keyboard 时生效；节点名为 uav_keyboard）
+uav_keyboard:
+  ros__parameters:
+    speed: 2.0              # 单键速度 (m/s)
+    yaw_rate: 0.785         # 偏航角速度 (rad/s)，约 45 deg/s
+    publish_rate: 20.0      # cmd_vel 发布频率 (Hz)
+    key_hold_timeout: 0.25  # 松键后多久自动停车 (s)
