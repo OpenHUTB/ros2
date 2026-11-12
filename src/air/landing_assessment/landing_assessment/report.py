@@ -10,7 +10,7 @@ from .learning import load,predict
 
 def main():
     out=Path('results');out.mkdir(exist_ok=True)
-    metrics=json.loads((out/'metrics.json').read_text())
+    metrics=json.loads((out/'metrics.json').read_text(encoding='utf-8'))
     split='test';data=metrics[split];names=list(data)
     fig,axes=plt.subplots(1,2,figsize=(12,4))
     axes[0].bar(range(len(names)),[data[n]['macro_f1'] for n in names]);axes[0].set_ylabel('Phase macro F1');axes[0].set_ylim(0,1)
@@ -23,12 +23,24 @@ def main():
     for i in range(4):
         for j in range(4):ax.text(j,i,str(matrix[i,j]),ha='center',va='center',color='black')
     ax.set_xticks(range(4));ax.set_xticklabels(PHASES,rotation=25);ax.set_yticks(range(4));ax.set_yticklabels(PHASES);ax.set(xlabel='Predicted',ylabel='Contact-derived label');fig.tight_layout();fig.savefig(out/'confusion.png',dpi=150);plt.close(fig)
-    with (out/'impact_predictions.csv').open() as f:rows=[r for r in csv.DictReader(f) if r['split']=='test']
+    with (out/'impact_predictions.csv').open(encoding='utf-8') as f:rows=[r for r in csv.DictReader(f) if r['split']=='test']
     fig,ax=plt.subplots(figsize=(6,5))
     for name in ('mlp_42','speed_quadratic_rules'):
         selected=[r for r in rows if r['model']==name];x=[float(r['true_peak_load_factor']) for r in selected];y=[float(r['predicted_peak_load_factor']) for r in selected];ax.scatter(x,y,label=name,alpha=.7)
     ax.plot([0,30],[0,30],'k--');ax.set(xlabel='Actual peak load factor',ylabel='Pre-contact predicted peak load factor');ax.legend();ax.grid(alpha=.2);fig.tight_layout();fig.savefig(out/'impact_comparison.png',dpi=150);plt.close(fig)
-    manifest=json.loads(Path('data/raw/manifest.json').read_text());record=next(r for r in manifest if r['split']=='test')
+    # 新功能：90% 保形预测区间（区间半宽来自验证集标定）
+    net,meta=load('models/trained/mlp_42');q=(meta.get('conformal') or {}).get('q')
+    if q:
+        selected=[r for r in rows if r['model']=='mlp_42']
+        true=[float(r['true_peak_load_factor']) for r in selected];pred=[float(r['predicted_peak_load_factor']) for r in selected]
+        coverage=data['mlp_42'].get('interval_coverage',float('nan'));target=meta['conformal']['coverage_target']
+        fig,ax=plt.subplots(figsize=(6.4,5))
+        ax.errorbar(true,pred,yerr=q,fmt='o',alpha=.75,ecolor='gray',capsize=3,label='90%% conformal interval (half width %.2f)'%q)
+        ax.plot([0,30],[0,30],'k--',label='Ideal')
+        ax.set(xlabel='Actual peak load factor',ylabel='Predicted peak load factor (body weights)',
+               title='Test coverage %.1f%% (target %.0f%%), n=%d episodes'%(100*coverage,100*target,len(true)))
+        ax.legend();ax.grid(alpha=.2);fig.tight_layout();fig.savefig(out/'impact_interval.png',dpi=150);plt.close(fig)
+    manifest=json.loads(Path('data/raw/manifest.json').read_text(encoding='utf-8'));record=next(r for r in manifest if r['split']=='test')
     raw=np.load(Path('data/raw')/record['file'])['raw'];features=observable(raw);net,meta=load('models/trained/mlp_42')
     x=np.array([features[i-WINDOW+1:i+1] for i in range(WINDOW-1,len(raw))]);prob,_=predict(net,meta,x)
     fig,axes=plt.subplots(2,1,figsize=(9,5),sharex=True);axes[0].plot(raw[:,0],features[:,0]);axes[0].axvline(record['contact_time_s'],color='r',ls='--',label='Contact truth (evaluation only)');axes[0].set_ylabel('Foot clearance (m)');axes[0].legend()

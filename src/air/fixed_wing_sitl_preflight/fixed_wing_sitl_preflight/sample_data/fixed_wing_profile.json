@@ -1,0 +1,8 @@
+{
+  "firmware": {"stack": "px4", "version": "1.14.4", "sitl": true, "frame": "fixed_wing"},
+  "connection": {"host": "localhost", "sitl_port": 4560, "mavlink_port": 14540},
+  "origin": {"latitude_deg": 28.2201, "longitude_deg": 112.9422, "altitude_m": 50.0},
+  "actuators": {"aileron_left": 1, "aileron_right": 2, "elevator": 3, "rudder": 4, "throttle": 5},
+  "sensors": {"airspeed": true, "gps": true, "imu": true, "barometer": true},
+  "failsafe": {"rc_loss": "return", "data_link_loss": "return", "minimum_battery_percent": 25}
+}

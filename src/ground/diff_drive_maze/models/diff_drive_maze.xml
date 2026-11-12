@@ -1,0 +1,47 @@
+<mujoco model="diff_drive_maze">
+  <option timestep="0.005"/>
+  <default>
+    <joint armature="0.01"/>
+    <geom condim="4"/>
+  </default>
+  <worldbody>
+    <light pos="0 0 5" dir="0 0 -1"/>
+    <geom name="floor" type="plane" size="5 5 0.1" rgba="0.85 0.85 0.85 1" friction="1.0 0.1 0.1"/>
+    <!-- 横墙：y=0，x 从 -2.0 到 0.5，挡住起点到终点的直穿对角线 -->
+    <geom name="wall_h" type="box" pos="-0.75 0.0 0.25" size="1.25 0.1 0.25" rgba="0.5 0.5 0.5 1"/>
+    <!-- 竖墙：x=0.5，y 从 0.0 到 2.0，与横墙在 (0.5, 0.0) 相接成 L 型隔墙 -->
+    <geom name="wall_v" type="box" pos="0.5 1.0 0.25" size="0.1 1.0 0.25" rgba="0.5 0.5 0.5 1"/>
+    <!-- 终点：绿色小球 (2.0, 2.0)，contype/conaffinity 置 0，只作可视化标记，不参与碰撞 -->
+    <geom name="goal" type="sphere" pos="2.0 2.0 0.06" size="0.08" rgba="0.1 0.8 0.2 1" contype="0" conaffinity="0"/>
+    <body name="chassis" pos="-2.0 -2.0 0.1">
+      <freejoint/>
+      <geom name="chassis" type="box" size="0.2 0.1 0.05" rgba="0.2 0.4 0.8 1"/>
+      <inertial pos="0 0 0" mass="2.0" diaginertia="0.01 0.01 0.02"/>
+      <!-- 后轮：由 velocity 执行器驱动，差速逆解得到左右轮角速度 -->
+      <body name="left_wheel" pos="-0.08 0.11 -0.05">
+        <joint name="left_wheel_joint" type="hinge" axis="0 1 0"/>
+        <geom name="left_wheel" type="cylinder" fromto="0 -0.03 0 0 0.03 0" size="0.05" rgba="0.1 0.1 0.1 1" friction="1.0 0.1 0.1"/>
+        <inertial pos="0 0 0" mass="0.1" diaginertia="0.0001 0.0001 0.0001"/>
+      </body>
+      <body name="right_wheel" pos="-0.08 -0.11 -0.05">
+        <joint name="right_wheel_joint" type="hinge" axis="0 1 0"/>
+        <geom name="right_wheel" type="cylinder" fromto="0 -0.03 0 0 0.03 0" size="0.05" rgba="0.1 0.1 0.1 1" friction="1.0 0.1 0.1"/>
+        <inertial pos="0 0 0" mass="0.1" diaginertia="0.0001 0.0001 0.0001"/>
+      </body>
+      <body name="front_left_wheel" pos="0.08 0.11 -0.05">
+        <joint name="front_left_wheel_joint" type="hinge" axis="0 1 0"/>
+        <geom name="front_left_wheel" type="cylinder" fromto="0 -0.03 0 0 0.03 0" size="0.05" rgba="0.3 0.3 0.3 1" friction="1.0 0.1 0.1"/>
+        <inertial pos="0 0 0" mass="0.1" diaginertia="0.0001 0.0001 0.0001"/>
+      </body>
+      <body name="front_right_wheel" pos="0.08 -0.11 -0.05">
+        <joint name="front_right_wheel_joint" type="hinge" axis="0 1 0"/>
+        <geom name="front_right_wheel" type="cylinder" fromto="0 -0.03 0 0 0.03 0" size="0.05" rgba="0.3 0.3 0.3 1" friction="1.0 0.1 0.1"/>
+        <inertial pos="0 0 0" mass="0.1" diaginertia="0.0001 0.0001 0.0001"/>
+      </body>
+    </body>
+  </worldbody>
+  <actuator>
+    <velocity name="left_wheel" joint="left_wheel_joint" kv="2"/>
+    <velocity name="right_wheel" joint="right_wheel_joint" kv="2"/>
+  </actuator>
+</mujoco>

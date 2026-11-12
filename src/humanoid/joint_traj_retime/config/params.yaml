@@ -1,0 +1,10 @@
+/**:
+  ros__parameters:
+    use_sim_time: false
+
+joint_traj_retime_node:
+  ros__parameters:
+    dt: 0.001            # 插值采样步长 s
+    speed_scale: 1.0     # 额外保守系数（<1 更慢，>1 更快）
+    default_v_max: 2.0   # rad/s，逐关节上限在节点里暂时统一取值
+    default_a_max: 8.0   # rad/s²

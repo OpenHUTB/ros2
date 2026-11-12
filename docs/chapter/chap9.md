@@ -20,3 +20,13 @@ ros2 run demo_nodes_cpp listener
 ```
 
 ![](../img/ros/ros2_talker_listener.png)
+
+---
+
+## 相关实验：Gazebo 仿真相机与图像话题验证
+
+- [Gazebo 仿真相机与图像话题验证](chap9/gazebo_camera_sim.md)
+  - 环境：Ubuntu 22.04 + ROS 2 Humble + Gazebo Fortress
+  - 组成：`ros_gz_sim_demos` 示例场景 + `ros_gz_bridge` 参数桥接 + RViz2 图像面板
+  - 任务：跑通「仿真相机 → 桥接 → ROS 2 话题 → 可视化」链路，
+    检查话题频率、分辨率、编码与相机内参是否符合预期

@@ -1,0 +1,10 @@
+﻿<launch>
+  <!-- Module-specific wrapper: roslaunch neural_ca_drone_ros perception.launch -->
+  <arg name="scene" default="sparse"/>
+  <arg name="rviz" default="false"/>
+  <include file="$(find neural_ca_drone_ros)/launch/main.launch">
+    <arg name="scene" value="$(arg scene)"/>
+    <arg name="module" value="perception"/>
+    <arg name="rviz" value="$(arg rviz)"/>
+  </include>
+</launch>

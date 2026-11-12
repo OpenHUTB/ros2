@@ -1,13 +1,10 @@
-# 键盘控制参数（任务①）
-# 本模块只发布机体系速度指令到 /uav/cmd_vel，真正的执行/坐标换算在 carlair_ros_bridge。
-
-control:
-  horiz_speed: 2.0        # 水平速度 m/s（W/S/A/D）
-  vert_speed: 1.0         # 垂直速度 m/s（R/F）
-  yaw_rate: 1.0           # 偏航角速度 rad/s（Q/E，正值=机头右转）
-
-rate:
-  publish_hz: 30.0        # 指令发布频率
-
-topic:
-  cmd_vel: "/uav/cmd_vel" # 与桥接包的 topic/cmd_vel 保持一致
+# 节点名 uav_keyboard_control，必须和 launch / rclpy node name 对齐
+uav_keyboard_control:
+  ros__parameters:
+    forward_speed: 2.0     # W/S 前后速度 m/s
+    side_speed: 0.5        # A/D 左右速度 m/s
+    vert_speed: 1.0        # R/F 升降速度 m/s
+    yaw_rate: 0.4          # Q/E 偏航角速度 rad/s（Q=左转（逆时针））
+    hold_timeout: 0.3      # 松开按键后保持指令的最长秒数，超时自动悬停
+    publish_hz: 30.0       # 指令发布频率
+    cmd_vel_topic: "/uav/cmd_vel"

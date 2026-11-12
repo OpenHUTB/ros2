@@ -1,0 +1,7 @@
+encoder_sim:
+  ros__parameters:
+    counts_per_revolution: 4096
+velocity_estimator:
+  ros__parameters:
+    dt: 0.001
+    window: 5

@@ -94,12 +94,15 @@ model.finalizeConnections()
 print("模型名称：", model.getName())
 print("关节总数：", model.getJointSet().getSize())
 print("刚体段总数：", model.getBodySet().getSize())
+print("关节列表：")
+for i in range(model.getJointSet().getSize()):
+    print("  ", model.getJointSet().get(i).getName())
 ```
 
 ✅ 成功输出：
 
 ```
-✅ 模型名称： TwoLinkArm
+模型名称： TwoLinkArm
 关节总数： 2
 刚体段总数： 2
 关节列表：
@@ -116,8 +119,9 @@ elbow_joint.getCoordinate().setValue(state, 0.785)
 
 final_state = opensim.simulate(model, state, 3.0)      # 官方顶层仿真函数
 
-print("肩关节终角(rad):", shoulder_joint.getCoordinate().getValue(final_state))
-print("肘关节终角(rad):", elbow_joint.getCoordinate().getValue(final_state))
+print("==== 仿真完成 ====")
+print("仿真结束时刻肩关节角度(rad):", shoulder_joint.getCoordinate().getValue(final_state))
+print("仿真结束时刻肘关节角度(rad):", elbow_joint.getCoordinate().getValue(final_state))
 ```
 
 ✅ 成功输出：
