@@ -106,7 +106,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [手动控制](./set_up_and_connect_to_carla.md)
 * [MNIST 手写数字视觉感知与机器人运动控制](./ground/mnist_digit_control.md) —— CNN 识别手写数字为运动指令，防抖确认后控制 turtlesim 平移/旋转
 * [生成对象](./ground/carla_spawn_objects.md)
-* [室内清扫车的沿墙清扫：激光雷达与神经网络贴墙跟随](./ground/wall_clean_nn.md) —— 12×10 m 带家具房间，圆角轮廓 + 纯跟踪专家，行为克隆 MLP，沿墙覆盖率 94.7%，平均贴墙误差 0.279 m
+* [室内清扫车的沿墙清扫：激光雷达与神经网络贴墙跟随](./ground/wall_clean_nn.md) —— 12×10 m 带家具房间，圆角轮廓 + 纯跟踪专家，行为克隆 MLP；专家 20/20 达标（覆盖 95.1%、贴墙误差 0.086 m），神经网络覆盖 78.9%、达标 5%
 * [地面载具物理仿真与键盘运动控制](./ground/carla_keyboard_control.md)
 * [CARLA+YOLOv8 目标检测感知与减速避障](./ground/carla_yolo_avoidance.md)
 * [阿克曼控制](./ground/ackermann_control.md)

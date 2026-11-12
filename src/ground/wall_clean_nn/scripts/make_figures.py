@@ -58,5 +58,13 @@ if __name__ == "__main__":
     pkg = os.path.join(HERE, "..")
     out = os.path.join(pkg, "results")
     os.makedirs(out, exist_ok=True)
-    loss_curve(os.path.join(pkg, "models", "wall_loss.npy"), os.path.join(out, "loss.png"))
-    compare(os.path.join(out, "wall_eval.json"), os.path.join(out, "compare.png"))
+    loss_src = os.path.join(pkg, "models", "wall_loss.npy")
+    if os.path.exists(loss_src):
+        loss_curve(loss_src, os.path.join(out, "loss.png"))
+    else:
+        print("skip loss.png: missing %s (run train.py first)" % loss_src)
+    eval_src = os.path.join(out, "wall_eval.json")
+    if os.path.exists(eval_src):
+        compare(eval_src, os.path.join(out, "compare.png"))
+    else:
+        print("skip compare.png: missing %s (run evaluate.py first)" % eval_src)

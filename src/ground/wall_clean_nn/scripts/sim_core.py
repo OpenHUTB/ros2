@@ -18,8 +18,14 @@ import mujoco
 MODEL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "models", "cover_world.xml")
 
 # 场地
+# HALF_X / HALF_Y 是墙体的**中心线**位置（对应 cover_world.xml 里 pos=±6 / ±5 的盒子），
+# 墙体半厚 WALL_T=0.3，所以真实内壁在 ±(6-0.3)=5.7 / ±(5-0.3)=4.7。
+# 所有"到墙距离"的量必须用 INNER_*，否则会恒定多算 0.30 m。
 HALF_X = 6.0
 HALF_Y = 5.0
+WALL_T = 0.3            # 墙体半厚（与 cover_world.xml 的 size 一致）
+INNER_X = HALF_X - WALL_T
+INNER_Y = HALF_Y - WALL_T
 RES = 0.5
 NX = int(2 * HALF_X / RES)
 NY = int(2 * HALF_Y / RES)
@@ -80,7 +86,7 @@ class CoverSim(object):
                 if not self.free_mask[i, j]:
                     continue
                 p = self.cell_center(i, j)
-                d_wall = min(HALF_X - abs(p[0]), HALF_Y - abs(p[1]))
+                d_wall = min(INNER_X - abs(p[0]), INNER_Y - abs(p[1]))
                 if d_wall <= 1.0:
                     mask[i, j] = True
         return mask
@@ -94,7 +100,7 @@ class CoverSim(object):
     def wall_error(self):
         """当前车体到最近墙面的距离，用于评估沿墙精度。"""
         x, y, _ = self.pose()
-        return min(HALF_X - abs(x), HALF_Y - abs(y))
+        return min(INNER_X - abs(x), INNER_Y - abs(y))
 
     # ---------------------------------------------------------------- 栅格
     def _build_free_mask(self):
@@ -212,7 +218,7 @@ class CoverSim(object):
 
     def _check_collision(self):
         x, y, _ = self.pose()
-        if abs(x) > HALF_X - 0.3 or abs(y) > HALF_Y - 0.3:
+        if abs(x) > INNER_X or abs(y) > INNER_Y:
             self.collided = True
             return
         for o in self.obstacles:

@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """行为克隆：采集沿墙专家示范并训练 MLP。
 
 特征 = 61 束激光雷达 + 11x11 已清扫栅格 + 当前速度
@@ -12,7 +13,31 @@ import time
 import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, HERE)
+
+
+def _pkg_paths():
+    """返回 (scripts_dir, models_dir)。
+
+    源码空间用本文件目录；安装空间（rosrun 调用 lib/<包>/ 下的副本）经 rospkg
+    定位 share/<包>，否则 from sim_core import 会失败、模型目录也会指到 lib/ 下。
+    """
+    scripts = HERE
+    models = os.path.abspath(os.path.join(HERE, "..", "models"))
+    try:
+        import rospkg
+        pkg = rospkg.RosPack().get_path("wall_clean_nn")
+        cand = os.path.join(pkg, "scripts")
+        if os.path.isdir(cand):
+            scripts = cand
+            models = os.path.join(pkg, "models")
+    except Exception:
+        pass
+    if scripts not in sys.path:
+        sys.path.insert(0, scripts)
+    return scripts, models
+
+
+SCRIPTS_DIR, MODELS_DIR = _pkg_paths()
 
 from sim_core import CoverSim, thrust_from_twist, START           # noqa: E402
 from oracle import build_wall_path, WallExpert, is_free, sample_start  # noqa: E402
@@ -24,10 +49,16 @@ def features(sim, obs, cov_size=11):
     return np.concatenate([obs["scan"], cov, [obs["speed"]]]).astype(np.float64)
 
 
+# 训练起点种子 = TRAIN_SEED_BASE + seed*TRAIN_SEED_STRIDE + ep，即 0, 1000, 2000, ...
+# 评测（evaluate.py）用 100.. 起始的独立种子段，两者不相交。
+TRAIN_SEED_BASE = 0
+TRAIN_SEED_STRIDE = 1000
+
+
 def generate(sim, episodes, steps, seed=0, noise=0.0, verbose=True):
     X, Y = [], []
     for ep in range(episodes):
-        rng = np.random.default_rng(seed * 1000 + ep)
+        rng = np.random.default_rng(TRAIN_SEED_BASE + seed * TRAIN_SEED_STRIDE + ep)
         start = sample_start(rng, sim.obstacles)
         path, _ = build_wall_path(sim.obstacles, start[:2])
         obs = sim.reset(start)
@@ -58,7 +89,7 @@ def main():
     ap.add_argument("--noise", type=float, default=0.06)
     args = ap.parse_args()
 
-    model_dir = os.path.join(HERE, "..", "models")
+    model_dir = MODELS_DIR
     os.makedirs(model_dir, exist_ok=True)
 
     sim = CoverSim(seed=args.seed)
@@ -77,7 +108,8 @@ def main():
     tr, va = idx[:split], idx[split:]
 
     print("[2/3] 训练 MLP ...")
-    net = MLP([Xn.shape[1], 128, 128, 2], seed=args.seed, lr=1.2e-3)
+    # 梯度已按 bs*outs 归一（见 nn.py），lr 相应放大一倍以保持等效步长
+    net = MLP([Xn.shape[1], 128, 128, 2], seed=args.seed, lr=2.4e-3)
     hist = []
     for ep in range(args.epochs):
         net.fit(Xn[tr], Yn[tr], epochs=1, batch_size=256, verbose=False)

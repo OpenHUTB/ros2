@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """沿墙清扫可视化与 GIF 导出。"""
 
 import argparse
@@ -10,8 +11,34 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon, Rectangle
 
+STOP_COV = 0.95      # 覆盖率达标即停（与 evaluate.py 的 COV_TARGET 一致）
+
 HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, HERE)
+
+
+def _pkg_paths():
+    """返回 (scripts_dir, models_dir)。
+
+    源码空间用本文件目录；安装空间（rosrun 调用 lib/<包>/ 下的副本）经 rospkg
+    定位 share/<包>，否则 from sim_core import 会失败、模型目录也会指到 lib/ 下。
+    """
+    scripts = HERE
+    models = os.path.abspath(os.path.join(HERE, "..", "models"))
+    try:
+        import rospkg
+        pkg = rospkg.RosPack().get_path("wall_clean_nn")
+        cand = os.path.join(pkg, "scripts")
+        if os.path.isdir(cand):
+            scripts = cand
+            models = os.path.join(pkg, "models")
+    except Exception:
+        pass
+    if scripts not in sys.path:
+        sys.path.insert(0, scripts)
+    return scripts, models
+
+
+SCRIPTS_DIR, MODELS_DIR = _pkg_paths()
 
 from sim_core import (CoverSim, HALF_X, HALF_Y, RES, NX, NY, BRUSH_R,
                       ANGLE_MIN, ANGLE_MAX, thrust_from_twist)
@@ -96,7 +123,7 @@ def main():
     ap.add_argument("--dpi", type=int, default=70)
     args = ap.parse_args()
 
-    model_dir = os.path.join(HERE, "..", args.model_dir)
+    model_dir = MODELS_DIR if args.model_dir == "models" else args.model_dir
     sim = CoverSim(seed=args.seed)
     rng = np.random.default_rng(args.seed)
     start = sample_start(rng, sim.obstacles)
@@ -112,7 +139,7 @@ def main():
         if sim.collided:
             res = "collision@%d" % k
             break
-        if sim.wall_coverage() > 0.94:
+        if sim.wall_coverage() >= STOP_COV:
             res = "done@%d" % k
             break
         if args.mode == "nn":

@@ -1,6 +1,32 @@
-﻿"""探针：沿墙清扫。"""
+#!/usr/bin/env python3
+"""探针：沿墙清扫。"""
 import sys, os
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+HERE = os.path.dirname(os.path.abspath(__file__))
+
+
+def _pkg_paths():
+    """返回 (scripts_dir, models_dir)。
+
+    源码空间用本文件目录；安装空间（rosrun 调用 lib/<包>/ 下的副本）经 rospkg
+    定位 share/<包>，否则 from sim_core import 会失败、模型目录也会指到 lib/ 下。
+    """
+    scripts = HERE
+    models = os.path.abspath(os.path.join(HERE, "..", "models"))
+    try:
+        import rospkg
+        pkg = rospkg.RosPack().get_path("wall_clean_nn")
+        cand = os.path.join(pkg, "scripts")
+        if os.path.isdir(cand):
+            scripts = cand
+            models = os.path.join(pkg, "models")
+    except Exception:
+        pass
+    if scripts not in sys.path:
+        sys.path.insert(0, scripts)
+    return scripts, models
+
+
+SCRIPTS_DIR, MODELS_DIR = _pkg_paths()
 import numpy as np
 from sim_core import CoverSim, thrust_from_twist, START
 from oracle import build_wall_path, WallExpert

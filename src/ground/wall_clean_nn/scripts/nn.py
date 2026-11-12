@@ -56,7 +56,8 @@ class MLP(object):
         out, acts = self.forward(X, cache=True)
         n = len(self.W)
         bs = X.shape[0]
-        grad = 2.0 * (out - Y) / bs
+        # 与 fit() 报告的 MSE 保持一致的梯度：mean((out-Y)^2) 对 out 求导要除以 bs*outs
+        grad = 2.0 * (out - Y) / (bs * out.shape[1])
 
         dW = [None] * n
         db = [None] * n
