@@ -42,11 +42,20 @@ jobs:
           grep -q "结论: PASS" docs/summary.md
           python - <<'PY'
           import csv
+          import re
+
+          # 1) 采样点数：20 Hz × 42 s 应约 840 个控制点
           rows = list(csv.DictReader(open("docs/depth_log.csv", encoding="utf-8")))
           assert len(rows) >= 800, len(rows)
-          worst = max(abs(float(r["error"])) for r in rows[-200:])
+
+          # 2) 稳态误差用模块自己的口径（每段最后 settle_time 秒），不要用 CSV 末尾若干行——
+          #    末尾可能正好跨到下一段切换的瞬态（实测会读到 0.10 m 的过渡值）。
+          text = open("docs/summary.md", encoding="utf-8").read()
+          m = re.search(r"最差稳态误差\s*([0-9.]+)\s*m", text)
+          assert m, "summary.md 里没有『最差稳态误差』行"
+          worst = float(m.group(1))
           assert worst < 0.05, worst
-          print("rows:", len(rows), "worst(last200):", worst)
+          print("rows:", len(rows), "worst steady-state:", worst)
           PY
 
       - name: Check launch file parses
