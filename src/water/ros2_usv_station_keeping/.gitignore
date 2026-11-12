@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+docs_figs/
+.pytest_cache/
+*.egg-info/

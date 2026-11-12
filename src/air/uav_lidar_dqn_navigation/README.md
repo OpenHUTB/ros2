@@ -6,14 +6,15 @@ AirSim + ROS Noetic。模块最终包含四项能力：
 1. **键盘遥控**：终端按键控制速度与偏航，带档位切换、里程统计
 2. **雷达感知 + DQN 导航**：24 扇区雷达特征输入 Dueling Double DQN，输出离散速度指令
 3. **建图与导航同步**：gmapping 粒子滤波边飞边建图，DQN 策略同时导航
+   （hector_slam 在本场景实测会跟丢，对比见 `docs/air/uav_lidar_dqn_navigation/`）
 4. **图像端到端 DQN**：前置相机 84×84 灰度图直接输入卷积网络，输出控制指令
 
 与监督式回归方案不同，本模块的控制器全部由**强化学习**训练得到：智能体在
 AirSim 场景里自行探索，以“接近目标、朝向对齐、避开障碍”为奖励信号优化策略。
 
-本 PR 在感知层之上加入 DQN 策略训练：Dueling Double DQN 网络、经验回放、
-目标网络与 ε-greedy 探索，训练好的权重落在 `models/`。DQN 部署、建图、
-端到端控制按依赖顺序在后续 PR 中逐层加入，README 与模块文档随之下沉。
+本 PR 在训练流程之上加入 DQN 在线部署与 gmapping 建图：`dqn_nav_node.py`
+加载训练好的权重复现导航，`slam.launch` 把雷达扫描接到 gmapping 上边飞边建图，
+建图时自动降低速度保证扫描重叠。图像端到端控制按依赖顺序在下一个 PR 加入。
 
 ## 运行环境
 
@@ -52,6 +53,12 @@ roslaunch uav_lidar_dqn_navigation main.launch mode:=teleop
 
 # 雷达感知：180° 累积扫描 + 24 扇区特征（另开 RViz 可看 /drone/lidar/scan）
 roslaunch uav_lidar_dqn_navigation main.launch mode:=scan
+
+# 任务 2 雷达 + DQN 导航（目标点默认 (15, 10)）
+roslaunch uav_lidar_dqn_navigation main.launch mode:=dqn
+
+# 任务 3 gmapping 建图 + DQN 导航同步
+roslaunch uav_lidar_dqn_navigation main.launch mode:=slam
 ```
 
 也可以直接用统一入口 `main.py`：
@@ -68,12 +75,44 @@ rosrun uav_lidar_dqn_navigation main.py --mode scan     # 雷达扫描发布
   与目标、速度、上一步动作拼成 32 维状态，供后续 DQN 使用；纯 NumPy 实现，
   `catkin_make run_tests` 或 `python3 -m unittest discover -s test` 均可离线验证。
 - `lidar_scan_node.py` 累积 1 秒点云拼成 180° LaserScan（`/drone/lidar/scan`）。
-  AirSim 旋转雷达单帧只覆盖一小段水平角，不累积的话建图会严重缺帧。
+  累积前按每帧位置和偏航补偿机体运动；控制扇区仍只使用最新一帧。
 - `scan.launch` 同时发布 `odom->base_link`（桥接节点）与 `base_link->laser`
-  静态 TF，单独检出本 PR 也能在 RViz 里正常显示。完整建图链路（`map->odom`
-  由 gmapping 提供）见 PR #922。
+  静态 TF，单独检出本 PR 也能在 RViz 里正常显示。任务 3 的 `slam.launch`
+  在此之上补 `map->odom`（gmapping）。
+
+### 建图与导航
+
+`dqn.launch` 与 `slam.launch` 都复用 `scan.launch`，差别只在是否启动
+`slam_gmapping`：前者做纯导航，后者边建图边导航。gmapping 的关键参数：
+
+| 参数 | 值 | 说明 |
+| --- | --- | --- |
+| `maxUrange` | 39 m | 必须略大于有效量程，否则 30~40 m 的回波被丢弃 |
+| `particles` | 50 | 稀疏雷达下比默认 30 更稳 |
+| `linearUpdate` / `angularUpdate` | 0.2 m / 0.1 rad | 触发一次更新的位姿增量 |
+| `delta` | 0.05 m | 与本次实测地图 YAML 的分辨率一致 |
+
+hector_slam 不做里程计融合、依赖扫描匹配初值，在本场景的稀疏 180° 雷达上
+曾观察到跟丢、地图呈扇形，因此改用 gmapping；当前仓库地图仍需重采。
+
+### 部署安全层
+
+`dqn_nav_node.py` 在取 Q 最大动作前先用 `safety_shield.py` 过滤：正前方
+1.0 m 内禁用直行与两个斜向动作，单侧 0.9 m 内禁用该侧斜向动作。
+近障时向较空旷一侧转向，前方重新通畅后短暂前进；0.35 m 兜底只检查前向扇区。
+这条恢复逻辑已做离线几何测试，仍需在 AirSim 近障场景验证整条控制链。
 
 ## 训练
+
+### 离线评估训练权重
+
+在本包目录执行 `python3 scripts/eval_policy.py` 可查看训练日志、各距离的
+六个 Q 值、原始动作与动作屏蔽结果；`python3 scripts/eval_policy.py --self-test`
+只用 NumPy 验证几何和动作屏蔽，不加载权重、不依赖 ROS 或 AirSim。安装到
+catkin 空间后可用 `rosrun uav_lidar_dqn_navigation eval_policy.py`。模型推理需要
+PyTorch；随包的完整检查点包含优化器状态，本次在 PyTorch 2.15.0+cpu 上验证了安全
+加载，PyTorch 1.13 的安全加载器无法读取它，不会自动退回不安全加载。
+屏蔽函数与 #922 一致；离线评估不模拟部署节点额外的近距离强制悬停。
 
 任务 2 的 DQN 在 AirSim 里自行探索，状态为 32 维（24 扇区 + 目标 4 + 速度 3 +
 上一步动作 1），动作为 6 个离散速度指令（前进/左前/右前/左转/右转/悬停）。
@@ -139,21 +178,41 @@ scripts/lidar_scan_node.py   雷达扫描话题发布
 scripts/dqn_network.py       Dueling 网络与动作空间
 scripts/dqn_agent.py         经验回放 / 目标网络 / Double DQN
 scripts/train_dqn_nav.py     任务 2 训练
+scripts/dqn_nav_node.py      任务 2 部署（加载权重在线导航）
+scripts/waypoint_goal_node.py 建图航点发布（到点后切换）
 scripts/main.py              统一入口
 test/test_lidar_features.py  特征工程单元测试（不依赖 AirSim）
 launch/teleop.launch         键盘遥控启动文件
 launch/scan.launch           雷达感知启动文件
 launch/train.launch          DQN 训练启动文件
-launch/main.launch           统一启动入口（本阶段支持 teleop / scan）
+launch/dqn.launch            任务 2 DQN 导航启动文件
+launch/slam.launch           任务 3 建图 + 导航启动文件
+launch/main.launch           统一启动入口（本阶段支持 teleop / scan / dqn / slam）
 ```
 
 ## 后续 PR
 
 | PR | 内容 |
 | --- | --- |
-| #922 | DQN 导航节点与 gmapping 建图链路 |
 | #932 | 图像端到端 DQN 与模块文档、演示动图 |
 
 ## 实测结果
 
-见模块文档 `docs/air/uav_lidar_dqn_navigation/index.md` 与后续 PR 的实测记录。
+| 任务 | 指标 | 数值 |
+| --- | --- | --- |
+| 键盘遥控 | 2 m/s 前进位移 / 高度波动 | 13.4 m / ±0.1 m |
+| 雷达 + DQN | 末 50 / 末 20 回合成功率 | 94% / 100% |
+| DQN 导航部署 | 距目标误差 | 0.83 m（目标 (15, 10)） |
+| 建图（2026-11-12 实机复测） | 地图尺寸 / 占用格 | 2208×2272 / 5472；0.05 m/格，连续墙体可见 |
+| 建图航点（同次运行） | 第二目标 / 运行中位置 | (16,20) / (16.49,19.62)，误差约 0.62 m |
+
+训练日志见 `models/train_nav_log.csv`。本次在 Windows Blocks + WSL ROS Noetic
+运行 `main.launch mode:=slam`，从 ROS `/map` 用 `map_saver` 保存原始 PGM，
+无损转成 `maps/uav_map.png`（72 KB）并以 `maps/uav_map.yaml` 指向它；
+`map_server` 已验证可按 YAML 读回 2208×2272、0.05 m/格地图。
+预览见 `docs/img/air/uav_lidar_dqn_navigation/uav_map_verified.png`。
+旧地图的 1503 个占用格与先前写的 5751 均不是本次运行结果。
+
+## 大模型使用声明
+
+本模块在开发过程中使用大模型辅助编写代码与文档，提交者对全部内容负责。

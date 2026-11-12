@@ -56,6 +56,22 @@ def _yaw_from_quat(q: np.ndarray) -> float:
     return np.arctan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z))
 
 
+def make_features(state: np.ndarray, waypoint: np.ndarray) -> np.ndarray:
+    """
+    6 维输入特征 [ex, ey, eyaw, vx, vy, wz]。
+
+    为什么单独抽成函数：collect / evaluate / DAgger 三处都要构造同一组特征，
+    各写一份最容易在改动时漂移，导致训练与部署的输入分布不一致。
+    state = [x, y, z, yaw, vx, vy, wz]
+    """
+    return np.array([
+        waypoint[0] - state[0],
+        waypoint[1] - state[1],
+        np.arctan2(waypoint[1] - state[1], waypoint[0] - state[0]) - state[3],
+        state[4], state[5], state[6],
+    ], dtype=np.float32)
+
+
 def _expert_cmd(state: np.ndarray, waypoint: np.ndarray) -> np.ndarray:
     """
     脚本专家：输出世界坐标系下的期望速度 [vx, vy]。
@@ -112,9 +128,7 @@ def collect_data(params: dict, steps: int = 4000):
             wp_idx = (wp_idx + 1) % len(EXPERT_WAYPOINTS)
         wp = EXPERT_WAYPOINTS[wp_idx]
         expert = _expert_cmd(state, wp)
-        feat = np.array([wp[0] - state[0], wp[1] - state[1],
-                         (np.arctan2(wp[1] - state[1], wp[0] - state[0]) - state[3]),
-                         state[4], state[5], state[6]], dtype=np.float32)
+        feat = make_features(state, wp)
         feat_list.append(feat)
         cmd_list.append(expert)
         # 底层 P 推力（与 sim_node 同一套）
@@ -135,10 +149,13 @@ def mujoco_step(model, data):
     mujoco.mj_step(model, data)
 
 
-def train(params: dict, epochs: int = 200, lr: float = 1e-3):
+def train(params: dict, epochs: int = 200, lr: float = 1e-3, seed: int = 0):
     """
     MLP 行为克隆：MSE 回归专家速度指令。
     为什么返回 train loss 曲线：PR 文档/性能评价需要"训练收敛曲线"。
+
+    ``seed`` 固定网络初始化：不固定的话同一份数据集每次训出的权重都不同，
+    闭环指标（MAE、圈时）会跟着漂，文档里的数就复现不出来。
     """
     root = common.get_package_root()
     ds_path = root / "data" / "cruise_dataset.npz"
@@ -149,6 +166,7 @@ def train(params: dict, epochs: int = 200, lr: float = 1e-3):
     d = np.load(ds_path)
     X = torch.tensor(d["X"], dtype=torch.float32)
     Y = torch.tensor(d["Y"], dtype=torch.float32)
+    torch.manual_seed(seed)
     net = CruiseMLP()
     opt = torch.optim.Adam(net.parameters(), lr=lr)
     lossfn = nn.MSELoss()
@@ -170,31 +188,41 @@ def train(params: dict, epochs: int = 200, lr: float = 1e-3):
     return history
 
 
-def evaluate(params: dict, horizon: int = 12000, use_net: bool = True):
+def evaluate(params: dict, horizon: int = 12000, use_net: bool = True, net=None,
+             max_seconds=None):
     """
     闭环评估：离线跑 horizon 步，MLP 或专家输出速度指令，统计航点跟踪误差。
-    返回 dict：MAE(位置)、成功率(到过所有航点)、平均速度。
+    返回 dict：MAE(位置)、成功率(到过所有航点)、圈时。
     为什么离线评估：ROS launch 跑通后，再用同一物理做量化指标，
     输出 MSE/MAE 满足作业"测试脚本打印量化指标"要求。
     与 collect_data 一致：按 wp_idx 顺序推进航点（到点切下一个），
     而不是每步选最近点——否则到达第一个点后会卡住不动。
+
+    ``net`` 允许传入内存中的策略（DAgger 每轮训练后直接评估，不必先落盘）。
+    ``max_seconds`` 给出时按模型步长换算成 horizon，用于测"跑完一圈要多久"
+    （默认的 12000 步 = 24 s 窗口不够 DAgger 跑完一圈，圈时会返回 None）。
     """
     root = common.get_package_root()
     wpath = common.find_weights_path(params.get("weights_path", ""))
-    net = None
-    if use_net:
+    if use_net and net is None:
         if not wpath.exists():
             raise FileNotFoundError(
                 f"找不到权重 {wpath}。请先运行: python3 main.py train"
             )
-        ckpt = torch.load(wpath, map_location="cpu")
+        # checkpoint 里除 state_dict 外还存了训练历史，只能走 pickle；文件由本仓库的
+        # 训练脚本产出。显式传 False 以消除 torch 2.4 的 FutureWarning。
+        ckpt = torch.load(wpath, map_location="cpu", weights_only=False)
         net = CruiseMLP()
         net.load_state_dict(ckpt["model"])
+    if net is not None:
         net.eval()
 
     model, data, dyn = _make_sim(params)
     dt = model.opt.timestep
+    if max_seconds is not None:
+        horizon = max(1, int(round(max_seconds / dt)))
     err_hist, visited = [], set()
+    lap_step = None
     wp_idx = 0
     for i in range(horizon):
         t = i * dt
@@ -203,15 +231,15 @@ def evaluate(params: dict, horizon: int = 12000, use_net: bool = True):
         # 距当前航点 < 0.4m 切下一个
         if np.hypot(wp[0] - state[0], wp[1] - state[1]) < 0.4:
             visited.add(wp_idx)
+            if lap_step is None and len(visited) == len(EXPERT_WAYPOINTS):
+                lap_step = i          # 第 4 个航点到达的时刻 = 跑完一圈
             wp_idx = (wp_idx + 1) % len(EXPERT_WAYPOINTS)
             wp = EXPERT_WAYPOINTS[wp_idx]
         # 跟踪误差 = 到当前目标航点的距离
         d_to_wp = float(np.hypot(wp[0] - state[0], wp[1] - state[1]))
         err_hist.append(d_to_wp)
         if use_net:
-            feat = np.array([wp[0] - state[0], wp[1] - state[1],
-                             (np.arctan2(wp[1] - state[1], wp[0] - state[0]) - state[3]),
-                             state[4], state[5], state[6]], dtype=np.float32)
+            feat = make_features(state, wp)
             with torch.no_grad():
                 cmd = net(torch.tensor(feat).unsqueeze(0)).squeeze(0).numpy()
         else:
@@ -228,6 +256,7 @@ def evaluate(params: dict, horizon: int = 12000, use_net: bool = True):
         "max_err_m": round(float(np.max(err_hist)), 4),
         "visited_waypoints": sorted(visited),
         "all_waypoints_hit": success,
+        "lap_time_s": round(lap_step * dt, 2) if lap_step is not None else None,
     }
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return result

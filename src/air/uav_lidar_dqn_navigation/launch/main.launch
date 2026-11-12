@@ -1,6 +1,6 @@
 <launch>
-  <!-- 统一启动入口：roslaunch uav_lidar_dqn_navigation main.launch mode:=teleop|scan
-       本阶段提供 teleop / scan；dqn / slam / e2e 会在后续 PR 中依次加入 -->
+  <!-- 统一启动入口：roslaunch uav_lidar_dqn_navigation main.launch mode:=teleop|scan|dqn|slam
+       本阶段提供 teleop / scan / dqn / slam；e2e 会在后续 PR 中加入 -->
   <arg name="mode" default="teleop"/>
   <arg name="airsim_ip" default="172.25.176.1"/>
   <arg name="vehicle_name" default="Drone_1"/>
@@ -13,6 +13,18 @@
 
   <include if="$(eval mode == 'scan')"
            file="$(find uav_lidar_dqn_navigation)/launch/scan.launch">
+    <arg name="airsim_ip" value="$(arg airsim_ip)"/>
+    <arg name="vehicle_name" value="$(arg vehicle_name)"/>
+  </include>
+
+  <include if="$(eval mode == 'dqn')"
+           file="$(find uav_lidar_dqn_navigation)/launch/dqn.launch">
+    <arg name="airsim_ip" value="$(arg airsim_ip)"/>
+    <arg name="vehicle_name" value="$(arg vehicle_name)"/>
+  </include>
+
+  <include if="$(eval mode == 'slam')"
+           file="$(find uav_lidar_dqn_navigation)/launch/slam.launch">
     <arg name="airsim_ip" value="$(arg airsim_ip)"/>
     <arg name="vehicle_name" value="$(arg vehicle_name)"/>
   </include>

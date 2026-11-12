@@ -1,0 +1,65 @@
+{
+  "os": "Windows 11 (10.0.26200)",
+  "python": "3.12.14",
+  "third_party_dependencies": "运行与测试：无（仅标准库）。配图：Pillow 12.3.0",
+  "scope": "offline: test/test_ballast_trim.py 18 项 + test/test_packaging.py 6 项 + main.py + PYTHONIOENCODING=gbk 复跑 + py_compile + tools/make_figures.py；ROS 2 与 mkdocs 另见下面对应字段",
+  "result": {
+    "tests_passed": 18,
+    "tests_failed": 0,
+    "test_command": "python test/test_ballast_trim.py",
+    "packaging_checks_passed": 6,
+    "packaging_test_command": "python test/test_packaging.py",
+    "pytest_collect": "未在本机执行（本机无 pytest，测试文件同时兼容 pytest 收集）",
+    "cli_outputs": ["report.json"],
+    "gbk_console_run": true,
+    "byte_compile": true,
+    "figure_generated": "docs/img/water/rov_ballast_trim/trim_sensitivity.png (32.2 KB)",
+    "module_entry_python_m": "python -m rov_ballast_trim --output ... 实测正常（launch 的兜底入口）",
+    "volume_m3": 0.315,
+    "displacement_kg": 323.505,
+    "dry_mass_kg": 285.0,
+    "required_ballast_kg": 38.505,
+    "net_buoyancy_n": 377.6,
+    "gm_dry_m": 0.0235,
+    "pitch_dry_deg": 54.08,
+    "ballast_plan": {"mass_kg": 38.505, "x_m": -0.240, "y_m": -0.026, "z_m": -0.180, "feasible": true},
+    "gm_after_m": 0.0421,
+    "roll_period_s": 2.77,
+    "offset_for_2deg_mm": 1.47,
+    "max_disturbance_moment_n_m": 11.65,
+    "target_gm_0_05": {"z_m": -0.246, "roll_period_s": 2.54, "moment_n_m": 13.83},
+    "depth_3000m_extra_ballast_kg": 4.347,
+    "pass": true
+  },
+  "mkdocs_build": {
+    "checked": true,
+    "scope": "局部构建：临时配置只含首页与本页，插件栈与仓库 mkdocs.yml 一致（mkdocs 1.6.1）",
+    "result": "构建退出码 0，本页 HTML 正常生成，页面本身无链接告警；全站构建未做"
+  },
+  "ci": {
+    "workflow": ".github/workflows/rov_ballast_trim_tests.yml",
+    "jobs": [
+      "Ballast trim tests (ubuntu-22.04, python 3.8, pytest + 直跑 + GBK + 配图)",
+      "ROS 2 Humble build and launch (container: ros:humble)",
+      "Windows smoke test (GBK stdio)"
+    ],
+    "status": "已跑通：run 43146991622 三个 job 全部 success（含 ROS 2 Humble 的 colcon build 与两次 ros2 launch）"
+  },
+  "ros_validation": {
+    "checked": true,
+    "env": "ubuntu-22.04 + ROS 2 Humble（官方 ros:humble 容器），CI run 43146991622 / 43164134791",
+    "commands": [
+      "colcon build --base-paths src/water/rov_ballast_trim --packages-select rov_ballast_trim --symlink-install",
+      "source install/setup.bash && ros2 launch rov_ballast_trim main.launch.py output:=<tmp>/launch_out",
+      "source install/setup.bash && ros2 launch rov_ballast_trim main.launch.py target_gm:=0.05 output:=<tmp>/launch_gm"
+    ],
+    "result": "两次 launch 的 report.json 断言通过（gm=0.042135、required_ballast_kg=38.505；target_gm 反解得到 gm=0.05）",
+    "note": "仓库根目录直接 colcon build 会 0 packages finished：上游 src/water/package.xml 把该目录整体识别为 ament_python 包 water，colcon 不再向下递归，必须用 --base-paths 限定范围"
+  },
+  "simulator_validation": {
+    "checked": false,
+    "reason": "未接入 HoloOcean；文档第 7 节只给接口路径，没有实跑记录"
+  },
+  "independent_machine_review": false
+}
+

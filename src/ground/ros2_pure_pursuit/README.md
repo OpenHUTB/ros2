@@ -22,9 +22,9 @@ ros2_pure_pursuit/
 │   └── node.py           # ROS2 节点（订阅 /odom /scan，发布 /cmd_vel）
 ├── sim/
 │   ├── run_sim.py        # 单场景离线仿真与出图
-│   └── benchmark.py      # 4 路径 × 有无避障 基准矩阵
+│   └── benchmark.py      # 5 路径 × 有无避障 基准矩阵
 ├── launch/nav.launch.py  # ROS2 启动文件
-├── tests/test_core.py    # 单元测试（30 项）
+├── tests/test_core.py    # 单元测试（34 项）
 ├── ci/run_ci.sh          # 一键检查（语法/依赖/测试/仿真/基准）
 ├── package.xml           # ROS2 包描述
 └── setup.py              # Python 包配置
@@ -37,7 +37,7 @@ ros2_pure_pursuit/
 pip3 install -r requirements.txt        # numpy, matplotlib
 
 # 2. 离线仿真（无需 ROS）
-python3 sim/run_sim.py --path eight     # 可选 circle / eight / s_curve / straight
+python3 sim/run_sim.py --path eight     # 可选 circle / eight / s_curve / s_curve_sparse / straight
 python3 sim/run_sim.py --path eight --no-avoid   # 对照组：关闭避障
 python3 sim/benchmark.py                # 生成基准矩阵 results/benchmark.md
 
@@ -83,12 +83,12 @@ $$v \leftarrow v \cdot (1 - 0.85 r),\qquad \omega_{\text{bias}} = \sigma \cdot 1
 
 ## 实验结果摘要
 
-四条路径（圆形 / 8 字形 / S 形 / 直线）× 有无避障的对照实验：
+五条路径（圆形 / 8 字形 / S 形 / S 形稀疏路点 / 直线）× 有无避障的对照实验：
 
 | 避障 | 碰撞 | RMS 横向误差 | 前向最小测距 |
 | --- | :---: | ---: | ---: |
-| 开 | 否（4/4 安全通过） | 0.061 ~ 0.116 m | 0.659 ~ 0.727 m |
-| 关 | **是（4/4 全部碰撞）** | — | — |
+| 开 | 否（5/5 安全通过） | 0.061 ~ 0.218 m | 0.577 ~ 0.727 m |
+| 关 | **是（5/5 全部碰撞）** | — | — |
 
 对比 `curve_gain=0`（旧行为）：RMS 误差下降 11%~12%，最大横向误差下降 6%~12%（见 `docs/ground/ros2_pure_pursuit/index.md` 3.4 节扫参表）。
 

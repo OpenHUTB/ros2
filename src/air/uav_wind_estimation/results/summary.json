@@ -1,0 +1,100 @@
+{
+  "module": "uav_wind_estimation",
+  "version": "0.1.0",
+  "generated_utc": "2026-11-11T05:38:32+00:00",
+  "environment": {
+    "python": "3.12.14",
+    "numpy": "2.3.5",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "config": {
+    "wind_m_s": [
+      3.0,
+      -2.0
+    ],
+    "airspeed_m_s": 12.0,
+    "gps_noise_m_s": 0.2,
+    "airspeed_noise_m_s": 0.15,
+    "airspeed_variation_m_s": 0.35,
+    "heading_noise_deg": 1.0,
+    "samples_per_leg": 20,
+    "seed": 0
+  },
+  "trials": 40,
+  "maneuvers": {
+    "hover": {
+      "observability": {
+        "eigenvalues": [
+          0.033325451680334905,
+          119.96667454831965
+        ],
+        "condition": 3599.851419841702,
+        "observable": false
+      },
+      "ls_speed_rmse_m_s": null,
+      "ls_direction_rmse_deg": null,
+      "reciprocal_speed_rmse_m_s": 11.995837583889765,
+      "estimable": false
+    },
+    "straight": {
+      "observability": {
+        "eigenvalues": [
+          0.04117025645648472,
+          119.95882974354349
+        ],
+        "condition": 2913.725589014367,
+        "observable": false
+      },
+      "ls_speed_rmse_m_s": null,
+      "ls_direction_rmse_deg": null,
+      "reciprocal_speed_rmse_m_s": 11.995816061641676,
+      "estimable": false
+    },
+    "reciprocal": {
+      "observability": {
+        "eigenvalues": [
+          0.030412088994904666,
+          119.96958791100516
+        ],
+        "condition": 3944.799317505129,
+        "observable": false
+      },
+      "ls_speed_rmse_m_s": null,
+      "ls_direction_rmse_deg": null,
+      "reciprocal_speed_rmse_m_s": 0.287419209337261,
+      "estimable": false
+    },
+    "circle": {
+      "observability": {
+        "eigenvalues": [
+          59.77498489424195,
+          60.22501510575803
+        ],
+        "condition": 1.0075287381889315,
+        "observable": true
+      },
+      "ls_speed_rmse_m_s": 0.049127947693777575,
+      "ls_direction_rmse_deg": 0.6164946039670306,
+      "reciprocal_speed_rmse_m_s": 0.22995765375577606,
+      "estimable": true
+    }
+  },
+  "noise_sweep": {
+    "0.05": {
+      "gps_noise_m_s": 0.05,
+      "speed_rmse_m_s": 0.03577533840543631
+    },
+    "0.10": {
+      "gps_noise_m_s": 0.1,
+      "speed_rmse_m_s": 0.0388251390848724
+    },
+    "0.20": {
+      "gps_noise_m_s": 0.2,
+      "speed_rmse_m_s": 0.049127947693777575
+    },
+    "0.40": {
+      "gps_noise_m_s": 0.4,
+      "speed_rmse_m_s": 0.07765568534866021
+    }
+  }
+}
