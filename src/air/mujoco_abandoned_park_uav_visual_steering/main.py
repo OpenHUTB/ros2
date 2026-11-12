@@ -41,7 +41,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--mode",
-        choices=("simulation", "collect", "quality", "train", "replay", "evaluate"),
+        choices=("simulation", "keyboard", "collect", "quality", "train", "replay", "evaluate"),
         default="simulation",
         help="runtime mode / 运行模式",
     )
@@ -104,8 +104,9 @@ def main(argv: list[str] | None = None) -> int:
             quality = inspect_dataset(args.output.resolve())
             print(json.dumps(quality, ensure_ascii=False, sort_keys=True))
             return 0 if quality["status"] == "passed" else 3
-        config_path = args.config.resolve() if args.config else _module_data("config/simulation.yaml")
-        dataset_config_path = args.dataset_config.resolve() if args.dataset_config else _module_data("config/dataset.yaml")
+
+        config_path = (args.config.resolve() if args.config else _module_data("config/simulation.yaml"))
+        dataset_config_path = (args.dataset_config.resolve() if args.dataset_config else _module_data("config/dataset.yaml"))
         model_path = args.model.resolve() if args.model else _module_data("models/scene.xml")
         config = SimulationConfig.from_yaml(config_path)
         if args.mode == "collect":
@@ -120,6 +121,16 @@ def main(argv: list[str] | None = None) -> int:
         if args.mode == "evaluate":
             from evaluation import evaluate
             print(json.dumps(evaluate(args.output.resolve(), args.checkpoint.resolve(), config_path=config_path, model_path=model_path, steps=args.steps), ensure_ascii=False, sort_keys=True))
+            return 0
+        if args.mode == "keyboard":
+            from navigation import keyboard_command
+            print("Keyboard mode / 键盘模式: W forward, A/D steer, S reverse, X stop")
+            for _ in range(args.steps):
+                key = input("key> ").strip() or "x"
+                speed, steering = keyboard_command(key)
+                simulation = UavSimulation(model_path, config)
+                simulation.step(steering)
+                print(json.dumps({"key": key, "speed": speed, "steering": steering}, ensure_ascii=False))
             return 0
         simulation = UavSimulation(model_path, config)
         for _ in range(args.steps):
@@ -168,4 +179,3 @@ def _unit_float(text: str) -> float:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

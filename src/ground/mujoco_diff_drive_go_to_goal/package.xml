@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>mujoco_diff_drive_go_to_goal</name>
+  <version>0.0.1</version>
+  <description>MuJoCo 差速小车 go-to-goal 仿真：分段比例控制先转向对准目标，再直行逼近，滞回避免边界极限环</description>
+  <maintainer email="jyhuang916@users.noreply.github.com">jyhuang916</maintainer>
+  <license>Apache-2.0</license>
+  <url type="repository">https://github.com/OpenHUTB/ros2/tree/master/src/ground/mujoco_diff_drive_go_to_goal</url>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <!-- numpy 走 apt 包名供 rosdep 解析；mujoco 不在 apt 仓库，仍需按 requirements.txt 用 pip 安装 -->
+  <exec_depend>python3-numpy</exec_depend>
+  <!-- Pillow 仅 test/record_demo_gif.py 导出 GIF 时使用；运行 main.py 不依赖，保留声明是为了包内录帧脚本可直接跑 -->
+  <exec_depend>python3-pil</exec_depend>
+  <!-- 单测导入 main，间接依赖 numpy；mujoco 仍按 requirements.txt 用 pip 安装 -->
+  <test_depend>python3-numpy</test_depend>
+</package>

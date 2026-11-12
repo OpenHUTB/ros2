@@ -4,7 +4,7 @@
 
 ## 功能范围
 
-本分支提供前视 RGB 数据采集、专家监督、场景组隔离划分及质量检查，并提供 CNN 训练、回放与评价入口。
+本分支整合数据采集、CNN 训练、ROS 2 图像控制接口及真实相机闭环评价，并提供建图与导航辅助接口。
 
 ## 坐标、时间与相机
 
@@ -29,6 +29,7 @@ $$
 - Python 3.10 或更新版本
 - MuJoCo 3.12.0
 - 训练和推理使用 PyTorch CPU 与 scikit-learn
+- ROS 2 Humble 与 Ubuntu 22.04 用于 ROS 节点
 
 ```bash
 cd src/air/mujoco_abandoned_park_uav_visual_steering
@@ -74,7 +75,22 @@ python main.py --mode replay --checkpoint models/weights/lightweight_steering_cn
 
 验证集用于选择权重，测试集用于最终分类评价。Accuracy、固定四类 macro-F1 和 4 × 4 混淆矩阵使用相同标签序号；即使某类没有出现在预测结果中，macro-F1 仍保留该类。加载权重时要求保存的标签严格为 `LEFT, STRAIGHT, RIGHT, STOP`，缺失或顺序不符时拒绝加载，防止控制含义被交换。
 
-本次固定种子训练运行 16 轮（19.60 s），按场景组隔离得到 312/78/78 张训练、验证和测试图像。独立测试集（78 张）准确率为 64.10%，四类 macro-F1 为 67.42%；单帧推理延迟均值为 0.356 ms，P95 为 0.416 ms。
+本次固定种子 CNN 训练运行 16 轮（19.60 s），按场景组隔离得到 312/78/78 张训练、验证和测试图像。独立测试集（78 张）准确率为 64.10%，四类 macro-F1 为 67.42%；单帧推理延迟均值为 0.356 ms，P95 为 0.416 ms。
+
+## ROS 2 图像控制接口
+
+节点订阅 `sensor_msgs/Image` 并发布 `geometry_msgs/Twist`：`LEFT` 对应正 `angular.z`，`RIGHT` 对应负值，`STRAIGHT` 的角速度为零，`STOP` 的线速度和角速度均为零。包安装包括节点、launch 文件与参数配置，launch 从安装后的包共享目录解析配置。
+
+从仓库工作空间根目录构建，提供训练所得权重：
+
+```bash
+colcon build --packages-select mujoco_abandoned_park_uav_visual_steering
+source install/setup.bash
+ros2 launch mujoco_abandoned_park_uav_visual_steering main.launch.py \
+  checkpoint:=/absolute/path/lightweight_steering_cnn.pt
+```
+
+缺少有效权重、图像解码失败、推理异常或图像流超过超时阈值时，节点发布零速度。图像问题消除后，下一张有效图像可恢复正常控制；缺少权重时保持零速，提供有效权重后重新启动节点。
 
 ## MuJoCo 三场景闭环评价
 
@@ -87,3 +103,11 @@ python main.py --mode evaluate \
 ```
 
 每回合记录位置、航向、标签、横向误差、前进距离及 CNN 推理次数。成功回合须同时满足：最大横向误差小于安全走廊界限、无人机中心到柱体中心的水平距离始终大于 0.5 m，以及沿 Y 方向的实际进度至少达到该时长理论前进距离的 60%。报告由这些轨迹统计平均横向误差和成功率，并记录权重 SHA-256；缺少权重时不生成 CNN 分数。
+
+## 建图与导航辅助接口
+
+`navigation.py` 提供占用栅格射线更新与四邻域 A* 基线；`slam.py` 积分里程计并把测距射线端点投影到全局栅格。`SynchronizedSlamNavigation.step` 顺序更新里程计、扫描和地图，再调用 MLP 局部策略。该接口处理给定的里程计和测距数据，不包含扫描匹配或回环优化。
+
+导航 MLP 由 `train_neural_navigation.py` 使用 A* 首步监督训练。固定种子 `250102` 下，训练集为 1,200 张随机可达地图，留出测试集为 300 张地图，各训练 24 轮；训练准确率为 83.94%，留出地图准确率为 82.78%。保存的权重为 3,457 字节。
+
+[建图与 A* 导航动图](../../../docs/img/air/mujoco_abandoned_park_uav_visual_steering/mapping_navigation_demo.gif)

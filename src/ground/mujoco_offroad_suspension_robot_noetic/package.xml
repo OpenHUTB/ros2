@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="2">
+  <name>mujoco_offroad_suspension_robot_noetic</name>
+  <version>1.0.0</version>
+  <description>
+    四轮独立悬架越野小车 MuJoCo 仿真（ROS Noetic / Ubuntu 20.04）：
+    高度场起伏地形、滑移转向轮速伺服、IMU 姿态反馈与崎岖路面限速。
+  </description>
+  <maintainer email="2405640340@qq.com">yi-lu-ping-an</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>rospy</depend>
+  <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>tf</depend>
+  <depend>python3-numpy</depend>
+
+  <!-- 曲线图 / 动图标注用；rosdep install 时一并装上 -->
+  <exec_depend>python3-matplotlib</exec_depend>
+
+  <!-- MuJoCo 与 Pillow 通过 pip 安装，不走 rosdep（见 README 的安装步骤） -->
+  <exec_depend>python3-pip</exec_depend>
+</package>

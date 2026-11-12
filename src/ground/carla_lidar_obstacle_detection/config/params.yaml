@@ -1,0 +1,38 @@
+# 激光雷达点云检测模块参数
+
+simulator:
+  host: "127.0.0.1"
+  port: 2000
+  map: "Town10HD_Opt"
+  timeout: 30.0
+  cache_dir: ""
+
+scene:
+  ego_blueprint: "vehicle.byd.seal"
+  spawn_index: -1            # -1 = 自动挑选空旷路段
+  n_traffic_vehicles: 12     # 在自车 8~35 m 的出生点上布置车辆
+  n_walkers: 6               # 生成的行人数
+  traffic_seed: 7
+  spawn_seed: 7              # 自车出生点也固定，保证多次运行可比
+
+sensor:
+  lidar_channels: 128        # 垂直线数，越多越容易扫到矮目标
+  lidar_range: 50.0
+  lidar_points_per_second: 2400000
+  lidar_rotation_frequency: 20.0
+
+detect:
+  min_points_per_object: 3   # 一个目标至少要有这么多点才算检出（稀疏点云下的经验值）
+  max_range: 60.0            # 只在 60 m 内统计
+  accumulate_sweeps: 5       # 累积几帧点云再检测（补上激光雷达水平角分辨率不足导致的漏检）
+  scans: 14                  # 采集多少帧做统计
+  scan_interval: 0.25        # 帧间隔（秒）
+
+output:
+  save_dir: "docs"
+
+evaluation:
+  eval_range: 30.0         # 主指标评估半径（米）：该范围内点云密度足、遮挡少
+  min_mean_recall: 0.40     # 逐帧平均召回率下限（30 m 内；本 demo 检测器多次实测 0.39~0.64）
+  min_precision: 0.65       # 车辆检出 precision 下限（只看车辆，避免静态物稀释）
+  min_mean_vehicles: 3.0    # 平均每帧检出的车辆数下限

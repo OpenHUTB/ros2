@@ -55,6 +55,14 @@ def main():
     ap.add_argument('--duration', type=float, default=60.0)
     ap.add_argument('--warmup', type=float, default=6.0)
     ap.add_argument('--dropout', type=float, default=0.10)
+    ap.add_argument('--dvl-outlier-ratio', type=float, default=0.0,
+                    help='注入 DVL 野值的概率 (0 = 关闭)')
+    ap.add_argument('--dvl-outlier-scale', type=float, default=2.0,
+                    help='DVL 野值的基础幅值 (m/s)')
+    ap.add_argument('--max-dvl-jump', type=float, default=0.0,
+                    help='相邻 DVL 速度跳变门限 (m/s, 0 = 关闭)')
+    ap.add_argument('--max-dvl-speed', type=float, default=0.0,
+                    help='DVL 速度模长门限 (m/s, 0 = 关闭)')
     ap.add_argument('--seed', type=int, default=7)
     ap.add_argument('--current', type=float, default=1.0,
                     help='1 = 启用配置里的三层洋流；0 = 关闭洋流')
@@ -96,7 +104,9 @@ def main():
     sample_every = 10                    # 500 Hz / 10 = 50 Hz
     dt = dt_phys * sample_every
 
-    sensor = SensorModel(seed=args.seed, dvl_dropout=args.dropout)
+    sensor = SensorModel(seed=args.seed, dvl_dropout=args.dropout,
+                         dvl_outlier_ratio=args.dvl_outlier_ratio,
+                         dvl_outlier_scale=args.dvl_outlier_scale)
 
     p_gt = node.data.sensor('pos').data[:3].copy()
     v_gt = node.data.sensor('vel').data[:3].copy()
@@ -133,7 +143,9 @@ def main():
         if ekf is None:
             if t < args.warmup:
                 continue
-            ekf = ROVEKF(p_gt, v_gt, q_gt)
+            ekf = ROVEKF(p_gt, v_gt, q_gt,
+                         max_dvl_jump=args.max_dvl_jump,
+                         max_dvl_speed=args.max_dvl_speed)
             ekf.sigma_acc = args.facc
             ekf.sigma_gyro = args.fgyro
             dr = SpaceState(p_gt, v_gt, q_gt)
@@ -201,6 +213,8 @@ def main():
                       'ekf': round(100.0 * final(e_ekf) / max(path_len, 1e-6), 2)},
         'nees_mean': round(float(np.mean(nees_arr)), 3) if nees_arr.size else None,
         'nees_in_95': round(float(np.mean(nees_arr < 7.815)), 3) if nees_arr.size else None,
+        'dvl_accepted': int(ekf.dvl_accepted) if ekf is not None else 0,
+        'dvl_rejected': int(ekf.dvl_rejected) if ekf is not None else 0,
     }
 
     print('\n路径长度: %.2f m | 时长: %.1f s | DVL 丢包率: %.0f%% | 洋流: %s'
@@ -217,6 +231,8 @@ def main():
     print('-' * 72)
     print('EKF NEES 均值 %.2f（3 自由度 95%% 上界 7.815），落在界内比例 %.1f%%'
           % (metrics['nees_mean'] or 0.0, 100.0 * (metrics['nees_in_95'] or 0.0)))
+    print('DVL 量测: 接受 %d 次, 门限拒绝 %d 次'
+          % (metrics['dvl_accepted'], metrics['dvl_rejected']))
     print('提升倍数 (RMSE): %.2fx' % (metrics['rmse_3d']['dr'] / max(metrics['rmse_3d']['ekf'], 1e-9)))
 
     out = {'metrics': metrics, 'series': series}
