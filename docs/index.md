@@ -110,6 +110,8 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [人形机器人轻量级 ZMP 步行控制基线](./humanoid/humanoid_zmp_walking.md)
 * [人形机器人深度图姿态估计与平衡控制](./humanoid/humanoid_depth_pose_control.md)
 * [关节指令的 QoS 与时延影响评估](./humanoid/joint_qos_latency_eval.md)
+
+* [人形机器人支撑多边形与倾倒裕度核算](./humanoid/humanoid_support_margin.md) —— 双足凸包、稳定裕度与临界推力/冲量；默认 40 kg 样机裕度 125 mm，61 N 推力或 17.5 N·s 冲量即可推倒
 * [人形机器人 IMU 姿态解算：互补滤波与 Madgwick 对比](./humanoid/humanoid_imu_attitude.md)
 * [人形机器人离线语音指令控制](./humanoid/humanoid_voice_command.md)
 * [人形机器人跑步牛顿第二定律理论计算与演示](./humanoid/humanoid_newton_running.md)
