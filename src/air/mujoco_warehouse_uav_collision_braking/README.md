@@ -52,14 +52,16 @@ PowerShell 挂载可写为 `--mount "type=bind,source=$($PWD.Path)\results,targe
 
 `python3 main.py --scenario static --render --output results/static` 保存物理场景截图和动画。
 
-`python3 -m unittest discover -s tests -v` 运行 13 项单元测试，覆盖射线几何、制动、接触、运动、高度保持、数据划分、模型训练与基准输出。
+`python3 -m unittest discover -s tests -v` 运行 16 项单元测试（含 CLI 默认路径 3 项），覆盖射线几何、制动、接触、运动、高度保持、数据划分、模型训练与基准输出。
 
 原理、场景动画和运行指标见[模块文档](../../../docs/air/mujoco_warehouse_uav_collision_braking.md)。
 
 ## 监督数据
 
+`--collect` 不传 `--output` 时，写入 `--dataset` 指定目录（默认 `dataset/`）；单次仿真与 `--benchmark` 仍默认写入 `results/`。同时指定 `--collect --benchmark` 时只执行基准测试，不执行采集。
+
 ```bash
-python3 main.py --collect --episodes 30 --seed 42 --duration 8 --output dataset
+python3 main.py --collect --episodes 30 --seed 42 --duration 8
 ```
 
 采集器输出 `train.npz`、`validation.npz`、`test.npz` 与 `manifest.json`。每个分区独占完整轨迹；九束距离、九束闭合速度、实际速度和巡航速度组成20维输入。目标为参考速度与三类风险标签，均来自制动距离规则。
