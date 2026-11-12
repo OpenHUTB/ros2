@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>g1_rgb_floor_patrol</name><version>0.1.0</version>
+  <description>MuJoCo G1 visual floor perception, image control and ROS indoor navigation.</description>
+  <maintainer email="maintainer@example.com">OpenHUTB contributor</maintainer>
+  <license>BSD-3-Clause</license>
+  <buildtool_depend>catkin</buildtool_depend>
+  <exec_depend>rospy</exec_depend>
+</package>

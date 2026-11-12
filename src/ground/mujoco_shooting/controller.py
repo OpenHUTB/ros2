@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import math
 
+from ballistics import solve_launch_velocity
+
 # 六个靶子：前三近、后三远（与 main.py 里的 t0..t5 顺序一致）
 TARGETS = [
     (1.55, -1.25), (2.00, 0.00), (1.55, 1.25),
@@ -96,19 +98,24 @@ def muzzle_position(yaw):
 
 
 def launch_velocity(muzzle_xy, target_xy, flight_time=DEFAULT_FLIGHT_TIME,
-                    muzzle_z=MUZZLE_Z, target_z=TARGET_Z, gravity=GRAVITY, boost=1.0):
+                    muzzle_z=MUZZLE_Z, target_z=TARGET_Z, gravity=GRAVITY,
+                    boost=1.0, wind=(0.0, 0.0)):
     """给定飞行时间，算出打到目标所需的初速度 (vx, vy, vz) 与水平距离.
 
     ``boost`` 用来补枪：打偏后按比例加大水平速度（配合固定飞行时间，
     弹道整体更"平"一点，容错更大）。
+
+    ``wind`` 是水平风加速度 ``(ax, ay)``，单位 m/s²。解算交给
+    :func:`ballistics.solve_launch_velocity`——它把风当作恒定加速度，
+    直接从公式里扣掉风的位移，所以有风时也能落在靶心。
     """
     dx = target_xy[0] - muzzle_xy[0]
     dy = target_xy[1] - muzzle_xy[1]
     dist = math.hypot(dx, dy)
     if dist <= 1e-9:
         return 0.0, 0.0, 0.0, 0.0
-    speed = dist / flight_time * boost
-    vx = speed * dx / dist
-    vy = speed * dy / dist
-    vz = (target_z - muzzle_z + 0.5 * gravity * flight_time ** 2) / flight_time
-    return vx, vy, vz, dist
+    vx, vy, vz = solve_launch_velocity(
+        (muzzle_xy[0], muzzle_xy[1], muzzle_z),
+        (target_xy[0], target_xy[1], target_z),
+        flight_time, gravity=gravity, wind=wind)
+    return vx * boost, vy * boost, vz, dist

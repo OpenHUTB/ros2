@@ -87,8 +87,7 @@ class YawCommandGuardNode(Node):
             % (config.max_yaw_rate_deg_s, config.control_rate_hz)
         )
 
-    @staticmethod
-    def _monotonic_s() -> float:
+    def _monotonic_s(self) -> float:
         return self.get_clock().now().nanoseconds * 1e-9
 
     def on_current_yaw(self, msg: Float64) -> None:

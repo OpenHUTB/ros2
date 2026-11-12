@@ -46,6 +46,18 @@ FIXED_DT = 1.0 / 60.0
 #: 默认随机种子
 DEFAULT_SEED = 42
 
+# ---------- 被障碍挡住时的绕行参数 ----------
+#: 贴墙绕行时保留的速度比例（0 = 旧行为：停下来原地打转）
+ESCAPE_SPEED_RATIO = 0.85
+#: 选定绕行方向后至少保持这么久，避免每帧在两侧切向之间来回抖
+ESCAPE_HOLD_S = 0.5
+#: 判定"卡住"的速度阈值（px/s）与持续时间（s）；持续卡住就翻到另一侧绕
+STUCK_SPEED_EPS = 4.0
+STUCK_TIME_S = 1.0
+#: 碰撞计数回滞：离开障碍表面超过这么多像素才算"解除接触"，
+#: 否则贴墙绕行时的一点点外退会把一次接触数成多次碰撞
+COLLISION_HYSTERESIS_PX = 4.0
+
 # 静态障碍物（圆心x, 圆心y, 半径）
 OBSTACLES = [
     (300, 200, 35),
@@ -77,6 +89,8 @@ class Car:
         # 撞到障碍物后，保持同一个转向方向一小段时间，避免每帧来回抖
         self._avoid_dir = 0.0
         self._avoid_time = 0.0
+        # 连续"几乎没动"的累计时长：持续卡住就翻到障碍另一侧绕
+        self._stuck_acc = 0.0
 
     def _note_blocked(self):
         if not self._blocked_last:
@@ -84,7 +98,16 @@ class Car:
         self._blocked_last = True
 
     def _note_free(self):
-        self._blocked_last = False
+        # 贴墙绕行时会周期性外退一点点（见 _escape_step）。若一离开表面就重置
+        # "接触中"的状态，同一次贴墙会被反复计成多次碰撞；这里加 4 px 回滞，
+        # 只有真正离开障碍表面才算解除接触。
+        near = self._nearest_obstacle()
+        if near is None:
+            self._blocked_last = False
+            return
+        ox, oy, r = near
+        if math.hypot(self.x - ox, self.y - oy) > r + CAR_RADIUS + COLLISION_HYSTERESIS_PX:
+            self._blocked_last = False
 
     def _collide_obstacle(self, nx, ny):
         """检查新位置是否撞到障碍物，撞到返回 True。"""
@@ -118,24 +141,103 @@ class Car:
         new_y = self.y + self.v * math.sin(new_theta) * dt
 
         if self._collide_obstacle(new_x, new_y):
-            # 撞墙：不前进，只原地转，保持一个方向转一小段时间再试
+            # 撞墙：沿障碍表面的切向绕行（见 _escape_step），而不是停下原地打转
             self.v = 0.0
             self._note_blocked()
-            if self._avoid_time <= 0.0:
-                self._avoid_dir = 1.0 if angle_err >= 0.0 else -1.0
-                self._avoid_time = 0.35
-            self.omega = MAX_STEER * self._avoid_dir
-            self.theta = normalize_angle(self.theta + self.omega * dt)
-            self._avoid_time -= dt
+            self._escape_step(dt, target_angle)
         else:
             self.x = new_x
             self.y = new_y
             self.theta = new_theta
             self._avoid_time = 0.0
+            self._stuck_acc = 0.0
             self._note_free()
 
         self.trail.append((self.x, self.y))
         return False
+
+    # ---------------------------------------------------------------- 绕障
+    def _nearest_obstacle(self):
+        """返回最近障碍 (ox, oy, r)；没有障碍时返回 None。"""
+        best = None
+        best_gap = float("inf")
+        for (ox, oy, r) in OBSTACLES:
+            gap = math.hypot(self.x - ox, self.y - oy) - r
+            if gap < best_gap:
+                best_gap = gap
+                best = (ox, oy, r)
+        return best
+
+    def _escape_step(self, dt, target_angle):
+        """被障碍挡住时：沿障碍表面切向**保持前进**地绕过去。
+
+        旧行为是把速度清零、只原地按最大角速度转。若障碍正压在"车→目标"的
+        连线上，车会贴着墙一直转圈：实测该场景 30 s 里 95.6% 的时间速度低于
+        5 px/s，末距始终 440 px，永远到不了目标。
+
+        这里改成：取"障碍心→车"的径向向量、旋转 90° 得到两条切向，选与目标
+        方位夹角更小的那侧，沿它以 ``ESCAPE_SPEED_RATIO * MAX_SPEED`` 前进；
+        若持续卡住（速度长时间低于阈值）则翻到另一侧。
+        """
+        near = self._nearest_obstacle()
+        if near is None:
+            return
+        ox, oy, _r = near
+        radial = math.atan2(self.y - oy, self.x - ox)
+        tangent_a = radial + math.pi / 2.0
+        tangent_b = radial - math.pi / 2.0
+
+        if self._avoid_time <= 0.0:
+            da = abs(normalize_angle(tangent_a - target_angle))
+            db = abs(normalize_angle(tangent_b - target_angle))
+            self._avoid_dir = 1.0 if da <= db else -1.0
+            self._avoid_time = ESCAPE_HOLD_S
+
+        want = tangent_a if self._avoid_dir >= 0.0 else tangent_b
+        err = normalize_angle(want - self.theta)
+        self.omega = max(-MAX_STEER, min(MAX_STEER, KP_TURN * err))
+        speed = MAX_SPEED * ESCAPE_SPEED_RATIO
+
+        new_theta = normalize_angle(self.theta + self.omega * dt)
+        new_x = self.x + speed * math.cos(new_theta) * dt
+        new_y = self.y + speed * math.sin(new_theta) * dt
+
+        if self._collide_obstacle(new_x, new_y):
+            # 切向这一小步仍会撞上：先沿径向外退一点点，同时继续转车头。
+            # 必须外退：车被"正好贴在碰撞边界"上时，切向的弦会略微落进障碍内
+            # （弦长 r·cos(dθ/2) < r），于是每一步都被判成撞墙，车就被钉死在
+            # 表面、只转不走——实测就是这里死循环的。
+            dx, dy = self.x - ox, self.y - oy
+            norm = math.hypot(dx, dy)
+            if norm > 1e-9:
+                back = 0.8 * speed * dt
+                bx = self.x + dx / norm * back
+                by = self.y + dy / norm * back
+                if not self._collide_obstacle(bx, by):
+                    self.x = bx
+                    self.y = by
+            self.v = 0.0
+            self.theta = new_theta
+        else:
+            self.v = speed
+            self.x = new_x
+            self.y = new_y
+            self.theta = new_theta
+
+        self._avoid_time -= dt
+        # 只在"车头已经大致对准切向、却仍然走不动"时才算卡住。
+        # 否则原地转向的那 0.x 秒也会被计入，车头还没转开就翻方向，变成左右来回摆。
+        if abs(err) > 0.35:
+            self._stuck_acc = 0.0
+        elif abs(self.v) < STUCK_SPEED_EPS:
+            self._stuck_acc += dt
+        else:
+            self._stuck_acc = 0.0
+        if self._stuck_acc >= STUCK_TIME_S:
+            # 对准了切向还走不动：换另一侧绕，避免在凹形/多障碍里死等
+            self._avoid_dir *= -1.0
+            self._avoid_time = ESCAPE_HOLD_S
+            self._stuck_acc = 0.0
 
     def manual_step(self, dt, keys):
         self.v = 0.0

@@ -23,7 +23,20 @@ from .dataset import generate_grouped_samples, split_by_episode
 
 MODULE_DIR = Path(__file__).resolve().parent
 MODEL_PATH = Path(os.environ.get("MUJOCO_LANDING_MODEL", MODULE_DIR / "output" / "landing_controller.joblib")).expanduser()
-SCENE_PATH = MODULE_DIR / "assets" / "moving_pad.xml"
+
+
+def _resolve_scene_path() -> Path:
+    source_asset = MODULE_DIR / "assets" / "moving_pad.xml"
+    if source_asset.is_file():
+        return source_asset
+    try:
+        from ament_index_python.packages import get_package_share_directory
+    except ImportError:
+        return source_asset
+    return Path(get_package_share_directory("mujoco_uav_moving_pad_landing")) / "assets" / "moving_pad.xml"
+
+
+SCENE_PATH = _resolve_scene_path()
 DT = 0.02
 DEFAULT_PAD_AMPLITUDE = (0.34, 0.22)
 DEFAULT_PAD_FREQUENCY = (0.42, 0.31)

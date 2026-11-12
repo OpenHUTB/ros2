@@ -64,8 +64,8 @@ English: The included Docker image uses OSMesa for display-free rendering. The c
 
 下图和动图由上述 MuJoCo 演示实际渲染生成：
 
-![移动平台着陆场景](media/landing_scene.png)
+![移动平台着陆场景](../../../docs/img/air/mujoco_uav_moving_pad_landing.png)
 
-![无人机移动平台着陆过程](media/landing_run.gif)
+![无人机移动平台着陆过程](../../../docs/img/air/mujoco_uav_moving_pad_landing.gif)
 
 English: Landing error and success are evaluated at first contact. Success requires contact, the UAV footprint to fit on the pad, altitude within 0.03 m of the model-derived contact height, and vertical speed at or below 0.6 m/s. Demo outputs include a rendered PNG, animated GIF, trajectory, and metrics JSON; teleoperation writes a scene image and command trace.

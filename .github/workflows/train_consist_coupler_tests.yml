@@ -1,0 +1,132 @@
+# Train Consist Coupler CI
+# 说明：跑完整 colcon build + test。纯逻辑测试本身不依赖 ROS，
+# 这里验证的是 ament_python 打包规则（setup.py / setup.cfg / package.xml）
+# 能被 colcon 正确识别，避免"本地能跑、ros2 run 找不到可执行文件"。
+
+name: Train Consist Coupler Tests
+
+on:
+  push:
+    paths:
+      - 'src/ground/train_consist_coupler/**'
+      - 'docs/ground/train_consist_coupler.md'
+      - 'docs/index.md'
+      - '.github/workflows/train_consist_coupler_tests.yml'
+  pull_request:
+    paths:
+      - 'src/ground/train_consist_coupler/**'
+      - 'docs/ground/train_consist_coupler.md'
+      - 'docs/index.md'
+      - '.github/workflows/train_consist_coupler_tests.yml'
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装 ROS 2 Humble
+        run: |
+          sudo apt update
+          sudo apt install -y software-properties-common curl gnupg lsb-release
+          sudo add-apt-repository universe
+          sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
+          sudo apt update
+          sudo apt install -y ros-humble-ros-base python3-colcon-common-extensions python3-rosdep python3-pip python3-pytest
+          sudo rosdep init || true
+          rosdep update
+
+      - name: colcon build
+        run: |
+          mkdir -p ros2_ws/src
+          ln -s $GITHUB_WORKSPACE/src/ground/train_consist_coupler ros2_ws/src/train_consist_coupler
+          cd ros2_ws
+          source /opt/ros/humble/setup.bash
+          rosdep install --from-paths src --ignore-src -r -y
+          colcon build --packages-select train_consist_coupler
+
+      - name: colcon test
+        run: |
+          cd ros2_ws
+          source /opt/ros/humble/setup.bash
+          source install/setup.bash
+          colcon test --packages-select train_consist_coupler
+          colcon test-result --verbose
+
+      - name: launch 冒烟测试
+        run: |
+          set +e
+          source /opt/ros/humble/setup.bash
+          source ros2_ws/install/setup.bash
+          ros2 launch train_consist_coupler main.launch.py playback_rate:=4.0 > /tmp/launch.log 2>&1 &
+          LAUNCH_PID=$!
+          sleep 30
+          echo "===== launch.log ====="
+          cat /tmp/launch.log
+          echo "===== 节点 ====="
+          ros2 node list > /tmp/nodes.txt 2>&1
+          cat /tmp/nodes.txt
+          echo "===== 话题 ====="
+          ros2 topic list > /tmp/topics.txt 2>&1
+          cat /tmp/topics.txt
+          echo "===== 取一帧车钩力 ====="
+          timeout 30 ros2 topic echo /train_consist/coupler_force --once > /tmp/echo.txt 2>&1
+          echo "echo 退出码 $?"
+          cat /tmp/echo.txt
+          kill $LAUNCH_PID 2>/dev/null
+          wait $LAUNCH_PID 2>/dev/null
+          echo "===== 断言 ====="
+          grep -q "/train_consist/coupler_force" /tmp/topics.txt || { echo "话题未注册"; exit 1; }
+          grep -q "data:" /tmp/echo.txt || { echo "未收到车钩力消息"; exit 1; }
+          echo "launch 冒烟测试通过"
+
+      - name: 安装 RViz 与虚拟显示
+        run: |
+          sudo apt-get install -y ros-humble-rviz2 ros-humble-tf2-ros xvfb x11-utils imagemagick
+
+      - name: RViz 截图（Xvfb 虚拟显示 + 软件渲染）
+        run: |
+          set +e
+          source /opt/ros/humble/setup.bash
+          source ros2_ws/install/setup.bash
+          export LIBGL_ALWAYS_SOFTWARE=1
+          export GALLIUM_DRIVER=llvmpipe
+          RVIZ_CFG=$(ros2 pkg prefix train_consist_coupler)/share/train_consist_coupler/config/consist.rviz
+          echo "配置: $RVIZ_CFG"; ls -l "$RVIZ_CFG"
+          ros2 run tf2_ros static_transform_publisher 0 0 0 0 0 0 map base_link > /tmp/tf.log 2>&1 &
+          # 定格在车钩力峰值帧（第 6180 帧，t=123.60 s），保证 RViz 任何时候订阅都能拿到数据
+          ros2 launch train_consist_coupler main.launch.py hold_frame:=6180 > /tmp/node.log 2>&1 &
+          sleep 12
+          echo "===== 节点 ====="; ros2 node list
+          echo "===== 话题信息 ====="; ros2 topic info -v /train_consist/markers
+          echo "===== 发布频率 ====="; timeout 8 ros2 topic hz /train_consist/markers 2>&1 | head -4
+          echo "===== marker 首帧摘要 ====="
+          timeout 20 ros2 topic echo /train_consist/markers --once 2>&1 | head -24
+          echo "===== 启动 RViz ====="
+          xvfb-run -a -s "-screen 0 1600x900x24" bash -c "
+            ros2 run rviz2 rviz2 -d '$RVIZ_CFG' > /tmp/rviz.log 2>&1 &
+            sleep 20; xwininfo -root -tree | head -12
+            import -window root /tmp/rviz_a.png
+            sleep 6;  import -window root /tmp/rviz_b.png
+          "
+          echo "===== rviz.log ====="; tail -25 /tmp/rviz.log
+          echo "===== node.log ====="; tail -8 /tmp/node.log
+          md5sum /tmp/rviz_*.png
+          test -s /tmp/rviz_b.png
+
+      - name: 上传截图
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rviz-screenshots
+          path: /tmp/rviz_*.png
+          if-no-files-found: warn
+
+      - name: 离线复现（不依赖 ROS）
+        run: |
+          cd src/ground/train_consist_coupler
+          python3 -m unittest discover -s tests -v
+          python3 -m train_consist_coupler.main --offline --output results_ci --quick
+          cat results_ci/scenarios.csv
