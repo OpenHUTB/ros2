@@ -1,0 +1,8 @@
+# ROS 2 节点参数。launch 里的参数会覆盖同名项。
+passage_sweep_node:
+  ros__parameters:
+    width: 0.90                 # 窄门净宽 (m)
+    variant: mppi_footprint     # mppi_footprint / mppi_point / reactive_footprint / reactive_point
+    publish_rate: 20.0          # 状态发布频率 (Hz)
+    control_hz: 20.0            # 控制频率；与 sim 的 CONTROL_HZ 一致
+    loop: true                  # 到达/碰撞后自动重置，便于连续观察
