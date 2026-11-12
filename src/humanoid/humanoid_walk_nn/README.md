@@ -99,6 +99,7 @@ roslaunch humanoid_walk_nn teleop.launch scene:=hall
   权重 `models/*.npz` 由 `bash main.sh train` 生成，因体积不纳入版本库（首次克隆后需先训练）。
 - **梯度校验**：`tests/test_gradients.py` 用中心差分校验 Dense/Conv2D/激活层反传
   （相对误差 <1e-5，实测 ~1e-9），`bash main.sh test` 会执行。
+- **pytest 覆盖范围**：`python -m pytest tests` 只收集 9 项（PID / 纯跟踪 / 安全层 / 平衡限幅 / 摔倒恢复等）；`tests/test_gradients.py` 与 `test_control.py` 的 mission 闭环流程不在 pytest 收集范围内，完整回归请用 `bash main.sh test`。
 - **日志不入库**：逐帧 `results/ros_*_slam_nav.json` 已移除并加入 `.gitignore`，
   由 `bash main.sh slam_nav <scene>` 重新生成。
 

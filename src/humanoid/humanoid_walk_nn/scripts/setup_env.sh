@@ -9,7 +9,7 @@ VENV="$ROOT/.venv"
 ROS_PY="/opt/ros/noetic/lib/python3/dist-packages"
 # 可选：用环境变量 PYTHON311 指定 >= 3.10 的解释器；否则自动探测。
 
-if [ -x "$VENV/bin/python3" ] && "$VENV/bin/python3" -c "import numpy" 2>/dev/null; then
+if [ -x "$VENV/bin/python3" ] && "$VENV/bin/python3" -c "import numpy, PIL, cv2, yaml" 2>/dev/null; then
   echo "[setup] venv already usable: $VENV"
 else
   PY="${PYTHON311:-}"
@@ -25,7 +25,7 @@ else
   fi
   echo "[setup] using $PY"
   "$PY" -m venv --system-site-packages "$VENV"
-  if ! "$VENV/bin/python3" -c "import numpy" 2>/dev/null; then
+  if ! "$VENV/bin/python3" -c "import numpy, PIL, cv2, yaml" 2>/dev/null; then
     echo "[setup] installing requirements into the venv"
     "$VENV/bin/python3" -m pip install --upgrade pip
     "$VENV/bin/python3" -m pip install -r "$ROOT/requirements.txt"
