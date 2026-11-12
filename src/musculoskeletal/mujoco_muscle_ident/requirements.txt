@@ -1,0 +1,3 @@
+# mujoco_muscle_ident 运行依赖
+numpy>=1.21
+matplotlib>=3.5

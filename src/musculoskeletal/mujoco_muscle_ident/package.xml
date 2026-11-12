@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>mujoco_muscle_ident</name>
+  <version>0.1.0</version>
+  <description>
+    肌肉参数辨识：用关节轨迹反演 F_max / l_opt / tau_act / 矩臂 / 阻尼，
+    并给出噪声敏感性、参数相关性与初值敏感性。纯 Python，无需 MuJoCo 运行。
+  </description>
+  <maintainer email="lyzzzz0921@users.noreply.github.com">lyzzzz0921</maintainer>
+  <license>MIT</license>
+
+  <exec_depend>python3-numpy</exec_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
