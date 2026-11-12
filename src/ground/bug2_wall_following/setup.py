@@ -4,7 +4,8 @@ setup(
     version="0.0.1",
     packages=find_packages(),
     data_files=[
-        ("share/" + "bug2_wall_following", ["package.xml"]),
+        ("share/bug2_wall_following", ["package.xml"]),
+        ("share/bug2_wall_following/launch", ["launch/main.launch.py"]),
         ("share/ament_index/resource_index/packages", ["resource/bug2_wall_following"]),
     ],
     install_requires=["pygame>=2.0"],
