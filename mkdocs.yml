@@ -166,6 +166,7 @@ nav:
     - 打靶: './ground/mujoco_shooting.md'
     - 交通标志识别（Windows 端脚本）: './ground/carla_traffic_sign_recognition.md'
     - 停车场场景生成: './ground/carla_parking_lot.md'
+    - reverse_parking_planner 离线回归测试（pytest）: './ground/reverse_parking_planner_pytest.md'
     - YOLOv8 视觉感知目标跟随: './ground/yolov8_target_tracking.md'
     - ROS2 差速机器人栅格 A* 全局路径规划: './ground/ros2_astar_planner/index.md'
     - ROS2 差速机器人 A* 全局规划与 DWA 局部避障: './ground/ros2_dwa_avoidance.md'
