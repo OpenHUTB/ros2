@@ -135,7 +135,7 @@ python2 tests/test_waypoint_target_switcher_local.py   # Melodic / Python 2.7
 代码位于
 [`src/ground/carla_perception_control`](https://github.com/OpenHUTB/ros2/tree/master/src/ground/carla_perception_control)，
 详细介绍（计算原理、源码解析、性能评价）见
-[传感器感知与给定轨迹跟踪（神经网络版）](./carla_perception_control.md)。
+[传感器感知与给定轨迹跟踪（神经网络版）](carla_keyboard_control.md#hw2)。
 
 ### 与本文示例的区别
 
@@ -203,7 +203,7 @@ python3 src/ground/carla_perception_control/main.py --mode run \
 !!! warning "给定轨迹务必落在车道上、且弯道处加密"
     航点之间是直线连接：航点若在路面外，车会开出路面撞停；
     转弯处航点间距过大会让车来不及转弯（前视距离仅 6 m）。
-    详见 [传感器感知与给定轨迹跟踪（神经网络版）](./carla_perception_control.md) 5.7 节。
+    详见 [传感器感知与给定轨迹跟踪（神经网络版）](carla_keyboard_control.md#hw2) 5.7 节。
 
 使用 launch 启动（ROS 2 / ROS 1）：
 
@@ -237,4 +237,4 @@ roslaunch carla_perception_control main.launch host:=172.21.108.47
 ![控制神经网络输出的转向指令](../img/ground/carla_steer_cmd.png)
 
 完整的调优过程与性能评价见
-[传感器感知与给定轨迹跟踪（神经网络版）](./carla_perception_control.md) 第 6 节。
+[传感器感知与给定轨迹跟踪（神经网络版）](carla_keyboard_control.md#hw2) 第 6 节。

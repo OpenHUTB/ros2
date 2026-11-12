@@ -150,25 +150,21 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [手动控制](./set_up_and_connect_to_carla.md)
 * [MNIST 手写数字视觉感知与机器人运动控制](./ground/mnist_digit_control.md) —— CNN 识别手写数字为运动指令，防抖确认后控制 turtlesim 平移/旋转
 * [生成对象](./ground/carla_spawn_objects.md)
-* [地面载具物理仿真与键盘运动控制](./ground/carla_keyboard_control.md)
+* [CARLA 课程作业合集（作业一~五）](./ground/carla_keyboard_control.md) —— 物理仿真与键盘控制、感知/控制 NN、建图与规划 NN、端到端 CNN、统一调度与性能评价（10 项指标）
 * [动态障碍物避让：激光雷达帧间差分与神经网络时机决策](./ground/dyn_avoid_nn.md) —— 两个往复扫动的障碍，专家用前向仿真决定过线时机，行为克隆 MLP 仅凭两帧雷达推断运动，20 回合成功率 90% / 75%
 * [CARLA+YOLOv8 目标检测感知与减速避障](./ground/carla_yolo_avoidance.md)
 * [阿克曼控制](./ground/ackermann_control.md)
 * [车道线检测（前视视觉）](./ground/carla_lane_keeping/lane_detection.md)
 * [车道保持控制](./ground/carla_lane_keeping/lane_keeping_control.md)
-* [传感器感知与给定轨迹跟踪（神经网络版）](./ground/carla_perception_control.md)
 * [R2D2小车自动巡航仿真](./ground/r2d2_cruise.md)
 * [R2D2小车航点巡航仿真](./ground/r2d2_waypoint_cruise.md) —— P控制器航点跟踪，方形路径循环巡逻，附轨迹数据记录
 * [路径点发布器](./ground/waypoint.md)
-* [激光雷达建图与神经网络规划导航](./ground/carla_mapping_navigation.md)
 * [MuJoCo 差速车建图与导航同步仿真（EKF-SLAM + 神经网络局部规划）](./ground/mujoco_slam_nav_sync.md) —— 栅格建图、粒子/协方差定位与 A* + 网络局部规划同步联调
 * [激光雷达点云 3D 目标检测与召回率评估](./ground/carla_lidar_obstacle_detection.md) —— 语义点云按实例分组 + 多帧累积；逐帧平均召回率 0.43（precision 0.65）
 * [自动驾驶代理](./ground/ad_agent.md)
-* [端到端神经网络图像驾驶](./ground/carla_end_to_end_nn.md)
 * [环岛汇入端到端驾驶（图像→控制）](./ground/carla_nn_roundabout_entry.md)
 * [自动驾驶示例](./ground/ad_demo.md)
 * [rostopic 手动驱动](./ground/rostopic_cruise.md)
-* [作业综合整合与性能评价](./ground/carla_benchmark_suite.md)
 * [ROS Scenario Runner](./ground/ros_scenario_runner.md)
 * [交通信号灯识别与响应](./ground/carla_traffic_light.md)
 * [RVIZ Carla 插件](./ground/rviz_plugin.md)

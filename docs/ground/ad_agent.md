@@ -14,7 +14,7 @@
 代码位于
 [`src/ground/carla_end_to_end_nn`](https://github.com/OpenHUTB/ros2/tree/master/src/ground/carla_end_to_end_nn)，
 详细介绍（计算原理、源码解析、性能评价）见
-[CARLA 端到端神经网络（图像 → 控制）](./carla_end_to_end_nn.md)。
+[CARLA 端到端神经网络（图像 → 控制）](carla_keyboard_control.md#hw4)。
 
 ### 与本文示例的区别
 
@@ -103,4 +103,4 @@ roslaunch carla_end_to_end_nn main.launch host:=192.168.8.1 mode:=test
 ![合成道路图像样本](../img/ground/carla_e2e_road_samples.png)
 
 完整的调优过程（含 maxpool 梯度缺陷与 tanh 缺失的排查）见
-[CARLA 端到端神经网络（图像 → 控制）](./carla_end_to_end_nn.md) 第 6 节。
+[CARLA 端到端神经网络（图像 → 控制）](carla_keyboard_control.md#hw4) 第 6 节。

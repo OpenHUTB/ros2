@@ -166,7 +166,7 @@ rostopic list
 **自主实现**的一套键盘运动控制，代码位于
 [`src/ground/carla_keyboard_control`](https://github.com/OpenHUTB/ros2/tree/master/src/ground/carla_keyboard_control)，
 详细介绍（计算原理、源码解析、性能评价）见
-[地面载具物理仿真与键盘运动控制](./ground/carla_keyboard_control.md)。
+[地面载具物理仿真与键盘运动控制](./ground/carla_keyboard_control.md#hw1)。
 
 ### 与本文示例的区别
 

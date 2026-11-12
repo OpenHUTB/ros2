@@ -30,7 +30,7 @@ The traceback for the exception was written to the log file
 代码位于
 [`src/ground/carla_benchmark_suite`](https://github.com/OpenHUTB/ros2/tree/master/src/ground/carla_benchmark_suite)，
 详细介绍（指标定义、源码解析、完整实测数据）见
-[CARLA 作业综合整合与性能评价](./carla_benchmark_suite.md)。
+[CARLA 作业综合整合与性能评价](carla_keyboard_control.md#hw5)。
 
 ### 与本文示例的区别
 
@@ -129,7 +129,7 @@ roslaunch carla_benchmark_suite main.launch target:=perception host:=172.21.108.
 ![各模块性能指标对比](../img/ground/carla_bench_metric_summary.png)
 
 完整的指标定义、横向对比与评价过程记录见
-[CARLA 作业综合整合与性能评价](./carla_benchmark_suite.md) 第 6 节。
+[CARLA 作业综合整合与性能评价](carla_keyboard_control.md#hw5) 第 6 节。
 
 ## 参考
 

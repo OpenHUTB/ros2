@@ -14,7 +14,7 @@
 代码位于
 [`src/ground/carla_mapping_navigation`](https://github.com/OpenHUTB/ros2/tree/master/src/ground/carla_mapping_navigation)，
 详细介绍（计算原理、源码解析、性能评价）见
-[CARLA 激光雷达建图与神经网络规划导航](./carla_mapping_navigation.md)。
+[CARLA 激光雷达建图与神经网络规划导航](carla_keyboard_control.md#hw3)。
 
 ### 与本文示例的区别
 
@@ -114,4 +114,4 @@ ros2 run rviz2 rviz2 -d $(ros2 pkg prefix carla_mapping_navigation)/share/carla_
 ![建图进度 3](../img/ground/carla_map_map_progress_3.png)
 
 完整的调优过程与性能评价见
-[CARLA 激光雷达建图与神经网络规划导航](./carla_mapping_navigation.md) 第 6 节。
+[CARLA 激光雷达建图与神经网络规划导航](carla_keyboard_control.md#hw3) 第 6 节。
