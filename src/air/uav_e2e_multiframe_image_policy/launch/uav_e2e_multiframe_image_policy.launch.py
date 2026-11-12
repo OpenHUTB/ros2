@@ -4,7 +4,9 @@
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 
 
 def generate_launch_description() -> LaunchDescription:
@@ -16,7 +18,10 @@ def generate_launch_description() -> LaunchDescription:
         executable="e2e_node",
         name="uav_e2e_multiframe_image_policy",
         output="screen",
-        parameters=[{"sim_rate": 20.0}],
+        parameters=[{
+            "sim_rate": ParameterValue(
+                LaunchConfiguration("sim_rate"), value_type=float),
+        }],
     )
 
     return LaunchDescription([sim_rate_arg, e2e_node])
