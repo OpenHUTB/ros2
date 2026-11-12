@@ -92,5 +92,9 @@ def main(argv=None):
     p.add_argument("--out", default="gif")
     p.set_defaults(func=cmd_gif)
 
+    p = sub.add_parser("manual", help="键盘调节肌肉激活与抬升")
+    p.add_argument("--keys", default=None, help="可重复按键序列；省略时读取交互终端")
+    p.set_defaults(func=lambda args: __import__(__package__ + ".manual", fromlist=["run"]).run(args.keys))
+
     args = ap.parse_args(argv)
     args.func(args)
