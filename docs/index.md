@@ -86,6 +86,7 @@ ROS每章节运行代码:
     * [ROV 六自由度推力分配](./chapter/chap9/rov_thruster_allocation_ls.md)
     * [无人机禁飞区膨胀绕行](./chapter/chap9/uav_geofence_bypass.md)
     * [无人机 LOS 航点制导](./chapter/chap9/uav_los_waypoint_guidance.md)
+    * [倒车纯追踪路径跟踪](./chapter/chap9/pure_pursuit_reverse.md)
 * [第 10 章](./chapter/turtlebot3_gazebo_control.md) - Turtlebot3 Gazebo键盘控制
 
 
