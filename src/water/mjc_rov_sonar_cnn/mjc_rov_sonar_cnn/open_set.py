@@ -224,7 +224,15 @@ def train_and_evaluate(epochs=30, seed_train=42, seed_test=1234,
         bg_fp = 'n/a' if row['background_fp_rate'] is None else f"{row['background_fp_rate']:.3f}"
         print(f"{row['threshold']:>9.3f} {row['coverage']:>9.3f} {accuracy:>9} {bg_fp:>7}")
 
+    # 把环境版本一起写进报告：同一份代码在不同 torch / numpy 下训练出的权重不同，
+    # 阈值扫描的绝对值会浮动 1～3 个点（实测 numpy 1.24 + torch 2.4.1 与 numpy 2.2 的
+    # 背景误报率差 2 个百分点）。记录版本后，复现差异就能一眼看出是环境还是代码问题。
+    import torch
     report = {
+        'env': {
+            'torch': torch.__version__,
+            'numpy': np.__version__,
+        },
         'seed_train': seed_train,
         'seed_test': seed_test,
         'n_train': n_train,
