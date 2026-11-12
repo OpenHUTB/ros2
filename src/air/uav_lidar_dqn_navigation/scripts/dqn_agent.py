@@ -218,12 +218,27 @@ class ImageDQNAgent(object):
             self.target.load_state_dict(self.online.state_dict())
         return float(loss.item())
 
-    def save(self, path):
-        torch.save({'action_dim': self.action_dim,
-                    'model': self.online.state_dict()}, path)
+    def save(self, path, include_optimizer=True):
+        model = self.online.state_dict()
+        if not include_optimizer:
+            model = {name: value.half() if value.is_floating_point() else value
+                     for name, value in model.items()}
+        checkpoint = {
+            'action_dim': self.action_dim,
+            'model': model,
+            'steps': self.steps,
+            'mode': 'e2e',
+        }
+        if include_optimizer:
+            checkpoint['optimizer'] = self.optimizer.state_dict()
+        torch.save(checkpoint, path)
 
     def load(self, path):
         ckpt = torch.load(path, map_location=self.device)
         self.online.load_state_dict(ckpt['model'])
         self.target.load_state_dict(ckpt['model'])
+        if 'optimizer' in ckpt:
+            self.optimizer.load_state_dict(ckpt['optimizer'])
+        if 'steps' in ckpt:
+            self.steps = int(ckpt['steps'])
         return ckpt
