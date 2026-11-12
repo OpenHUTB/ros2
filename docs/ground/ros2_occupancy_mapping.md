@@ -24,7 +24,27 @@
 输出时 $\ell > 0.2$ 记为占据（100），$\ell < -0.2$ 记为自由（0），
 其余为未知（-1）。
 
+## 文件结构
+
+```text
+src/ground/ros2_occupancy_mapping/
+├── ros2_occupancy_mapping/  # mapping.py / sim.py / main_mapping.py
+├── config/mapping_params.yaml
+├── launch/main_launch.py
+├── results/benchmark.json
+├── test/                    # 5 项单元测试
+└── README.md
+```
+
 ## 2. 运行
+
+### 运行环境
+
+| 项目 | 版本 |
+| --- | --- |
+| ROS 2 | Ubuntu 20.04.6 + Foxy 0.9.2 |
+| Python | 3.8.10 |
+| 离线基准 | Windows 11 + Python 3.12 + NumPy 2.x |
 
 ```bash
 cd ~/hutb_ws
@@ -41,6 +61,16 @@ ros2 launch ros2_occupancy_mapping main_launch.py
 
 参数在 `config/mapping_params.yaml`：`resolution`、`x_min/x_max/y_min/y_max`、
 `frame_id`。
+
+## 参数说明
+
+| 参数 | 含义 | 默认 |
+| --- | --- | --- |
+| `scan_topic` / `odom_topic` / `map_topic` | 输入/输出话题 | `/scan` / `/odom` / `/map` |
+| `frame_id` | 地图坐标系 | `odom` |
+| `resolution` | 栅格分辨率 | 0.05 m |
+| `x_min` / `x_max` | x 范围 | -10.0 / 10.0 |
+| `y_min` / `y_max` | y 范围 | -10.0 / 10.0 |
 
 ## 3. 离线复现
 
@@ -66,13 +96,18 @@ python3 -m ros2_occupancy_mapping.sim     # 60 帧、180 束
 
 > 不同 NumPy/平台会有约 ±0.02 的 IoU 和 ±3% 的格数差异；在 Ubuntu 22.04 + NumPy 1.24 上复现为 0.722 / 0.959 / 0.745 / 1229，结论不变。
 
-![占据栅格地图](../img/ground/ros2_occupancy_mapping/occupancy_map.png)
-
 precision 0.953 说明“标成占据的格子几乎都是真障碍”；recall 0.725 的损失主要来自：
 
 * 部分墙面只被斜视扫到，端点落在墙内；
 * 0.05 m 栅格对圆边的离散化；
 * 机器人路径是半径 3 m 的圆，四个角落覆盖较少。
+
+## 运行效果
+
+12 m × 8 m 房间、三个圆柱，60 帧建图后覆盖率 0.82、占据 IoU **0.70**、
+precision **0.953**、recall 0.725：
+
+![占据栅格地图](../img/ground/ros2_occupancy_mapping/occupancy_map.png)
 
 ## 5. 与规划器的关系
 
@@ -89,7 +124,7 @@ precision 0.953 说明“标成占据的格子几乎都是真障碍”；recall 
 * 只输出占据/自由/未知，没有语义或可通行性分析；
 * 固定 20 m × 20 m 栅格，大场景需分块或稀疏存储。
 
-## 7. 大模型声明
+## 大模型使用声明
 
 代码与文档在编写过程中使用了 AI 大模型辅助。作者已实际运行 5 项单元测试和
 60 帧离线建图，并对提交内容的正确性与完整性负全部责任。

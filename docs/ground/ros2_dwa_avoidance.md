@@ -138,11 +138,33 @@ DWA 被拉向墙面。
 节点订阅 `/scan`、`/odom`、`/goal_pose`，发布 `/cmd_vel`；参数全部可在
 `config/dwa_params.yaml` 或 launch 参数中修改。
 
+## 文件结构
+
+```text
+src/ground/ros2_dwa_avoidance/
+├── ros2_dwa_avoidance/       # main_dwa.py / dwa_core.py / sim.py
+├── config/dwa_params.yaml    # 全部规划参数
+├── launch/main_launch.py     # 一键启动
+├── test/                     # 18 项单元测试
+├── results.json              # 5 场景 × 3 控制器结果
+├── sweep.json                # 45 次参数扫描
+├── requirements.txt
+└── README.md
+```
+
 ## 6. 运行步骤
+
+### 运行环境
+
+| 项目 | 版本 |
+| --- | --- |
+| ROS 2 | Ubuntu 20.04.6 + Foxy 0.9.2（Humble 共用接口） |
+| Python | 3.8.10 |
+| 离线基准 | Windows 11 + Python 3.12 + NumPy 2.5.4 |
 
 ### 6.1 编译
 
-实测环境：Ubuntu 20.04.6、ROS 2 Foxy 0.9.2、Python 3.8.10；
+环境同上文「运行环境」表（Ubuntu 20.04.6 + Foxy 0.9.2 + Python 3.8.10）；
 代码只使用 Foxy/Humble 共有的接口，在 Humble 下同样可编译。
 
 ```bash
@@ -179,6 +201,20 @@ python3 -m ros2_dwa_avoidance.sim --no-figures   # 写 results/sweep，不需要
 python3 -m ros2_dwa_avoidance.sim                # 完整运行，额外生成 figures/
 python3 -m unittest discover -s test -v      # 18 项单元测试
 ```
+
+## 参数说明
+
+| 参数 | 含义 | 默认 |
+| --- | --- | --- |
+| `max_v` / `max_w` | 线速度/角速度上限 | 0.80 m/s / 1.80 rad/s |
+| `max_acc_v` / `max_acc_w` | 线/角加速度上限 | 1.20 m/s² / 3.00 rad/s² |
+| `predict_time` | DWA 轨迹预测时域 | 1.50 s |
+| `control_rate` | 控制频率 | 10 Hz |
+| `robot_radius` / `safety_margin` | 机器人半径/安全裕度 | 0.22 m / 0.08 m |
+| `heading_weight` / `velocity_weight` / `clearance_weight` | 三项代价权重 | 0.60 / 1.50 / 0.60 |
+| `lookahead` | A\* 前视距离 | 1.20 m |
+| `map_half_size` | 局部栅格半边长 | 10.0 m |
+| `publish_tf` | 是否发布 `odom→base_link` | true |
 
 ## 7. 实验设置
 
@@ -226,8 +262,6 @@ python3 -m unittest discover -s test -v      # 18 项单元测试
 > 复现时 utrap/A\*+DWA 为 22.3 s / 12.63 m / 0.303 m（本表 23.3 s / 12.64 m / 0.32 m），
 > 属平台/数值库差异；其余回合一致。不同环境不要求逐位相同。
 
-![5 个场景的轨迹对比](../img/ground/ros2_dwa_avoidance/trajectories.png)
-
 ### 8.2 分析
 
 1. **窄走廊**：纯 DWA 在走廊中段（路径 10.99 m、终点距目标 2.96 m）停住并原地摆动，
@@ -250,6 +284,16 @@ python3 -m unittest discover -s test -v      # 18 项单元测试
 
 所有成功回合的最小离障距离为 0.30–1.14 m。规划器内部要求 $r+0.08=0.30$ m，
 实测最低 0.30 m，说明安全裕度被真正执行，而不是只在代价函数里“软约束”。
+
+## 运行效果
+
+5 个场景的 A\*+DWA 全部成功（5/5），纯 DWA 4/5，反应式基线 1/3；轨迹对比如下：
+
+![5 个场景的轨迹对比](../img/ground/ros2_dwa_avoidance/trajectories.png)
+
+ROS 2 话题级闭环两次运行均到达目标（26.1 s / 20.3 s，路径约 11.9 m）：
+
+![ROS 2 编译、单元测试与闭环运行](../img/ground/ros2_dwa_avoidance/ros2_run.png)
 
 ## 9. 参数灵敏度
 
@@ -335,8 +379,6 @@ RViz2 里可以直接显示 RobotModel。
 连续两次都正常通过。`ros2 launch ... goal_x:=11.5 goal_y:=0.0` 也已验证：
 launch 参数能正确覆盖节点默认目标（日志中 `goal=(11.50, 0.00)`）。
 
-![ROS 2 编译、单元测试与闭环运行](../img/ground/ros2_dwa_avoidance/ros2_run.png)
-
 ## 11. 局限与展望
 
 * 二维圆形机器人模型，未考虑轮子打滑、电机力矩饱和；真车部署需在 `/cmd_vel`
@@ -352,7 +394,7 @@ launch 参数能正确覆盖节点默认目标（日志中 `goal=(11.50, 0.00)`�
   false，避免 RViz 报重复 TF；
 * 尚未接入 Gazebo/TurtleBot3 做三维仿真验证，这是下一步工作（另见 #1134）。
 
-## 12. 大模型声明
+## 大模型使用声明
 
 本模块的代码、实验脚本与文档在编写过程中使用了 AI 大模型辅助。
 作者已在离线仿真中实际运行全部基准与单元测试，并在 Ubuntu 20.04 + ROS 2 Foxy

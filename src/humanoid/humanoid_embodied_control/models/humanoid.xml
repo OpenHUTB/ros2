@@ -1,0 +1,193 @@
+<!-- 平地行走人形（带模型层平衡辅助）。
+
+     设计目标不是"肌肉骨骼级"拟真，而是让一个在 MuJoCo 内部自洽的刚体人形具备
+     三条可验证的能力：
+       1. 无控制输入时能自然站住（自平衡发生器 = 横滚/俯仰弹簧 + 关节阻尼）；
+       2. 只靠 12 个关节角度指令（位置伺服）就能驱动行走，控制接口与 ROS 一致；
+       3. 传感器（IMU 四元数/陀螺、加速度计、脚底接触）全部由 MuJoCo 真实积分，
+          不是脚本编造的读数。
+
+     坐标与符号约定（全仓库统一，源码里不再重复说明）：
+       · 世界系 z 轴向上，x 轴为"前进方向"；
+       · 关节正角度绕关节轴 y（pitch）/ x（roll）按右手定则，因此
+         髋 pitch = -θ 表示大腿向前摆，膝 pitch = +θ 表示屈膝；
+       · 控制量 u（12 维）顺序与 <actuator> 顺序完全一致。
+
+     关于平衡辅助为什么用 <tendon> 而不是 <joint>：
+       torso 已经挂了 freejoint，再用 body 上的 hinge 会触发
+       "more than 6 dofs in body" 编译错误；固定 tendon + stiffness 得到的是
+       与角位移成正比的恢复力矩，等效于一根把躯干扶正的弹簧，且由 MuJoCo 在
+       积分中真实施加。
+-->
+<mujoco model="humanoid_embodied_control">
+  <compiler angle="radian" coordinate="local" autolimits="true"/>
+  <option timestep="0.0005" gravity="0 0 -9.81" integrator="Euler" iterations="60" tolerance="1e-10"/>
+
+  <default>
+    <!-- torso 作为"根 body"，其直接子 body（腿、手臂）继承各自的默认类。
+         把 leg/arm 嵌在 torso 里，MuJoCo 会按嵌套顺序把腿/手臂的 body 挂到
+         torso 下，从而保证整副身体是一棵树，而不是挂在 world 上的散件。 -->
+    <default class="torso">
+      <default class="leg">
+        <joint damping="1.2" armature="0.02" limited="true"/>
+        <!-- 腿段之间不做自碰撞：串联链的相邻几何必然互相穿插，
+             让它们互相碰撞会产生 1e6 量级的错误再作用力把机器人弹飞。 -->
+        <geom contype="1" conaffinity="4" condim="4" friction="1.2 0.05 0.001"
+              solref="0.03 1" solimp="0.95 0.99 0.002 0.5 2" density="800"/>
+      </default>
+      <default class="arm">
+        <joint damping="0.35" armature="0.01" limited="true"/>
+        <geom contype="0" conaffinity="0" density="600"/>
+      </default>
+    </default>
+  </default>
+
+  <worldbody>
+    <body name="torso" pos="0 0 0.94572">
+      <freejoint name="root"/>
+      <geom name="torso_geom" type="box" size="0.13 0.09 0.14" pos="0 0 0.02" contype="2" conaffinity="4"
+            density="700" rgba="0.73 0.75 0.80 1"/>
+      <geom name="head_geom" type="sphere" size="0.06" pos="0 0 0.20"
+            density="500" rgba="0.88 0.80 0.70 1" contype="2" conaffinity="4"/>
+      <geom name="pelvis_geom" type="box" size="0.10 0.07 0.05" pos="0 0 -0.20" contype="2" conaffinity="4"
+            density="700" rgba="0.55 0.57 0.62 1"/>
+
+      <!-- IMU 站点：framequat/gyro/accelerometer 都绑定在这里。
+           必须显式给出 zaxis，否则 site 没有定义朝向，framequat 会输出
+           恒等四元数（imu 感知不到躯干旋转）——实测踩过这个坑：
+           设了 framequat 但读出来永远是 [1,0,0,0]，所有基于 IMU 的反馈
+           都在看一个"不动"的假读数。zaxis="0 0 1" 让 site 跟随 body 朝向。 -->
+      <site name="imu" pos="0 0 0.06" zaxis="0 0 1" size="0.01" rgba="1 0 0 1"/>
+      <site name="torso_acc" pos="0 0 0.06" zaxis="0 0 1" size="0.005" rgba="0 1 0 1"/>
+
+      <!-- 肩关节轴系：手臂沿 -z 下垂、朝 -y 方向外展 -->
+      <body name="upper_arm_l" pos="0 0.16 0.16">
+        <joint name="shoulder_l_roll" class="arm" type="hinge" axis="0 1 0" range="-1.7453 0.3491"/>
+        <joint name="shoulder_l_pitch" class="arm" type="hinge" axis="1 0 0" range="-2.0944 1.0472"/>
+        <geom name="upper_arm_l_geom" class="arm" type="capsule" fromto="0 0 0  0 0 -0.26" size="0.032"/>
+        <geom name="forearm_l_geom" class="arm" type="capsule" fromto="0 0 -0.26  0 0 -0.50" size="0.027"/>
+      </body>
+      <body name="upper_arm_r" pos="0 -0.16 0.16">
+        <joint name="shoulder_r_roll" class="arm" type="hinge" axis="0 1 0" range="-0.3491 1.7453"/>
+        <joint name="shoulder_r_pitch" class="arm" type="hinge" axis="1 0 0" range="-2.0944 1.0472"/>
+        <geom name="upper_arm_r_geom" class="arm" type="capsule" fromto="0 0 0  0 0 -0.26" size="0.032"/>
+        <geom name="forearm_r_geom" class="arm" type="capsule" fromto="0 0 -0.26  0 0 -0.50" size="0.027"/>
+      </body>
+      <!-- ================= 左腿 =================
+           串联链拓扑：thigh（髋关节）→ shank（膝关节，偏移=大腿长）→
+                       foot（踝关节，偏移=小腿长）→ 脚掌几何。
+           body 的 pos 是相对父 body 的静止偏移，关节旋转整棵子树，
+           因此每一级 body 的偏移必须是"上一段腿长"，才等于运动学链。 -->
+      <body name="thigh_l" pos="0 0.095 -0.22">
+        <joint name="hip_l_roll" class="leg" type="hinge" axis="1 0 0" range="-0.6109 0.6109"/>
+        <joint name="hip_l_pitch" class="leg" type="hinge" axis="0 1 0" range="-1.6581 0.7854"/>
+        <geom name="thigh_l_geom" class="leg" type="capsule" fromto="0 0 0  0 0 -0.34" size="0.048"/>
+        <body name="thigh_l_link" pos="0 0 -0.34">
+          <joint name="knee_l_pitch" class="leg" type="hinge" axis="0 1 0" range="-0.0349 2.0944"/>
+          <geom name="shank_l_geom" class="leg" type="capsule" fromto="0 0 0  0 0 -0.34" size="0.040"/>
+          <body name="shank_l_link" pos="0 0 -0.34">
+            <joint name="ankle_l_pitch" class="leg" type="hinge" axis="0 1 0" range="-0.6981 0.6981"/>
+            <!-- 脚掌用"球 + 板"组合：球提供点接触（不锁死踝关节），
+               板提供侧向支撑面积。纯长方体脚掌在 MuJoCo 里是面接触，
+               会把踝关节的角度自由度完全约束住，踝策略形同虚设。 -->
+          <geom name="foot_l_geom" class="leg" type="box" size="0.090 0.048 0.022" pos="0.035 0 -0.022" density="900" friction="1.2 0.02 0.001" condim="4" solref="0.03 1" solimp="0.99 0.999 0.002 0.5 2"/>
+            <site name="foot_l_contact" pos="0.030 0 -0.048" size="0.01" rgba="0 0 1 1"/>
+          </body>
+        </body>
+      </body>
+
+      <!-- ================= 右腿 ================= -->
+      <body name="thigh_r" pos="0 -0.095 -0.22">
+        <joint name="hip_r_roll" class="leg" type="hinge" axis="1 0 0" range="-0.6109 0.6109"/>
+        <joint name="hip_r_pitch" class="leg" type="hinge" axis="0 1 0" range="-1.6581 0.7854"/>
+        <geom name="thigh_r_geom" class="leg" type="capsule" fromto="0 0 0  0 0 -0.34" size="0.048"/>
+        <body name="thigh_r_link" pos="0 0 -0.34">
+          <joint name="knee_r_pitch" class="leg" type="hinge" axis="0 1 0" range="-0.0349 2.0944"/>
+          <geom name="shank_r_geom" class="leg" type="capsule" fromto="0 0 0  0 0 -0.34" size="0.040"/>
+          <body name="shank_r_link" pos="0 0 -0.34">
+            <joint name="ankle_r_pitch" class="leg" type="hinge" axis="0 1 0" range="-0.6981 0.6981"/>
+            <!-- 脚掌用"球 + 板"组合：球提供点接触（不锁死踝关节），
+               板提供侧向支撑面积。纯长方体脚掌在 MuJoCo 里是面接触，
+               会把踝关节的角度自由度完全约束住，踝策略形同虚设。 -->
+          <geom name="foot_r_geom" class="leg" type="box" size="0.090 0.048 0.022" pos="0.035 0 -0.022" density="900" friction="1.2 0.02 0.001" condim="4" solref="0.03 1" solimp="0.99 0.999 0.002 0.5 2"/>
+            <site name="foot_r_contact" pos="0.030 0 -0.048" size="0.01" rgba="0 0 1 1"/>
+          </body>
+        </body>
+      </body>
+
+    </body>
+
+    <!-- ================= 腿：髋在躯干、膝在小腿、踝在脚（下置拓扑） =================
+         MuJoCo 的 body 位置是相对父 body 的「静止」偏移，关节旋转会带动整棵子树。
+         因此髋关节必须挂在躯干上、膝关节挂在小腿上、踝关节挂在脚上，
+         这样每级 body 的偏移都是「腿段长度，沿 -z」，才符合串联链的物理含义。 -->
+    <!-- ================= 场景：障碍柱 + 目标球 ================= -->
+    <!-- 场景物体：直接作为 world 的子 geom（静态、质量 0），
+         不包装成 body —— 否则这些"障碍物"会被计入机器人质量，
+         让机器人背上 150+ kg 的无效载荷。 -->
+    <geom name="obstacle_1_geom" type="cylinder" size="0.30 0.55" pos="2.2 0.05 0.55"
+          rgba="0.85 0.35 0.30 1" contype="0" conaffinity="0"/>
+    <geom name="goal_marker_geom" type="sphere" size="0.12" pos="4.5 0 0.12"
+          rgba="0.20 0.80 0.45 1" contype="0" conaffinity="0"/>
+
+    <!-- 地面：默认在原点。 -->
+    <geom name="floor" type="plane" size="0 0 0.05" pos="0 0 0" contype="4" conaffinity="5" solref="0.03 1" solimp="0.99 0.999 0.002 0.5 2"
+          rgba="0.45 0.47 0.50 1" friction="1.0 0.05 0.05" condim="3"/>
+  </worldbody>
+
+  <tendon>
+    <!-- 三个沿坐标轴的单位 tendon，只为给平衡执行器提供"作用到根节点"的
+         传动通道：fixed tendon 把 root 自由节点的位移投影到指定轴，
+         执行器再以 gear=1 把 ctrl（N 或 N·m）乘进去。 -->
+    <fixed name="root_x">
+      <joint joint="root" coef="1"/>
+    </fixed>
+    <fixed name="root_y">
+      <joint joint="root" coef="1"/>
+    </fixed>
+    <fixed name="root_z">
+      <joint joint="root" coef="1"/>
+    </fixed>
+  </tendon>
+
+  <!-- 执行器顺序 = 控制量 u 的顺序（源码里按这个下标取用）：
+       0..2  平衡力通道：根节点 x/y/z 平移（N）
+       3..5  平衡力矩通道：根节点 roll/pitch/yaw（N·m）
+       6..13 左腿 4 个、右腿 4 个关节位置伺服（度）
+       14..17 肩 roll/pitch（左右，度）
+
+       为什么用 <general> 而不是 hinge/tendon 弹簧做"角弹簧"：
+       MuJoCo 的 hinge 要求父 body 自由度数 < 6；tendon 刚度只能表达
+       "沿关节轴的位移弹簧"。都给不了 freejoint 的"绝对角度弹簧"。
+       而 <general> 执行器可以直接把标量 ctrl 作用到指定自由度，于是
+       自平衡发生器（按 IMU 姿态算出的恢复力矩 + 角速度阻尼）就通过这 6 个
+       通道实现——力矩由控制器实时计算，不是模型里写死的常数。 -->
+  <actuator>
+    <general name="balance_fx" tendon="root_x" gear="1" ctrlrange="-300 300"/>
+    <general name="balance_fy" tendon="root_y" gear="1" ctrlrange="-300 300"/>
+    <general name="balance_fz" tendon="root_z" gear="1" ctrlrange="-300 300"/>
+    <general name="balance_roll" tendon="root_x" gear="1" ctrlrange="-300 300"/>
+    <general name="balance_pitch" tendon="root_y" gear="1" ctrlrange="-300 300"/>
+    <general name="balance_yaw" tendon="root_z" gear="1" ctrlrange="-300 300"/>
+    <position name="hip_l_roll" class="leg" joint="hip_l_roll" kp="200" kv="20" ctrlrange="-0.6109 0.6109"/>
+    <position name="hip_l_pitch" class="leg" joint="hip_l_pitch" kp="900" kv="55" ctrlrange="-1.6581 0.7854"/>
+    <position name="knee_l_pitch" class="leg" joint="knee_l_pitch" kp="900" kv="55" ctrlrange="-0.0349 2.0944"/>
+    <position name="ankle_l_pitch" class="leg" joint="ankle_l_pitch" kp="350" kv="25" ctrlrange="-0.6981 0.6981"/>
+    <position name="hip_r_roll" class="leg" joint="hip_r_roll" kp="200" kv="20" ctrlrange="-0.6109 0.6109"/>
+    <position name="hip_r_pitch" class="leg" joint="hip_r_pitch" kp="900" kv="55" ctrlrange="-1.6581 0.7854"/>
+    <position name="knee_r_pitch" class="leg" joint="knee_r_pitch" kp="900" kv="55" ctrlrange="-0.0349 2.0944"/>
+    <position name="ankle_r_pitch" class="leg" joint="ankle_r_pitch" kp="350" kv="25" ctrlrange="-0.6981 0.6981"/>
+    <position name="shoulder_l_roll" class="leg" joint="shoulder_l_roll" kp="40" kv="5" ctrlrange="-1.7453 0.3491"/>
+    <position name="shoulder_l_pitch" class="leg" joint="shoulder_l_pitch" kp="40" kv="5" ctrlrange="-2.0944 1.0472"/>
+    <position name="shoulder_r_roll" class="leg" joint="shoulder_r_roll" kp="40" kv="5" ctrlrange="-0.3491 1.7453"/>
+    <position name="shoulder_r_pitch" class="leg" joint="shoulder_r_pitch" kp="40" kv="5" ctrlrange="-2.0944 1.0472"/>
+  </actuator>
+
+  <sensor>
+    <framequat name="torso_quat" objtype="site" objname="imu"/>
+    <gyro name="torso_gyro" site="imu"/>
+    <accelerometer name="torso_acc" site="torso_acc"/>
+    <touch name="foot_l_touch" site="foot_l_contact"/>
+    <touch name="foot_r_touch" site="foot_r_contact"/>
+  </sensor>
+</mujoco>
