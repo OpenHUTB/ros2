@@ -5,6 +5,9 @@ scenario 参数决定回放哪个工况：
 
 节点的参数同时写在 config/semi_active_suspension.yaml 里，这里的启动参数会覆盖
 文件，方便直接 ros2 launch semi_active_suspension main.launch.py scenario:=iso_rough。
+
+rviz 默认关：无显示环境（CI、容器、WSL 无 X）里 RViz2 找不到 Ogre 的渲染库会直接
+exit 127，而节点本身是好的。要看画面自己加 rviz:=true。
 """
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
@@ -31,8 +34,8 @@ def generate_launch_description():
         'height_gain', default_value='4.0',
         description='垂向位移放大倍数，1.0 为真实比例')
     rviz = DeclareLaunchArgument(
-        'rviz', default_value='true',
-        description='是否同时打开 RViz2')
+        'rviz', default_value='false',
+        description='是否同时打开 RViz2；无显示环境请保持 false')
 
     rviz_config = PathJoinSubstitution(
         [pkg_share, 'rviz', 'semi_active_suspension.rviz'])

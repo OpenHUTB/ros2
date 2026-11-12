@@ -20,6 +20,7 @@ import math
 
 import rclpy
 from geometry_msgs.msg import Point
+from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from std_msgs.msg import String
 from std_srvs.srv import Trigger
@@ -281,11 +282,18 @@ def main(argv: list[str] | None = None) -> int:
     node = SuspensionNode()
     try:
         rclpy.spin(node)
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, ExternalShutdownException):
+        # Ctrl+C 与 SIGTERM 走同一分支。SIGTERM 时 rclpy 的信号处理器已经把上下文
+        # 关掉了，这里再抛一个 rclpy 自己的 ExternalShutdownException 出来，不接住
+        # 就会打一屏 traceback（rcl_shutdown already called）。
         pass
     finally:
-        node.destroy_node()
-        rclpy.shutdown()
+        try:
+            node.destroy_node()
+        finally:
+            # 上下文已经被信号处理器关过就不要重复关，否则 RCLError
+            if rclpy.ok():
+                rclpy.shutdown()
     return 0
 
 

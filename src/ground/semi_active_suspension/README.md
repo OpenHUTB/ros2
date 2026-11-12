@@ -12,7 +12,7 @@
 ```bash
 cd src/ground/semi_active_suspension
 python3 -m semi_active_suspension.main --output results
-python3 -m pytest tests -q      # 37 项
+python3 -m pytest tests -q      # 38 项
 ```
 
 跑完四个工况，生成三张对比曲线 + 一张指标汇总图，同时打印指标表。
@@ -117,8 +117,16 @@ $K_{\text{sky}} = 4200$、$K_{\text{gh}} = 1200$ N·s/m 是标定出来的折中
 ## ROS 2 节点
 
 ```bash
+# 只起节点，不开 RViz2（默认）
 ros2 launch semi_active_suspension main.launch.py scenario:=speed_bump
+
+# 要画面时再加 rviz:=true
+ros2 launch semi_active_suspension main.launch.py scenario:=speed_bump rviz:=true
 ```
+
+`rviz` 默认是 `false`：无显示环境（CI、容器、WSL 没配 X）里 RViz2 找不到
+`libOgreMain.so` 会直接 exit 127，那不是本节点的问题，但一起启动会让人以为节点挂了。
+先不加 `rviz` 确认 `/suspension/markers` 有输出，再开界面更省事。
 
 RViz2 里同时回放两排：上排被动、下排半主动，各画车身参考面、四个减振器、四个车轮
 和脚下正在向后滚动的路面；最前面一排竖条是四个减振器此刻的阻尼系数，颜色从蓝（最软）

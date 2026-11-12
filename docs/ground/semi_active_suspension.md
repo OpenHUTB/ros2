@@ -192,8 +192,16 @@ RMS 从 1069 N 升到 1103 N。接地性是安全指标，舒适性是体验指�
 ## 在 RViz2 里看
 
 ```bash
+# 只起节点（rviz 默认 false）
 ros2 launch semi_active_suspension main.launch.py scenario:=speed_bump
+
+# 要界面再加 rviz:=true
+ros2 launch semi_active_suspension main.launch.py scenario:=speed_bump rviz:=true
 ```
+
+`rviz` 默认关着：无显示环境（CI、容器、WSL 未配 X）里 RViz2 加载 Ogre 的渲染库会
+直接 exit 127，节点本身没毛病，但一起启动容易误判成节点挂了。先确认
+`/suspension/markers` 在出数据，再开界面。
 
 两排并排：上排被动、下排半主动。每排画车身参考面、四个减振器、四个车轮和脚下正在
 向后滚动的路面；最前面一排竖条是四个减振器此刻的阻尼系数，颜色从蓝（最软）到橙（最硬）。

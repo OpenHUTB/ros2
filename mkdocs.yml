@@ -228,7 +228,7 @@ nav:
     - 里程计轨迹记录: './ground/odom_trace_recorder.md'
     - 转向执行器滞后: './ground/steering_actuator_lag.md'
     - 刹车距离核算: './ground/braking_distance_check.md'
-    - 半主动悬架车身姿态控制（天棚/地棚阻尼）: './ground/semi_active_suspension.md'
+    - 半主动悬架车身姿态控制: './ground/semi_active_suspension.md'
     - 换挡策略与闭环控制: './ground/gear_shift_policy.md'
     - 牵引车挂车折刀判定: './ground/trailer_kinematics.md'
     - 速度曲线规划: './ground/speed_profile_check.md'
