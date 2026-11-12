@@ -31,6 +31,7 @@ install(FILES
   scripts/policy.py
   scripts/route.py
   scripts/route_env.py
+  scripts/route_constants.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
