@@ -6,14 +6,14 @@
 <meta content="IE=edge" http-equiv="X-UA-Compatible"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <link href="../../img/favicon.ico" rel="shortcut icon"/>
-<title>6. 机器人 SLAM 与自主导航 - 模拟器的 ROS 文档</title>
+<title>章节首页 - 模拟器的 ROS 文档</title>
 <link href="../../css/theme.css" rel="stylesheet"/>
 <link href="../../css/theme_extra.css" rel="stylesheet"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
 <link href="../../extra.css" rel="stylesheet"/>
 <script>
         // Current page data
-        var mkdocs_page_name = "6. \u673a\u5668\u4eba SLAM \u4e0e\u81ea\u4e3b\u5bfc\u822a";
+        var mkdocs_page_name = "\u7ae0\u8282\u9996\u9875";
         var mkdocs_page_input_path = "chapter/chap6.md";
         var mkdocs_page_url = null;
       </script>
@@ -71,6 +71,8 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../chap2/ros1_env_check/">ROS Noetic 环境自检与常见问题排查</a>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="../../chap2/ros2_qos_demo/">ROS 2 QoS 服务质量：可靠性、历史深度与持久性</a>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../chap3/">3. 机器人系统设计</a>
@@ -93,11 +95,19 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../chap5/lidar_obstacle_nn/">基于激光雷达扫描的神经网络障碍物分类</a>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="../chap5/kalman_filter_tracking/">卡尔曼滤波：从带噪测距中估计位置与速度</a>
+</li>
 </ul>
 </li>
-<li class="toctree-l1 current"><a class="reference internal current" href="#">6. 机器人 SLAM 与自主导航</a>
+<li class="toctree-l1 current"><a class="reference internal current">6. 机器人 SLAM 与自主导航</a>
 <ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="#_1">教程小节</a>
+<li class="toctree-l2 current"><a class="reference internal current" href="#">章节首页</a>
+<ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="#_1">教程小节</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="particle_filter_localization/">粒子滤波：一维蒙特卡洛定位（MCL）</a>
 </li>
 </ul>
 </li>
@@ -1176,7 +1186,8 @@
 <ul class="wy-breadcrumbs">
 <li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
 <li class="breadcrumb-item">ROS 教程</li>
-<li class="breadcrumb-item active">6. 机器人 SLAM 与自主导航</li>
+<li class="breadcrumb-item">6. 机器人 SLAM 与自主导航</li>
+<li class="breadcrumb-item active">章节首页</li>
 <li class="wy-breadcrumbs-aside">
 <a href="https://github.com/OpenHUTB/ros2/edit/master/docs/chapter/chap6.md"> 编辑页面</a>
 </li>
@@ -1216,8 +1227,8 @@ src/chap6/catkin_ws/src/mrobot_teleop/        # 键盘遥控节点（Python3）
 </div>
 </div><footer>
 <div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
-<a class="btn btn-neutral float-left" href="../chap5/lidar_obstacle_nn/" title="基于激光雷达扫描的神经网络障碍物分类"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
-<a class="btn btn-neutral float-right" href="../chap7/" title="7. 机械臂控制">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+<a class="btn btn-neutral float-left" href="../chap5/kalman_filter_tracking/" title="卡尔曼滤波：从带噪测距中估计位置与速度"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="particle_filter_localization/" title="粒子滤波：一维蒙特卡洛定位（MCL）">后一页 <span class="icon icon-circle-arrow-right"></span></a>
 </div>
 <hr/>
 <div role="contentinfo">
@@ -1234,8 +1245,8 @@ src/chap6/catkin_ws/src/mrobot_teleop/        # 键盘遥控节点（Python3）
 <span>
 <a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
 </span>
-<span><a href="../chap5/lidar_obstacle_nn/" style="color: #fcfcfc">« 前一页</a></span>
-<span><a href="../chap7/" style="color: #fcfcfc">后一页 »</a></span>
+<span><a href="../chap5/kalman_filter_tracking/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="particle_filter_localization/" style="color: #fcfcfc">后一页 »</a></span>
 </span>
 </div>
 <script src="../../js/jquery-3.6.0.min.js"></script>
