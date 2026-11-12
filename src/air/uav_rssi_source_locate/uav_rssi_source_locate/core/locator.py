@@ -57,10 +57,12 @@ def expanding_square(cfg: SearchCfg) -> List[Tuple[float, float]]:
                 (cx - half, cy + half), (cx - half, cy - half)]
         out_of_bounds = all(not (0 <= x <= cfg.area[0] and 0 <= y <= cfg.area[1])
                             for x, y in ring)
-        wpts += ring
-        k += 1
+        # 先判后加：整圈全出界（或超出覆盖阈值）时不再加这一圈，
+        # 否则会多飞一圈完全在搜索区外的航点
         if out_of_bounds or half > max(cfg.area) * 0.75:
             break
+        wpts += ring
+        k += 1
     return wpts
 
 

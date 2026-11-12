@@ -145,6 +145,14 @@ def test_expanding_square_starts_centered_and_grows():
         SearchCfg(ring_points=2)
 
 
+def test_expanding_square_stays_in_bounds():
+    # 扩张方形停止时应停在边界内，不应多飞一圈完全越界的航点
+    wpts = expanding_square(CFG)
+    for x, y in wpts:
+        assert 0.0 <= x <= CFG.area[0]
+        assert 0.0 <= y <= CFG.area[1]
+
+
 def test_ring_points_are_on_the_circle():
     pts = ring_points((10.0, 20.0), 6.0, 8)
     assert len(pts) == 8
