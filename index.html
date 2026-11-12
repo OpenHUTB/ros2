@@ -164,6 +164,8 @@
 </ul>
 <p class="caption"><span class="caption-text">人形机器人</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="humanoid/humanoid_kws_command/">人形机器人离线语音指令控制：端到端关键词识别（KWS）</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="humanoid/embodied_humanoid_control/">具身人形物理仿真与平衡行走控制</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="humanoid/joint_friction_identification/">关节 Stribeck 摩擦辨识与前馈补偿</a>
@@ -244,6 +246,12 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="humanoid/humanoid_mujoco_slam_nn_nav/">人形机器人 MuJoCo 建图导航与神经网络控制</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="humanoid/humanoid_stair_zmp_preview/">人形上下台阶步态仿真：ZMP 预瞄控制与台阶参数扫描</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="humanoid/mujoco_hopper_slip_control/">MuJoCo单足弹跳机器人简单仿真：SLIP 模型与 Raibert 弹跳控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="humanoid/humanoid_passage_width_sweep/">人形足迹下的局部避障算法对比：MPPI 与斥力法的窄通道宽度扫描</a>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">四足机器人</span></p>
 <ul>
@@ -314,13 +322,17 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/ros2_pure_pursuit/">ROS2 差速机器人纯追踪路径跟踪与反应式避障</a>
 </li>
+<li class="toctree-l1"><a class="reference internal">手动控制</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="set_up_and_connect_to_carla/">MathWorks 示例</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="control/carla_manual_control/">Windows + Ubuntu 20.04 实测</a>
+</li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="ground/diff_drive_astar_odom_nav/">基于里程计反馈与 A* 算法的差速底盘静态全局路径规划</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/vio_time_offset_estimation/">视觉-惯性时间偏移互相关估计</a>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="ground/ros2_ekf_localization/">ROS2 差速机器人 EKF 多传感器融合定位</a>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="set_up_and_connect_to_carla/">手动控制</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/dyn_avoid_nn/">动态障碍物避让：激光雷达帧间差分与神经网络时机决策</a>
 </li>
@@ -389,6 +401,8 @@
 <li class="toctree-l1"><a class="reference internal" href="ground/reverse_parking_planner_pytest/">reverse_parking_planner 离线回归测试（pytest）</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/yolov8_target_tracking/">YOLOv8 视觉感知目标跟随</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ground/ros2_ekf_localization/">ROS2 差速机器人 EKF 多传感器融合定位</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/ros2_astar_planner/">ROS2 差速机器人栅格 A* 全局路径规划</a>
 </li>
@@ -620,6 +634,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/vehicle_wading_check/">涉水深度与浮力裕度核算</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="ground/trailer_jackknife_guard/">半挂车折叠风险与倒车限速保护</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="ground/passability_check/">车辆几何通过性核算（接近角/离去角/纵向通过角）</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/turtlebot3_relocalization/">高精度定位与重定位（AMCL 式粒子滤波）</a>
@@ -658,6 +674,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/ground_slope_estimation/">地面坡度估计</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="ground/estop_latch/">急停闩锁与人工复位</a>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">空域载具</span></p>
 <ul>
@@ -671,6 +689,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/mujoco_drone_distance_stop/">无人机制动旧入口</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="ground/road_numpy_nn_slam/">城市道路地面载具二维动力学、激光 SLAM 与神经网络导航</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="air/mujoco_uav_range_neural_braking/">无人机测距制动与神经控制</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="air/mujoco_uav_braking_metrics/">无人机测距制动轨迹指标分析</a>
@@ -678,6 +698,8 @@
 <li class="toctree-l1"><a class="reference internal" href="air/mujoco_uav_range_sensor_quality/">无人机测距几何一致性检查</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="air/town10_facade_cruise_capture/">Town10立面自主巡航与图像采集</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="air/drone_lawnmower_survey/">AirSim 无人机弓字形区域勘测</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="air/powerline_mission_preflight/">输电线路无人机巡检任务预检</a>
 </li>
@@ -767,9 +789,15 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="air/carlair_ros_bridge/">无人机与 ROS 的桥接模块</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="air/uav_payload_cg_envelope/">无人机载荷重心包线检查</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="air/airsim_ros2_bringup/">AirSim ROS 2 Humble 最小桥接</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="air/airsim_ros2_gnss/">AirSim ROS 2 Humble GNSS 桥接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="air/airsim_ros2_magnetometer/">AirSim ROS 2 Humble 磁力计桥接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="air/airsim_ros2_barometer/">AirSim ROS 2 Humble 气压计桥接</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="air/uav_lidar_ground_filter/">无人机 LiDAR 地面/障碍分割</a>
 </li>
@@ -796,6 +824,8 @@
 <li class="toctree-l1"><a class="reference internal" href="air/uav_moving_platform_landing/">移动平台（车/船）精准降落</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="air/uav_keyboard_control/">无人机键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="air/uav_takeoff_hover_land/">无人机起飞—悬停—降落状态机</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="air/uav_airsim_keyboard/">无人机 AirSim 键盘遥控（ROS 2 Humble）</a>
 </li>
@@ -1114,6 +1144,17 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="water/ros2_usv_station_keeping/">欠驱动无人艇低速定点保持与横漂补偿</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="water/multi_agent_hunting/">多 AUV 协同围捕</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">路径规划与跟踪</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="motion_planning/rrt_path_planning/">RRT 采样式二维路径规划与平滑</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="motion_planning/trapezoidal_profile/">梯形与 S 曲线速度规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="motion_planning/stanley_tracking/">Stanley 前视路径跟踪（含曲率前馈）</a>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">经典控制</span></p>
 <ul>
@@ -1168,6 +1209,7 @@
 <li><a href="#air_vehicle">空域载具</a></li>
 <li><a href="#water_vehicle">水域载具</a></li>
 <li><a href="#manipulation">机械臂操作</a></li>
+<li><a href="#motion_planning">路径规划与跟踪</a></li>
 </ul>
 <hr/>
 <h2 id="1">1. 入门 <span id="list"></span></h2>
@@ -1238,6 +1280,7 @@
 <p>ROS 2 QoS 兼容性检查实验：<a href="chap2/ros2_qos_compatibility_lab/">chap2/ros2_qos_compatibility_lab</a></p>
 <h2 id="2">2. 人形机器人 <span id="humanoid"></span></h2>
 <ul>
+<li><a href="humanoid/humanoid_kws_command/">人形机器人离线语音指令控制：端到端关键词识别（KWS）</a></li>
 <li><a href="humanoid/embodied_humanoid_control/">具身人形物理仿真与平衡行走控制</a> —— MuJoCo 双足人形：键盘遥控、激光/深度感知、参数化步态与根节点平衡控制</li>
 <li>
 <p><a href="humanoid/joint_friction_identification/">关节 Stribeck 摩擦辨识与前馈补偿</a> —— 恒速扫掠 + 网格/最小二乘辨识 Stribeck 四参数（库仑 −1.7%、静摩擦 −1.0%），前馈补偿把正弦跟踪 RMS 从 0.00703 降到 0.00310 rad（改善 55.9%）</p>
@@ -1300,6 +1343,9 @@
 <li><a href="musculoskeletal/muscle_leg_gait/">肌肉驱动的下肢关节与步态</a></li>
 <li><a href="musculoskeletal/knee_tracking/">膝关节肌肉骨骼仿真与轨迹跟踪</a></li>
 <li><a href="humanoid/hand_eye_calibration/">机械臂手眼标定仿真</a> </li>
+<li><a href="humanoid/humanoid_stair_zmp_preview/">人形上下台阶步态仿真：ZMP 预瞄控制与台阶参数扫描</a></li>
+<li><a href="humanoid/mujoco_hopper_slip_control/">MuJoCo单足弹跳机器人简单仿真：SLIP 模型与 Raibert 弹跳控制</a></li>
+<li><a href="humanoid/humanoid_passage_width_sweep/">人形足迹下的局部避障算法对比：MPPI 与斥力法的窄通道宽度扫描</a></li>
 <li><a href="musculoskeletal/msk_muscle_ident/">给定黑箱关节轨迹，反推肌肉参数</a></li>
 </ul>
 <h2 id="4">4. 地面载具  <span id="ground_vehicle"></span></h2>
@@ -1319,6 +1365,7 @@
 <li>
 <p><a href="set_up_and_connect_to_carla/">手动控制</a></p>
 </li>
+<li><a href="control/carla_manual_control/">CARLA 手动控制（Windows + Ubuntu 20.04 实测）</a></li>
 <li><a href="ground/mnist_digit_control/">MNIST 手写数字视觉感知与机器人运动控制</a> —— CNN 识别手写数字为运动指令，防抖确认后控制 turtlesim 平移/旋转</li>
 <li><a href="ground/carla_spawn_objects/">生成对象</a></li>
 <li><a href="ground/wall_clean_nn/">室内清扫车的沿墙清扫：激光雷达与神经网络贴墙跟随</a> —— 12×10 m 带家具房间，圆角轮廓 + 纯跟踪专家，行为克隆 MLP；专家 20/20 达标（覆盖 95.1%、贴墙误差 0.086 m），神经网络覆盖 78.9%、达标 5%</li>
@@ -1359,6 +1406,7 @@
 <li><a href="ground/turning_sweep_check/">转弯扫掠校验</a></li>
 <li><a href="ground/vehicle_gradeability_check/">爬坡能力与牵引力余量核算</a> —— 按整车质量、坡度、车速与附着系数核算所需/可用牵引力和余量，区分可爬坡、动力不足与打滑风险</li>
 <li><a href="ground/vehicle_wading_check/">涉水深度与浮力裕度核算</a> —— 按进气口、排气口与车门下沿取限深，核算浮力占比、湿态牵引力与允许涉水车速，区分 SAFE/CAUTION/FLOODED/FLOATING</li>
+<li><a href="ground/trailer_jackknife_guard/">半挂车折叠风险与倒车限速保护</a></li>
 <li><a href="ground/passability_check/">车辆几何通过性核算</a> —— 接近角/离去角/纵向通过角 + 沿剖面逐位姿判断车头/车底/车尾会不会蹭、蹭多深</li>
 <li><a href="ground/rqt_plugin/">RQT 插件</a></li>
 <li><a href="ground/carla_lidar_pointcloud_segmentation/">激光雷达点云语义分割</a></li>
@@ -1538,6 +1586,7 @@
 <li><a href="ground/heartbeat_watchdog/">上游心跳看门狗</a> —— 监视上游节点的 <code>/heartbeat</code>，超时判定失联并发布急停，与 <code>cmd_vel_guard</code> 互补</li>
 <li><a href="ground/mujoco_ground_slam_nn_nav/">MuJoCo 地面无人车 SLAM 建图导航与神经网络控制</a></li>
 <li><a href="ground/ground_slope_estimation/">地面坡度估计</a></li>
+<li><a href="ground/estop_latch/">急停闩锁与人工复位</a> —— 把 <code>/emergency_stop</code> 锁住，必须调用 <code>/estop_latch/reset</code> 人工确认才放行，默认上电即闩锁</li>
 </ul>
 <h2 id="5">5. 空域载具 <span id="air_vehicle"></span></h2>
 <ul>
@@ -1558,11 +1607,15 @@
 </li>
 <li><a href="air/uav_yaw_stabilize/">无人机航向角 PD 稳定控制与阶跃转向仿真</a> —— 阵风力矩与往复风扰下的航向保持精度、阵风恢复时间，附实现动图</li>
 <li><a href="air/airsim_rl_planner_ros1/">AirSim ROS 1 Noetic PPO 联调</a></li>
+<li><a href="ground/mujoco_drone_distance_stop/">无人机制动旧入口</a></li>
 <li>
-<p><a href="ground/mujoco_drone_distance_stop/">无人机制动旧入口</a></p>
+<p><a href="ground/road_numpy_nn_slam/">城市道路地面载具：二维自行车动力学、激光 SLAM 与纯 NumPy 神经网络导航</a></p>
 </li>
 <li>
 <p><a href="air/town10_facade_cruise_capture/">Town10 立面自主巡航与图像采集</a></p>
+</li>
+<li>
+<p><a href="air/drone_lawnmower_survey/">AirSim 无人机弓字形区域勘测</a> —— 按区域尺寸、航线间距、高度和速度生成往返覆盖航线，支持无仿真器安全预览与参数边界测试</p>
 </li>
 <li>
 <p><a href="air/powerline_mission_preflight/">输电线路无人机巡检任务预检</a> —— 在任务执行前检查航点结构、高度、航段距离和杆塔双侧覆盖</p>
@@ -1685,16 +1738,20 @@
 <p><a href="air/ros_pkgs/">空域模拟器的 ROS 封装器</a></p>
 </li>
 <li><a href="air/carlair_ros_bridge/">无人机与 ROS 的桥接模块</a></li>
+<li><a href="air/uav_payload_cg_envelope/">无人机载荷重心包线检查</a> —— 结合空机与载荷质量检查纵向、横向重心余量。</li>
 <li><a href="air/uav_slam_nav/">无人机 SLAM 建图与导航</a> —— Humble 侧 slam_toolbox + nav2，跨 ros1_bridge 接 Noetic bridge</li>
 <li><a href="air/uav_depth_mapping_nav/">无人机深度相机建图与自主导航（深度反投影 + A* + 纯追踪）</a> —— 深度相机反投影建图、A* 规划与纯追踪控制的完整闭环（原 uav_slam_nav 更名，避免与已合并模块重名）</li>
 <li><a href="air/airsim_ros2_bringup/">AirSim ROS 2 Humble 最小桥接</a></li>
 <li><a href="air/airsim_ros2_gnss/">AirSim ROS 2 Humble GNSS 桥接</a></li>
+<li><a href="air/airsim_ros2_magnetometer/">AirSim ROS 2 Humble 磁力计桥接</a></li>
+<li><a href="air/airsim_ros2_barometer/">AirSim ROS 2 Humble 气压计桥接</a></li>
 <li><a href="air/uav_lidar_ground_filter/">无人机 LiDAR 地面/障碍分割</a></li>
 <li><a href="air/rooftop_landing/">无人机屋顶降落</a> —— 用机载 LiDAR 检测屋顶平面，取轮廓的最大内切圆圆心作为降落点，自主飞抵其上方后垂直降落</li>
 <li><a href="air/rooftop_landing_nn/">无人机屋顶降落（学习型落点选择）</a> —— 用点云高度图 + 小 CNN 直接回归屋顶落点；凹形屋顶（U/L/天井）与稀疏点云下比凸包最大内切圆更稳，附三组消融对比</li>
 <li><a href="air/uav_landing_monitor/">无人机降落过程监控（指令-运动一致性）</a> —— 在线校验「速度指令 vs 实际高度变化」，抓“喊了不动 / 掉得没人管 / 超时没落地”这类静默故障，输出告警、状态 JSON 与 CSV 报告</li>
 <li><a href="air/uav_moving_platform_landing/">移动平台（车/船）精准降落</a> —— 只吃一路带延迟的平台位置，在线估速度、预测相遇点，落点误差 0.03 m（追实测位置的朴素做法 0.48 m 且落不准），附四种制导策略的定量对照</li>
 <li><a href="air/uav_keyboard_control/">无人机键盘控制</a></li>
+<li><a href="air/uav_takeoff_hover_land/">无人机起飞—悬停—降落状态机</a> —— 订阅 <code>/uav/pose</code>、发布 <code>/uav/cmd_vel</code>，用状态机和比例控制完成起飞、到点悬停与降落，附离线仿真与指标</li>
 <li><a href="air/uav_airsim_keyboard/">无人机 AirSim 键盘遥控（ROS 2 Humble）</a> —— W/S/A/D/R/F/Q/E 键直控 AirSim 多旋翼，内置 AirSim 桥与看门狗，支持起飞/降落服务</li>
 <li>
 <p><a href="air/uav_bc_bench/">无人机行为克隆模型对比基准（网络结构与数据增强）</a> —— 三种网络结构 × 有无数据增强的对照实验，按圈分组切分，含恒零基线</p>
@@ -2018,6 +2075,7 @@
 <hr/>
 <ul>
 <li><a href="water/ros2_usv_station_keeping/">欠驱动无人艇低速定点保持与横漂补偿</a> —— 几何制导 + 在线流估计 + 双环控制，无侧推器也能顶流定点</li>
+<li><a href="water/multi_agent_hunting/">多 AUV 协同围捕</a> —— 拍卖算法做任务分配，水声信道带真实延迟与丢包，包抄点向目标收缩并有捕获判定，支持 seed 复现</li>
 </ul>
 <h2 id="7">7. 经典控制 <span id="classical_control"></span></h2>
 <ul>
@@ -2034,12 +2092,7 @@
 <li>
 <p><a href="muscle_arm_ros2_bridge/">ROS2 话题桥接（二连杆机械臂肌肉骨骼仿真）</a></p>
 </li>
-<li>
-<p><a href="muscle_arm_mujoco_simulation/">二连杆机械臂肌肉骨骼建模与 MuJoCo 仿真</a></p>
-</li>
-<li>
-<p><a href="muscle_arm_cocontraction_simulation/">拮抗共激活分析（二连杆机械臂肌肉骨骼仿真）</a></p>
-</li>
+<li><a href="muscle_arm_mujoco_simulation/">二连杆机械臂肌肉骨骼建模与 MuJoCo 仿真</a></li>
 </ul>
 <h2 id="_5">参考文献</h2>
 <ul>

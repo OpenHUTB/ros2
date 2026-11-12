@@ -134,6 +134,8 @@
 </ul>
 <p class="caption"><span class="caption-text">人形机器人</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_kws_command/">人形机器人离线语音指令控制：端到端关键词识别（KWS）</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../humanoid/embodied_humanoid_control/">具身人形物理仿真与平衡行走控制</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../humanoid/joint_friction_identification/">关节 Stribeck 摩擦辨识与前馈补偿</a>
@@ -214,6 +216,12 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_mujoco_slam_nn_nav/">人形机器人 MuJoCo 建图导航与神经网络控制</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_stair_zmp_preview/">人形上下台阶步态仿真：ZMP 预瞄控制与台阶参数扫描</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/mujoco_hopper_slip_control/">MuJoCo单足弹跳机器人简单仿真：SLIP 模型与 Raibert 弹跳控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_passage_width_sweep/">人形足迹下的局部避障算法对比：MPPI 与斥力法的窄通道宽度扫描</a>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">四足机器人</span></p>
 <ul>
@@ -284,55 +292,17 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../ros2_pure_pursuit/">ROS2 差速机器人纯追踪路径跟踪与反应式避障</a>
 </li>
+<li class="toctree-l1"><a class="reference internal">手动控制</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../set_up_and_connect_to_carla/">MathWorks 示例</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../control/carla_manual_control/">Windows + Ubuntu 20.04 实测</a>
+</li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../diff_drive_astar_odom_nav/">基于里程计反馈与 A* 算法的差速底盘静态全局路径规划</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../vio_time_offset_estimation/">视觉-惯性时间偏移互相关估计</a>
-</li>
-<li class="toctree-l1 current"><a class="reference internal current" href="#">ROS2 差速机器人 EKF 多传感器融合定位</a>
-<ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="#1">1. 系统架构</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#2">2. 状态量与运动学模型</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#3">3. 预测步</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#4">4. 更新步</a>
-<ul>
-<li class="toctree-l3"><a class="reference internal" href="#41-joseph">4.1 Joseph 形式</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#42">4.2 角度残差归一化</a>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#5-nees">5. 一致性评估：NEES</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#6">6. 噪声参数调参与模型失配诊断</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#7">7. 安全与数值保护</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#8-ros2">8. ROS2 中部署</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#9">9. 实验结果</a>
-<ul>
-<li class="toctree-l3"><a class="reference internal" href="#91">9.1 场景设置</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#92-1-hz">9.2 三种定位模式对比（位置观测 1 Hz）</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#93-8">9.3 位置观测频率的影响（8 字形，全融合）</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#94">9.4 模型失配诊断</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#95">9.5 轨迹与误差曲线</a>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#10">10. 测试与可复现性</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#11">11. 局限与展望</a>
-</li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="../../set_up_and_connect_to_carla/">手动控制</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../dyn_avoid_nn/">动态障碍物避让：激光雷达帧间差分与神经网络时机决策</a>
 </li>
@@ -401,6 +371,50 @@
 <li class="toctree-l1"><a class="reference internal" href="../reverse_parking_planner_pytest/">reverse_parking_planner 离线回归测试（pytest）</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../yolov8_target_tracking/">YOLOv8 视觉感知目标跟随</a>
+</li>
+<li class="toctree-l1 current"><a class="reference internal current" href="#">ROS2 差速机器人 EKF 多传感器融合定位</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="#1">1. 系统架构</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#2">2. 状态量与运动学模型</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#3">3. 预测步</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#4">4. 更新步</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#41-joseph">4.1 Joseph 形式</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#42">4.2 角度残差归一化</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#5-nees">5. 一致性评估：NEES</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#6">6. 噪声参数调参与模型失配诊断</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#7">7. 安全与数值保护</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#8-ros2">8. ROS2 中部署</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#9">9. 实验结果</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#91">9.1 场景设置</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#92-1-hz">9.2 三种定位模式对比（位置观测 1 Hz）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#93-8">9.3 位置观测频率的影响（8 字形，全融合）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#94">9.4 模型失配诊断</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#95">9.5 轨迹与误差曲线</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#10">10. 测试与可复现性</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#11">11. 局限与展望</a>
+</li>
+</ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../ros2_astar_planner/">ROS2 差速机器人栅格 A* 全局路径规划</a>
 </li>
@@ -632,6 +646,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../vehicle_wading_check/">涉水深度与浮力裕度核算</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../trailer_jackknife_guard/">半挂车折叠风险与倒车限速保护</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../passability_check/">车辆几何通过性核算（接近角/离去角/纵向通过角）</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../turtlebot3_relocalization/">高精度定位与重定位（AMCL 式粒子滤波）</a>
@@ -670,6 +686,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../ground_slope_estimation/">地面坡度估计</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../estop_latch/">急停闩锁与人工复位</a>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">空域载具</span></p>
 <ul>
@@ -683,6 +701,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../mujoco_drone_distance_stop/">无人机制动旧入口</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../road_numpy_nn_slam/">城市道路地面载具二维动力学、激光 SLAM 与神经网络导航</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_uav_range_neural_braking/">无人机测距制动与神经控制</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_uav_braking_metrics/">无人机测距制动轨迹指标分析</a>
@@ -690,6 +710,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_uav_range_sensor_quality/">无人机测距几何一致性检查</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/town10_facade_cruise_capture/">Town10立面自主巡航与图像采集</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_lawnmower_survey/">AirSim 无人机弓字形区域勘测</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/powerline_mission_preflight/">输电线路无人机巡检任务预检</a>
 </li>
@@ -779,9 +801,15 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/carlair_ros_bridge/">无人机与 ROS 的桥接模块</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_payload_cg_envelope/">无人机载荷重心包线检查</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/airsim_ros2_bringup/">AirSim ROS 2 Humble 最小桥接</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/airsim_ros2_gnss/">AirSim ROS 2 Humble GNSS 桥接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/airsim_ros2_magnetometer/">AirSim ROS 2 Humble 磁力计桥接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/airsim_ros2_barometer/">AirSim ROS 2 Humble 气压计桥接</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_lidar_ground_filter/">无人机 LiDAR 地面/障碍分割</a>
 </li>
@@ -808,6 +836,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_moving_platform_landing/">移动平台（车/船）精准降落</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_keyboard_control/">无人机键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_takeoff_hover_land/">无人机起飞—悬停—降落状态机</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_airsim_keyboard/">无人机 AirSim 键盘遥控（ROS 2 Humble）</a>
 </li>
@@ -1125,6 +1155,17 @@
 <li class="toctree-l1"><a class="reference internal" href="../../water/dave_underwater_sim/">DAVE 水下机器人仿真环境搭建与 REXROV/Oberon7 机械臂作业演示</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../water/ros2_usv_station_keeping/">欠驱动无人艇低速定点保持与横漂补偿</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/multi_agent_hunting/">多 AUV 协同围捕</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">路径规划与跟踪</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../motion_planning/rrt_path_planning/">RRT 采样式二维路径规划与平滑</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../motion_planning/trapezoidal_profile/">梯形与 S 曲线速度规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../motion_planning/stanley_tracking/">Stanley 前视路径跟踪（含曲率前馈）</a>
 </li>
 </ul>
 <p class="caption"><span class="caption-text">经典控制</span></p>
@@ -1677,8 +1718,8 @@ ros2<span class="w"> </span>launch<span class="w"> </span>ros2_ekf_localization<
 </div>
 </div><footer>
 <div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
-<a class="btn btn-neutral float-left" href="../vio_time_offset_estimation/" title="视觉-惯性时间偏移互相关估计"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
-<a class="btn btn-neutral float-right" href="../../set_up_and_connect_to_carla/" title="手动控制">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+<a class="btn btn-neutral float-left" href="../yolov8_target_tracking/" title="YOLOv8 视觉感知目标跟随"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../ros2_astar_planner/" title="ROS2 差速机器人栅格 A* 全局路径规划">后一页 <span class="icon icon-circle-arrow-right"></span></a>
 </div>
 <hr/>
 <div role="contentinfo">
@@ -1695,8 +1736,8 @@ ros2<span class="w"> </span>launch<span class="w"> </span>ros2_ekf_localization<
 <span>
 <a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
 </span>
-<span><a href="../vio_time_offset_estimation/" style="color: #fcfcfc">« 前一页</a></span>
-<span><a href="../../set_up_and_connect_to_carla/" style="color: #fcfcfc">后一页 »</a></span>
+<span><a href="../yolov8_target_tracking/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../ros2_astar_planner/" style="color: #fcfcfc">后一页 »</a></span>
 </span>
 </div>
 <script src="../../js/jquery-3.6.0.min.js"></script>
