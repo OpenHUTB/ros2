@@ -43,6 +43,7 @@ def main():
     a = p.parse_args()
 
     t = time.time()
+    os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
     collect(MODEL_PATH, a.out, n_episodes=a.episodes,
             force_range=tuple(a.force), warmup=a.warmup, horizon=a.horizon,
             verbose=True)
