@@ -144,3 +144,7 @@ src/air/uav_camera_tracking/results/*.png
 # 用 `python main.py --gen-data` 现场生成（约 1 分钟）。
 !src/air/uav_fault_e2e_thrust_policy/results/*.pt
 !src/air/uav_fault_e2e_thrust_policy/results/*.json
+
+# 运动规划模块的演示配图：默认生成到 docs/img/motion_planning/<模块>/ 并入库，
+# scripts/ 下不再保留副本（main.py --outdir <目录> 可改输出位置）。
+src/motion_planning/*/scripts/*.png
