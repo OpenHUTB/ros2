@@ -616,6 +616,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 ### 控制
 
 * [水域载具示例（手柄 / 航点 / 深度航向指令）](./water/holoocean_examples.md) —— 多代理手柄控制、相机 HUD 与配置文件结构
+* [USV 会遇局面判定与 COLREGs 避让](./water/usv_colregs_avoidance.md)
 
 * [水下机器人物理仿真与 6-DOF 键盘运动控制](./water/rov_physical_simulation.md)
 
