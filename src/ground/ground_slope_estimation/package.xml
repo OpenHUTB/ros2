@@ -4,8 +4,10 @@
   <name>ground_slope_estimation</name>
   <version>0.1.0</version>
   <description>从深度点云拟合地面平面并估计坡度角</description>
-  <maintainer email="openhutb@example.com">OpenHUTB</maintainer>
+  <maintainer email="234208483+gfdklzr@users.noreply.github.com">OpenHUTB</maintainer>
   <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
 
   <exec_depend>rclpy</exec_depend>
   <exec_depend>std_msgs</exec_depend>
@@ -13,9 +15,6 @@
   <exec_depend>launch</exec_depend>
   <exec_depend>launch_ros</exec_depend>
 
-  <test_depend>ament_copyright</test_depend>
-  <test_depend>ament_flake8</test_depend>
-  <test_depend>ament_pep257</test_depend>
   <test_depend>python3-pytest</test_depend>
 
   <export>
