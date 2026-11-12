@@ -57,7 +57,6 @@ nav:
     - ROS 2 QoS 兼容性检查实验: 'chap2/ros2_qos_compatibility_lab.md'
 - ROS 教程:
     - 1. 认识 ROS: 'chapter/chap1/chap1.md'
-    - 小海龟多航点巡航与暂停恢复: 'chapter/chap1/turtle_waypoint_patrol/index.md'
     - 2. ROS 基础 - ROS 基础:
         - 章节首页: './chapter/chap2.md'
         - ROS Noetic 多传感器话题时间同步: 'chap2/ros1_message_time_sync/index.md'
@@ -82,6 +81,7 @@ nav:
     - 9. ROS 2:
         - 章节首页: './chapter/chap9.md'
         - Gazebo 仿真相机与图像话题验证: './chapter/chap9/gazebo_camera_sim.md'
+        - ROV 六自由度推力分配: './chapter/chap9/rov_thruster_allocation_ls.md'
     - 10. Turtlebot3 Gazebo键盘控制: 'chapter/turtlebot3_gazebo_control.md'
 
 - 人形机器人:
@@ -142,6 +142,7 @@ nav:
     - MuJoCo 单臂抓取与 π0 推理接口复现（CPU 演示）: './manipulation/pi0_mujoco_grasp.md'
     - 拮抗共激活分析（二连杆机械臂肌肉骨骼仿真）: './muscle_arm_cocontraction_simulation.md'
 - 地面载具:
+    - 小海龟多航点巡航与暂停恢复: 'chapter/chap1/turtle_waypoint_patrol/index.md'
     - 离线测试接入 GitHub Actions: './ground/offline_checks.md'
     - 编码器量化误差与速度估计滤波对比: './ground/encoder_quantization_velocity.md'
     - CAN 报文信号解码与 CRC/计数器校验: './ground/can_signal_decode.md'
@@ -234,6 +235,7 @@ nav:
     - 神经网络强化学习算法与网络结构对比（MuJoCo CartPole）: './ground/rl_algorithm_compare.md'
     - 车辆稳态操稳特性对比（不足/中性/过度转向）: './ground/steady_state_handling_eval.md'
     - 基于Mujoco的键盘遥控小车: './ground/mujoco_car_project.md'
+    - MuJoCo 叉车相机引导的托盘接近与低速插入: './ground/mujoco_forklift_pallet_docking.md'
     - 地面载具横向控制算法对比（纯跟踪/Stanley/LQR）: './ground/lateral_control_benchmark.md'
     - MPPI 采样 MPC 与蒸馏网络的 8 字赛道跟踪对比: './ground/mujoco_mppi_neural_tracker.md'
     - ROS2 差速机器人 A* 全局规划与 DWA 局部避障: './ground/ros2_dwa_avoidance.md'
@@ -294,6 +296,7 @@ nav:
     - 速度曲线规划: './ground/speed_profile_check.md'
     - 转弯扫掠校验: './ground/turning_sweep_check.md'
     - 爬坡能力与牵引力余量核算: './ground/vehicle_gradeability_check.md'
+    - 涉水深度与浮力裕度核算: './ground/vehicle_wading_check.md'
     - 车辆几何通过性核算（接近角/离去角/纵向通过角）: './ground/passability_check.md'
     - 高精度定位与重定位（AMCL 式粒子滤波）: './ground/turtlebot3_relocalization.md'
     - 速度指令安全监督: './ground/cmd_vel_guard.md'
@@ -372,8 +375,10 @@ nav:
     - 无人机降落过程监控（指令-运动一致性）: './air/uav_landing_monitor.md'
     - 移动平台（车/船）精准降落: './air/uav_moving_platform_landing.md'
     - 无人机键盘控制: './air/uav_keyboard_control.md'
+    - 无人机 AirSim 键盘遥控（ROS 2 Humble）: './air/uav_airsim_keyboard.md'
     - 无人机行为克隆模型对比基准（网络结构与数据增强）: './air/uav_bc_bench.md'
     - 无人机 SLAM 建图与导航: './air/uav_slam_nav.md'
+    - 无人机深度相机建图与自主导航（深度反投影 + A* + 纯追踪）: './air/uav_depth_mapping_nav.md'
     - MuJoCo 四旋翼垂直通道 PPO 定高与抗扰控制: './air/uav_vertical_ppo.md'
     - 基于 PPO 的无人机导航避障: './air/uav_ppo_nav.md'
     - uav_ppo_nav 本地测试（pytest）: './air/uav_ppo_nav_local_test.md'
@@ -485,6 +490,8 @@ nav:
     - 水下ROV仿真键盘控制与摄像头目标追踪: './water/rov_gazebo_sim.md'
     - 水下机器人物理仿真与 6-DOF 键盘运动控制: './water/rov_physical_simulation.md'
     - 水下 ROV 六自由度手操与抗流能力评测仿真: './water/rov_handling_eval.md'
+
+    - ROV 浮力-压载配平与初稳性核算: './water/rov_ballast_trim.md'
     - ROV 深度保持 PID 控制与扰动恢复仿真: './water/rov_depth_hold.md'
     - ROV 推进器配置矩阵与饱和感知推力分配: './water/rov_thruster_allocation.md'
     - 水下多传感器感知与 3D 轨迹跟踪控制: './water/rov_trajectory_tracking.md'
