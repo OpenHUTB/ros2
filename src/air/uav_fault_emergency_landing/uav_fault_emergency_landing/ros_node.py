@@ -9,7 +9,7 @@ from __future__ import annotations
 import math
 import threading
 from pathlib import Path
-from typing import Optional
+from typing import Any, Dict, Optional
 
 import numpy as np
 
@@ -27,6 +27,24 @@ DEFAULT_SCORE_CHECKPOINT = "results/score.pt"
 DEFAULT_GUIDANCE_CHECKPOINT = "results/guidance.pt"
 GOAL_TIMEOUT = 0.5
 SCAN_PERIOD = 0.25          # 建图节流（秒，仿真时间）：一帧深度图反投影约 120 ms
+
+# 节点参数默认值。必须与 config/landing.yaml 的键一一对应：
+# `test/test_entry.py` 会读那份 yaml 逐键比对，改一处忘了另一处会直接测出来。
+DEFAULT_PARAMETERS: Dict[str, Any] = {
+    "scene": "urban_block",
+    "seed": 0,
+    "dt": 0.01,
+    "substeps": 4,
+    "fault": "degradation",
+    "rotor": 2,
+    "severity": 0.5,
+    "mode": "neural",
+    "duration": 40.0,
+    "publish_rate": 20.0,
+    "score_checkpoint": DEFAULT_SCORE_CHECKPOINT,
+    "guidance_checkpoint": DEFAULT_GUIDANCE_CHECKPOINT,
+    "enable_tf": False,
+}
 
 
 def _resolve_checkpoint(value: str) -> str:
@@ -66,19 +84,8 @@ def build_node_class():
     class ForcedLandingNode(Node):
         def __init__(self):
             super().__init__(NODE_NAME)
-            self.declare_parameter("scene", "urban_block")
-            self.declare_parameter("seed", 0)
-            self.declare_parameter("dt", 0.01)
-            self.declare_parameter("substeps", 4)
-            self.declare_parameter("fault", "degradation")
-            self.declare_parameter("rotor", 2)
-            self.declare_parameter("severity", 0.5)
-            self.declare_parameter("mode", "neural")
-            self.declare_parameter("duration", 40.0)
-            self.declare_parameter("publish_rate", 20.0)
-            self.declare_parameter("score_checkpoint", DEFAULT_SCORE_CHECKPOINT)
-            self.declare_parameter("guidance_checkpoint", DEFAULT_GUIDANCE_CHECKPOINT)
-            self.declare_parameter("enable_tf", False)
+            for name, value in DEFAULT_PARAMETERS.items():
+                self.declare_parameter(name, value)
 
             self._scan_step = 0
             self._last_scan_time = -1e9

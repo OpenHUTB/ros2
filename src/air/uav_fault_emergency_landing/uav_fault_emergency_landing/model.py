@@ -42,8 +42,12 @@ def _torch():
     return torch
 
 
-def build_score_module():
-    """构造可降落性评分网络（全卷积）。"""
+def build_score_module(channels: Tuple[int, int] = SCORE_CHANNELS):
+    """构造可降落性评分网络（全卷积）。
+
+    ``channels`` 必须与检查点里 ``arch.channels`` 一致——``load_checkpoint()``
+    会把检查点里存的结构传进来，这样以后改通道数也不会把旧权重读废。
+    """
     torch = _torch()
     nn = torch.nn
 
@@ -51,7 +55,7 @@ def build_score_module():
         def __init__(self, channels: Tuple[int, int] = SCORE_CHANNELS):
             super().__init__()
             c1, c2 = channels
-            self.channels = tuple(channels)
+            self.channels = tuple(int(c) for c in channels)
             self.features = nn.Sequential(
                 nn.Conv2d(1, c1, 3, padding=1), nn.ReLU(),
                 nn.Conv2d(c1, c2, 3, padding=1), nn.ReLU(),
@@ -61,16 +65,17 @@ def build_score_module():
         def forward(self, x):
             return torch.sigmoid(self.head(self.features(x)))
 
-    return LandingScoreNet()
+    return LandingScoreNet(tuple(channels))
 
 
-def build_guidance_module():
-    """构造迫降制导网络。"""
+def build_guidance_module(hidden: Tuple[int, ...] = GUIDANCE_HIDDEN):
+    """构造迫降制导网络；``hidden`` 同理来自检查点的 ``arch.hidden``。"""
     torch = _torch()
     nn = torch.nn
+    hidden_default = tuple(int(h) for h in hidden)
 
     class GuidanceNet(nn.Module):
-        def __init__(self, hidden: Tuple[int, ...] = GUIDANCE_HIDDEN):
+        def __init__(self, hidden: Tuple[int, ...] = hidden_default):
             super().__init__()
             self.hidden = tuple(int(h) for h in hidden)
             layers = []
@@ -84,7 +89,7 @@ def build_guidance_module():
         def forward(self, x):
             return self.net(x)
 
-    return GuidanceNet()
+    return GuidanceNet(hidden_default)
 
 
 # --------------------------------------------------------------------------- #
@@ -113,15 +118,24 @@ def save_checkpoint(path: str | Path, kind: str, module: Any,
 
 
 def load_checkpoint(path: str | Path, map_location: str = "cpu") -> Tuple[Any, Dict[str, Any]]:
-    """按检查点里存的 ``arch`` 重建网络，返回 ``(module, meta)``。"""
+    """按检查点里存的 ``arch`` 重建网络，返回 ``(module, meta)``。
+
+    结构参数（``channels`` / ``hidden``）从检查点里读，而不是用模块默认值：
+    否则以后调整了通道数或隐藏层，旧权重会因为 ``size mismatch`` 直接读不出来。
+    """
     torch = _torch()
     payload = torch.load(str(path), map_location=map_location, weights_only=False)
     arch = payload.get("arch") or {}
+    version = arch.get("arch_version")
+    if version is not None and int(version) > ARCH_VERSION:
+        raise ValueError(
+            f"检查点用的网络版本 {version} 比当前代码 {ARCH_VERSION} 新，"
+            "请更新代码或重新训练")
     kind = arch.get("kind")
     if kind == "score":
-        module = build_score_module()
+        module = build_score_module(tuple(arch.get("channels") or SCORE_CHANNELS))
     elif kind == "guidance":
-        module = build_guidance_module()
+        module = build_guidance_module(tuple(arch.get("hidden") or GUIDANCE_HIDDEN))
     else:
         raise ValueError(f"检查点里没有合法的 arch.kind：{arch!r}")
     module.load_state_dict(payload["state_dict"])

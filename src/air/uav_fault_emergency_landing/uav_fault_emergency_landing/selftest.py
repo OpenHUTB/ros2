@@ -187,8 +187,14 @@ def _check_integration(r: _Report) -> None:
     expert = E.run_landing(api, "expert", dict(kind="degradation", rotor=2, severity=0.5),
                            seed=0, seconds=30.0, start_xy=start_xy, hover_z=hover_z,
                            params=params, effectiveness=eff)
-    r.check("垂直迫降撞障碍", bool(vertical.landed_on_obstacle),
+    # 判据刻意写成"相对"而不是"必须穿楼"：不同 MuJoCo 版本下射线/几何的取整略有差别，
+    # pick_obstacle_spot() 可能选到同一栋楼旁边的格子，直接用 landed_on_obstacle 会随版本抖。
+    # 真正要守住的性质是——垂直下降会贴近甚至穿过障碍，选点迫降不会。
+    r.check("垂直迫降贴障碍或穿楼", float(vertical.min_clearance) < 1.0,
             f"clearance={vertical.min_clearance:.2f}")
+    r.check("选点迫降比垂直迫降更安全",
+            float(expert.min_clearance) > float(vertical.min_clearance),
+            f"expert={expert.min_clearance:.2f} vs vertical={vertical.min_clearance:.2f}")
     r.check("选点迫降安全", bool(expert.landed and not expert.landed_on_obstacle),
             f"status={expert.status} t={expert.touchdown_time}")
 

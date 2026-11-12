@@ -123,7 +123,7 @@ ros2 launch uav_fault_emergency_landing landing.launch.py mode:=neural rotor:=1
 
 | 话题 | 类型 | 说明 |
 | --- | --- | --- |
-| `/uav/odom` | `nav_msgs/Odometry` | 位姿与速度，50 Hz |
+| `/uav/odom` | `nav_msgs/Odometry` | 位姿与速度，默认 20 Hz（`publish_rate`） |
 | `/uav/status` | `std_msgs/String` | `HOVER` / `DESCENDING` / `LANDED` |
 | `/uav/landing_target` | `geometry_msgs/Point` | 当前选中的落点 |
 | `/uav/health` | `std_msgs/Float32MultiArray` | 四桨推力权限真值 |
