@@ -2,10 +2,12 @@
 
 import pytest
 import rclpy
+from rclpy.parameter import Parameter
 from std_msgs.msg import String
 
 from heartbeat_watchdog.heartbeat_watchdog_node import (
     HeartbeatWatchdog,
+    _split_nodes,
     _stale_nodes,
 )
 
@@ -65,6 +67,26 @@ def test_waiting_before_any_heartbeat(watchdog):
     assert watchdog.estop_pub.last().data is True
 
 
+def test_unrelated_heartbeat_keeps_waiting(watchdog):
+    """不在名单里的心跳不应把 waiting 变成 stale。"""
+    watchdog.heartbeat_callback(String(data='other_node'))
+
+    assert watchdog.last_seen == {}
+
+    watchdog.on_timer()
+
+    assert watchdog.status_pub.last().data == 'waiting'
+
+
+def test_partial_report_keeps_waiting(watchdog):
+    watchdog.watched_nodes = ['navigator', 'controller']
+    watchdog.heartbeat_callback(String(data='navigator'))
+
+    watchdog.on_timer()
+
+    assert watchdog.status_pub.last().data == 'waiting'
+
+
 def test_ok_after_heartbeat(watchdog):
     watchdog.heartbeat_callback(String(data='navigator'))
 
@@ -99,7 +121,8 @@ def test_recovery_returns_to_ok(watchdog):
 
 def test_multiple_nodes_reports_only_stale_one(watchdog):
     watchdog.watched_nodes = ['navigator', 'controller']
-    watchdog.last_seen = {'navigator': watchdog._now_seconds()}
+    now = watchdog._now_seconds()
+    watchdog.last_seen = {'navigator': now, 'controller': now - 5.0}
     watchdog.heartbeat_timeout = 1.0
 
     watchdog.on_timer()
@@ -136,25 +159,29 @@ def test_invalid_parameter_rejected(name, value):
         rclpy.shutdown()
 
 
+def test_split_nodes_drops_blank_entries():
+    assert _split_nodes('navigator, ,controller') == [
+        'navigator', 'controller']
+    assert _split_nodes('') == []
+    assert _split_nodes(' , ') == []
+
+
 def test_empty_watched_nodes_rejected():
     rclpy.init()
     try:
-        node = HeartbeatWatchdog()
-        node.watched_nodes = []
         with pytest.raises(ValueError):
-            node.validate_parameters()
-        node.destroy_node()
+            HeartbeatWatchdog(parameter_overrides=[
+                Parameter(name='watched_nodes', value=' , ')])
     finally:
         rclpy.shutdown()
 
 
-def test_blank_watched_node_rejected():
-    rclpy.init()
+def test_integer_timeout_is_accepted():
+    """CLI 传整数不应触发参数类型异常。"""
+    rclpy.init(args=['--ros-args', '-p', 'heartbeat_timeout:=2'])
     try:
         node = HeartbeatWatchdog()
-        node.watched_nodes = ['navigator', '  ']
-        with pytest.raises(ValueError):
-            node.validate_parameters()
+        assert node.heartbeat_timeout == pytest.approx(2.0)
         node.destroy_node()
     finally:
         rclpy.shutdown()
