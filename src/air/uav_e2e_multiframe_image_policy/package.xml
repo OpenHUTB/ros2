@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>uav_e2e_multiframe_image_policy</name>
+  <version>0.0.1</version>
+  <description>多帧图像端到端策略：连续三帧下视灰度图堆叠输入，固定卷积提取中心可见度、横向质心偏差与梯度线索，两层 numpy MLP 直接输出前飞速度与偏航指令，不经过显式感知—规划—控制分层。</description>
+  <maintainer email="799628765@qq.com">wqs159</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <depend>rclpy</depend>
+  <depend>nav_msgs</depend>
+  <depend>std_msgs</depend>
+
+  <test_depend>pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
