@@ -200,6 +200,21 @@ def test_energy_never_negative():
     assert auv.energy == 0.0
 
 
+def test_position_reads_dry_run_key():
+    auv = AUVAgent('a', controller=PIDController())
+    auv.state = {'Location': [0.5, 1.0, -2.0]}
+
+    assert np.allclose(auv.position(), [0.5, 1.0, -2.0])
+
+
+def test_position_reads_holoocean_sensor_key():
+    """HoloOcean 的观测按传感器类型做键，位置在 LocationSensor 里。"""
+    auv = AUVAgent('a', controller=PIDController())
+    auv.state = {'LocationSensor': [1.0, 2.0, 3.0]}
+
+    assert np.allclose(auv.position(), [1.0, 2.0, 3.0])
+
+
 # ----------------------------- 复现性 -----------------------------
 def test_same_seed_same_start_positions():
     first = HuntingScenario(_config(seed=7))
