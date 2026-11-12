@@ -20,6 +20,16 @@ except ImportError:
     HAS_TORCH = False
 
 
+# 10 维状态特征的固定归一化系数，训练脚本 (train/train_trajectory_policy.py)
+# 与在线推理共用，保证“训练-部署”输入分布完全一致。
+STATE_SCALE = np.array([
+    1.0 / 1.5, 1.0 / 1.5, 1.0 / 1.5,   # 位置误差 ex, ey, ez [m]
+    1.0 / 0.8, 1.0 / 0.8, 1.0 / 0.8,   # 速度误差 evx, evy, evz [m/s]
+    1.0, 1.0,                          # sin(eyaw), cos(eyaw)
+    1.0 / 0.6, 1.0 / 0.6,              # 期望前馈速度 vxd, vyd [m/s]
+], dtype=np.float32)
+
+
 class MLPPolicy(nn.Module if HAS_TORCH else object):
     """PyTorch 轨迹跟踪神经网络结构 (10 -> 64 -> 64 -> 4)"""
     def __init__(self):
@@ -48,10 +58,13 @@ class NNTrajectoryController:
         torque_scale: float = 80.0,
         depth_scale: float = 500.0,
         weights_path: Optional[str] = None,
+        zero_weights: bool = False,
     ):
         self.force_scale = force_scale
         self.torque_scale = torque_scale
         self.depth_scale = depth_scale
+        self.weights_loaded = False
+        self.weights_source = None
 
         # 尝试加载离线训练的最优网络权值
         loaded = False
@@ -78,10 +91,15 @@ class NNTrajectoryController:
                     self.b2 = data["b2"]
                     self.W3 = data["w3"]
                     self.b3 = data["b3"]
+                    if self.W1.shape != (10, 64) or self.W3.shape != (64, 4):
+                        raise ValueError("nn_weights.npz 形状与 10-64-64-4 结构不匹配")
                     loaded = True
+                    self.weights_source = path
                     break
-                except Exception:
-                    pass
+                except Exception as exc:
+                    print(f"[WARN] 轨迹策略权值加载失败 ({path}): {exc}")
+                    loaded = False
+                    break
 
         if not loaded:
             # 专家解耦蒸馏先验权重
@@ -106,6 +124,21 @@ class NNTrajectoryController:
             self.W3[16:32, 1] = 1.0 / 16.0
             self.W3[32:48, 2] = 1.0 / 16.0
             self.W3[48:64, 3] = 1.0 / 16.0
+            self.weights_source = "handcrafted_fallback"
+        else:
+            self.weights_loaded = True
+
+        # 消融实验开关：加载后把所有权值置零，网络输出恒为 0。
+        # 用于 test/test_nn_training.py 验证“性能来自训练得到的参数”，
+        # 而不是来自推理代码里隐藏的专家规则。
+        if zero_weights:
+            self.W1 = np.zeros_like(self.W1)
+            self.b1 = np.zeros_like(self.b1)
+            self.W2 = np.zeros_like(self.W2)
+            self.b2 = np.zeros_like(self.b2)
+            self.W3 = np.zeros_like(self.W3)
+            self.b3 = np.zeros_like(self.b3)
+            self.weights_source = "zero_ablation"
 
         self.torch_model = None
         if HAS_TORCH:
@@ -152,7 +185,7 @@ class NNTrajectoryController:
         # 偏航角误差归一化至 [-pi, pi]
         err_yaw = (desired_yaw - current_yaw + math.pi) % (2.0 * math.pi) - math.pi
 
-        # 3. 构造 10 维神经网络状态特征输入
+        # 3. 构造 10 维神经网络状态特征输入（与训练脚本共用 STATE_SCALE）
         state = np.array([
             err_pos_b[0],
             err_pos_b[1],
@@ -164,7 +197,7 @@ class NNTrajectoryController:
             math.cos(err_yaw),
             vel_d_b[0],
             vel_d_b[1]
-        ], dtype=np.float32)
+        ], dtype=np.float32) * STATE_SCALE
 
         # 4. 前向推理 (纯 NumPy 高性能矩阵运算，全平台毫秒级稳定)
         h1 = np.tanh(state @ self.W1 + self.b1)
