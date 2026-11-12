@@ -305,6 +305,8 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [乘坐舒适性传递率](./ground/ride_comfort_transmissibility.md) —— 用二自由度悬架加 ISO 2631 频率加权算路面振动传到人身上剩多少，解释「40 难受、60 反而稳」
 * [不足转向梯度与侧向稳定裕度](./ground/lateral_stability_margin.md) —— 用不足转向梯度与临界车速算「快点打方向会不会失控」，纯代数、可离线断言
 
+* [狭窄通道通行：激光雷达开口辨识与神经网络选口穿行](./ground/gap_nav_nn.md) —— 隔墙三个开口（0.7/1.4/2.4 m），车宽 0.6 m，专家按可通行性与绕路代价选口，行为克隆 MLP 仅凭雷达判断孔径，20 回合成功率 100% / 90%
+
 ## 5. 空域载具 <span id='air_vehicle'></span>
 * [仓储通道巡检无人机测距与分级制动](./air/mujoco_warehouse_uav_collision_braking.md)
 
