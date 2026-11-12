@@ -1,5 +1,5 @@
 {
-  "accuracy": 0.9639,
+  "accuracy": 0.9753,
   "architecture": [
     41,
     128,
@@ -10,18 +10,18 @@
   "batch": 64,
   "confusion": [
     [
-      463,
-      11,
+      469,
+      4,
       0,
       0,
       0,
       0,
       0,
-      2
+      3
     ],
     [
-      1,
-      40,
+      3,
+      38,
       0,
       0,
       0,
@@ -80,14 +80,14 @@
       0
     ],
     [
-      5,
+      3,
       0,
       0,
       0,
       0,
       0,
       0,
-      4
+      6
     ]
   ],
   "directions": [
@@ -106,19 +106,19 @@
   "lr": 0.0012,
   "model": "planner_mlp",
   "per_class_accuracy": {
-    "ahead": 0.973,
-    "ahead_left": 0.976,
-    "ahead_right": 0.444,
+    "ahead": 0.985,
+    "ahead_left": 0.927,
+    "ahead_right": 0.667,
     "back": null,
     "back_left": null,
     "back_right": null,
     "left": null,
     "right": null
   },
-  "seconds": 41.86,
+  "seconds": 4.87,
   "target_accuracy": 0.65,
   "task": "discrete local action (8 directions) classification",
-  "train_samples": 5412,
+  "train_samples": 4632,
   "val_episodes": [
     0,
     1

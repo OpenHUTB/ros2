@@ -6,7 +6,7 @@
 2. **传感器感知与运动控制**：72 束 360° 激光雷达（噪声/野值/丢点）、IMU（roll/pitch/yaw rate）、6 关节编码器、GNSS、前视 32×32 深度相机；感知 MLP 对激光去噪后再送入控制器；
 3. **建图与导航**：对数几率占据栅格 + 相关性扫描匹配 SLAM；A* 全局规划、纯跟踪步行控制、平衡感知限速、障碍减速/停车与摔倒恢复；
 4. **端到端模型**：前视深度图（32×32）→ 2 层 CNN → `(walk_speed, turn_rate)`；
-5. **神经网络训练 / 测试 / ROS 封装**：纯 NumPy 实现 MLP/CNN/Adam/DQN/REINFORCE，7 个模型的训练元信息与评测指标（`models/*.json`，权重由 `bash main.sh train` 生成）、8 个 ROS 节点、6 个 launch；
+5. **神经网络训练 / 测试 / ROS 封装**：纯 NumPy 实现 MLP/CNN/Adam/DQN/REINFORCE，7 个模型（`models/*.json` 元信息 + `models/*.npz` 权重，总共约 1.3 MB）、8 个 ROS 节点、6 个 launch；
 6. **多场景性能评价**：`hall`（走廊）、`warehouse`（货架 + 移动搬运车）、`obstacle`（木箱训练场）三场景闭环 benchmark，含碰撞、摔倒、终点误差指标与 RL 算法/网络结构对比。
 
 完整原理、算法与实验数据见文档页：[`docs/humanoid/humanoid_walk_nn.md`](../../../docs/humanoid/humanoid_walk_nn.md)。
@@ -96,7 +96,7 @@ roslaunch humanoid_walk_nn teleop.launch scene:=hall
   0.35 m 硬安全距离。行为克隆因此不再顶墙，但也可能卡住（成功率不虚高）。
 - **蒸馏评估**：行为克隆/端到端与“经典”共享几何专家，比较的是蒸馏质量而非方法优劣。
 - **模型元信息**：`models/*.json` 含 arch/lr/epochs/dataset_hash/config_hash/code_hash 等 meta 与评测指标；
-  权重 `models/*.npz` 由 `bash main.sh train` 生成，因体积不纳入版本库（首次克隆后需先训练）。
+  权重 `models/*.npz` 已随仓库提供（约 1.3 MB），干净 clone 可直接复现 `results/benchmark.json`；如需重新训练执行 `bash main.sh train` 覆盖。
 - **梯度校验**：`tests/test_gradients.py` 用中心差分校验 Dense/Conv2D/激活层反传
   （相对误差 <1e-5，实测 ~1e-9），`bash main.sh test` 会执行。
 - **pytest 覆盖范围**：`python -m pytest tests` 只收集 9 项（PID / 纯跟踪 / 安全层 / 平衡限幅 / 摔倒恢复等）；`tests/test_gradients.py` 与 `test_control.py` 的 mission 闭环流程不在 pytest 收集范围内，完整回归请用 `bash main.sh test`。

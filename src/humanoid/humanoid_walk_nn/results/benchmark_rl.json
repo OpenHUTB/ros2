@@ -14,7 +14,7 @@
       "mean_return": 20.526,
       "mean_steps": 30.3,
       "success_rate": 0.767,
-      "train_seconds": 26.36,
+      "train_seconds": 3.37,
       "train_steps": 9733
     },
     "dqn_3x64": {
@@ -32,7 +32,7 @@
       "mean_return": 17.66,
       "mean_steps": 24.3,
       "success_rate": 0.833,
-      "train_seconds": 27.47,
+      "train_seconds": 3.6,
       "train_steps": 8935
     },
     "pg_2x64": {
@@ -48,7 +48,7 @@
       "mean_return": 0.748,
       "mean_steps": 84.3,
       "success_rate": 0.067,
-      "train_seconds": 37.2,
+      "train_seconds": 2.39,
       "train_steps": 17980
     }
   },
@@ -101,15 +101,15 @@
     "three_hidden_layers": {
       "mean_return": 17.66,
       "success_rate": 0.833,
-      "train_seconds": 27.47
+      "train_seconds": 3.6
     },
     "two_hidden_layers": {
       "mean_return": 20.526,
       "success_rate": 0.767,
-      "train_seconds": 26.36
+      "train_seconds": 3.37
     }
   },
-  "seconds": 93.08,
+  "seconds": 9.78,
   "seed": 2026,
   "state_dim": 86,
   "task": "reach the goal in the hall floor plan (discrete action abstraction, walking speed / turn-rate limits and lateral balance falls)"

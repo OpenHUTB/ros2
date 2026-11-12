@@ -3,149 +3,149 @@
   "scenes": {
     "hall": {
       "action_counts": {
-        "0": 713,
-        "1": 61,
+        "0": 476,
+        "1": 41,
         "2": 0,
         "3": 0,
         "4": 0,
         "5": 0,
         "6": 0,
-        "7": 14
+        "7": 9
       },
       "beams": 72,
       "clean_scan_shape": [
-        788,
+        526,
         72
       ],
       "cmd_shape": [
-        788,
+        526,
         2
       ],
       "collisions": 0,
       "depth_shape": [
-        788,
+        526,
         32,
         32
       ],
       "episode_success_rate": 1.0,
-      "episodes": 3,
+      "episodes": 2,
       "falls": 0,
       "feature_shape": [
-        788,
+        526,
         41
       ],
       "label_mean": [
-        0.755,
-        0.0278
+        0.7547,
+        0.0298
       ],
       "random_start": false,
       "sample_hz": 10.0,
-      "samples": 788,
+      "samples": 526,
       "scan_shape": [
-        788,
+        526,
         72
       ],
       "scene": "hall",
-      "seconds_wall": 105.35,
+      "seconds_wall": 21.38,
       "seed": 20261111
     },
     "obstacle": {
       "action_counts": {
-        "0": 527,
-        "1": 104,
+        "0": 353,
+        "1": 67,
         "2": 0,
         "3": 0,
         "4": 0,
         "5": 0,
         "6": 0,
-        "7": 75
+        "7": 50
       },
       "beams": 72,
       "clean_scan_shape": [
-        706,
+        470,
         72
       ],
       "cmd_shape": [
-        706,
+        470,
         2
       ],
       "collisions": 0,
       "depth_shape": [
-        706,
+        470,
         32,
         32
       ],
       "episode_success_rate": 1.0,
-      "episodes": 3,
+      "episodes": 2,
       "falls": 0,
       "feature_shape": [
-        706,
+        470,
         41
       ],
       "label_mean": [
-        0.6689,
-        0.0254
+        0.6702,
+        0.0232
       ],
       "random_start": false,
       "sample_hz": 10.0,
-      "samples": 706,
+      "samples": 470,
       "scan_shape": [
-        706,
+        470,
         72
       ],
       "scene": "obstacle",
-      "seconds_wall": 119.84,
+      "seconds_wall": 25.95,
       "seed": 20261111
     },
     "warehouse": {
       "action_counts": {
-        "0": 412,
-        "1": 28,
+        "0": 276,
+        "1": 18,
         "2": 0,
         "3": 0,
         "4": 0,
         "5": 0,
         "6": 0,
-        "7": 404
+        "7": 268
       },
       "beams": 72,
       "clean_scan_shape": [
-        844,
+        562,
         72
       ],
       "cmd_shape": [
-        844,
+        562,
         2
       ],
       "collisions": 0,
       "depth_shape": [
-        844,
+        562,
         32,
         32
       ],
       "episode_success_rate": 1.0,
-      "episodes": 3,
+      "episodes": 2,
       "falls": 0,
       "feature_shape": [
-        844,
+        562,
         41
       ],
       "label_mean": [
-        0.586,
-        -0.3942
+        0.5862,
+        -0.3956
       ],
       "random_start": false,
       "sample_hz": 10.0,
-      "samples": 844,
+      "samples": 562,
       "scan_shape": [
-        844,
+        562,
         72
       ],
       "scene": "warehouse",
-      "seconds_wall": 105.61,
+      "seconds_wall": 22.49,
       "seed": 20261111
     }
   },
-  "seconds_wall": 330.81,
-  "total_samples": 2338
+  "seconds_wall": 69.83,
+  "total_samples": 1558
 }

@@ -12,45 +12,22 @@
     "out_dim": 2
   },
   "augmentation": "left-right mirror (flip depth image, negate turn)",
-  "batch": 64,
-  "epochs": 16,
+  "batch": 32,
+  "epochs": 25,
   "loss_weights": {
     "omega": 1.0,
     "v": 1.0
   },
   "lr": 0.0005,
-  "mean_baseline_omega_mae": 0.1461,
-  "mean_baseline_v_mae": 0.0506,
-  "meta": {
-    "arch": {
-      "conv1_stride": 2,
-      "conv_channels": [
-        8,
-        16
-      ],
-      "fc": 64,
-      "in_ch": 1,
-      "in_h": 32,
-      "in_w": 32,
-      "out_dim": 2
-    },
-    "batch": 64,
-    "config_hash": "f35edf8939bd75fd14d7543e261a6a4c52d8a2fc",
-    "created_utc": "2026-11-11T14:11:39Z",
-    "dataset_hash": "1a28588cce6ad6ee6495162556480aa3d4c40f67",
-    "epochs": 16,
-    "git_sha": "unversioned",
-    "lr": 0.0005,
-    "train_samples": 1812,
-    "train_seconds": 121.27
-  },
+  "mean_baseline_omega_mae": 0.1474,
+  "mean_baseline_v_mae": 0.0533,
   "model": "e2e_cnn",
-  "normalised_rmse": 0.11117,
-  "omega_mae": 0.1463,
-  "seconds": 121.27,
+  "normalised_rmse": 0.133,
+  "omega_mae": 0.1858,
+  "seconds": 7.31,
   "task": "depth image (32x32) -> (walk speed, turn rate) behaviour cloning",
-  "train_samples": 1812,
-  "v_mae": 0.0941,
+  "train_samples": 1032,
+  "v_mae": 0.1057,
   "val_episodes": [
     0,
     1

@@ -12,31 +12,14 @@
   "input": "18 lidar sectors (min+mean) + goal polar + speed + balance = 41",
   "input_dim": 41,
   "lr": 0.002,
-  "meta": {
-    "arch": [
-      41,
-      160,
-      160,
-      2
-    ],
-    "batch": 96,
-    "config_hash": "f35edf8939bd75fd14d7543e261a6a4c52d8a2fc",
-    "created_utc": "2026-11-11T14:11:39Z",
-    "dataset_hash": "1a28588cce6ad6ee6495162556480aa3d4c40f67",
-    "epochs": 80,
-    "git_sha": "unversioned",
-    "lr": 0.002,
-    "train_samples": 12936,
-    "train_seconds": 556.12
-  },
   "model": "control_mlp",
-  "normalised_rmse": 0.03849,
-  "omega_mae": 0.0394,
+  "normalised_rmse": 0.08248,
+  "omega_mae": 0.1095,
   "output": "(v/MAX_SPEED, omega/MAX_TURN_RATE)",
-  "seconds": 556.12,
+  "seconds": 16.7,
   "task": "behaviour cloning of the reactive walking policy (v, omega)",
-  "train_samples": 12936,
-  "v_mae": 0.0297,
+  "train_samples": 10596,
+  "v_mae": 0.0663,
   "val_episodes": [
     0,
     1
