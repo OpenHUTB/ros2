@@ -1159,9 +1159,24 @@ dtheta = omega * dt
 <p><code>dist / 60</code> 里的 60 是减速距离 <code>SLOWDOWN_DISTANCE</code>。这个值不能太大：如果取
 120，目标以 60 px/s 移动时，小车在 40 px 外就把速度降到和目标一样，只能一直
 跟在后面，追不上。</p>
-<p>碰撞检测：小车新位置到每个障碍物圆心距离小于 <code>obstacle_r + car_r</code> 则放弃位移。
-撞上后小车原地转向（保持同一方向约 0.35 s，避免每帧来回抖），并按一次接触事件把
-<code>hits</code> 加一（持续贴墙只记一次）；手动模式同样允许贴墙原地转向，否则会卡死。</p>
+<p>碰撞检测：小车新位置到每个障碍物圆心距离小于 <code>obstacle_r + car_r</code> 则放弃位移。</p>
+<p>撞上后<strong>沿障碍表面切向绕行</strong>（不再原地打转），并按一次接触事件把 <code>hits</code> 加一
+（持续贴墙只记一次）。具体做法：</p>
+<ol>
+<li>取"障碍心 → 车"的径向向量，±90° 得到两条切向；</li>
+<li>选与目标方位夹角更小的那侧，以 <code>0.85 × MAX_SPEED</code> 沿切向前进；</li>
+<li>若贴得太紧、切向这一小步仍会撞，就沿径向外退一点点再转车头——
+   否则车会被"正好贴在碰撞边界"钉住（切向的弦长略小于半径，每步都判成撞墙）；</li>
+<li>车头对准切向却仍走不动超过 1 s，就翻到另一侧绕，避免在凹形障碍里死等。</li>
+</ol>
+<blockquote>
+<p>为什么必须改：旧实现是撞上后把速度清零、只按最大角速度原地转。障碍正压在
+"车 → 目标"连线上时，车会贴着墙一直转圈。实测（车在 (120,300)、目标 (800,300)、
+半径 90 px 的圆正挡中间、30 s）：<strong>旧实现 95.6% 的时间速度低于 5 px/s，末距
+始终 440 px，永远到不了</strong>；改后 <strong>5.45 s 绕过并到达</strong>，卡死时间占比降到 14.7%，
+全程没有穿进障碍（最小间隙 0.00 px）。这两条都已固化成回归用例
+（<code>test_escape_gets_around_obstacle_blocking_the_target</code> 在旧代码上会失败）。</p>
+</blockquote>
 <h2 id="_5">无窗口评测</h2>
 <p><code>--headless</code> 使用 SDL dummy 驱动，不开窗口，按固定 60 Hz 步长跑完 <code>--duration</code>
 秒，输出 <code>metrics.json</code>：</p>
@@ -1207,7 +1222,7 @@ mean_dist=33.8px final_dist=20.2px path=1422.1px hits=0
 <h2 id="_6">测试</h2>
 <div class="highlight"><pre><span></span><code>python<span class="w"> </span>-m<span class="w"> </span>unittest<span class="w"> </span>discover<span class="w"> </span>-s<span class="w"> </span>src/ground/car_2d_target_tracker/tests<span class="w"> </span>-v
 </code></pre></div>
-<p>14 个用例，覆盖角度归一化、自动追踪、到达判定、碰撞事件计数、手动贴墙转向、
+<p>17 个用例，覆盖角度归一化、自动追踪、到达判定、碰撞事件计数、手动贴墙转向、
 目标边界反弹、headless 指标与同种子确定性。</p>
 <h2 id="_7">参数</h2>
 <table>
