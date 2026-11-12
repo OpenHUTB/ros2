@@ -347,6 +347,7 @@ nav:
     - 急停闩锁与人工复位: './ground/estop_latch.md'
 
 - 空域载具:
+    - 无人机空间围栏与速度门控: './air/uav_box_geofence_guard/index.md'
     - MuJoCo 城市屋顶光伏覆盖率测量: './air/mujoco_uav_rooftop_pv_coverage_survey.md'
     - MuJoCo 屋顶光伏覆盖率测量第二天: './air/mujoco_uav_rooftop_pv_coverage_survey_day2.md'
     - winter 场景无人机圆周飞行: './air/winter_circle.md'
