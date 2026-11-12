@@ -63,6 +63,7 @@ nav:
         - ROS Noetic 多传感器话题时间同步: 'chap2/ros1_message_time_sync/index.md'
         - ROS Noetic 运行参数热更新（正弦信号）: 'chap2/ros1_parameter_sine_wave/index.md'
         - ROS Noetic 环境自检与常见问题排查: 'chap2/ros1_env_check/index.md'
+        - ROS 2 QoS 服务质量：可靠性、历史深度与持久性: 'chap2/ros2_qos_demo.md'
     - 3. 机器人系统设计: './chapter/chap3.md'
     - 4. 机器人仿真:
         - 章节首页: './chapter/chap4.md'
@@ -72,7 +73,10 @@ nav:
         - fire_detect 构建与 ament 资源索引: './chap5/fire_detect.md'
         - 行人隐私脱敏视觉检测节点: 'privacy_mask/README.md'
         - 基于激光雷达扫描的神经网络障碍物分类: './chapter/chap5/lidar_obstacle_nn.md'
-    - 6. 机器人 SLAM 与自主导航: './chapter/chap6.md'
+        - 卡尔曼滤波：从带噪测距中估计位置与速度: './chapter/chap5/kalman_filter_tracking.md'
+    - 6. 机器人 SLAM 与自主导航:
+        - 章节首页: './chapter/chap6.md'
+        - 粒子滤波：一维蒙特卡洛定位（MCL）: './chapter/chap6/particle_filter_localization.md'
     - 7. 机械臂控制: './chapter/chap7.md'
     - 8. ROS 机器人综合应用:
         - 章节首页: './chapter/chap8.md'
