@@ -851,7 +851,21 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#_7">性能评价</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_8">文件清单</a>
+<li class="toctree-l2"><a class="reference internal" href="#dagger-mlp">DAgger 数据聚合（改进 MLP 巡航）</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#_8">为什么需要</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_9">算法</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_10">运行</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_11">实测结果</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_12">结论与局限</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_13">文件清单</a>
 </li>
 </ul>
 </li>
@@ -1037,12 +1051,16 @@ bash<span class="w"> </span>main.sh
 python3<span class="w"> </span>main.py<span class="w"> </span>collect
 python3<span class="w"> </span>main.py<span class="w"> </span>train
 python3<span class="w"> </span>main.py<span class="w"> </span><span class="nb">test</span>
+python3<span class="w"> </span>main.py<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--lap<span class="w">      </span><span class="c1"># 额外测「跑完一圈的耗时」，默认 60 s 窗口</span>
 
-<span class="c1"># ROS 实时仿真</span>
+<span class="c1"># ROS 实时仿真（前提：本机已装 torch，且权重已由上面的 train / dagger 产出）</span>
 ros2<span class="w"> </span>launch<span class="w"> </span>mjc_rov_current_teleop<span class="w"> </span>main.launch.py
 <span class="c1"># 另开终端</span>
 ros2<span class="w"> </span>run<span class="w"> </span>mjc_rov_current_teleop<span class="w"> </span>keyboard_node
 ros2<span class="w"> </span>run<span class="w"> </span>mjc_rov_current_teleop<span class="w"> </span>cruise_node
+
+<span class="c1"># DAgger 数据聚合（改进 MLP 巡航）</span>
+python3<span class="w"> </span>main.py<span class="w"> </span>dagger<span class="w"> </span>--iterations<span class="w"> </span><span class="m">6</span><span class="w"> </span>--epochs<span class="w"> </span><span class="m">300</span>
 </code></pre></div>
 <h2 id="_7">性能评价</h2>
 <table>
@@ -1067,7 +1085,128 @@ ros2<span class="w"> </span>run<span class="w"> </span>mjc_rov_current_teleop<sp
 </tbody>
 </table>
 <p>MLP 在洋流扰动下接近专家性能，证明神经网络学会了基本的航点跟踪行为；与专家的差距反映了 BC 方法在动态扰动下的泛化局限。</p>
-<h2 id="_8">文件清单</h2>
+<h2 id="dagger-mlp">DAgger 数据聚合（改进 MLP 巡航）</h2>
+<h3 id="_8">为什么需要</h3>
+<p>上表显示行为克隆只到达 2/4 航点。原因是 BC 只在<strong>专家轨迹</strong>上训练：策略一旦漂到专家没去过的状态，输入分布就与训练集不一致，误差会持续累积。DAgger（Dataset Aggregation）正是针对这一点。</p>
+<h3 id="_9">算法</h3>
+<ol>
+<li>第 0 轮用专家本身跑闭环，等价于原始 BC 数据集；</li>
+<li>之后每轮用<strong>当前策略</strong>跑闭环，把策略实际访问到的每个状态交给专家标注；</li>
+<li>新样本并入数据集后从头重训；</li>
+<li>每轮结束在固定评估窗口内测 MAE 与航点到达数，全部记录进报告。</li>
+</ol>
+<p>采集策略自身访问到的状态、而不是专家的状态，是 DAgger 与 BC 的关键区别。</p>
+<h3 id="_10">运行</h3>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>main.py<span class="w"> </span>dagger<span class="w"> </span>--iterations<span class="w"> </span><span class="m">6</span><span class="w"> </span>--epochs<span class="w"> </span><span class="m">300</span>
+</code></pre></div>
+<p>输出：</p>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>weights/cruise_mlp_dagger.pt</code></td>
+<td>最终策略权重</td>
+</tr>
+<tr>
+<td><code>data/dagger_report.json</code></td>
+<td>逐轮样本数、训练 MSE、MAE、航点到达数</td>
+</tr>
+</tbody>
+</table>
+<p>子命令完全离线，不需要 ROS，也不需要仿真器启动。</p>
+<p>训练好的 DAgger 权重可直接用于在线节点（<code>cruise_node</code> 已有 <code>weights_path</code> 参数）：</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>mjc_rov_current_teleop<span class="w"> </span>cruise_node<span class="w"> </span>--ros-args<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-p<span class="w"> </span>weights_path:<span class="o">=</span><span class="nv">$HOME</span>/ros2/src/water/mjc_rov_current_teleop/weights/cruise_mlp_dagger.pt
+</code></pre></div>
+<h3 id="_11">实测结果</h3>
+<p>两张表的复现命令（注意 <code>dagger</code> 的 <code>--iterations</code> 默认是 4，下表用的是 6 轮）：</p>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>main.py<span class="w"> </span>collect
+python3<span class="w"> </span>main.py<span class="w"> </span>train<span class="w">                              </span><span class="c1"># 默认 --seed 0</span>
+python3<span class="w"> </span>main.py<span class="w"> </span>dagger<span class="w"> </span>--iterations<span class="w"> </span><span class="m">6</span><span class="w"> </span>--epochs<span class="w"> </span><span class="m">300</span><span class="w"> </span><span class="c1"># 24 s / 圈时两张表都是这条</span>
+python3<span class="w"> </span>main.py<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--lap
+</code></pre></div>
+<p>固定 24 s 评估窗口（12000 步 × 0.002 s，与 <code>main.py test</code> 一致），训练固定 <code>--seed 0</code>：</p>
+<table>
+<thead>
+<tr>
+<th>策略</th>
+<th>航点到达</th>
+<th>MAE 位置误差</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>脚本专家</td>
+<td>4/4</td>
+<td>1.60 m</td>
+</tr>
+<tr>
+<td>BC（原始）</td>
+<td>2/4</td>
+<td>1.53 m</td>
+</tr>
+<tr>
+<td>DAgger（6 轮）</td>
+<td>3/4</td>
+<td>1.47 m</td>
+</tr>
+</tbody>
+</table>
+<p>（上节「性能评价」里的 1.67 m 是原模块未固定初始化时的另一次运行；<code>train()</code> 现在默认 <code>seed=0</code>，
+同一份数据集每次训出的权重相同，闭环指标才可复现。）</p>
+<p>24 s 窗口对 DAgger 仍略紧（实测第 3 个航点在 21.4 s 到达，第 4 个来不及），因此再用<strong>跑完一圈的耗时</strong>作为主指标，窗口放宽到 60 s。复现命令：</p>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>main.py<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--lap<span class="w">          </span><span class="c1"># 窗口长度可用 --lap-seconds 改</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code>[圈时] 专家: 22.33 s  完成=True
+[圈时] MLP: 28.84 s  完成=True
+[圈时] DAgger: 24.52 s  完成=True
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>策略</th>
+<th>航点到达</th>
+<th>跑完一圈</th>
+<th>相对专家</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>脚本专家</td>
+<td>4/4</td>
+<td>22.33 s</td>
+<td>—</td>
+</tr>
+<tr>
+<td>BC</td>
+<td>4/4</td>
+<td>28.84 s</td>
+<td>+29%</td>
+</tr>
+<tr>
+<td><strong>DAgger</strong></td>
+<td>4/4</td>
+<td><strong>24.52 s</strong></td>
+<td><strong>+10%</strong></td>
+</tr>
+</tbody>
+</table>
+<p>DAgger 把 BC 多花的 6.5 s 收回 4.3 s，相对 BC 一圈快 15%——比 24 s 窗口下能看出的差距（2/4 vs 3/4）更明确。</p>
+<p>BC 的圈时对网络初始化比较敏感：换 <code>--seed</code> 在 27～36 s 之间波动（未固定种子时曾测到 36.11 s），
+所以上表给的是 <code>seed=0</code> 的固定一组。DAgger 每轮重训都带固定种子，同样的 <code>--seed</code> 下结果稳定。</p>
+<h3 id="_12">结论与局限</h3>
+<ul>
+<li>DAgger 修正的是<strong>状态覆盖</strong>：策略漂出去的区域被补上专家标注，因此速度跟踪明显改善；</li>
+<li>它<strong>不修正速度估计的系统性偏差</strong>：MSE 回归会朝均值收缩，远距离时策略给出的速度小于专家（实测 <code>dist = 1.155 m</code> 时专家 0.6 m/s、策略 0.41 m/s），所以仍未追平专家；</li>
+<li><strong>MAE 不能单独当主指标</strong>：它受"在航点附近停留多久"影响，慢的策略平均距离反而可能更小，
+  因此以圈时为主要指标，MAE 只作辅助。</li>
+</ul>
+<h2 id="_13">文件清单</h2>
 <div class="highlight"><pre><span></span><code>mjc_rov_current_teleop/
 ├── package.xml / setup.py / setup.cfg
 ├── requirements.txt / README.md
@@ -1075,10 +1214,12 @@ ros2<span class="w"> </span>run<span class="w"> </span>mjc_rov_current_teleop<sp
 ├── mjc_rov_current_teleop/
 │   ├── __init__.py
 │   ├── common.py          # 水下动力学 + 路径解析
-│   ├── cruise_net.py      # MLP 定义/采集/训练/评估
+│   ├── cruise_net.py      # MLP 定义/采集/训练/评估（含共用特征构造）
+│   ├── dagger.py          # DAgger 数据聚合：缓冲、采样标注、重训、逐轮报告
 │   ├── sim_node.py        # ROS MuJoCo 仿真节点
 │   ├── keyboard_node.py   # 键盘遥操
 │   └── cruise_node.py     # ROS MLP 巡航节点
+├── test/test_dagger.py    # 10 项 DAgger 单元测试（无需 torch / mujoco）
 ├── launch/main.launch.py
 ├── models/rov_pond.xml    # 自包含 MJCF（基本几何体）
 ├── config/rov_current_params.yaml

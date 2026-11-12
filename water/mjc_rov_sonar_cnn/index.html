@@ -861,7 +861,21 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#5">5. 运行步骤</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#6">6. 文件清单</a>
+<li class="toctree-l2"><a class="reference internal" href="#6">6. 开集识别：背景类与置信度拒识</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#61">6.1 原评估的两个问题</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#62">6.2 新增能力</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#63">6.3 运行</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#64">6.4 实测结果</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#65">6.5 单元测试</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#7">7. 文件清单</a>
 </li>
 </ul>
 </li>
@@ -897,7 +911,21 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#5">5. 运行步骤</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#6">6. 文件清单</a>
+<li class="toctree-l2"><a class="reference internal" href="#6">6. 开集识别：背景类与置信度拒识</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#61">6.1 原评估的两个问题</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#62">6.2 新增能力</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#63">6.3 运行</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#64">6.4 实测结果</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#65">6.5 单元测试</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#7">7. 文件清单</a>
 </li>
 </ul>
 </li>
@@ -1093,20 +1121,107 @@ colcon<span class="w"> </span>build<span class="w"> </span>--symlink-install<spa
 <span class="nb">cd</span><span class="w"> </span>src/water/mjc_rov_sonar_cnn
 bash<span class="w"> </span>main.sh
 
+<span class="c1"># 开集识别（背景类 + 置信度拒识）</span>
+python3<span class="w"> </span>main.py<span class="w"> </span>openset<span class="w"> </span>--epochs<span class="w"> </span><span class="m">30</span><span class="w"> </span>--clutter<span class="w"> </span><span class="m">2</span>
+
 <span class="c1"># ROS 实时仿真</span>
 ros2<span class="w"> </span>launch<span class="w"> </span>mjc_rov_sonar_cnn<span class="w"> </span>main.launch.py
 <span class="c1"># 另开终端</span>
 ros2<span class="w"> </span>run<span class="w"> </span>mjc_rov_sonar_cnn<span class="w"> </span>classify_node
 </code></pre></div>
-<h2 id="6">6. 文件清单</h2>
+<h2 id="6">6. 开集识别：背景类与置信度拒识</h2>
+<h3 id="61">6.1 原评估的两个问题</h3>
+<ul>
+<li><strong>测试集与训练集同源</strong>：<code>SyntheticSonarDataset</code> 与 <code>test_cnn</code> 都从 <code>RandomState(42)</code> 起生成，测试集的 200 张正好是训练集的前 200 张；</li>
+<li><strong>任务过于平凡</strong>：三类亮斑坐标几乎固定（礁石约 (1.5, 1.5)、管道约 (2.5, -1.5)、残骸约 (0.5, -2.5)），CNN 只要看"哪个固定位置最亮"就能分类。</li>
+</ul>
+<p>实测：即使把测试集换成独立种子（<code>python3 main.py test --seed 1234</code>），准确率仍是 <strong>1.000</strong>。这说明 100% 不是"模型好"，而是<strong>任务本身太容易</strong>——该指标无法反映真实泛化能力。</p>
+<h3 id="62">6.2 新增能力</h3>
+<p><code>open_set.py</code> 把任务改成<strong>开集识别</strong>：</p>
+<ol>
+<li><strong>增加"背景"类</strong>（第 4 类，无目标）。真实巡检中绝大多数画面没有目标，原实现要求每帧三选一，必然产生误报；</li>
+<li><strong>目标位置逐样本随机</strong>，模型只能依赖回波形状与尺度（三类 σ 分别为 4 / 2 / 3），而不是固定像素；</li>
+<li><strong>叠加随机假目标（clutter）</strong>，让"背景"与"有目标"不再是简单的整体亮度阈值问题；</li>
+<li><strong>训练与测试使用互不相同的随机种子</strong>；</li>
+<li><strong>置信度拒识</strong>：当最大 softmax 低于阈值 τ 时输出 <code>unknown</code>，把"我不确定"作为合法输出。</li>
+</ol>
+<p>数据集构造、拒识判定与指标计算都只依赖 numpy，只有训练与推理需要 PyTorch。</p>
+<h3 id="63">6.3 运行</h3>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>main.py<span class="w"> </span>openset<span class="w"> </span>--epochs<span class="w"> </span><span class="m">30</span><span class="w"> </span>--clutter<span class="w"> </span><span class="m">2</span>
+</code></pre></div>
+<p>输出 <code>weights/sonar_cnn_openset.pt</code> 与 <code>data/openset_report.json</code>，并在终端打印阈值扫描表。</p>
+<h3 id="64">6.4 实测结果</h3>
+<p>训练 800 张（seed 42）、测试 400 张（<strong>独立 seed 1234</strong>）、每图叠加 2 个随机假目标：</p>
+<table>
+<thead>
+<tr>
+<th>拒识阈值 τ</th>
+<th>覆盖率</th>
+<th>被接受准确率</th>
+<th>背景误报率</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0.000（不拒识）</td>
+<td>1.000</td>
+<td>0.912</td>
+<td>0.070</td>
+</tr>
+<tr>
+<td>0.500</td>
+<td>0.998</td>
+<td>0.915</td>
+<td>0.061</td>
+</tr>
+<tr>
+<td>0.700</td>
+<td>0.948</td>
+<td>0.934</td>
+<td>0.042</td>
+</tr>
+<tr>
+<td>0.900</td>
+<td>0.843</td>
+<td>0.959</td>
+<td>0.022</td>
+</tr>
+<tr>
+<td><strong>0.950</strong></td>
+<td><strong>0.800</strong></td>
+<td><strong>0.966</strong></td>
+<td><strong>0.011</strong></td>
+</tr>
+<tr>
+<td>0.990</td>
+<td>0.655</td>
+<td>0.973</td>
+<td>0.013</td>
+</tr>
+</tbody>
+</table>
+<p>阈值取 0.95 时，<strong>背景误报率从 7.0% 降到 1.1%</strong>，代价是拒识 20% 的画面；被接受样本的准确率同时从 91.2% 升到 96.6%。这正是"覆盖率–准确率"权衡曲线的用途：巡检场景宁可少报，不可乱报。</p>
+<div class="admonition note">
+<p class="admonition-title">数值对环境版本敏感</p>
+<p>上表是 numpy 1.24 + torch 2.4.1+cpu 下的结果。换到 numpy 2.2 环境复跑，
+<strong>趋势与结论不变</strong>（拒识确实把背景误报压下去、被接受样本准确率上升），但绝对值会浮动：
+τ=0 的背景误报率在 7%～9% 之间，各档准确率差 0.5～2.6 个百分点，因此"降到原来的 1/4～1/6"
+比一个固定的倍数更准确。<code>data/openset_report.json</code> 已经把 <code>torch</code> / <code>numpy</code> 版本和逐阈值结果
+一起记下，复现时先对一下版本。</p>
+</div>
+<h3 id="65">6.5 单元测试</h3>
+<p><code>test/test_open_set.py</code> 共 <strong>17 项</strong>，只依赖 numpy，不需要 PyTorch：数据集形状与类别均衡、同种子可复现、不同种子不同、目标图比背景图更亮、位置非常量、杂波提升能量、拒识阈值行为、指标（覆盖率 / 准确率 / 背景误报率）的精确值、输入校验。</p>
+<h2 id="7">7. 文件清单</h2>
 <div class="highlight"><pre><span></span><code>mjc_rov_sonar_cnn/
 ├── package.xml / setup.py / setup.cfg
 ├── main.py / main.sh
 ├── mjc_rov_sonar_cnn/
-│   ├── common.py        # 声呐图像合成
-│   ├── cnn_model.py     # CNN 定义 + 训练 + 测试
+│   ├── common.py        # 声呐图像合成（支持传入 rng 复现噪声）
+│   ├── cnn_model.py     # 三分类 CNN 定义 + 训练 + 测试（test 支持 --seed）
+│   ├── open_set.py      # 背景类 + 置信度拒识：数据集、拒识、指标、训练
 │   ├── sim_node.py      # MuJoCo + ROS 发布声呐图
 │   └── classify_node.py # CNN 推理节点
+├── test/test_open_set.py # 17 项开集识别单测（无需 torch / mujoco）
 ├── launch/main.launch.py
 ├── models/rov_sonar_pool.xml
 ├── config/sonar_params.yaml
