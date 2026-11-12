@@ -6,6 +6,7 @@
 
 import math
 import os
+import random
 import sys
 import unittest
 
@@ -14,6 +15,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 from apf_path_planning.apf import (
     APFParams,
+    EscapeTracker,
     Obstacle,
     attractive_potential,
     attractive_gradient,
@@ -216,6 +218,90 @@ class TestPlanWithObstacles(unittest.TestCase):
             for o in obs:
                 self.assertGreater(obstacle_distance(p, o), 0.0,
                                    "路径穿入障碍物")
+
+
+class TestLocalMinimaEscape(unittest.TestCase):
+    """局部最小值逃逸：2-周期抖动必须能触发扰动（评审阻塞项）。
+
+    原实现用「这一步没更近」累加 no_progress，但 2-周期里每隔一步就有一步
+    更近，else 分支把计数清零，计数最高到 1，永远到不了 escape_patience。
+    改为「历史最优距离连续 patience 步没有刷新」后，这两种情形都要成立：
+    真卡住必须触发，正常前进不能误触发。
+    """
+
+    def test_single_obstacle_on_path_reaches_goal(self):
+        # 评审给出的最小复现：单障碍正好挡在起点—目标连线上。
+        # 默认参数下机器人会在 (3.5, 0)/(3.6, 0) 之间 2-周期振荡到 timeout。
+        params = APFParams()
+        path, status = plan((0.0, 0.0), (10.0, 0.0),
+                            [Obstacle(5.0, 0.0, 0.5)], params)
+        self.assertEqual(status, "reached", "局部最小值未被逃逸")
+        self.assertLessEqual(distance(path[-1], (10.0, 0.0)),
+                             params.goal_tol + 1e-6)
+        # 逃逸靠随机扰动打破对称性：轨迹必须离开 y=0 这条对称轴
+        self.assertTrue(any(abs(p[1]) > 1e-6 for p in path),
+                        "轨迹始终在对称轴上，说明扰动没生效")
+
+    def test_stalled_progress_triggers_escape(self):
+        params = APFParams()
+        tracker = EscapeTracker((10.0, 0.0), [Obstacle(5.0, 0.0, 0.5)],
+                                params, random.Random(0))
+        pos = (3.5, 0.0)
+        tracker.reset(pos)
+
+        escaped = False
+        for _ in range(params.escape_patience + 10):
+            pos, escaped = tracker.advance(pos)
+            if escaped:
+                break
+        self.assertTrue(escaped, "连续 %d 步不刷新最优距离仍不逃逸"
+                        % params.escape_patience)
+        self.assertEqual(tracker.escapes, 1)
+
+    def test_patience_zero_escapes_on_first_stall(self):
+        # 评审定位问题时用的对照：patience=0 时任何一次停滞都立刻扰动
+        params = APFParams(escape_patience=0)
+        tracker = EscapeTracker((10.0, 0.0), [Obstacle(5.0, 0.0, 0.5)],
+                                params, random.Random(0))
+        pos = (3.5, 0.0)
+        tracker.reset(pos)
+
+        escaped = False
+        for _ in range(4):
+            pos, escaped = tracker.advance(pos)
+            if escaped:
+                break
+        self.assertTrue(escaped)
+        self.assertEqual(tracker.escapes, 1)
+
+    def test_no_false_escape_when_making_progress(self):
+        # 无障碍直线前进时每一步都在刷新最优距离，不应触发扰动
+        params = APFParams()
+        tracker = EscapeTracker((10.0, 0.0), [], params, random.Random(0))
+        pos = (0.0, 0.0)
+        tracker.reset(pos)
+        for _ in range(50):
+            pos, escaped = tracker.advance(pos)
+            self.assertFalse(escaped, "持续接近目标时误触发逃逸")
+        self.assertEqual(tracker.escapes, 0)
+
+    def test_escape_fires_inside_u_trap(self):
+        # U 形深陷阱：随机扰动是有限尝试，不保证能走出去（已知限制），
+        # 但必须真的触发过，而不是像修复前那样计数器永远攒不满。
+        obstacles = [
+            Obstacle(6.5, 0.0, 0.6),
+            Obstacle(6.0, 1.0, 0.6),
+            Obstacle(6.0, -1.0, 0.6),
+            Obstacle(5.5, 1.8, 0.6),
+            Obstacle(5.5, -1.8, 0.6),
+        ]
+        params = APFParams(max_iter=400)
+        tracker = EscapeTracker((10.0, 0.0), obstacles, params, random.Random(0))
+        pos = (0.0, 0.0)
+        tracker.reset(pos)
+        for _ in range(params.max_iter):
+            pos, _ = tracker.advance(pos)
+        self.assertGreater(tracker.escapes, 0, "U 形陷阱里从未尝试逃逸")
 
 
 class TestPotentialAt(unittest.TestCase):

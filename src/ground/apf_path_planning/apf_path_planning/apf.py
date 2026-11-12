@@ -10,8 +10,8 @@
    避免远距离引力过大导致步进发散。
 2. **障碍物半径建模**：障碍物用圆形 (圆心, 半径) 描述，斥力按机器人到
    障碍物边界的距离计算，更贴近实际物理尺寸。
-3. **局部最小值逃逸**：当合力幅值过小或距目标距离持续不下降时，
-   注入随机扰动跳出局部势阱。
+3. **局部最小值逃逸**：当距目标的**历史最优距离**连续 ``escape_patience``
+   步没有刷新时，注入随机扰动尝试跳出局部势阱（判据见 ``EscapeTracker``）。
 
 纯数学层，不依赖 pygame，便于单元测试。
 """
@@ -201,6 +201,80 @@ def step(pos: Point, goal: Point,
 
 
 # ---------------------------------------------------------------------------
+# 局部最小值检测与逃逸
+# ---------------------------------------------------------------------------
+# 判定"最优距离被刷新"的浮点容差：小于它视作原地不动，避免浮点噪声反复清零计数。
+_PROGRESS_EPS = 1e-9
+
+
+class EscapeTracker:
+    """局部最小值检测 + 随机扰动逃逸（``plan()`` 与交互模式共用同一份逻辑）。
+
+    判据不是"这一步有没有更近"。2-周期抖动（一近一远、净位移为零）里
+    每两步就有一步变远，若"单步更近就清零"计数最高只能到 1，
+    永远攒不满 ``escape_patience``；反过来，如果单步更远就清零，
+    又会把绕行障碍的正常回退误判成停滞。
+
+    这里改用**历史最优距离**做判据：
+
+    * 当前距离刷新了"距目标的历史最近距离"（超过 ``_PROGRESS_EPS``），
+      说明确有进展，计数清零；
+    * 否则计数 +1，连续 ``escape_patience`` 步没有刷新最优即判定为
+      陷入局部势阱，注入一次随机扰动，计数清零后重新观察。
+
+    这样一近一远的抖动不算进展（最优距离不变），连续不刷新最优一定会
+    触发逃逸；而正常绕行只要曾经更近过就继续累计，不会每步都扰动。
+    """
+
+    def __init__(self, goal: Point, obstacles: List[Obstacle],
+                 params: APFParams,
+                 rng: Optional[random.Random] = None):
+        self.goal = goal
+        self.obstacles = obstacles
+        self.params = params
+        self.rng = rng if rng is not None else random.Random(0)
+        self.best_distance = float("inf")
+        self.stalled_steps = 0
+        self.escapes = 0
+
+    def reset(self, pos: Point) -> None:
+        """以当前位置作为新的最优距离重新计数（初始化或场景重置时调用）。"""
+        self.best_distance = distance(pos, self.goal)
+        self.stalled_steps = 0
+
+    def advance(self, pos: Point) -> Tuple[Point, bool]:
+        """从 ``pos`` 沿合力走一步，必要时注入逃逸扰动。
+
+        返回 ``(新位置, 本次是否触发了逃逸)``。
+        """
+        new_pos, _force = step(pos, self.goal, self.obstacles, self.params)
+        new_dist = distance(new_pos, self.goal)
+
+        if new_dist < self.best_distance - _PROGRESS_EPS:
+            self.best_distance = new_dist
+            self.stalled_steps = 0
+        else:
+            self.stalled_steps += 1
+
+        escaped = False
+        if self.stalled_steps > self.params.escape_patience:
+            new_pos = self._jitter(pos)
+            escaped = True
+            self.escapes += 1
+            self.stalled_steps = 0
+            new_dist = distance(new_pos, self.goal)
+            if new_dist < self.best_distance - _PROGRESS_EPS:
+                self.best_distance = new_dist
+        return new_pos, escaped
+
+    def _jitter(self, pos: Point) -> Point:
+        """在当前位置叠加各向同性随机扰动，打破势阱的对称性。"""
+        j = self.params.escape_jitter
+        return (pos[0] + self.rng.uniform(-1.0, 1.0) * j,
+                pos[1] + self.rng.uniform(-1.0, 1.0) * j)
+
+
+# ---------------------------------------------------------------------------
 # 完整规划
 # ---------------------------------------------------------------------------
 def plan(start: Point, goal: Point,
@@ -222,8 +296,8 @@ def plan(start: Point, goal: Point,
 
     pos = (float(start[0]), float(start[1]))
     path: List[Point] = [pos]
-    no_progress = 0
-    last_dist = distance(pos, goal)
+    tracker = EscapeTracker(goal, obstacles, params, rng)
+    tracker.reset(pos)
 
     for _ in range(params.max_iter):
         # 到达判定
@@ -235,27 +309,8 @@ def plan(start: Point, goal: Point,
             if obstacle_distance(pos, obs) <= 0.0:
                 return path, "trapped"
 
-        new_pos, force = step(pos, goal, obstacles, params)
-        fmag = math.hypot(*force)
-
-        # 局部最小值检测：合力过小 或 距目标不下降
-        new_dist = distance(new_pos, goal)
-        stuck = (fmag < 1e-6) or (new_dist >= last_dist - 1e-9)
-
-        if stuck:
-            no_progress += 1
-            if no_progress > params.escape_patience:
-                # 随机扰动逃逸
-                jx = rng.uniform(-1.0, 1.0) * params.escape_jitter
-                jy = rng.uniform(-1.0, 1.0) * params.escape_jitter
-                new_pos = (pos[0] + jx, pos[1] + jy)
-                no_progress = 0
-        else:
-            no_progress = 0
-
-        last_dist = distance(new_pos, goal)
-        path.append(new_pos)
-        pos = new_pos
+        pos, _escaped = tracker.advance(pos)
+        path.append(pos)
 
         # 发散检测
         if abs(pos[0]) > 1e4 or abs(pos[1]) > 1e4:

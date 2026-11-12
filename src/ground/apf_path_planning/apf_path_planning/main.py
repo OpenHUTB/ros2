@@ -19,13 +19,15 @@ except ImportError:  # pragma: no cover
     pygame = None
 
 try:
-    from .apf import (APFParams, Obstacle, plan, step, total_force,
-                      distance, obstacle_distance, potential_at)
+    from .apf import (APFParams, EscapeTracker, Obstacle, plan,
+                      attractive_potential, repulsive_potential,
+                      total_force, distance, obstacle_distance)
     from . import config as C
 except ImportError:  # pragma: no cover - 根目录 main.py 直接执行
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-    from apf import (APFParams, Obstacle, plan, step, total_force,
-                    distance, obstacle_distance, potential_at)
+    from apf import (APFParams, EscapeTracker, Obstacle, plan,
+                     attractive_potential, repulsive_potential,
+                     total_force, distance, obstacle_distance)
     import config as C
 
 
@@ -60,20 +62,71 @@ def build_scenario(args) -> tuple:
 # ---------------------------------------------------------------------------
 # 绘制
 # ---------------------------------------------------------------------------
+def _repulsive_reference(params):
+    """斥力势的对数色标参考值：d_thresh/10 处的斥力势。
+
+    斥力在障碍物表面趋于无穷，直接用全图最大势归一化会只剩一小圈死红、
+    失去梯度；取影响范围 1/10 处的势能作参考，再按 log1p 压缩，
+    既能看清障碍物周围的斥力环，又不会被无穷远处的数值支配。
+    """
+    d = params.d_thresh_rep / 10.0
+    return 0.5 * params.k_rep * (1.0 / d - 1.0 / params.d_thresh_rep) ** 2
+
+
+def potential_shade(u_att, u_rep, att_ref, rep_ref):
+    """把引力势与斥力势分别归一化后取较大者，返回 [0, 1] 的着色比例。
+
+    引力势（远场 U ≈ 10⁴ 量级）比斥力势（障碍物边缘外 U ≈ 10² 量级）
+    大一到两个数量级，两者相加后线性归一化必然让 95% 以上像素饱和成同一
+    颜色。这里按各自量级归一化：引力开方、斥力对数，取较大值着色，
+    于是「远离目标越来越红」与「障碍物周围的红环」能同时看见。
+    """
+    att = 0.0 if att_ref <= 0.0 else math.sqrt(max(u_att, 0.0) / att_ref)
+    denom = math.log1p(rep_ref)
+    if math.isinf(u_rep):
+        rep = 1.0
+    elif denom <= 1e-12:
+        rep = 0.0
+    else:
+        rep = math.log1p(max(u_rep, 0.0)) / denom
+    return min(1.0, max(0.0, max(att, rep)))
+
+
 def draw_potential_field(surface, goal, obstacles, params, step=20):
-    """势场热图背景：低势能暗蓝、高势能亮红。降采样以加速。"""
+    """势场热图背景：按归一化后的势值着色（暗蓝低、亮红高）。降采样以加速。
+
+    引力/斥力分两个量级，见 ``potential_shade``；引力参考值取画布四角的
+    最大势，保证不同画布尺寸与参数下颜色都能铺满整个色标。
+    """
     w, h = surface.get_size()
+    corners = ((0.0, 0.0), (float(w), 0.0), (0.0, float(h)), (float(w), float(h)))
+    att_ref = max(attractive_potential(c, goal, params.k_att, params.d_thresh_att)
+                  for c in corners)
+    rep_ref = _repulsive_reference(params)
+    low, high = C.POTENTIAL_LOW, C.POTENTIAL_HIGH
     for y in range(0, h, step):
         for x in range(0, w, step):
-            u = potential_at((float(x), float(y)), goal, obstacles, params)
-            if math.isinf(u):
-                ratio = 1.0
-            else:
-                ratio = min(1.0, u / 5000.0)
-            r = int(C.POTENTIAL_LOW[0] + (C.POTENTIAL_HIGH[0] - C.POTENTIAL_LOW[0]) * ratio)
-            g = int(C.POTENTIAL_LOW[1] + (C.POTENTIAL_HIGH[1] - C.POTENTIAL_LOW[1]) * ratio)
-            b = int(C.POTENTIAL_LOW[2] + (C.POTENTIAL_HIGH[2] - C.POTENTIAL_LOW[2]) * ratio)
-            pygame.draw.rect(surface, (r, g, b), (x, y, step, step))
+            pos = (float(x), float(y))
+            ratio = potential_shade(
+                attractive_potential(pos, goal, params.k_att, params.d_thresh_att),
+                repulsive_potential(pos, obstacles, params.k_rep, params.d_thresh_rep),
+                att_ref, rep_ref)
+            color = (int(low[0] + (high[0] - low[0]) * ratio),
+                     int(low[1] + (high[1] - low[1]) * ratio),
+                     int(low[2] + (high[2] - low[2]) * ratio))
+            pygame.draw.rect(surface, color, (x, y, step, step))
+
+
+def make_background(goal, obstacles, params, step=6):
+    """预渲染静态势场热图，供录制/交互逐帧复用。
+
+    势场只与 goal/obstacles/params 有关，与机器人位置无关；每帧重算一遍
+    既慢又没必要。预渲染一次后每帧只 blit，顺带可以把采样步长从 20 px
+    降到 6 px，热图不再是明显的大色块。
+    """
+    bg = pygame.Surface((C.WIDTH, C.HEIGHT))
+    draw_potential_field(bg, goal, obstacles, params, step=step)
+    return bg
 
 
 def draw_obstacles(surface, obstacles):
@@ -121,6 +174,7 @@ def draw_force_arrow(surface, pos, force, color=C.FORCE, scale=3.0):
 
 
 def draw_hud(surface, font, status, n_steps, dist_goal, force_mag, params):
+    """HUD 固定在右上角，并垫一层半透明底，避免文字压在路径/起点标记上看不清。"""
     lines = [
         f"APF Path Planning  |  status: {status}",
         f"steps: {n_steps}  |  dist_to_goal: {dist_goal:.1f} px",
@@ -128,11 +182,16 @@ def draw_hud(surface, font, status, n_steps, dist_goal, force_mag, params):
         f"d_thresh_att={params.d_thresh_att}  d_thresh_rep={params.d_thresh_rep}",
         "ESC: quit",
     ]
-    y = 10
-    for line in lines:
-        txt = font.render(line, True, C.HUD)
-        surface.blit(txt, (12, y))
-        y += 18
+    rendered = [font.render(line, True, C.HUD) for line in lines]
+    pad, line_h = 8, 18
+    panel_w = max(t.get_width() for t in rendered) + 2 * pad
+    panel_h = line_h * len(rendered) + 2 * pad - 4
+    x0 = max(8, surface.get_width() - panel_w - 8)
+    panel = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
+    panel.fill((12, 15, 20, 185))
+    surface.blit(panel, (x0, 6))
+    for i, txt in enumerate(rendered):
+        surface.blit(txt, (x0 + pad, 6 + pad + i * line_h))
 
 
 # ---------------------------------------------------------------------------
@@ -158,12 +217,12 @@ def record_demo(output, start, goal, obstacles, params):
     # 预计算完整路径
     path, status = plan(start, goal, obstacles, params)
     n_frames = C.RECORD_FRAMES
+    background = make_background(goal, obstacles, params)
 
     frames = []
     for i in range(n_frames):
         progress = (i + 1) / n_frames * len(path)
-        surface.fill(C.BG)
-        draw_potential_field(surface, goal, obstacles, params, step=20)
+        surface.blit(background, (0, 0))
         # 网格
         for gx in range(0, C.WIDTH, 40):
             pygame.draw.line(surface, C.GRID, (gx, 0), (gx, C.HEIGHT))
@@ -202,9 +261,10 @@ def interactive(start, goal, obstacles, params):
     rng = random.Random(0)
     pos = (float(start[0]), float(start[1]))
     path = [pos]
-    no_progress = 0
-    last_dist = distance(pos, goal)
+    tracker = EscapeTracker(goal, obstacles, params, rng)
+    tracker.reset(pos)
     status = "running"
+    background = make_background(goal, obstacles, params)
 
     running = True
     while running:
@@ -217,30 +277,17 @@ def interactive(start, goal, obstacles, params):
         if status == "running":
             if distance(pos, goal) <= params.goal_tol:
                 status = "reached"
+            elif any(obstacle_distance(pos, obs) <= 0.0 for obs in obstacles):
+                status = "trapped"
             else:
-                f = total_force(pos, goal, obstacles, params)
-                fmag = math.hypot(*f)
-                if fmag < 1e-6:
-                    no_progress += 1
-                new_pos, _ = step_iter(pos, goal, obstacles, params, rng)
-                new_dist = distance(new_pos, goal)
-                if new_dist >= last_dist - 1e-3:
-                    no_progress += 1
-                else:
-                    no_progress = 0
-                if no_progress > params.escape_patience:
-                    new_pos = (pos[0] + rng.uniform(-1, 1) * params.escape_jitter,
-                               pos[1] + rng.uniform(-1, 1) * params.escape_jitter)
-                    no_progress = 0
-                last_dist = distance(new_pos, goal)
-                path.append(new_pos)
-                pos = new_pos
+                # 与 plan() 共用同一套停滞检测/逃逸逻辑，避免两处行为不一致
+                pos, _ = tracker.advance(pos)
+                path.append(pos)
                 if len(path) >= params.max_iter:
                     status = "timeout"
 
         f = total_force(pos, goal, obstacles, params)
-        screen.fill(C.BG)
-        draw_potential_field(screen, goal, obstacles, params, step=20)
+        screen.blit(background, (0, 0))
         for gx in range(0, C.WIDTH, 40):
             pygame.draw.line(screen, C.GRID, (gx, 0), (gx, C.HEIGHT))
         for gy in range(0, C.HEIGHT, 40):
@@ -257,11 +304,6 @@ def interactive(start, goal, obstacles, params):
         clock.tick(C.FPS)
 
     pygame.quit()
-
-
-def step_iter(pos, goal, obstacles, params, rng):
-    """交互模式单步（含 escape 由调用方处理）。"""
-    return step(pos, goal, obstacles, params)
 
 
 # ---------------------------------------------------------------------------
