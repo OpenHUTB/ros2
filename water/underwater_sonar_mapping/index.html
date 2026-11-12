@@ -6,14 +6,14 @@
 <meta content="IE=edge" http-equiv="X-UA-Compatible"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <link href="../../img/favicon.ico" rel="shortcut icon"/>
-<title>新增水下三维地形测绘模块 - 模拟器的 ROS 文档</title>
+<title>水下声呐三维测深与 VFH 反应式避障 - 模拟器的 ROS 文档</title>
 <link href="../../css/theme.css" rel="stylesheet"/>
 <link href="../../css/theme_extra.css" rel="stylesheet"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
 <link href="../../extra.css" rel="stylesheet"/>
 <script>
         // Current page data
-        var mkdocs_page_name = "\u65b0\u589e\u6c34\u4e0b\u4e09\u7ef4\u5730\u5f62\u6d4b\u7ed8\u6a21\u5757";
+        var mkdocs_page_name = "\u6c34\u4e0b\u58f0\u5450\u4e09\u7ef4\u6d4b\u6df1\u4e0e VFH \u53cd\u5e94\u5f0f\u907f\u969c";
         var mkdocs_page_input_path = "water/underwater_sonar_mapping.md";
         var mkdocs_page_url = null;
       </script>
@@ -847,7 +847,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../mjc_rov_rl_compare/">同一 ROV 任务 PPO 与 SAC 强化学习算法对比</a>
 </li>
-<li class="toctree-l1 current"><a class="reference internal current" href="#">新增水下三维地形测绘模块</a>
+<li class="toctree-l1 current"><a class="reference internal current" href="#">水下声呐三维测深与 VFH 反应式避障</a>
 <ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="#_1">作业概述与背景</a>
 </li>
@@ -856,6 +856,20 @@
 <li class="toctree-l2"><a class="reference internal" href="#_3">核心代码文件</a>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#_4">运行步骤</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#vfh">声呐驱动的 VFH+ 反应式避障</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#_5">算法流程</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_6">话题接口</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_7">主要参数</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_8">运行</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_9">验证结果</a>
+</li>
+</ul>
 </li>
 </ul>
 </li>
@@ -898,7 +912,7 @@
 <ul class="wy-breadcrumbs">
 <li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
 <li class="breadcrumb-item">水域载具</li>
-<li class="breadcrumb-item active">新增水下三维地形测绘模块</li>
+<li class="breadcrumb-item active">水下声呐三维测深与 VFH 反应式避障</li>
 <li class="wy-breadcrumbs-aside">
 <a href="https://github.com/OpenHUTB/ros2/edit/master/docs/water/underwater_sonar_mapping.md"> 编辑页面</a>
 </li>
@@ -920,10 +934,20 @@
 <p>本模块包含以下核心文件，均已提交至仓库：</p>
 <div class="highlight"><pre><span></span><code>src/
 └── underwater_sonar_mapping/
-    ├── main.py                 # 三维声呐测绘与障碍物可视化节点
-    ├── setup.py                # ROS 2 功能包配置文件
+    ├── underwater_sonar_mapping/
+    │   ├── main.py              # 三维声呐测绘与障碍物可视化节点（原有）
+    │   ├── terrain.py           # 海床高度场 + 障碍物 + 水平射线求交
+    │   ├── sonar.py             # 多波束扫描声呐模型（波束布局、量程、噪声、丢包）
+    │   ├── vfh.py               # VFH+ 极坐标直方图、环形平滑、谷底选择、降速
+    │   └── sonar_vfh_node.py    # 声呐驱动的反应式避障节点
+    ├── test/
+    │   ├── test_terrain_sonar.py  # 22 项：海床 / 射线 / 声呐
+    │   ├── test_vfh.py            # 17 项：直方图 / 平滑 / 选向 / 滞环
+    │   └── test_closed_loop.py    # 6 项：闭环到点与避碰
+    ├── setup.py                 # ROS 2 功能包配置（含 sonar_vfh 入口）
     └── launch/
-        └── main.launch.py      # 一键启动文件
+        ├── main.launch.py       # 三维测绘可视化
+        └── sonar_vfh.launch.py  # VFH 避障
 </code></pre></div>
 <h2 id="_4">运行步骤</h2>
 <ol>
@@ -946,7 +970,158 @@
 5.运行效果（截图）
 <img alt="运行效果" src="../../img/underwater_sonar_3d_mapping_run.png"/></li>
 </ol>
-<p>效果说明：节点成功启动，基于模拟声呐数据生成了三维海底地形，并清晰标注了水下沉船/暗礁等障碍物位置，验证了声呐三维测绘与避障感知算法的可行性。</p></div>
+<p>效果说明：节点成功启动，基于模拟声呐数据生成了三维海底地形，并清晰标注了水下沉船/暗礁等障碍物位置，验证了声呐三维测绘与避障感知算法的可行性。</p>
+<h2 id="vfh">声呐驱动的 VFH+ 反应式避障</h2>
+<p>上面的可视化节点只做静态测绘，不产生控制指令。以下模块补上「感知 → 决策 → 控制」闭环：扫描声呐探测到障碍后，用 VFH+（Vector Field Histogram）选出可通行的方向，并把速度指令发给 <code>/cmd_vel</code>。</p>
+<h3 id="_5">算法流程</h3>
+<ol>
+<li><strong>声呐扫描</strong>：以 72 束、360° 的水平扫描声呐在当前深度上对海床高度场与方块障碍物做射线求交，得到每束的回波距离（可配置量程、噪声与丢包率）。</li>
+<li><strong>极坐标障碍密度</strong>：回波按方位落入 72 个扇区，并按<strong>车辆半径 + 安全余量</strong>膨胀每束的角宽，使车辆挤不过去的窄缝仍被判为阻塞；密度随距离衰减（<code>(1 - d/d_max)²</code>）。</li>
+<li><strong>环形低通平滑</strong>：用 <code>[1,2,4,2,1]</code> 卷积核做循环卷积，消除单束噪声造成的尖峰。</li>
+<li><strong>谷底选择</strong>：取密度低于阈值的连续扇区作为候选谷底，选其中最接近目标方位的方向，并加入<strong>滞环</strong>（默认 15°）——只有另一条谷底明显更优时才切换，避免在两个相似缝隙间来回摆动。</li>
+<li><strong>降速</strong>：按<strong>所选方向上的净空</strong>（而非全局最近回波）线性降速，避免"侧方贴障但前方开阔"时误停。</li>
+</ol>
+<h3 id="_6">话题接口</h3>
+<table>
+<thead>
+<tr>
+<th>话题</th>
+<th>类型</th>
+<th>方向</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/sonar/scan</code></td>
+<td><code>sensor_msgs/LaserScan</code></td>
+<td>发布</td>
+<td>一次扫描（<code>frame_id: sonar_link</code>）</td>
+</tr>
+<tr>
+<td><code>/vfh/histogram</code></td>
+<td><code>std_msgs/Float32MultiArray</code></td>
+<td>发布</td>
+<td>平滑后的极坐标障碍密度</td>
+</tr>
+<tr>
+<td><code>/cmd_vel</code></td>
+<td><code>geometry_msgs/Twist</code></td>
+<td>发布</td>
+<td>避障速度指令</td>
+</tr>
+<tr>
+<td><code>/odom</code></td>
+<td><code>nav_msgs/Odometry</code></td>
+<td>发布</td>
+<td>仿真位姿（可替换为真实定位）</td>
+</tr>
+<tr>
+<td><code>/vfh/status</code></td>
+<td><code>std_msgs/String</code></td>
+<td>发布</td>
+<td>JSON：模式、目标距离、转向角、谷宽、净空</td>
+</tr>
+<tr>
+<td><code>/tf</code></td>
+<td><code>tf2_msgs/TFMessage</code></td>
+<td>发布</td>
+<td><code>map → base_link</code>（里程计）</td>
+</tr>
+<tr>
+<td><code>/tf_static</code></td>
+<td><code>tf2_msgs/TFMessage</code></td>
+<td>发布（一次性）</td>
+<td><code>base_link → sonar_link</code>，让扫描能在 RViz 里挂上</td>
+</tr>
+</tbody>
+</table>
+<p><code>LaserScan</code> 的 <code>angle_max</code> 按约定取 <code>angle_min + (N-1)·increment</code>（72 束、360° 时为 −π…175°），不是 <code>2π</code>。
+<code>/sonar/scan</code> 的 <code>frame_id</code> 是 <code>sonar_link</code>，因此节点在启动时补发一条 <code>base_link → sonar_link</code> 的静态变换，
+否则该坐标系在 TF 树里是孤点。</p>
+<p>节点内置运动积分，<strong>不依赖物理引擎即可独立演示</strong>；接入真实 ROV 时把 <code>/cmd_vel</code> 与 <code>/odom</code> 换成外部来源即可，算法部分无需改动。</p>
+<h3 id="_7">主要参数</h3>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>默认值</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>goal_x</code> / <code>goal_y</code></td>
+<td><code>20.0</code> / <code>0.0</code></td>
+<td>目标点</td>
+</tr>
+<tr>
+<td><code>depth</code></td>
+<td><code>6.0</code></td>
+<td>巡航深度（NED，向下为正）</td>
+</tr>
+<tr>
+<td><code>v_max</code></td>
+<td><code>1.2</code></td>
+<td>最大前向速度，m/s</td>
+</tr>
+<tr>
+<td><code>beams</code> / <code>fov_deg</code></td>
+<td><code>72</code> / <code>360</code></td>
+<td>声呐束数与视场</td>
+</tr>
+<tr>
+<td><code>max_range</code></td>
+<td><code>30.0</code></td>
+<td>声呐量程，m</td>
+</tr>
+<tr>
+<td><code>range_sigma</code> / <code>dropout</code></td>
+<td><code>0.02</code> / <code>0.0</code></td>
+<td>测距噪声标准差与丢包率</td>
+</tr>
+<tr>
+<td><code>robot_radius</code> / <code>safety_margin</code></td>
+<td><code>0.6</code> / <code>0.5</code></td>
+<td>膨胀半径，m</td>
+</tr>
+<tr>
+<td><code>threshold</code></td>
+<td><code>0.35</code></td>
+<td>谷底密度阈值</td>
+</tr>
+<tr>
+<td><code>min_valley_deg</code></td>
+<td><code>15.0</code></td>
+<td>谷底最小角宽，过窄视为不可通行</td>
+</tr>
+<tr>
+<td><code>hysteresis_deg</code></td>
+<td><code>15.0</code></td>
+<td>切换谷底时的滞环角</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_8">运行</h3>
+<div class="highlight"><pre><span></span><code>colcon<span class="w"> </span>build<span class="w"> </span>--packages-select<span class="w"> </span>underwater_sonar_mapping
+<span class="nb">source</span><span class="w"> </span>install/setup.bash
+ros2<span class="w"> </span>launch<span class="w"> </span>underwater_sonar_mapping<span class="w"> </span>sonar_vfh.launch.py
+</code></pre></div>
+<p>或在另一个终端直接运行节点并修改目标：</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>underwater_sonar_mapping<span class="w"> </span>sonar_vfh<span class="w"> </span>--ros-args<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-p<span class="w"> </span>goal_x:<span class="o">=</span><span class="m">25</span>.0<span class="w"> </span>-p<span class="w"> </span>goal_y:<span class="o">=</span><span class="m">6</span>.0<span class="w"> </span>-p<span class="w"> </span>v_max:<span class="o">=</span><span class="m">1</span>.5
+</code></pre></div>
+<p>在 RViz 中订阅 <code>/sonar/scan</code>（LaserScan）与 <code>/odom</code> 可看到回波与轨迹；用 <code>ros2 topic echo /vfh/status</code> 观察避障状态。</p>
+<h3 id="_9">验证结果</h3>
+<p>单元测试共 38 项，均不需要 ROS 或仿真器：</p>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>test/test_terrain_sonar.py<span class="w">   </span><span class="c1"># 15 项：海床、射线求交、声呐布局与噪声</span>
+python3<span class="w"> </span>test/test_vfh.py<span class="w">             </span><span class="c1"># 17 项：直方图、平滑、选向、滞环、降速</span>
+python3<span class="w"> </span>test/test_closed_loop.py<span class="w">     </span><span class="c1"># 6 项：闭环到点与避碰</span>
+</code></pre></div>
+<p>闭环仿真（三块障碍物，起点 <code>(0,0)</code>、目标 <code>(20,0)</code>）：17.5 s、175 个控制周期到达目标，终点 <code>(19.23, -0.17)</code>，全程未进入任何障碍物，与最近障碍的最小间隙约 0.7 m。</p>
+<blockquote>
+<p>说明：本模块的声呐是<strong>水平扫描</strong>模型（用于避障），与上方三维测绘节点的俯视测深几何不同，两者互补。</p>
+</blockquote></div>
 </div>
 </div><footer>
 <div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
