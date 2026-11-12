@@ -5,6 +5,7 @@ setup(
     packages=find_packages(),
     data_files=[
         ("share/line_following_pid", ["package.xml"]),
+        ("share/line_following_pid/launch", ["launch/main.launch.py"]),
         ("share/ament_index/resource_index/packages", ["resource/line_following_pid"]),
     ],
     install_requires=["pygame>=2.0"],
