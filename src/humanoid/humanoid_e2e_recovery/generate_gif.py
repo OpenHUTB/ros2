@@ -2,7 +2,8 @@
 generate_gif.py —— 端到端模块演示 gif（offscreen 渲染）
 ================================================================
 用最终端到端网络驱动，先空站再施加推力，录制 overview 视角的 gif。
-默认输出到本模块目录下的 demo_test.gif（与 README、PR 描述引用的文件名一致）。
+默认直接写到仓库的文档配图目录 docs/img/humanoid/e2e_recovery_demo.gif，
+不往包目录里再放一份副本（包内副本既不会被 data_files 安装，也与 docs 那份重复）。
 """
 from __future__ import annotations
 import os, sys, argparse
@@ -18,7 +19,9 @@ from humanoid_e2e_recovery.expert import expert_action
 
 MODEL = os.path.join(HERE, "models", "humanoid_camera.xml")
 WEIGHTS = os.path.join(HERE, "models_trained", "e2e_policy.npz")
-DEFAULT_OUT = os.path.join(HERE, "demo_test.gif")
+# 模块根 → src/humanoid/humanoid_e2e_recovery，向上三级即仓库根
+REPO = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
+DEFAULT_OUT = os.path.join(REPO, "docs", "img", "humanoid", "e2e_recovery_demo.gif")
 
 
 def generate(out_gif: str = DEFAULT_OUT, force: float = 20.0, direction_deg: float = 0.0,
@@ -79,7 +82,7 @@ def generate(out_gif: str = DEFAULT_OUT, force: float = 20.0, direction_deg: flo
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
     p.add_argument("--out", default=DEFAULT_OUT,
-                   help="输出路径，默认 demo_test.gif（与 README 引用一致）")
+                   help="输出路径，默认 docs/img/humanoid/e2e_recovery_demo.gif（README/PR 引用同一份）")
     p.add_argument("--force", type=float, default=20,
                    help="推力 N。2 s 起推 20N×40 步可站满；25N 起当前相位会失稳")
     p.add_argument("--direction", type=float, default=0)
