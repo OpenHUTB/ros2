@@ -2,12 +2,28 @@
 
 演示经典 Bug2 算法在 2D 平面上绕过圆形障碍到达目标。
 
-## 分层
+## 环境
 
-- `geometry.py`：点到线段距离、线段相交、障碍表面最近点。
-- `bug2.py`：状态机 GOAL_SEEKING / WALL_FOLLOWING / REACHED，记录 hit_point。
-- `main.py`：pygame 可视化，绿色起点、红色目标、灰色障碍、青色轨迹、橙色沿墙段。
+- Windows 11，Python 3.13.16，pygame 2.6.1
 
 ## 运行
 
 见包内 README。
+
+## 分层
+
+- geometry.py：点到线段距离、线段相交、障碍表面最近点。
+- bug2.py：状态机 GOAL_SEEKING / WALL_FOLLOWING / REACHED，记录 hit_point。
+- main.py：pygame 可视化，绿色起点、红色目标、灰色障碍、青色轨迹、橙色沿墙段。
+
+## 实测结果
+
+本地复跑：393 步抵达目标，终点距目标 12.18 px，途中触发沿墙跟随。
+
+## 限制
+
+- 纯 2D 几何演示，障碍统一为圆形。
+
+## 声明
+
+过程中借助大模型工具辅助代码编写、整理包目录结构与本描述排版，核心逻辑与操作、场景参数设定与实际运行调试为本人完成，作者对提交内容负责。
