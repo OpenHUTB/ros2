@@ -25,10 +25,11 @@ DATASET = os.path.join(HERE, "data", "e2e_dataset.npz")
 WEIGHTS = os.path.join(HERE, "models_trained", "e2e_policy.npz")
 
 STAND_SECONDS = 10.0     # 专家站姿判据：必须稳住 10 s（评审要求）
-# 端到端网络的闭环判据。取 3 s 是因为单帧图像不含速度信息，纯位置型控制
-# 在闭环上只能做到 3.5 s 左右（实测），10 s 是混合 30% 专家力矩才达到的。
-# 这个差异是架构性的，不是训练没收敛，依据见 README「闭环能力与架构限制」。
-E2E_STAND_SECONDS = 3.0
+# 端到端网络的闭环判据与专家一致，都是 10 s。
+# 单帧输入只能做到 3.53 s（diag/09：补 30% 专家力矩才站满），因为单帧里没有
+# 速度信息；改成双帧（t 与 t-0.102 s 并排，见 dataset.TEMPORAL_LAG_SEC）后
+# 网络能自己差分出倾倒方向，实测站满 20 s、50 N 推扰后仍站满。
+E2E_STAND_SECONDS = 10.0
 CTRL_DT = 0.002
 
 
@@ -58,7 +59,8 @@ def _nn_policy(predictor):
 
     def policy(sim, refresh):
         if refresh:
-            cache["u"] = predictor.predict_from_image(sim.render_front(gray=True))
+            cache["u"] = predictor.predict_from_image(
+                sim.render_front(gray=True), t=sim.data.time)
         return cache["u"]
     return policy
 
@@ -79,7 +81,7 @@ def run_check():
     print("=" * 70)
     print("  端到端视觉平衡控制 自检")
     print("    专家控制器判据：站姿须稳 %.0f s" % STAND_SECONDS)
-    print("    端到端网络判据：站姿须稳 %.0f s（单帧视觉的架构上限，见 README）" % E2E_STAND_SECONDS)
+    print("    端到端网络判据：站姿须稳 %.0f s（双帧时序，见 README）" % E2E_STAND_SECONDS)
     print("    全零权重必须判 FAIL（判别力检查）")
     print("=" * 70)
     ok = True
@@ -124,7 +126,14 @@ def run_check():
     # 真样本的前向结果，看**跨样本**变化与隐藏层存活率。
     if os.path.exists(DATASET):
         ds = np.load(DATASET)
+        # 双帧权重必须按同样的时间基线配对，否则维度对不上
         Xs = ds["X"][:3000].astype(np.float64)
+        if getattr(predictor, "lag_sec", 0.0) > 0 and "ep" in ds:
+            from humanoid_e2e_recovery.dataset import make_pairs
+            sample_dt = float(ds["sample_dt"]) if "sample_dt" in ds else 0.006
+            Xp, _, _ = make_pairs(Xs, ds["Y"][:3000].astype(np.float64),
+                                  ds["ep"][:3000], predictor.lag_sec, sample_dt)
+            Xs = Xp
         outs_ds = predictor.predict_vecs(Xs)
         per_dim = outs_ds.std(axis=0)
         cross = float(per_dim.max())
@@ -162,23 +171,36 @@ def run_check():
           f"(全零权重 {('%.2fs 即跌倒' % zfell) if zfell else '竟然也站满 %.0fs → 自检无判别力' % STAND_SECONDS})")
     shutil.rmtree(tmpdir, ignore_errors=True)
 
-    # 6. 端到端站立
-    # 判据按 E2E_STAND_SECONDS（3 s）计，而不是专家用的 10 s：单帧图像里没有
-    # 速度/角速度信息，网络只能做位置型控制，闭环上表现为缓慢漂移而非快速崩溃
-    # （实测零权重 1.31 s、当前权重 3.53 s、加上 30% 专家力矩可站满 10 s）。
-    # 详细数据与架构限制见 README「闭环能力与架构限制」。
+    # 6. 端到端站立（与专家同判据 10 s）
+    # 单帧权重只能到 3.53 s（diag/09 实测），双帧权重站满 20 s（diag/15 复核）。
+    # 两版权重都按这里的判据跑，谁没做到就 FAIL。
     sim.reset()
+    predictor.reset()
     fell, tilt = _run_episode(sim, _nn_policy(predictor), E2E_STAND_SECONDS)
-    check("端到端站姿 %.0fs（单帧架构实测上限）" % E2E_STAND_SECONDS, fell is None,
+    check("端到端站姿 %.0fs" % E2E_STAND_SECONDS, fell is None,
           f"({'跌倒于 %.2fs' % fell if fell else '站稳'}，最大倾角 {np.degrees(tilt):.1f}°)")
 
-    # 10 s 只作为报告项打印，不参与通过/失败判定
+    # 6b. 抗推：30 N 推 0.08 s 后必须恢复。双帧权重的推力上限实测在这里
+    # （30 N/40 步站住 6.8°；50 N/40 步 2.08 s 失稳，50 N/10 步可站住 4.4°），
+    # 50 N/40 步只作为报告项打印——它与专家控制器的能力还有差距，如实记录。
     sim.reset()
-    fell10, tilt10 = _run_episode(sim, _nn_policy(predictor), STAND_SECONDS)
-    print(f"  [报告] 端到端 10s 站姿: "
-          f"{('跌倒于 %.2fs' % fell10) if fell10 else '站稳'}，"
-          f"最大倾角 {np.degrees(tilt10):.1f}° —— 单帧视觉缺速度信息，"
-          f"闭环阻尼不足，非调参可解")
+    predictor.reset()
+    _run_episode(sim, _nn_policy(predictor), 4.0)
+    sim.apply_push((30, 0, 0), steps=40, target=DEFAULT_STAND_TARGET,
+                   balance=expert_action)
+    pfell, ptilt = _run_episode(sim, _nn_policy(predictor), 6.0)
+    check("端到端 30N 推扰后恢复", pfell is None,
+          f"({'跌倒于 %.2fs' % pfell if pfell else '站稳'}，最大倾角 {np.degrees(ptilt):.1f}°)")
+
+    sim.reset()
+    predictor.reset()
+    _run_episode(sim, _nn_policy(predictor), 4.0)
+    sim.apply_push((50, 0, 0), steps=40, target=DEFAULT_STAND_TARGET,
+                   balance=expert_action)
+    qfell, qtilt = _run_episode(sim, _nn_policy(predictor), 6.0)
+    print(f"  [报告] 端到端 50N(0.08s) 推扰: "
+          f"{('跌倒于 %.2fs' % qfell) if qfell else '站稳'}，"
+          f"最大倾角 {np.degrees(qtilt):.1f}° —— 超出网络推力上限，专家可恢复")
 
     sim.close()
     print("=" * 70)
@@ -210,7 +232,7 @@ def run_demo(force=50, direction_deg=0, seconds=STAND_SECONDS, gif_path=None):
     for i in range(steps):
         if i % 2 == 0:
             img = sim.render_front(gray=True)
-            u = predictor.predict_from_image(img)
+            u = predictor.predict_from_image(img, t=sim.data.time)
             if gif_path is not None and i % 6 == 0:
                 frames.append(sim.render_front(gray=False).astype(np.uint8))
         sim.step(target=DEFAULT_STAND_TARGET, torque_extra=u)

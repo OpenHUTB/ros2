@@ -97,6 +97,11 @@ def test_权重文件可加载且对样本有响应():
         pytest.skip("数据集不存在，无法做跨样本判别")
     ds = np.load(DATASET)
     Xs = ds["X"][:3000].astype(np.float64)
+    if getattr(p, "lag_sec", 0.0) > 0 and "ep" in ds:
+        from humanoid_e2e_recovery.dataset import make_pairs
+        sample_dt = float(ds["sample_dt"]) if "sample_dt" in ds else 0.006
+        Xs, _, _ = make_pairs(Xs, ds["Y"][:3000].astype(np.float64),
+                              ds["ep"][:3000], p.lag_sec, sample_dt)
     outs = p.predict_vecs(Xs)
     per_dim = outs.std(axis=0)
     assert per_dim.max() > 1e-3, (
@@ -127,7 +132,7 @@ def test_零权重被判为失稳():
     fell_at = None
     for i in range(int(10.0 / 0.002)):
         if i % 2 == 0:
-            u = p.predict_from_image(sim.render_front(gray=True))
+            u = p.predict_from_image(sim.render_front(gray=True), t=sim.data.time)
         sim.step(target=DEFAULT_STAND_TARGET, torque_extra=u)
         if sim.fallen():
             fell_at = sim.data.time

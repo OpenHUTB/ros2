@@ -16,6 +16,13 @@ from .expert import expert_action
 # 过小的下限会把恒定像素的浮点噪声放大成主要输入，实测 R² 从 0.98 掉到 0.30。
 X_STD_FLOOR = 0.02
 
+# 双帧时序输入的时间基线。0.102 s ≈ 17 个采样（采样间隔 record_every × 2 ms = 6 ms）。
+# 依据见 diag/15：6 ms 基线的差分几乎为 0（像素 std 0.00038），拿不到速度；
+# 100 ms 基线才能让"往哪边倒"变可见，闭环从 3.53 s 提到站满 20 s。
+TEMPORAL_LAG_SEC = 0.102
+
+CTRL_DT = 0.002
+
 # 执行器真实力矩量程（models/humanoid_camera.xml 中 motor 的 ctrlrange ±300）。
 TORQUE_LIMIT = 300.0
 
@@ -25,6 +32,14 @@ def _img_to_vec(img, size=16):
     bh, bw = h // size, w // size
     c = img[:bh * size, :bw * size]
     return c.reshape(size, bh, size, bw).mean(axis=(1, 3)).flatten().astype(np.float32)
+
+
+def make_pairs(X, Y, ep, lag_sec, sample_dt):
+    """按时间基线把单帧样本拼成双帧输入（只在同一回合内配对）。"""
+    lag = max(1, int(round(lag_sec / sample_dt)))
+    ok = np.asarray(ep[lag:]) == np.asarray(ep[:-lag])
+    idx = np.nonzero(ok)[0] + lag
+    return np.concatenate([X[idx - lag], X[idx]], axis=1), Y[idx], lag
 
 
 def collect(model_path, out_path, n_episodes=60, force_range=(40, 100),
@@ -40,6 +55,7 @@ def collect(model_path, out_path, n_episodes=60, force_range=(40, 100),
     rng = np.random.default_rng(seed)
     sim = E2ESim(model_path, kp=kp, kd=kd)
     X, Y = [], []
+    ep_id = []
     ep_kept = 0
     for ep in range(n_episodes):
         sim.reset()
@@ -50,6 +66,7 @@ def collect(model_path, out_path, n_episodes=60, force_range=(40, 100),
             # 出 219 N·m（专家此时是 0 N·m），0.79 s 就把机器人推翻。
             if record_warmup and k % record_every == 0:
                 X.append(_img_to_vec(sim.render_front(gray=True)))
+                ep_id.append(ep)
                 Y.append(np.clip(u0, -TORQUE_LIMIT, TORQUE_LIMIT).astype(np.float32))
             sim.step(target=DEFAULT_STAND_TARGET, torque_extra=u0)
             if sim.fallen():
@@ -64,6 +81,7 @@ def collect(model_path, out_path, n_episodes=60, force_range=(40, 100),
             u = expert_action(sim)
             if k % record_every == 0:
                 X.append(_img_to_vec(sim.render_front(gray=True)))
+                ep_id.append(ep)
                 # 标签必须落在执行器真实量程内。motor 的 ctrlrange 是 ±300 N·m，
                 # 专家在极端状态下会算出 ±3000 以上的数，MuJoCo 虽然会截断，
                 # 但若把未截断的值当回归目标，网络就会去拟合物理上不存在的
@@ -97,8 +115,10 @@ def collect(model_path, out_path, n_episodes=60, force_range=(40, 100),
     y_std = Y.std(axis=0)
     y_scale = np.where(y_std > 1e-6, y_std, 1.0)
     os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
-    np.savez(out_path, X=X, Y=Y, X_mean=X_mean, X_std=X_std,
-             Y_mean=Y_mean, Y_scale=y_scale)
+    # ep 记录每条样本属于第几回合：训练端构造双帧配对时不能跨回合拼接
+    np.savez(out_path, X=X, Y=Y, ep=np.asarray(ep_id, dtype=np.int32),
+             sample_dt=np.float64(record_every * CTRL_DT),
+             X_mean=X_mean, X_std=X_std, Y_mean=Y_mean, Y_scale=y_scale)
     sim.close()
     if verbose:
         print(f"[collect] 数据集: {out_path} | X={X.shape} Y={Y.shape} "
