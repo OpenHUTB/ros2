@@ -203,6 +203,7 @@ nav:
     - Gazebo 差速小车键盘控制: './ground/gazebo_diff_drive_teleop.md'
     - MuJoCo Locomotion 强化学习对比实验: './ground/rl_mujoco_locomotion.md'
     - 自动紧急制动（AEB）: './ground/carla_aeb_braking.md'
+    - 载重偏置下的制动距离与跑偏: './ground/brake_load_transfer.md'
     - 盲区监测（BSD）: './ground/carla_bsd_blind_spot.md'
     - 车道偏离预警（LDW）: './ground/carla_lane_departure_warning.md'
     - 弯道自适应限速（CSL）: './ground/carla_curve_speed_limit.md'
