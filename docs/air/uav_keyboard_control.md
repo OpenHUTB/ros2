@@ -214,6 +214,8 @@ CarlaAir 视口**内置**键盘操控（任务①的「仿真」部分），本�
 
 ### 7.2 运行步骤
 
+> 本节为 v0.1（ROS 1）历史实现步骤。v0.2（ROS 2）的正确流程请见第 3 节「三终端启动与桥接验证」。
+
 前置：按 [环境搭建与连接](../air/setup_and_connect.md) 配好虚拟机 ROS 环境；
 按 [桥接模块](../air/carlair_ros_bridge.md) 的 **2.1 节**在宿主机启动 CarlaAir 仿真器，
 等终端输出 `CarlaAir is ready.`（此时 `41451` 端口就绪）。

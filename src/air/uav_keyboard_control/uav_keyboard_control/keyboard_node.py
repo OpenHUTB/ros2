@@ -98,7 +98,7 @@ class KeyboardNode(Node):
         )
         self._pub = self.create_publisher(
             Twist, self.get_parameter("cmd_vel_topic").value, 10)
-        self._period = 1.0 / float(self.get_parameter("publish_hz").value)
+        self._period = 1.0 / max(float(self.get_parameter("publish_hz").value), 1.0)
 
     def publish_now(self, now: float) -> None:
         vx, vy, vz, wz = self.latch.current(now)
