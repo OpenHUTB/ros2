@@ -69,6 +69,7 @@ nav:
     - 人形机器人 2D 激光雷达 CNN 感知与避障: './humanoid/humanoid_lidar_nn_perception.md'
     - MuJoCo单足弹跳机器人简单仿真: './humanoid/mujoco_hopper_demo/index.md'
 - 肌肉骨骼人:
+    - 二连杆机械臂 OpenSim 建模与 PD 控制仿真: './two_link_arm_opensim_simulation.md'
     - 肌肉骨骼人基础: './musculoskeletal/musculoskeletal_basics.md'
 - 地面载具:
     - 手动控制: './set_up_and_connect_to_carla.md'
