@@ -24,7 +24,7 @@ class SimNode:
             rospy.get_param("~wind_y", 1.0),
             0.0,
         ], dtype=float)
-        self.sim = DeliverySim(SimConfig(wind=wind, substeps=2))
+        self.sim = DeliverySim(SimConfig(wind=wind, substeps=4))
         self.cmd = None
         self.release_requested = False
         self.state_pub = rospy.Publisher("/uav/state", Float64MultiArray, queue_size=1)

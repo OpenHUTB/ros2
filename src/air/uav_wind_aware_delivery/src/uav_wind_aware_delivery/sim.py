@@ -47,8 +47,8 @@ class DeliverySim:
         self.model_path = path
         self.model = mujoco.MjModel.from_xml_path(path)
         self.data = mujoco.MjData(self.model)
-        self.dt = float(self.cfg.dt)
         self.substeps = int(self.cfg.substeps)
+        self.dt = self.substeps * float(self.model.opt.timestep)
         self.time = 0.0
         self._cmd_force = np.zeros(3)
         self._cmd_torque = np.zeros(3)

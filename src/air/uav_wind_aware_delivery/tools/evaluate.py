@@ -15,7 +15,7 @@ from uav_wind_aware_delivery.sim import DeliverySim, SimConfig  # noqa: E402
 
 
 def run_episode(wind, compensate, seed=0):
-    sim = DeliverySim(SimConfig(wind=np.asarray(wind, dtype=float), substeps=2))
+    sim = DeliverySim(SimConfig(wind=np.asarray(wind, dtype=float), substeps=4))
     mission = DeliveryMission(
         MissionConfig(target=np.array([5.0, 2.0, 0.0]), compensate=compensate,
                       release_alt=3.0, hover_time=0.8),

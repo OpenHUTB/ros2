@@ -4,18 +4,18 @@
   "nn_compensation": {
     "episodes": 10,
     "success_rate": 1.0,
-    "mean_error_m": 0.2323,
-    "p90_error_m": 0.3233,
-    "mean_time_s": 12.13
+    "mean_error_m": 0.2674,
+    "p90_error_m": 0.3448,
+    "mean_time_s": 6.91
   },
   "no_compensation": {
     "episodes": 10,
     "success_rate": 0.0,
-    "mean_error_m": 1.0544,
-    "p90_error_m": 1.2933,
-    "mean_time_s": 11.74
+    "mean_error_m": 1.0532,
+    "p90_error_m": 1.3188,
+    "mean_time_s": 7.26
   },
-  "improvement_error_pct": 78.0,
+  "improvement_error_pct": 74.6,
   "rows": [
     {
       "seed": 0,
@@ -27,9 +27,9 @@
       "compensate": true,
       "landed": true,
       "released": true,
-      "error_m": 0.192,
+      "error_m": 0.2438,
       "success": true,
-      "time_s": 14.66,
+      "time_s": 9.62,
       "release_point": [
         4.395,
         1.276
@@ -49,9 +49,9 @@
       "compensate": false,
       "landed": true,
       "released": true,
-      "error_m": 1.1498,
+      "error_m": 1.1875,
       "success": false,
-      "time_s": 15.19,
+      "time_s": 9.79,
       "release_point": [
         5.0,
         2.0
@@ -71,9 +71,9 @@
       "compensate": true,
       "landed": true,
       "released": true,
-      "error_m": 0.1872,
+      "error_m": 0.3341,
       "success": true,
-      "time_s": 13.59,
+      "time_s": 5.78,
       "release_point": [
         4.788,
         1.455
@@ -93,9 +93,9 @@
       "compensate": false,
       "landed": true,
       "released": true,
-      "error_m": 0.9014,
+      "error_m": 0.8032,
       "success": false,
-      "time_s": 10.56,
+      "time_s": 8.65,
       "release_point": [
         5.0,
         2.0
@@ -115,9 +115,9 @@
       "compensate": true,
       "landed": true,
       "released": true,
-      "error_m": 0.2889,
+      "error_m": 0.3057,
       "success": true,
-      "time_s": 10.64,
+      "time_s": 5.86,
       "release_point": [
         4.381,
         2.665
@@ -137,9 +137,9 @@
       "compensate": false,
       "landed": true,
       "released": true,
-      "error_m": 1.1448,
+      "error_m": 1.1524,
       "success": false,
-      "time_s": 10.7,
+      "time_s": 5.8,
       "release_point": [
         5.0,
         2.0
@@ -159,9 +159,9 @@
       "compensate": true,
       "landed": true,
       "released": true,
-      "error_m": 0.234,
+      "error_m": 0.245,
       "success": true,
-      "time_s": 11.09,
+      "time_s": 6.15,
       "release_point": [
         5.533,
         1.546
@@ -181,9 +181,9 @@
       "compensate": false,
       "landed": true,
       "released": true,
-      "error_m": 0.8933,
+      "error_m": 0.9052,
       "success": false,
-      "time_s": 10.85,
+      "time_s": 5.88,
       "release_point": [
         5.0,
         2.0
@@ -203,9 +203,9 @@
       "compensate": true,
       "landed": true,
       "released": true,
-      "error_m": 0.1844,
+      "error_m": 0.2285,
       "success": true,
-      "time_s": 14.3,
+      "time_s": 9.12,
       "release_point": [
         4.377,
         1.6
@@ -225,9 +225,9 @@
       "compensate": false,
       "landed": true,
       "released": true,
-      "error_m": 0.9387,
+      "error_m": 0.9667,
       "success": false,
-      "time_s": 14.76,
+      "time_s": 9.26,
       "release_point": [
         5.0,
         2.0
@@ -247,9 +247,9 @@
       "compensate": true,
       "landed": true,
       "released": true,
-      "error_m": 0.2002,
+      "error_m": 0.2121,
       "success": true,
-      "time_s": 12.58,
+      "time_s": 7.7,
       "release_point": [
         5.163,
         1.414
@@ -269,9 +269,9 @@
       "compensate": false,
       "landed": true,
       "released": true,
-      "error_m": 0.8657,
+      "error_m": 0.8018,
       "success": false,
-      "time_s": 10.57,
+      "time_s": 7.92,
       "release_point": [
         5.0,
         2.0
@@ -291,9 +291,9 @@
       "compensate": true,
       "landed": true,
       "released": true,
-      "error_m": 0.1556,
+      "error_m": 0.1749,
       "success": true,
-      "time_s": 11.55,
+      "time_s": 6.23,
       "release_point": [
         6.061,
         2.789
@@ -313,9 +313,9 @@
       "compensate": false,
       "landed": true,
       "released": true,
-      "error_m": 1.4773,
+      "error_m": 1.4951,
       "success": false,
-      "time_s": 11.04,
+      "time_s": 5.97,
       "release_point": [
         5.0,
         2.0
@@ -335,9 +335,9 @@
       "compensate": true,
       "landed": true,
       "released": true,
-      "error_m": 0.2104,
+      "error_m": 0.2202,
       "success": true,
-      "time_s": 12.14,
+      "time_s": 7.2,
       "release_point": [
         5.318,
         1.393
@@ -357,9 +357,9 @@
       "compensate": false,
       "landed": true,
       "released": true,
-      "error_m": 0.8581,
+      "error_m": 0.8776,
       "success": false,
-      "time_s": 12.66,
+      "time_s": 7.73,
       "release_point": [
         5.0,
         2.0
@@ -379,9 +379,9 @@
       "compensate": true,
       "landed": true,
       "released": true,
-      "error_m": 0.3501,
+      "error_m": 0.367,
       "success": true,
-      "time_s": 10.3,
+      "time_s": 5.71,
       "release_point": [
         4.295,
         1.93
@@ -401,9 +401,9 @@
       "compensate": false,
       "landed": true,
       "released": true,
-      "error_m": 1.0417,
+      "error_m": 1.0432,
       "success": false,
-      "time_s": 10.54,
+      "time_s": 5.73,
       "release_point": [
         5.0,
         2.0
@@ -423,9 +423,9 @@
       "compensate": true,
       "landed": true,
       "released": true,
-      "error_m": 0.3203,
+      "error_m": 0.3423,
       "success": true,
-      "time_s": 10.46,
+      "time_s": 5.77,
       "release_point": [
         4.244,
         2.648
@@ -445,9 +445,9 @@
       "compensate": false,
       "landed": true,
       "released": true,
-      "error_m": 1.2729,
+      "error_m": 1.2992,
       "success": false,
-      "time_s": 10.56,
+      "time_s": 5.82,
       "release_point": [
         5.0,
         2.0

@@ -18,7 +18,7 @@ def main():
     wy = float(sys.argv[2]) if len(sys.argv) > 2 else 1.0
     comp = (sys.argv[3] != "0") if len(sys.argv) > 3 else True
     wind = np.array([wx, wy, 0.0])
-    sim = DeliverySim(SimConfig(wind=wind, substeps=2))
+    sim = DeliverySim(SimConfig(wind=wind, substeps=4))
     mission = DeliveryMission(
         MissionConfig(target=np.array([5.0, 2.0, 0.0]), compensate=comp,
                       release_alt=3.0, hover_time=0.8),

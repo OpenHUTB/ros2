@@ -24,7 +24,7 @@ from uav_wind_aware_delivery.state import State  # noqa: E402
 class TestCore(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.sim = DeliverySim(SimConfig(wind=np.zeros(3), substeps=2))
+        cls.sim = DeliverySim(SimConfig(wind=np.zeros(3), substeps=4))
         cls.ctrl = GeometricController()
         cls.model_path = os.path.join(ROOT, "models", "impact_mlp.npz")
 
@@ -37,7 +37,7 @@ class TestCore(unittest.TestCase):
         self.assertTrue(np.allclose(quat_to_euler(np.array([1.0, 0, 0, 0])), 0.0))
 
     def test_03_hover_stable(self):
-        sim = DeliverySim(SimConfig(wind=np.zeros(3), substeps=2))
+        sim = DeliverySim(SimConfig(wind=np.zeros(3), substeps=4))
         ctrl = GeometricController()
         sp = np.array([0.0, 0.0, 1.8])
         for _ in range(300):
@@ -45,7 +45,7 @@ class TestCore(unittest.TestCase):
         self.assertLess(float(np.linalg.norm(sim.state().pos - sp)), 0.10)
 
     def test_04_wind_hold(self):
-        sim = DeliverySim(SimConfig(wind=np.array([3.0, -1.5, 0.0]), substeps=2))
+        sim = DeliverySim(SimConfig(wind=np.array([3.0, -1.5, 0.0]), substeps=4))
         ctrl = GeometricController()
         sp = np.array([0.0, 0.0, 2.0])
         for _ in range(500):
@@ -53,14 +53,14 @@ class TestCore(unittest.TestCase):
         self.assertLess(float(np.linalg.norm(sim.state().pos[:2] - sp[:2])), 0.20)
 
     def test_05_release_once(self):
-        sim = DeliverySim(SimConfig(wind=np.zeros(3), substeps=2))
+        sim = DeliverySim(SimConfig(wind=np.zeros(3), substeps=4))
         self.assertFalse(sim.released)
         self.assertTrue(sim.release())
         self.assertTrue(sim.released)
         self.assertFalse(sim.release())
 
     def test_06_payload_drop(self):
-        sim = DeliverySim(SimConfig(wind=np.zeros(3), substeps=2))
+        sim = DeliverySim(SimConfig(wind=np.zeros(3), substeps=4))
         sim.release()
         for _ in range(250):
             sim.step(sim.hover_force(), np.zeros(3))
@@ -69,7 +69,7 @@ class TestCore(unittest.TestCase):
         self.assertTrue(st.landed)
 
     def test_07_mass_drop(self):
-        sim = DeliverySim(SimConfig(wind=np.zeros(3), substeps=2))
+        sim = DeliverySim(SimConfig(wind=np.zeros(3), substeps=4))
         before = sim.mass
         sim.release()
         self.assertAlmostEqual(before - sim.mass, 0.20, places=3)

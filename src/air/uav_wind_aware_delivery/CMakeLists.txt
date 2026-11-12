@@ -24,7 +24,7 @@ install(FILES scripts/nodes/_bootstrap.py
         DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 # 运行期 Python 包：安装空间下由 ROS 的 PYTHONPATH 提供 import。
-install(DIRECTORY src/uav_wind_aware_delivery
+install(DIRECTORY src/uav_wind_aware_delivery/
         DESTINATION ${CATKIN_PACKAGE_PYTHON_DESTINATION}
         PATTERN "__pycache__" EXCLUDE)
 
