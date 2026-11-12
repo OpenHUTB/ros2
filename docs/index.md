@@ -621,6 +621,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [HoloOcean ROS2 运行时容器](./water/docker_runtime.md) —— 用 `build_container.sh` 构建运行时镜像
 
 * [声呐数据滤波初步验证](./water/rov_sonar_filter.md)
+* [水下机器人 MuJoCo 仿真、声呐 SLAM 与纯 NumPy 神经网络导航](./water/rov_numpy_nn_slam.md) —— 6-DOF ROV 物理仿真、键盘遥控、声呐建图定位、A* 导航与端到端 CNN
 
 如果对文档中的任何问题可以在 [本文档的源码仓库](https://github.com/OpenHUTB/ros2) 中的 [问题](https://github.com/OpenHUTB/ros2/issues) 页面讨论或者提交 [拉取请求](https://github.com/OpenHUTB/.github/blob/master/CONTRIBUTING.md) 直接修改文档。
 
