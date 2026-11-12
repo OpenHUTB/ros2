@@ -31,6 +31,7 @@ title: 主页
   - [地面载具](#ground_vehicle)
   - [空域载具](#air_vehicle)
   - [水域载具](#water_vehicle)
+  - [机械臂操作](#manipulation)
 
 ---
 
@@ -154,6 +155,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [生成对象](./ground/carla_spawn_objects.md)
 * [地面载具物理仿真与键盘运动控制](./ground/carla_keyboard_control.md)
 * [动态障碍物避让：激光雷达帧间差分与神经网络时机决策](./ground/dyn_avoid_nn.md) —— 两个往复扫动的障碍，专家用前向仿真决定过线时机，行为克隆 MLP 仅凭两帧雷达推断运动，20 回合成功率 90% / 75%
+* [电机温度时序预测与误差评估](./ground/mujoco_motor_temperature_predictor.md)
 * [CARLA+YOLOv8 目标检测感知与减速避障](./ground/carla_yolo_avoidance.md)
 * [阿克曼控制](./ground/ackermann_control.md)
 * [车道线检测（前视视觉）](./ground/carla_lane_keeping/lane_detection.md)
@@ -227,6 +229,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [MuJoCo 两轮自平衡小车](./ground/mujoco_balance_car.md)
 * [MuJoCo 差速小车电机温升模型](./ground/mujoco_motor_thermal_model.md)
 * [MuJoCo 地面差速小车侧倾/翻车风险预测与主动限速](./ground/mujoco_car_rollover_guard.md)
+* [ROS 2 电机温度保护节点](./ground/mujoco_motor_thermal_guard.md)
 * [MuJoCo 地面差速小车单侧驱动失效检测与差速补偿](./ground/mujoco_car_drive_fault.md)
 * [MuJoCo 四轮独立悬架越野小车仿真](./ground/mujoco_offroad_suspension.md)
 * [2D 小车目标追踪仿真](./ground/car_2d_target_tracker.md)
@@ -467,6 +470,8 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [无人机桨故障健康度估计](./air/uav_rotor_fault_detector_nn.md) —— 用机载 IMU 与控制器指令（13 维特征）经 1D-CNN+GRU 实时回归四桨剩余推力权限，单桨完全失效 0.10 s 检出、误报率 0，同时提供 ROS2 节点与在线估计接口
 * [桨故障下的端到端推力策略](./air/uav_fault_e2e_thrust_policy.md) —— 前视深度图 32×32 + 16 维本体量（含四桨健康度与三轴角速率）直接输出四个桨的归一化推力，用 DAgger 从几何控制器蒸馏；healthy/t1e0.3–0.5 工况下约 1/3 成功，诚实记录了"端到端推力输出对回归精度过于敏感"这一限制
 
+* [无人机桨故障下的神经容错控制](./air/uav_neural_fault_tolerant_control.md) —— 几何控制器给出期望合推力与力矩，加权最小二乘按健康度重新分配到四桨（桨彻底失效时主动放弃偏航），再用 5252 参数的 MLP 学分配残差；12 次对比飞行里把跟踪误差降到 0.188 m（相对加权分配降 29%）而生存率不变
+
 * [无人机编队飞行](./air/uav_formation_flight.md) —— 长机按航点巡航、僚机保持队形（一字/纵队/三角可动态切换），三架共用一条 AirSim RPC，依次起飞、低空展开后进入任务
 * [移动地面目标的后方等距跟随](./air/uav_moving_target_follow.md) —— 解析截获预测 + standoff 参考生成 + 偏移方向限速，MuJoCo 真飞跟随误差 0.1~4.6 m
 * [神经安全过滤器](./air/uav_neural_safety_filter.md)
@@ -523,6 +528,8 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 
 * [AirSim 无人机 IMU 速度估计（MLP）](./air/uav_airsim_imu_velocity_estimator.md) —— IMU 5 帧 30 维进，单隐层 MLP 出速度大小，验证 R² 0.453、实飞 MAE 1.32 m/s
 * [倾转旋翼过渡走廊与倾转角调度](./air/uav_tiltrotor_transition_corridor/index.md) —— 平飞平衡方程 + 功率/前进比双约束二分求走廊，按走廊调度倾转角并做掉高保护
+
+* [AirSim 无人机 IMU 姿态估计（MLP）](./air/uav_airsim_attitude_estimator.md) —— IMU 5 帧 30 维进单隐层 MLP 回归 roll/pitch，平均 MAE 0.9°
 
 ## 6. 水域载具  <span id='water_vehicle'></span>
 
@@ -599,6 +606,10 @@ ___
 
 * [倒立摆平衡小车 (cart-pole, LQR 最优控制)](./classical_control/cartpole_balance.md) —— 用 LQR 让倒立摆从倾斜被拉回竖直保持不倒,演示 ROS 发布/订阅闭环与最优控制
 
+
+## 8. 机械臂操作 <span id='manipulation'></span>
+
+* [MuJoCo 单臂抓取与 π0 推理接口复现（CPU 演示）](./manipulation/pi0_mujoco_grasp.md) —— 基于 MuJoCo 的单臂抓取/放置仿真，含 π0 观测→动作块接口（CPU 策略替身）
 
 ## 参考文献
 * [MuJoCo 失落公园无人机端到端视觉转向](./air/mujoco_abandoned_park_uav_visual_steering.md)
