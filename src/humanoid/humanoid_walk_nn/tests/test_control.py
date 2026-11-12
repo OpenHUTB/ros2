@@ -136,7 +136,8 @@ def test_fall_recovery() -> None:
     print("[recovery] fall detected -> commanded standstill for 0.8 s OK")
 
 
-def test_mission_scene(name: str, max_time: float = 150.0) -> dict:
+def run_mission_scene(name: str, max_time: float = 150.0) -> dict:
+    """跑一条 scene 的完整任务；辅助函数（无 test_ 前缀，避免被 pytest 收集）。"""
     scene = get_scene(name)
     sim = HumanoidSim(name, seed=C.DEFAULT_SEED, noise=True)
     mission = MissionController(scene)
@@ -204,7 +205,7 @@ def main() -> int:
     test_safety_filter()
     test_balance_limits()
     test_fall_recovery()
-    results = [test_mission_scene(name) for name in C.SCENES]
+    results = [run_mission_scene(name) for name in C.SCENES]
     print("[mission] summary: reached %d/%d, collisions %d, falls %d, "
           "obstacle stops %d, cart stops %d, recoveries %d"
           % (sum(1 for r in results if r["reached"] is not None), len(results),

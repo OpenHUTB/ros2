@@ -39,7 +39,7 @@ humanoid_walk_nn/
 
 - Ubuntu 20.04.6 LTS + ROS Noetic（`/opt/ros/noetic`）
 - Python ≥ 3.8（项目私有 venv；仅需 NumPy，无 GPU、无 MuJoCo/CARLA 依赖）
-- 依赖：`numpy`、`Pillow`、`PyYAML`、`rospkg`（见 `requirements.txt`）
+- 依赖：`numpy`、`Pillow`、`opencv-python`、`PyYAML`（见 `requirements.txt`；`rospkg` 由 ROS Noetic 提供）
 
 ## 快速开始
 
