@@ -446,6 +446,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [AirSim ROS 2 Humble 最小桥接](./air/airsim_ros2_bringup.md)
 * [AirSim ROS 2 Humble GNSS 桥接](./air/airsim_ros2_gnss.md)
 * [AirSim ROS 2 Humble 磁力计桥接](./air/airsim_ros2_magnetometer.md)
+* [AirSim ROS 2 Humble 气压计桥接](./air/airsim_ros2_barometer.md)
 * [无人机 LiDAR 地面/障碍分割](./air/uav_lidar_ground_filter.md)
 * [无人机屋顶降落](./air/rooftop_landing.md) —— 用机载 LiDAR 检测屋顶平面，取轮廓的最大内切圆圆心作为降落点，自主飞抵其上方后垂直降落
 * [无人机屋顶降落（学习型落点选择）](./air/rooftop_landing_nn.md) —— 用点云高度图 + 小 CNN 直接回归屋顶落点；凹形屋顶（U/L/天井）与稀疏点云下比凸包最大内切圆更稳，附三组消融对比
