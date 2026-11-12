@@ -9,6 +9,11 @@ if ! command -v python3 >/dev/null 2>&1; then
   exit 1
 fi
 
+if ! python3 -c 'import sys; raise SystemExit(sys.version_info < (3, 8))' >/dev/null 2>&1; then
+  echo "Python 3.8 or newer is required." >&2
+  exit 1
+fi
+
 if ! python3 -c "import ensurepip" >/dev/null 2>&1; then
   if [[ "${EUID}" -eq 0 ]]; then
     APT_PREFIX=()

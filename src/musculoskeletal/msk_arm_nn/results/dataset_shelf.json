@@ -1,0 +1,40 @@
+{
+  "action_counts": {
+    "0": 30,
+    "1": 7,
+    "2": 2,
+    "3": 0,
+    "4": 0,
+    "5": 0,
+    "6": 0,
+    "7": 75
+  },
+  "cmd_shape": [
+    114,
+    4
+  ],
+  "collisions": 0,
+  "depth_shape": [
+    114,
+    32,
+    32
+  ],
+  "episode_success_rate": 1.0,
+  "episodes": 6,
+  "expert_source": "geometric_expert",
+  "feature_shape": [
+    114,
+    28
+  ],
+  "label_mean": [
+    0.3774,
+    0.1315,
+    0.0468,
+    0.5411
+  ],
+  "sample_hz": 20.0,
+  "samples": 114,
+  "scene": "shelf",
+  "seconds_wall": 2.3,
+  "seed": 20261111
+}

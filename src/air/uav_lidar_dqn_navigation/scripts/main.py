@@ -8,9 +8,10 @@ uav_lidar_dqn_navigation 统一入口
     python3 main.py --mode bridge       # 只启动 AirSim 桥接
     python3 main.py --mode scan         # 雷达扫描发布（建图感知层）
     python3 main.py --mode train        # 任务 2 DQN 策略训练
+    python3 main.py --mode dqn          # 任务 2 DQN 导航部署
 
-本阶段实现桥接、遥控、雷达感知与 DQN 训练；DQN 部署、建图与端到端控制
-在后续 PR 中按层加入，并同步扩充这里的模式表。
+本阶段实现桥接、遥控、雷达感知、DQN 训练与部署；建图由 launch 组合多个节点，
+端到端控制在后续 PR 中加入，并同步扩充这里的模式表。
 """
 
 import argparse
@@ -53,11 +54,17 @@ def run_train():
     train_dqn_nav.main()
 
 
+def run_dqn():
+    from dqn_nav_node import DQNNavNode
+    DQNNavNode().run()
+
+
 MODES = {
     'bridge': run_bridge,
     'teleop': run_teleop,
     'scan': run_scan,
     'train': run_train,
+    'dqn': run_dqn,
 }
 
 

@@ -35,6 +35,8 @@ class EKFNode(Node):
         self.declare_parameter('sigma_depth', 0.02)
         self.declare_parameter('sigma_att', 0.01)
         self.declare_parameter('init_delay', 0.1)
+        self.declare_parameter('max_dvl_jump', 0.0)
+        self.declare_parameter('max_dvl_speed', 0.0)
         self.sigma_dvl = float(self.get_parameter('sigma_dvl').value)
         self.sigma_depth = float(self.get_parameter('sigma_depth').value)
         self.sigma_att = float(self.get_parameter('sigma_att').value)
@@ -70,7 +72,11 @@ class EKFNode(Node):
                                      msg.twist.linear.y,
                                      msg.twist.linear.z])
         if self.ekf is not None and self.initialized_dt:
+            rejected_before = self.ekf.dvl_rejected
             self.ekf.update_dvl(self.pending_dvl, sigma=self.sigma_dvl)
+            if self.ekf.dvl_rejected != rejected_before:
+                self.get_logger().warn(
+                    'DVL 野值被门限拒绝 (累计 %d 次)' % self.ekf.dvl_rejected)
 
     def on_imu(self, msg: Imu):
         stamp = (msg.header.stamp.sec, msg.header.stamp.nanosec)
@@ -96,6 +102,8 @@ class EKFNode(Node):
                 p0, v0, q,
                 sigma_acc=float(self.get_parameter('sigma_acc').value),
                 sigma_gyro=float(self.get_parameter('sigma_gyro').value),
+                max_dvl_jump=float(self.get_parameter('max_dvl_jump').value),
+                max_dvl_speed=float(self.get_parameter('max_dvl_speed').value),
             )
             self.dr = SpaceState(p0, v0, q)
             self.last_stamp = stamp
