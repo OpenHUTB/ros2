@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>mujoco_hopper_slip_control</name>
+  <version>1.0.0</version>
+  <description>MuJoCo 单足弹跳机器人：SLIP 弹簧-质量模型 + Raibert 落脚点 + 起飞速度能量伺服，含定高/抗扰/刚度扫描三项实验</description>
+  <maintainer email="jerrytsts@users.noreply.github.com">jerrytsts</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+
+  <!-- 运行依赖：
+       - numpy 走系统包（rosdep 可解析）
+       - MuJoCo 在 Ubuntu 22.04 没有 apt 包，用 pip 装到用户目录，
+         命令见 requirements.txt 与 README「安装与运行」。
+         因此这里不写 mujoco 的 exec_depend，避免 rosdep 去找不存在的包。
+       注意：XML 注释里不能出现连续两个减号，pip 的用户安装选项不要写在这里。 -->
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>ros2launch</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

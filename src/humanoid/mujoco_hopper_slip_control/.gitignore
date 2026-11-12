@@ -1,0 +1,6 @@
+# 生成物：实验结果、视频、缓存
+results/
+*.mp4
+__pycache__/
+*.pyc
+.venv/
