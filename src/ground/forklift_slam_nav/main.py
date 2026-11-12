@@ -1,4 +1,4 @@
-from forklift_slam_nav.simulator import main
+from forklift_slam_nav.main import main
 
 
 if __name__ == '__main__':

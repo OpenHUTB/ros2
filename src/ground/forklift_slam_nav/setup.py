@@ -8,6 +8,6 @@ setup(name=package_name, version='0.1.0', packages=[package_name],
                   ('share/' + package_name + '/launch', glob('launch/*.launch.py')),
                   ('share/' + package_name + '/config', glob('config/*.yaml')),
                   ('share/' + package_name + '/worlds', glob('worlds/*.xml'))],
-      install_requires=['setuptools', 'numpy>=1.23', 'mujoco==3.12.0'], zip_safe=True,
+      install_requires=['setuptools', 'numpy>=1.24', 'mujoco==3.12.0'], zip_safe=False,
       tests_require=['pytest'],
-      entry_points={'console_scripts': ['main = forklift_slam_nav.simulator:main', 'mujoco_robot = forklift_slam_nav.simulator:main']})
+      entry_points={'console_scripts': ['main = forklift_slam_nav.main:main', 'mujoco_robot = forklift_slam_nav.simulator:main']})

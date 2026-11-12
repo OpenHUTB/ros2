@@ -49,4 +49,8 @@ Nav2 会通过 `/cmd_vel` 控制底盘；局部代价地图使用 `/scan` 标记
 
 规范启动文件为 `launch/main.launch.py`（包含原 `launch/bringup.launch.py`，原命令仍可使用），通过 `ros2 launch forklift_slam_nav main.launch.py` 调用。仿真可执行入口 `mujoco_robot` 对应 `forklift_slam_nav.simulator:main`。`odom -> base_link` 的高度为 0.22 m；`base_link -> laser` 的相对高度为 0.04 m，激光在模型中的绝对高度为 0.26 m。
 
-规范 Python 入口为 `main.py`，调用 `forklift_slam_nav.simulator:main`；安装后可用 `ros2 run forklift_slam_nav main` 启动仿真节点，原 `mujoco_robot` 可执行入口继续兼容。
+源码根目录的 `main.py` 调用安装后的具名模块 `forklift_slam_nav.main`，该模块统一转发至仿真节点；安装后可用 `ros2 run forklift_slam_nav main` 启动仿真节点，原 `mujoco_robot` 可执行入口继续兼容。
+
+## 运行环境与复现条件
+
+全栈运行环境为 Ubuntu 22.04、ROS 2 Humble、MuJoCo 3.12.0 和 NumPy 1.24 或更新版本。导航镜像依赖先行构建的 `mujoco-forklift-pallet-docking:latest` 基础镜像。启动统一 launch 后，需等待 SLAM 发布在线地图、地图覆盖目标区域且 Nav2 导航服务就绪，再发送地图坐标系下的 `(0, 2)` 目标。地图 157×156 与目标返回 `SUCCEEDED` 为该容器环境的一次运行记录；地图尺寸随实际观测范围变化。
