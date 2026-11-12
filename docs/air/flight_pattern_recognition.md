@@ -98,7 +98,7 @@ python main.py prepare                     # 首次运行：解压语料、校�
 bash main.sh demo "$PWD/data/final_raw/episode_300.csv;$PWD/data/final_raw/episode_302.csv"
 ```
 
-`main.sh demo` 走 `ros2 launch`，起两个节点：`pattern_replay`（按时间戳回放）与 `pattern_recognizer`（识别）。看板是独立进程，另开一个终端：
+`main.sh demo` 走 `ros2 launch`，起两个可执行文件：`pattern_replay`（节点名 `flight_pattern_replay`，按时间戳回放）与 `pattern_recognizer`（节点名 `flight_pattern_recognizer`，负责识别）。看板是独立进程，另开一个终端：
 
 ```bash
 python main.py dashboard
@@ -382,7 +382,7 @@ flowchart TD
 | `mlp_position_only_42` | 0.3714 | 0.3173 | 0.300 | 0.6095 |
 | 最近质心基线（非神经网络） | 0.7571 | 0.7451 | — | 0.9429 |
 
-推理耗时（单窗口，CPU）：MLP 中位数约 **0.07 ms**（p95 0.14–0.32 ms），GRU 约 **1.9 ms**（p95 2.6–3.1 ms）——相差约 **28 倍**，源于 GRU 要逐步展开 61 个时间步。上面是 3 轮 × 300 次重复测量的区间；同一模型跨轮次可差 0.05 ms 以上，所以比单点数值更有意义的是量级：MLP 始终在亚毫秒级，GRU 始终在 2 ms 级。
+推理耗时（单窗口，CPU，取自 `results/final/summary.json` 的 `inference_median_ms` / `inference_p95_ms`，可重跑 `evaluate.py` 复核）：MLP 中位数 **0.021 ms**（p95 0.029 ms），GRU **0.662 ms**（p95 1.140 ms）——相差约 **32 倍**，源于 GRU 要逐步展开 61 个时间步。量级上 MLP 在亚毫秒级、GRU 在 0.7 ms 级，两者都远低于 20 Hz 记录频率的 50 ms 预算。
 
 final 集上的 Macro-F1 与准确率几乎相同（`mlp_44`：0.9777 与 0.9778），因为五类窗口数严格相等（各 63 个），宏平均与微平均只在边界效应上有差别。
 
@@ -469,11 +469,11 @@ $$
 | `/uav/pattern/status` | `std_msgs/String` | 节点状态：`collecting_7_seconds_of_history` / `recognizing` / `replay_complete` / `no_data_history_reset` |
 | `/uav/pattern/replay_status` | `std_msgs/String` | 回放结束通知，用于触发关停 |
 
-| 节点 | 可执行文件 | 职责 |
+| 节点名 | 可执行文件 | 职责 |
 |---|---|---|
-| `pattern_replay` | `pattern_replay` | 按记录时间戳回放 CSV，可设 `speed` 与 `startup_delay` |
-| `pattern_recognizer` | `pattern_recognizer` | 维护窗口、推理、防抖、发布事件与预测 |
-| `flight_pattern_dashboard` | `topic_dashboard` | 订阅四个话题实时绘图 |
+| `flight_pattern_replay` | `pattern_replay` | 按记录时间戳回放 CSV，可设 `speed` 与 `startup_delay` |
+| `flight_pattern_recognizer` | `pattern_recognizer` | 维护窗口、推理、防抖、发布事件与预测 |
+| `flight_pattern_dashboard` | `pattern_dashboard` | 订阅四个话题实时绘图 |
 
 启动：
 
