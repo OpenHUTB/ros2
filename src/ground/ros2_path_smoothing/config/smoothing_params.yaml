@@ -1,0 +1,6 @@
+﻿path_smoothing:
+  ros__parameters:
+    input_topic: /plan
+    output_topic: /plan_smoothed
+    map_topic: /map
+    min_clearance: 0.1

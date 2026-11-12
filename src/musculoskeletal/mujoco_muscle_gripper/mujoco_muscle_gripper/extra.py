@@ -5,7 +5,8 @@ from __future__ import annotations
 import mujoco
 import numpy as np
 
-from .core import DT, SPRING, HillMuscle, gripper_xml, muscle_force
+from .core import DT, HillMuscle, gripper_xml, muscle_force
+from .runs import _finger_contact
 
 LIFT_TARGET = 0.10
 CLOSE_T = 1.5
@@ -21,37 +22,66 @@ def _fresh(friction=1.5, obj_mass=None):
     return m, d
 
 
-def _grip_force_estimate(muscle, q, qd):
-    """准静态估计：手指受力平衡时，接触法向力 = 肌肉力 − 弹簧回位力。"""
-    return muscle_force(muscle, q, qd) - SPRING * q
+def _force_pi_step(
+    target_force,
+    measured_force,
+    integral,
+    kp=0.025,
+    ki=0.30,
+):
+    """执行一步带条件抗积分饱和的夹持力 PI 控制。"""
+    error = target_force - measured_force
+    proposed = integral + ki * error * DT
+    raw_u = 0.30 + kp * error + proposed
+    saturated_high = raw_u > 1.0 and error > 0.0
+    saturated_low = raw_u < 0.0 and error < 0.0
+    if not (saturated_high or saturated_low):
+        integral = proposed
+    activation = float(np.clip(0.30 + kp * error + integral, 0.0, 1.0))
+    return activation, integral
 
 
 def run_g5(targets=(2.0, 4.0, 8.0)):
-    """G5 抓持力闭环：PI 调激活，跟踪目标夹持力。"""
+    """G5 双指夹持力闭环：PI 跟踪真实接触法向力合计。
+
+    与 G1 使用相同的 mj_contactForce 口径。单指肌力减弹簧力是
+    准静态单指估计，既遗漏另一指，也在加速阶段混入惯性和阻尼；
+    不能作为双指总夹持力传感器使用。
+    """
     rows = []
     for target in targets:
         m, d = _fresh()
         dfl = m.joint("flj").dofadr[0]
-        mus = HillMuscle()
+        dfr = m.joint("frj").dofadr[0]
+        mus_l, mus_r = HillMuscle(), HillMuscle()
         u = 0.30
-        ki = 0.6
+        kp, ki, integral = 0.025, 0.30, 0.0
         hist = []
         t90 = None
+        contact_points, measured_force = _finger_contact(m, d)
 
         for i in range(int(3.0 / DT)):
             t = i * DT
             q = float(d.qpos[m.joint("flj").qposadr[0]])
             v = float(d.qvel[dfl])
-            f_est = _grip_force_estimate(mus, q, v)
-            u = float(np.clip(u + ki * (target - f_est) * DT, 0.0, 1.0))
-            mus.update_activation(u, DT)
+            # 上一拍步进后的接触力用于本拍反馈；首拍使用初始化测量。
+            u, integral = _force_pi_step(
+                target,
+                measured_force,
+                integral,
+                kp=kp,
+                ki=ki,
+            )
+            mus_l.update_activation(u, DT)
+            mus_r.update_activation(u, DT)
             qr = float(d.qpos[m.joint("frj").qposadr[0]])
-            vr = float(d.qvel[m.joint("frj").dofadr[0]])
-            d.qfrc_applied[dfl] = muscle_force(mus, q, v)
-            d.qfrc_applied[m.joint("frj").dofadr[0]] = muscle_force(mus, qr, vr)
+            vr = float(d.qvel[dfr])
+            d.qfrc_applied[dfl] = muscle_force(mus_l, q, v)
+            d.qfrc_applied[dfr] = muscle_force(mus_r, qr, vr)
             mujoco.mj_step(m, d)
-            hist.append(f_est)
-            if t90 is None and f_est >= 0.9 * target:
+            contact_points, measured_force = _finger_contact(m, d)
+            hist.append(measured_force)
+            if t90 is None and measured_force >= 0.9 * target:
                 t90 = t
 
         steady = float(np.mean(hist[-int(0.5 / DT):]))
@@ -61,6 +91,8 @@ def run_g5(targets=(2.0, 4.0, 8.0)):
             "steady_err_n": steady - target,
             "rise_time_s": t90 if t90 is not None else -1.0,
             "final_activation": u,
+            "contact_points": contact_points,
+            "force_source": "mj_contactForce_bilateral_sum",
         })
     return {"levels": rows}
 

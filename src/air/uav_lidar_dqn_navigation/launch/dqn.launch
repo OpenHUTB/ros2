@@ -25,6 +25,6 @@
   <!-- 目标点话题，便于演示时动态修改 -->
   <node name="goal_publisher" pkg="rostopic" type="rostopic"
         args="pub -r 1 /drone/goal geometry_msgs/PointStamped
-              '{header: {frame_id: map}, point: {x: $(arg goal_x), y: $(arg goal_y), z: -$(arg altitude)}}'"
+              '{header: {frame_id: world_ned}, point: {x: $(arg goal_x), y: $(arg goal_y), z: -$(arg altitude)}}'"
         output="log"/>
 </launch>

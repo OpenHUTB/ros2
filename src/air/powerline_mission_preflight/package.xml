@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>powerline_mission_preflight</name>
+  <version>0.1.0</version>
+  <description>Preflight validation for UAV power-line inspection mission JSON.</description>
+  <maintainer email="xxbzy727749@users.noreply.github.com">xxbzy727749</maintainer>
+  <license>MIT</license>
+  <buildtool_depend>ament_python</buildtool_depend>
+  <exec_depend>python3</exec_depend>
+  <test_depend>python3-pytest</test_depend>
+  <export><build_type>ament_python</build_type></export>
+</package>

@@ -78,7 +78,7 @@ rosrun uav_lidar_dqn_navigation main.py --mode scan     # 雷达扫描发布
   与目标、速度、上一步动作拼成 32 维状态，供后续 DQN 使用；纯 NumPy 实现，
   `catkin_make run_tests` 或 `python3 -m unittest discover -s test` 均可离线验证。
 - `lidar_scan_node.py` 累积 1 秒点云拼成 180° LaserScan（`/drone/lidar/scan`）。
-  AirSim 旋转雷达单帧只覆盖一小段水平角，不累积的话建图会严重缺帧。
+  累积前按每帧位置和偏航补偿机体运动；控制扇区仍只使用最新一帧。
 - `scan.launch` 同时发布 `odom->base_link`（桥接节点）与 `base_link->laser`
   静态 TF，单独检出本 PR 也能在 RViz 里正常显示。任务 3 的 `slam.launch`
   在此之上补 `map->odom`（gmapping）。
@@ -93,18 +93,29 @@ rosrun uav_lidar_dqn_navigation main.py --mode scan     # 雷达扫描发布
 | `maxUrange` | 39 m | 必须略大于有效量程，否则 30~40 m 的回波被丢弃 |
 | `particles` | 50 | 稀疏雷达下比默认 30 更稳 |
 | `linearUpdate` / `angularUpdate` | 0.2 m / 0.1 rad | 触发一次更新的位姿增量 |
-| `delta` | 0.05 m | 地图分辨率 |
+| `delta` | 0.05 m | 新运行的 gmapping 地图分辨率；仓库旧 PGM 为 0.1 m，不能当作本配置的输出 |
 
 hector_slam 不做里程计融合、依赖扫描匹配初值，在本场景的稀疏 180° 雷达上
-实测会跟丢、地图呈扇形，因此改用 gmapping；对比实验见模块文档。
+曾观察到跟丢、地图呈扇形，因此改用 gmapping；当前仓库地图仍需重采。
 
 ### 部署安全层
 
 `dqn_nav_node.py` 在取 Q 最大动作前先用 `safety_shield.py` 过滤：正前方
-1.0 m 内禁用直行与两个斜向动作，单侧 0.9 m 内禁用该侧斜向动作，贴到 0.35 m
-强制悬停。屏蔽后仍在剩余动作里取 Q 最大，转向/悬停仍由网络决定。
+1.0 m 内禁用直行与两个斜向动作，单侧 0.9 m 内禁用该侧斜向动作。
+近障时向较空旷一侧转向，前方重新通畅后短暂前进；0.35 m 兜底只检查前向扇区。
+这条恢复逻辑已做离线几何测试，仍需在 AirSim 近障场景验证整条控制链。
 
 ## 训练
+
+### 离线评估训练权重
+
+在本包目录执行 `python3 scripts/eval_policy.py` 可查看训练日志、各距离的
+六个 Q 值、原始动作与动作屏蔽结果；`python3 scripts/eval_policy.py --self-test`
+只用 NumPy 验证几何和动作屏蔽，不加载权重、不依赖 ROS 或 AirSim。安装到
+catkin 空间后可用 `rosrun uav_lidar_dqn_navigation eval_policy.py`。模型推理需要
+PyTorch；随包的完整检查点包含优化器状态，本次在 PyTorch 2.15.0+cpu 上验证了安全
+加载，PyTorch 1.13 的安全加载器无法读取它，不会自动退回不安全加载。
+屏蔽函数与 #922 一致；离线评估不模拟部署节点的近障转向恢复与到达停止。
 
 任务 2 的 DQN 在 AirSim 里自行探索，状态为 32 维（24 扇区 + 目标 4 + 速度 3 +
 上一步动作 1），动作为 6 个离散速度指令（前进/左前/右前/左转/右转/悬停）。
@@ -186,6 +197,7 @@ scripts/dqn_nav_node.py      任务 2 部署（加载权重在线导航）
 scripts/camera_node.py       前置相机话题
 scripts/train_dqn_e2e.py     任务 4 端到端训练
 scripts/dqn_e2e_node.py      任务 4 端到端部署
+scripts/waypoint_goal_node.py 建图航点发布（到点后切换）
 scripts/main.py              统一入口
 test/test_lidar_features.py  特征工程单元测试（不依赖 AirSim）
 launch/teleop.launch         键盘遥控启动文件
@@ -214,11 +226,13 @@ launch/main.launch           统一启动入口（teleop / scan / dqn / slam / e
 | 键盘遥控 | 2 m/s 前进位移 / 高度波动 | 13.4 m / ±0.1 m |
 | 雷达 + DQN | 末 50 / 末 20 回合成功率 | 94% / 100% |
 | DQN 导航部署 | 距目标误差 | 0.83 m（目标 (15, 10)） |
-| 建图 | 栅格数 / 占用格 | 1136×1104 / 5751 |
-| 建图路线 | 绕行航点 | (0,0) → (0,20) → (16,20) |
 | 端到端 DQN | 末 20 回合成功率 / 部署误差 | 65% / 2.46 m |
+| 仓库旧地图（待重采） | 实际尺寸 / 占用格 | 1104×1136 / 1503；不可作为当前 `slam.launch` 的建图结果 |
+| 建图路线配置 | 依次发布航点 | (0,20) → (16,20)；等待 AirSim 实机验证 |
 
-训练日志见 `models/train_nav_log.csv`，地图见 `maps/uav_map.pgm`。
+训练日志见 `models/train_nav_log.csv`。`maps/uav_map.pgm` 是旧运行遗留的诊断文件，
+其 0.1 m 分辨率、[-55,-55] 原点与当前 launch 参数不符，且缺乏连续墙体；
+应重新运行 `slam.launch`，用 `map_saver` 保存并核验新地图后再用作效果证据。
 
 ## 大模型使用声明
 
