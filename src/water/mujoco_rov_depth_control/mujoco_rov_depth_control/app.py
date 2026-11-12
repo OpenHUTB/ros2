@@ -268,7 +268,7 @@ def write_evidence(cfg, mujoco, save_dir, rows, seg_stats, mass, net_buoyancy,
             fh.write("目标 %.2f m -> 稳态平均误差 %.3f m，最大误差 %.3f m\n"
                      % (s["setpoint"], s["settle_error"], s["max_error"]))
         fh.write("最差稳态误差 %.3f m（PASS 阈值 %.3f m）\n" % (worst, threshold))
-        fh.write("结论: %s\n" % ("PASS" if ok else "FAIL"))
+        fh.write("结论: %s\n" % ("PASS" if worst <= threshold else "FAIL"))
 
 
 def main():
