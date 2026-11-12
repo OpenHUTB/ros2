@@ -492,6 +492,7 @@ nav:
     - ROV 推进器配置矩阵与饱和感知推力分配: './water/rov_thruster_allocation.md'
     - 水下多传感器感知与 3D 轨迹跟踪控制: './water/rov_trajectory_tracking.md'
     - 水下声呐 SLAM 占据栅格建图与自主避障导航: './water/rov_sonar_slam_navigation.md'
+    - 水下机器人图像端到端视觉伺服: './water/rov_end_to_end.md'
     - 水下 ROV 对接任务：声呐扫描 + CNN 标记检测 + 逼近导航: './water/mjc_rov_docking_nav.md'
     - 水下 ROV AprilTag 视觉定位与定点巡航仿真: './water/rov_apriltag_cruise.md'
     - 水下 ROV 视觉引导的沉船结构巡检采样仿真: './water/rov_wreck_inspection.md'

@@ -1,7 +1,10 @@
-# 水下机器人 MuJoCo 物理仿真与 6-DOF 键盘运动控制
+# 任务 1：物理仿真与 6-DOF 键盘运动控制
 
----
+## 1. 运行环境
 
+- Ubuntu 22.04 + ROS2 Humble + MuJoCo 3.12.0
+- 无头测试：`MUJOCO_GL=osmesa`
+- 3D 视窗：`LIBGL_ALWAYS_SOFTWARE=1 MUJOCO_GL=glfw`
 ## 1. 概述与目标
 
 本模块旨在建立水下遥控无人潜水器（Remote Operated Vehicle, ROV）在真实水下流体介质中的物理仿真环境，实现六自由度（6-DOF）空间动力学响应计算，并通过标准 ROS 2 话题架构接入键盘遥控输入，完成全向运动操控。
@@ -216,205 +219,94 @@ def _get_key(self, timeout=0.05):
 在运行仿真或执行测试前，必须确保安装了 MuJoCo 物理引擎及科学计算依赖库，否则将提示 `ModuleNotFoundError: No module named 'mujoco'`：
 
 ```bash
-# 1. 激活 ROS 2 Humble 环境 (虚拟机已配置时可跳过)
-source /opt/ros/humble/setup.bash
-
-# 2. 进入 ROS 2 工作空间根目录
-cd ~/ros2
-
-# 3. 安装功能包核心依赖清单
-pip3 install -r src/water/rov_mujoco/requirements.txt
-
-# 注：若国内网络下载较慢，推荐使用清华大学镜像源加速：
-# pip3 install -r src/water/rov_mujoco/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+./main.sh --gui     # 3D 视窗 + 键盘遥控
+./main.sh --test    # 自动化测试
 ```
 
-`requirements.txt` 声明的核心依赖项如下：
+## 2. 物理模型
 
-- `mujoco>=3.0.0`：DeepMind MuJoCo 高保真多体动力学与流体物理引擎；
-- `numpy>=1.20.0`：空间坐标转换与洋流向量解算；
-- `scipy>=1.7.0`：三维空间旋转（Rotation）与插值运算；
-- `pyyaml`：仿真参数解析。
+ROV 为 freejoint 刚体，质量 $m$，重力 $g$。为模拟中性浮力，每步在机体 Z 方向施加
 
----
+$$
+F_{\text{buoy}} = \Big(\sum_i m_i\Big) g .
+$$
 
-### 5.3 步骤 1：编译与配置工作空间
+推进器指令映射为机体力/力矩：
 
-在 Ubuntu 20.04 / 22.04 终端中执行编译，并加载环境变量：
+$$
+\mathbf f_{\text{body}} = (350\,v_x,\ 350\,v_y,\ 0)^\top,\qquad
+\boldsymbol\tau_{\text{body}} = (90\,\omega_x,\ 90\,\omega_y,\ 90\,\omega_z)^\top,
+$$
 
-```bash
-cd ~/ros2
+再经偏航旋转矩阵 $R(\psi)$ 变换到世界系：
 
-# 编译 rov_mujoco 功能包
-colcon build --packages-select rov_mujoco --symlink-install
+$$
+\mathbf f_{\text{world}} = R(\psi)\,\mathbf f_{\text{body}} .
+$$
 
-# 加载当前工作空间构建环境 (关键步骤，每次新开终端均需执行)
-source install/setup.bash
-```
+深度方向由 PID 定深控制器输出推力（`mujoco_sim_node.py:296` 起）：
 
-**预期编译输出**：
+$$
+F_z = K_p (z_d-z) + K_i \int (z_d-z)\,dt + K_d (\dot z_d-\dot z),
+$$
+
+参数 $K_p=1800,\ K_i=35,\ K_d=900$，上限 3500 N。
+
+## 3. 键盘映射
+
+| 按键 | 功能 |
+|------|------|
+| W/S | 前进/后退（$\pm x$） |
+| A/D | 左移/右移（$\pm y$） |
+| Q/E | 上浮/下潜（$\pm z$） |
+| J/L | 左/右偏航 |
+| I/K | 前/后俯仰 |
+| U/O | 左/右翻滚 |
+| 空格 | 急停（所有指令清零） |
+| +/- | 速度比例增减 |
+
+实现位置：`rov_mujoco/keyboard_teleop_node.py`。
+
+## 4. 测试
+
+`./main.sh --test` 依次验证：
+
+1. 初始位姿读取；
+2. 按 W 后位移与速度；
+3. 按 Q 后垂向运动；
+4. 按 J 后偏航角速度响应；
+5. 传感器话题发布。
+
+实测（`00_总览/实测输出/task1.log`）：
+
 ```text
-Starting >>> rov_mujoco
-Finished <<< rov_mujoco [2.85s]
-
-Summary: 1 package finished [3.12s]
+初始位置: [-0.0017, 0.0010, -0.9516] m
+按下 W 后: 位移 0.0364 m，速度 0.3442 m/s
+按下 Q 后: 位移 0.0316 m，速度 0.2912 m/s
+按下 J 后: 旋转响应正常
+EXIT=0
 ```
 
----
+测试代码在 `test/test_sim_teleop.py`（入口 `main.py --test`）。
 
-### 5.4 步骤 2：自动化单元验证测试
+## 5. 运行演示
 
-在启动实际仿真前，推荐先运行自动化单元测试，快速验证 MuJoCo 物理引擎加载、流体环境步进与 6-DOF 键盘响应逻辑：
+任务 1 键盘控制实测 GIF（W/S/A/D 操作，ROV 在场景中移动与转向）：
 
-```bash
-# 方式 A：直接运行 Python 测试脚本（推荐快速自检）
-python3 src/water/rov_mujoco/test/test_sim_teleop.py
+![任务 1 键盘控制](images/task1_control.gif)
 
-# 方式 B：通过 colcon 执行标准化回归测试
-colcon test --packages-select rov_mujoco && colcon test-result --all
-```
+> GIF 由 GUI 录屏（MP4）转码得到，480×623、82 帧、约 6.5 MB。
 
-**预期测试输出**：
-```text
-============================================================
-  水下机器人仿真及 6-DOF 键盘运动控制单元测试
-============================================================
+## 5. 源码解析
 
-[Step 1] 验证基础流体环境与洋流推进步进...
-  -> 初始位置 (X, Y, Z): [-0.0180, 0.0023, -0.9852] m
-  -> 初始速度 (X, Y, Z): [-0.0012, 0.0004, -0.0001] m/s
+| 文件:行号 | 内容 |
+|---|---|
+| `rov_mujoco/mujoco_sim_node.py:127` | 中性浮力计算 |
+| `rov_mujoco/mujoco_sim_node.py:296` | 物理步进：外力、洋流拖曳、姿态自稳 |
+| `rov_mujoco/mujoco_sim_node.py:354` | 定深 PID / 键盘推力映射 |
+| `rov_mujoco/keyboard_teleop_node.py:91` | 键盘节点初始化与按键映射 |
 
-[Step 2] 模拟键盘按下 'W' (前进推力)...
-  -> 前进后位置 X: 0.3466 m (位移: 0.3646 m)
-  -> 前进后速度 X: 0.0821 m/s
-  -> ✅ 前进控制测试通过！
+## 6. 已知限制
 
-[Step 3] 模拟键盘按下 'Q' (垂直上浮)...
-  -> 上浮后深度 Z: -0.8521 m (位移: +0.1331 m)
-  -> 上浮后垂直速度: 0.0543 m/s
-  -> ✅ 上浮控制测试通过！
-
-[Step 4] 模拟键盘按下 'A' (横向左移)...
-  -> 侧移后位置 Y: 0.1852 m (位移: +0.1829 m)
-  -> ✅ 横移控制测试通过！
-
-[Step 5] 模拟偏航角转向与急停恢复...
-  -> 转向后角速度 Z: 0.1520 rad/s
-  -> 执行急停 Space 键: 推力与角速度全部安全归零
-  -> ✅ 偏航与急停控制测试通过！
-
-============================================================
-🎉 仿真与遥控核心功能测试全部通过！(5/5 passed)
-============================================================
-```
-
----
-
-### 5.5 步骤 3：多场景运行与交互模式
-
-根据不同硬件环境与实验目的，系统提供三种运行模式：
-
-#### 模式 A：终端独立交互模式（推荐在虚拟机/无独立显卡环境使用）
-无需依赖图形显卡驱动，直接在当前终端窗口中完成按键控制与状态反馈，并自动向 ROS 2 广播话题：
-```bash
-python3 src/water/rov_mujoco/main.py
-```
-- **操作方式**：在终端直接按键盘字符键（`W/S/A/D`、`Q/E`、`J/L`、`I/K`、空格），终端将实时打印推力比例与位置变化；按 <kbd>Ctrl</kbd> + <kbd>C</kbd> 安全退出。
-
-#### 模式 B：标准 ROS 2 Launch 多节点模式（标准部署方式）
-在标准 ROS 2 体系下同时拉起物理仿真内核节点 `mujoco_sim_node` 与按键监听节点 `keyboard_teleop_node`：
-```bash
-ros2 launch rov_mujoco main.launch.py
-```
-- **验证与话题监测**：新开一个终端，执行以下命令即可观察 ROV 实时发布的物理仿真数据：
-  ```bash
-  source /opt/ros/humble/setup.bash
-  source install/setup.bash
-
-  # 查看当前活跃话题
-  ros2 topic list
-
-  # 监听实时深度变化 (50Hz)
-  ros2 topic echo /rov/depth
-
-  # 监听空间位姿里程计
-  ros2 topic echo /rov/odom
-  ```
-
-#### 模式 C：3D 可视化视窗交互模式（录屏与直观查看推荐）
-拉起 MuJoCo 官方原生 3D 渲染窗口，呈现水下池体、ROV 机械臂本体与洋流扰动动态效果：
-```bash
-python3 src/water/rov_mujoco/main.py --gui
-```
-- **操作方式**：鼠标左键拖拽旋转视角，右键平移缩放；在终端窗口中按下方向键或数字键控制航行。
-
----
-
-### 5.6 步骤 4：虚拟机常见问题排查 (FAQ / Troubleshooting)
-
-#### Q1: 运行提示 `ModuleNotFoundError: No module named 'mujoco'`
-- **原因**：当前 Python 环境未安装 MuJoCo 引擎。
-- **解决**：执行 `pip3 install -r src/water/rov_mujoco/requirements.txt` 或 `pip3 install mujoco numpy scipy pyyaml`。
-
-#### Q2: 在 Ubuntu 20.04 虚拟机 (VMware / VirtualBox) 中运行 `--gui` 视窗报错 `GLFW error` 或黑屏
-- **原因**：虚拟机未开启 3D 图形加速，或虚拟显卡驱动的 OpenGL 版本低于 3.3。
-- **解决方式**：
-  1. **开启 3D 加速**：关闭虚拟机，在 VMware 中进入“虚拟机设置 -> 显示器”，勾选“加速 3D 图形”；
-  2. **强制指定 OpenGL 驱动版本**：在终端运行前注入 MESA 兼容参数：
-     ```bash
-     export MESA_GL_VERSION_OVERRIDE=3.3
-     python3 src/water/rov_mujoco/main.py --gui
-     ```
-  3. **使用纯终端模式（最佳替代方案）**：虚拟机中若完全没有 GPU 驱动，可直接运行 **模式 A**（`python3 src/water/rov_mujoco/main.py`），核心物理动力学计算与键盘控制完全一致且不受显卡限制。
-
-#### Q3: 运行 `ros2 launch` 报错 `Package 'rov_mujoco' not found`
-- **原因**：编译后未加载当前工作空间的 setup 脚本。
-- **解决**：在运行指令的终端中执行 `source install/setup.bash`。
-
-#### Q4: 提示 `ModuleNotFoundError: No module named 'rclpy'`
-- **原因**：未加载 ROS 2 基础环境变量。
-- **解决**：执行 `source /opt/ros/humble/setup.bash`。
-
-#### Q5: 运行提示 `cannot import name '_rclpy_pybind11' ... The C extension '...cpython-310-x86_64-linux-gnu.so' isn't present`
-- **原因**：在 Ubuntu 20.04 虚拟机中激活了 Python 3.10 环境（如 Conda `nn_3.10`）。由于 Ubuntu 20.04 教学镜像中的 ROS 2 Humble 底层 C 语言扩展库仅针对系统默认的 Python 3.8 编译（文件名为 `cpython-38` 结尾），无法在 Python 3.10 解释器中被加载。
-- **解决**：在 Ubuntu 20.04 虚拟机中必须切换至 **Python 3.8** 环境运行：
-  ```bash
-  # 退出高版本 Python 环境，使用系统原生默认的 Python 3.8
-  conda deactivate
-  # 或切换激活 Python 3.8 虚拟环境
-  conda activate nn_3.8
-  python3 src/water/rov_mujoco/test/test_sim_teleop.py
-  ```
-
----
-
-## 6. 实验结果与动图演示 (GIF)
-
-> **录屏规范**：推荐使用 [ScreenToGif](https://www.screentogif.com/) 录制窗口，保持输出动图文件体积一般小于 10MB（最大不超过 20MB）。
-
-### 6.1 键盘 6-DOF 运动控制效果演示
-
-![水下机器人键盘运动控制演示](../img/water/rov_keyboard_teleop.gif)
-
-*图 1.1：通过键盘 W/S/A/D 与 Q/E 键实时控制水下 ROV 航行体在虚拟水体中前进、平移与沉浮过程（文件体积：8.12 MB）。*
-
-### 6.2 话题通信与数据流监测
-
-在控制运行时开启新终端，执行话题监听验证数据流连续性：
-```bash
-ros2 topic echo /rov/depth
-```
-```text
-data: -1.2483
----
-data: -1.2135
----
-data: -1.1820
-```
-表明下潜深度值伴随推力控制实时精确更新。
-
----
-
-## 7. 结论与扩展支持
-
-本模块成功实现了水下机器人在 MuJoCo 物理引擎中的 6-DOF 动力学闭环建模，完成了标准 ROS 2 Launch 启动与键盘实时控制，并全面兼容 Ubuntu 20.04 教学虚拟机与 Ubuntu 22.04 环境。后续可在此动力学模型基础上进一步扩展多波束前视声呐、水下相机与 IMU 传感器仿真流，并基于感知数据实施轨迹跟踪闭环控制。
+- 3D 视窗依赖 WSLg/Mesa 软件渲染，帧率较低，关闭窗口时可能 core dump（不影响测试）。
+- 无头环境只验证了测试入口，未验证交互式视窗。
