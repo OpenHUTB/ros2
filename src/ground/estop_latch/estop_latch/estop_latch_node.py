@@ -13,7 +13,9 @@
 import math
 
 import rclpy
+from rclpy.exceptions import InvalidParameterTypeException
 from rclpy.node import Node
+from rclpy.qos import DurabilityPolicy, QoSProfile
 from std_msgs.msg import Bool, String
 from std_srvs.srv import Trigger
 
@@ -64,7 +66,7 @@ class EstopLatch(Node):
 
     def __init__(self, **kwargs):
         super().__init__('estop_latch', **kwargs)
-        self.input_timeout = declare_float(self, 'input_timeout', 1.0)
+        self.input_timeout = declare_float(self, 'input_timeout', 0.0)
         self.release_hold_time = declare_float(
             self, 'release_hold_time', 2.0)
         self.status_rate = declare_float(self, 'status_rate', 1.0)
@@ -82,7 +84,10 @@ class EstopLatch(Node):
 
         self.create_subscription(
             Bool, 'emergency_stop', self.estop_callback, 10)
-        self.estop_pub = self.create_publisher(Bool, 'estop', 10)
+        # 保留最后一个急停值：下游重启后能立刻拿到当前状态，不必等定时器
+        self.estop_pub = self.create_publisher(
+            Bool, 'estop',
+            QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
         self.status_pub = self.create_publisher(
             String, 'estop_status', 10)
         self.create_service(Trigger, '~/reset', self.handle_reset)
@@ -142,6 +147,10 @@ class EstopLatch(Node):
         self.publish_result()
 
     def handle_reset(self, request, response):
+        if not self.latched:
+            response.success = False
+            response.message = '当前未闩锁，无需复位'
+            return response
         ok, reason = evaluate_release(
             self._now_seconds(), self.last_input_time,
             self.last_active_time, self.input_active,
@@ -190,7 +199,7 @@ def main(args=None):
     logger = rclpy.logging.get_logger('estop_latch')
     try:
         node = EstopLatch()
-    except ValueError as exc:
+    except (ValueError, InvalidParameterTypeException) as exc:
         logger.fatal('参数非法，节点退出: %s' % exc)
         rclpy.shutdown()
         raise SystemExit(1)
