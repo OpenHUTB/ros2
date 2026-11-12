@@ -76,7 +76,7 @@ def main():
     comp = summary(True)
     base = summary(False)
     out = {
-        "scenario": "wind-aware payload delivery, target=(5,2), release_alt=3m",
+        "scenario": "wind-aware payload delivery, target=(5,2), payload_release_alt=2.7m",
         "episodes_per_method": 10,
         "nn_compensation": comp,
         "no_compensation": base,

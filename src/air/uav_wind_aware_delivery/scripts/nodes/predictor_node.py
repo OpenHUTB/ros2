@@ -43,9 +43,11 @@ class PredictorNode:
                     vx, vy, vz = st.payload_vel
                     base = st.payload_pos[:2]
                 else:
-                    h = float(st.pos[2])
+                    # 物资挂在机腹下方：预测输入用物资高度，不用无人机高度；
+                    # 释放瞬间速度沿用无人机速度。
+                    h = float(st.payload_pos[2])
                     vx, vy, vz = st.vel
-                    base = st.pos[:2]
+                    base = st.payload_pos[:2]
                 if h > 0.05:
                     if self.model is not None:
                         off = self.model.predict(np.array([[h, vx, vy, vz,

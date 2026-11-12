@@ -15,6 +15,9 @@ from .nn import ImpactMLP
 class MissionConfig:
     target: np.ndarray = field(default_factory=lambda: np.array([5.0, 2.0, 0.0]))
     release_alt: float = 3.0
+    # 物资挂在机腹下方，释放瞬间物资高度 = 无人机高度 - payload_drop；
+    # 预测/补偿必须用物资高度，不能直接用 release_alt。
+    payload_drop: float = 0.30
     hover_time: float = 0.9
     compensate: bool = True
     max_time: float = 45.0
@@ -50,13 +53,17 @@ class DeliveryMission:
                 return out
         return simulate_drop(h, vx, vy, vz, wind)
 
+    @property
+    def payload_release_alt(self) -> float:
+        return float(self.cfg.release_alt - self.cfg.payload_drop)
+
     def compute_release_point(self, wind: np.ndarray) -> np.ndarray:
         if not self.cfg.compensate:
             return np.asarray(self.cfg.target[:2], dtype=float).copy()
         rel = np.asarray(self.cfg.target[:2], dtype=float).copy()
         off = np.zeros(2)
         for _ in range(4):
-            off = self.predict_offset(self.cfg.release_alt, 0.0, 0.0, 0.0, wind)
+            off = self.predict_offset(self.payload_release_alt, 0.0, 0.0, 0.0, wind)
             rel = np.asarray(self.cfg.target[:2], dtype=float) - off
         self.predicted_offset = off
         self.predicted_landing = np.asarray(self.cfg.target[:2], dtype=float)

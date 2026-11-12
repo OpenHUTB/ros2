@@ -27,6 +27,7 @@ class MissionNode:
             MissionConfig(
                 target=target,
                 release_alt=rospy.get_param("~release_alt", 3.0),
+                payload_drop=rospy.get_param("~payload_drop", 0.30),
                 hover_time=rospy.get_param("~hover_time", 0.8),
                 compensate=bool(rospy.get_param("~compensate", True)),
             ),

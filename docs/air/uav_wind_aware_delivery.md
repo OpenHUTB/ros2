@@ -39,7 +39,6 @@ uav_wind_aware_delivery/
 ├── tools/                            训练、评估、单集调试、录制
 ├── tests/run_all.py                  15 个单元测试
 ├── results/                          benchmark / predictor 指标
-└── media/ubuntu_air_demo.mp4         Ubuntu 桌面实操视频
 ```
 
 ## 一、环境准备
@@ -175,7 +174,7 @@ a_z  = -g - 0.02 * v_z / m
 
 ### 3. 释放点补偿
 
-目标点 `T=(5,2)`，释放高度 `h=3 m`。迭代：
+目标点 `T=(5,2)`，物资释放高度 `h = release_alt - payload_drop = 2.7 m`（物资挂在机腹下方 0.30 m）。迭代：
 
 ```text
 rel ← T
@@ -201,10 +200,10 @@ repeat 4:
 
 | 方法 | 成功率 | 平均落点误差 | P90 误差 | 平均完成时间 |
 | --- | --- | --- | --- | --- |
-| **NN 释放点补偿** | **10/10（100%）** | **0.1604 m** | **0.2481 m** | 12.73 s |
-| 不补偿（目标正上方释放） | 0/10（0%） | 1.0455 m | 1.3195 m | 12.59 s |
+| **NN 释放点补偿** | **10/10（100%）** | **0.2323 m** | **0.3233 m** | 12.13 s |
+| 不补偿（目标正上方释放） | 0/10（0%） | 1.0544 m | 1.2933 m | 11.74 s |
 
-平均误差降低 **84.7%**。
+平均误差降低 **78.0%**。
 
 固定风 `(3.0, 1.0) m/s` 的 ROS 全链：
 
@@ -233,17 +232,11 @@ cd ~/air_ws/src/uav_wind_aware_delivery
 
 结果写入 `results/benchmark.json`、`results/predictor_metrics.json`。
 
-## 六、Ubuntu 桌面实操视频
+## 六、Ubuntu 桌面实操录屏（可选）
 
-- 视频：`media/ubuntu_air_demo.mp4`
-- 规格：1280×796，15 fps，45 s，H.264
+- 仓库不提交录屏文件；在本地运行 `bash scripts/record_demo.sh` 生成 `media/ubuntu_air_demo.mp4`。
+- 规格：1280×796，15 fps，45 s，H.264。
 - 内容：Ubuntu 桌面打开 OpenCV Viewer，展示起飞、巡航、对准、释放、落地与 HUD 误差。
-
-录制脚本：
-
-```bash
-bash scripts/record_demo.sh
-```
 
 使用 `ffmpeg -f x11grab` 录屏；需要桌面会话（`DISPLAY=:0`）。GIF 由视频裁剪 Viewer 区域生成，见 `docs/img/air/uav_wind_aware_delivery.gif`。
 

@@ -14,6 +14,12 @@ from .mathutil import quat_to_mat, vee
 from .state import State
 
 
+# 与 models/uav_delivery.xml 的机身/物资质量一致；ROS 控制器在释放前后
+# 必须用不同质量，否则释放后会多给约 20% 垂向推力。
+UAV_DRY_MASS = 0.972
+PAYLOAD_MASS = 0.20
+
+
 @dataclass
 class ControlConfig:
     kp: float = 5.5

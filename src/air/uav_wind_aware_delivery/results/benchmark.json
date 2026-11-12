@@ -1,21 +1,21 @@
 {
-  "scenario": "wind-aware payload delivery, target=(5,2), release_alt=3m",
+  "scenario": "wind-aware payload delivery, target=(5,2), payload_release_alt=2.7m",
   "episodes_per_method": 10,
   "nn_compensation": {
     "episodes": 10,
     "success_rate": 1.0,
-    "mean_error_m": 0.1604,
-    "p90_error_m": 0.2481,
-    "mean_time_s": 12.73
+    "mean_error_m": 0.2323,
+    "p90_error_m": 0.3233,
+    "mean_time_s": 12.13
   },
   "no_compensation": {
     "episodes": 10,
     "success_rate": 0.0,
-    "mean_error_m": 1.0455,
-    "p90_error_m": 1.3195,
-    "mean_time_s": 12.59
+    "mean_error_m": 1.0544,
+    "p90_error_m": 1.2933,
+    "mean_time_s": 11.74
   },
-  "improvement_error_pct": 84.7,
+  "improvement_error_pct": 78.0,
   "rows": [
     {
       "seed": 0,
@@ -27,16 +27,16 @@
       "compensate": true,
       "landed": true,
       "released": true,
-      "error_m": 0.1051,
+      "error_m": 0.192,
       "success": true,
-      "time_s": 14.9,
+      "time_s": 14.66,
       "release_point": [
-        4.338,
-        1.206
+        4.395,
+        1.276
       ],
       "predicted_offset": [
-        0.662,
-        0.794
+        0.605,
+        0.724
       ]
     },
     {
@@ -49,9 +49,9 @@
       "compensate": false,
       "landed": true,
       "released": true,
-      "error_m": 1.1535,
+      "error_m": 1.1498,
       "success": false,
-      "time_s": 15.48,
+      "time_s": 15.19,
       "release_point": [
         5.0,
         2.0
@@ -71,16 +71,16 @@
       "compensate": true,
       "landed": true,
       "released": true,
-      "error_m": 0.1349,
+      "error_m": 0.1872,
       "success": true,
-      "time_s": 13.81,
+      "time_s": 13.59,
       "release_point": [
-        4.768,
-        1.402
+        4.788,
+        1.455
       ],
       "predicted_offset": [
-        0.232,
-        0.598
+        0.212,
+        0.545
       ]
     },
     {
@@ -93,9 +93,9 @@
       "compensate": false,
       "landed": true,
       "released": true,
-      "error_m": 0.7788,
+      "error_m": 0.9014,
       "success": false,
-      "time_s": 14.32,
+      "time_s": 10.56,
       "release_point": [
         5.0,
         2.0
@@ -115,16 +115,16 @@
       "compensate": true,
       "landed": true,
       "released": true,
-      "error_m": 0.2422,
+      "error_m": 0.2889,
       "success": true,
-      "time_s": 10.68,
+      "time_s": 10.64,
       "release_point": [
-        4.322,
-        2.731
+        4.381,
+        2.665
       ],
       "predicted_offset": [
-        0.678,
-        -0.731
+        0.619,
+        -0.665
       ]
     },
     {
@@ -137,9 +137,9 @@
       "compensate": false,
       "landed": true,
       "released": true,
-      "error_m": 1.1686,
+      "error_m": 1.1448,
       "success": false,
-      "time_s": 10.74,
+      "time_s": 10.7,
       "release_point": [
         5.0,
         2.0
@@ -159,16 +159,16 @@
       "compensate": true,
       "landed": true,
       "released": true,
-      "error_m": 0.1785,
+      "error_m": 0.234,
       "success": true,
-      "time_s": 11.75,
+      "time_s": 11.09,
       "release_point": [
-        5.589,
-        1.501
+        5.533,
+        1.546
       ],
       "predicted_offset": [
-        -0.589,
-        0.499
+        -0.533,
+        0.454
       ]
     },
     {
@@ -181,9 +181,9 @@
       "compensate": false,
       "landed": true,
       "released": true,
-      "error_m": 0.8952,
+      "error_m": 0.8933,
       "success": false,
-      "time_s": 11.58,
+      "time_s": 10.85,
       "release_point": [
         5.0,
         2.0
@@ -203,16 +203,16 @@
       "compensate": true,
       "landed": true,
       "released": true,
-      "error_m": 0.1303,
+      "error_m": 0.1844,
       "success": true,
-      "time_s": 14.73,
+      "time_s": 14.3,
       "release_point": [
-        4.317,
-        1.562
+        4.377,
+        1.6
       ],
       "predicted_offset": [
-        0.683,
-        0.438
+        0.623,
+        0.4
       ]
     },
     {
@@ -225,9 +225,9 @@
       "compensate": false,
       "landed": true,
       "released": true,
-      "error_m": 0.9416,
+      "error_m": 0.9387,
       "success": false,
-      "time_s": 15.05,
+      "time_s": 14.76,
       "release_point": [
         5.0,
         2.0
@@ -247,16 +247,16 @@
       "compensate": true,
       "landed": true,
       "released": true,
-      "error_m": 0.1554,
+      "error_m": 0.2002,
       "success": true,
-      "time_s": 12.78,
+      "time_s": 12.58,
       "release_point": [
-        5.181,
-        1.356
+        5.163,
+        1.414
       ],
       "predicted_offset": [
-        -0.181,
-        0.644
+        -0.163,
+        0.586
       ]
     },
     {
@@ -269,9 +269,9 @@
       "compensate": false,
       "landed": true,
       "released": true,
-      "error_m": 0.7841,
+      "error_m": 0.8657,
       "success": false,
-      "time_s": 13.24,
+      "time_s": 10.57,
       "release_point": [
         5.0,
         2.0
@@ -291,16 +291,16 @@
       "compensate": true,
       "landed": true,
       "released": true,
-      "error_m": 0.0736,
+      "error_m": 0.1556,
       "success": true,
-      "time_s": 11.92,
+      "time_s": 11.55,
       "release_point": [
-        6.164,
-        2.865
+        6.061,
+        2.789
       ],
       "predicted_offset": [
-        -1.164,
-        -0.865
+        -1.061,
+        -0.789
       ]
     },
     {
@@ -313,9 +313,9 @@
       "compensate": false,
       "landed": true,
       "released": true,
-      "error_m": 1.5161,
+      "error_m": 1.4773,
       "success": false,
-      "time_s": 11.35,
+      "time_s": 11.04,
       "release_point": [
         5.0,
         2.0
@@ -335,16 +335,16 @@
       "compensate": true,
       "landed": true,
       "released": true,
-      "error_m": 0.159,
+      "error_m": 0.2104,
       "success": true,
-      "time_s": 12.4,
+      "time_s": 12.14,
       "release_point": [
-        5.353,
-        1.333
+        5.318,
+        1.393
       ],
       "predicted_offset": [
-        -0.353,
-        0.667
+        -0.318,
+        0.607
       ]
     },
     {
@@ -357,9 +357,9 @@
       "compensate": false,
       "landed": true,
       "released": true,
-      "error_m": 0.8624,
+      "error_m": 0.8581,
       "success": false,
-      "time_s": 12.96,
+      "time_s": 12.66,
       "release_point": [
         5.0,
         2.0
@@ -379,16 +379,16 @@
       "compensate": true,
       "landed": true,
       "released": true,
-      "error_m": 0.3016,
+      "error_m": 0.3501,
       "success": true,
-      "time_s": 10.32,
+      "time_s": 10.3,
       "release_point": [
-        4.226,
-        1.925
+        4.295,
+        1.93
       ],
       "predicted_offset": [
-        0.774,
-        0.075
+        0.705,
+        0.07
       ]
     },
     {
@@ -401,9 +401,9 @@
       "compensate": false,
       "landed": true,
       "released": true,
-      "error_m": 1.0573,
+      "error_m": 1.0417,
       "success": false,
-      "time_s": 10.58,
+      "time_s": 10.54,
       "release_point": [
         5.0,
         2.0
@@ -423,16 +423,16 @@
       "compensate": true,
       "landed": true,
       "released": true,
-      "error_m": 0.1232,
+      "error_m": 0.3203,
       "success": true,
-      "time_s": 13.99,
+      "time_s": 10.46,
       "release_point": [
-        4.172,
-        2.711
+        4.244,
+        2.648
       ],
       "predicted_offset": [
-        0.828,
-        -0.711
+        0.756,
+        -0.648
       ]
     },
     {
@@ -445,9 +445,9 @@
       "compensate": false,
       "landed": true,
       "released": true,
-      "error_m": 1.2977,
+      "error_m": 1.2729,
       "success": false,
-      "time_s": 10.6,
+      "time_s": 10.56,
       "release_point": [
         5.0,
         2.0

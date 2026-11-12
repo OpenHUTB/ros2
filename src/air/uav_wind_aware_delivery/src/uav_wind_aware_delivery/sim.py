@@ -50,6 +50,8 @@ class DeliverySim:
         self.dt = float(self.cfg.dt)
         self.substeps = int(self.cfg.substeps)
         self.time = 0.0
+        self._cmd_force = np.zeros(3)
+        self._cmd_torque = np.zeros(3)
 
         self.base_id = self._id(mujoco.mjtObj.mjOBJ_BODY, "base_link")
         self.payload_id = self._id(mujoco.mjtObj.mjOBJ_BODY, "payload")
@@ -107,6 +109,8 @@ class DeliverySim:
         self.released = False
         self.landed = False
         self.time = 0.0
+        self._cmd_force = np.zeros(3)
+        self._cmd_torque = np.zeros(3)
         mujoco.mj_forward(self.model, self.data)
 
     # --------------------------------------------------------------- action
@@ -120,9 +124,11 @@ class DeliverySim:
         return True
 
     def apply_force_torque(self, force: np.ndarray, torque: np.ndarray):
-        """在机体系原点施加世界系合力和世界系力矩。"""
-        self.data.xfrc_applied[self.base_id, 0:3] = np.asarray(force, dtype=float)
-        self.data.xfrc_applied[self.base_id, 3:6] = np.asarray(torque, dtype=float)
+        """记录并施加世界系合力/力矩；step() 每个 substep 会重新写 xfrc。"""
+        self._cmd_force = np.asarray(force, dtype=float).copy()
+        self._cmd_torque = np.asarray(torque, dtype=float).copy()
+        self.data.xfrc_applied[self.base_id, 0:3] = self._cmd_force
+        self.data.xfrc_applied[self.base_id, 3:6] = self._cmd_torque
 
     def _wind_forces(self):
         """物资与机体的风阻力；机体力较小，用于体现扰动。"""
@@ -139,9 +145,19 @@ class DeliverySim:
 
     # ----------------------------------------------------------------- step
     def step(self, force: Optional[np.ndarray] = None, torque: Optional[np.ndarray] = None):
-        if force is not None:
+        # step(None) 表示本步不施加控制力；不能沿用上一步的 xfrc。
+        if force is None:
+            self._cmd_force = np.zeros(3)
+            self._cmd_torque = np.zeros(3)
+        else:
             self.apply_force_torque(force, torque if torque is not None else np.zeros(3))
+
         for _ in range(self.substeps):
+            # 每个 substep 从“控制力 + 当前风阻力”重新组合，避免 wind 在
+            # apply_force_torque 的结果上重复累加。
+            self.data.xfrc_applied[:, :] = 0.0
+            self.data.xfrc_applied[self.base_id, 0:3] = self._cmd_force
+            self.data.xfrc_applied[self.base_id, 3:6] = self._cmd_torque
             self._wind_forces()
             mujoco.mj_step(self.model, self.data)
         self.time += self.dt

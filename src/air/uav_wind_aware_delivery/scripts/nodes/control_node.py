@@ -12,7 +12,9 @@ import rospy  # noqa: E402
 from geometry_msgs.msg import PoseStamped  # noqa: E402
 from std_msgs.msg import Float64MultiArray  # noqa: E402
 
-from uav_wind_aware_delivery.control import GeometricController  # noqa: E402
+from uav_wind_aware_delivery.control import (  # noqa: E402
+    GeometricController, PAYLOAD_MASS, UAV_DRY_MASS,
+)
 from uav_wind_aware_delivery.state import State  # noqa: E402
 
 
@@ -40,7 +42,8 @@ class ControlNode:
     def spin(self):
         while not rospy.is_shutdown():
             if self.state is not None and self.setpoint is not None:
-                f, tau = self.ctrl.compute(self.state, self.setpoint, np.zeros(3))
+                mass = UAV_DRY_MASS + (0.0 if self.state.released else PAYLOAD_MASS)
+                f, tau = self.ctrl.compute(self.state, self.setpoint, np.zeros(3), mass=mass)
                 msg = Float64MultiArray()
                 msg.data = np.concatenate([f, tau]).tolist()
                 self.cmd_pub.publish(msg)

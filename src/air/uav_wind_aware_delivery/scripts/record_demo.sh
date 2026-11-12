@@ -1,11 +1,17 @@
 #!/usr/bin/env bash
-# 录制 Ubuntu 桌面演示：OpenCV Viewer + 桌面环境，x11grab 30 s。
-export DISPLAY=:0
+# 录制 Ubuntu 桌面演示：OpenCV Viewer + 桌面环境，x11grab 45 s。
+set -e
+export DISPLAY="${DISPLAY:-:0}"
 export XAUTHORITY="${XAUTHORITY:-/run/user/1000/gdm/Xauthority}"
 export DBUS_SESSION_BUS_ADDRESS="${DBUS_SESSION_BUS_ADDRESS:-unix:path=/run/user/1000/bus}"
-WS="$HOME/air_ws"
+WS="${AIR_WS:-$HOME/air_ws}"
 OUT="$WS/media"
-FF="${FFMPEG_BIN:-/home/lxy/codex_vehicle_20261021_2040/runtime/python/lib/python3.11/site-packages/imageio_ffmpeg/binaries/ffmpeg-linux-x86_64-v7.0.2}"
+FF="${FFMPEG_BIN:-ffmpeg}"
+if ! command -v "$FF" >/dev/null 2>&1; then
+  echo "[record] 找不到 ffmpeg: $FF" >&2
+  echo "  请安装 ffmpeg，或设置 FFMPEG_BIN=/path/to/ffmpeg" >&2
+  exit 1
+fi
 mkdir -p "$OUT"
 
 pkill -f 'roslaunch uav_wind_aware_delivery' 2>/dev/null || true

@@ -5,21 +5,53 @@ from __future__ import annotations
 
 import argparse
 import os
+import shutil
 import subprocess
 import sys
 
-ROOT = os.path.dirname(os.path.abspath(__file__))
-VENV_PY = os.environ.get("UAV_VENV_PYTHON", "/home/lxy/ground_nn_nav/.venv/bin/python")
+
+def _source_root() -> str:
+    here = os.path.dirname(os.path.abspath(__file__))
+    if os.path.isdir(os.path.join(here, "models")):
+        return here
+    try:
+        import rospkg
+        path = rospkg.RosPack().get_path("uav_wind_aware_delivery")
+        if path and os.path.isdir(path):
+            return path
+    except Exception:
+        pass
+    return here
 
 
-def ensure_venv():
-    """没有 mujoco 时尽量切到项目 venv。"""
+ROOT = _source_root()
+
+
+def _venv_python() -> str:
+    env = os.environ.get("UAV_VENV_PYTHON", "").strip()
+    if env:
+        return env
+    return os.path.join(ROOT, ".venv", "bin", "python")
+
+
+def ensure_venv() -> None:
+    """没有 mujoco 时切到项目 venv；找不到时明确报错。"""
     try:
         import mujoco  # noqa: F401
         return
     except Exception:
-        if os.path.exists(VENV_PY) and os.path.realpath(sys.executable) != os.path.realpath(VENV_PY):
-            os.execv(VENV_PY, [VENV_PY, os.path.abspath(__file__)] + sys.argv[1:])
+        pass
+
+    venv = _venv_python()
+    if not os.path.exists(venv):
+        raise SystemExit(
+            "[uav] 找不到 MuJoCo venv: %s\n"
+            "  请先在包目录运行: bash scripts/setup_env.sh\n"
+            "  或设置: export UAV_VENV_PYTHON=/path/to/python3.11" % venv
+        )
+    if os.path.realpath(sys.executable) == os.path.realpath(venv):
+        return
+    os.execv(venv, [venv, os.path.abspath(__file__)] + sys.argv[1:])
 
 
 def info():
@@ -31,7 +63,7 @@ def info():
     print(f"numpy    : {np.__version__}")
     print(f"model    : {os.path.join(ROOT, 'models', 'uav_delivery.xml')}")
     print(f"predictor: {os.path.join(ROOT, 'models', 'impact_mlp.npz')}")
-    print(f"roslaunch: {subprocess.run(['which', 'roslaunch'], capture_output=True, text=True).stdout.strip()}")
+    print(f"roslaunch: {shutil.which('roslaunch') or 'not found'}")
 
 
 def run(cmd):
