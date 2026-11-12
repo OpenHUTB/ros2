@@ -7,7 +7,7 @@ from launch_ros.actions import Node
 def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument(
-            'input_timeout', default_value='1.0'),
+            'input_timeout', default_value='0.0'),
         DeclareLaunchArgument(
             'release_hold_time', default_value='2.0'),
         DeclareLaunchArgument(
