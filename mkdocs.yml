@@ -323,6 +323,7 @@ nav:
     - 无人机相机云台两轴稳定控制: './air/uav_gimbal_stabilization.md'
     - 旋翼桨尖马赫数与桨盘载荷: './air/uav_prop_tip_mach.md'
     - 无人机 IMU 与气压高度融合: './air/uav_altitude_sensor_fusion.md'
+    - 无人机 L1 自适应高度控制仿真: './air/uav_l1_altitude_stabilization.md'
     - 无人机屋顶降落: './air/rooftop_landing.md'
     - 无人机屋顶降落（学习型落点选择）: './air/rooftop_landing_nn.md'
     - 无人机降落过程监控（指令-运动一致性）: './air/uav_landing_monitor.md'
