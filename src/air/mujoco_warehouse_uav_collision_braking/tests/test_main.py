@@ -25,6 +25,12 @@ class MainTests(unittest.TestCase):
 
         self.assertEqual(collect.call_args.args[0], Path("custom-data"))
 
+    def test_benchmark_default_output_is_not_changed_by_collection_flag(self):
+        with patch("warehouse_braking.benchmark.benchmark", return_value={"ok": True}) as benchmark:
+            main(["--collect", "--benchmark"])
+
+        self.assertEqual(benchmark.call_args.args[1], Path("results/benchmark.json"))
+
 
 if __name__ == "__main__":
     unittest.main()
