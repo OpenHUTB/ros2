@@ -91,6 +91,7 @@ nav:
     - 10. Turtlebot3 Gazebo键盘控制: 'chapter/turtlebot3_gazebo_control.md'
 
 - 人形机器人:
+    - 人形机器人离线语音指令控制：端到端关键词识别（KWS）: './humanoid/humanoid_kws_command.md'
     - 具身人形物理仿真与平衡行走控制: './humanoid/embodied_humanoid_control.md'
     - 关节 Stribeck 摩擦辨识与前馈补偿: './humanoid/joint_friction_identification.md'
     - 人形机器人基础: './humanoid/humanoid_basics.md'
@@ -161,6 +162,7 @@ nav:
     - 二连杆机械臂肌肉骨骼建模与 MuJoCo 仿真: './muscle_arm_mujoco_simulation.md'
     - 拮抗共激活分析（二连杆机械臂肌肉骨骼仿真）: './muscle_arm_cocontraction_simulation.md'
 - 地面载具:
+    - RRT 快速随机扩展树路径规划: './ground/rrt_path_planning.md'
     - 小海龟多航点巡航与暂停恢复: 'chapter/chap1/turtle_waypoint_patrol/index.md'
     - 离线测试接入 GitHub Actions: './ground/offline_checks.md'
     - 编码器量化误差与速度估计滤波对比: './ground/encoder_quantization_velocity.md'
@@ -345,14 +347,14 @@ nav:
     - MuJoCo 地面无人车 SLAM 建图导航与神经网络控制: './ground/mujoco_ground_slam_nn_nav/README.md'
     - 地面坡度估计: './ground/ground_slope_estimation.md'
     - 急停闩锁与人工复位: './ground/estop_latch.md'
-
+    - 城市道路地面载具二维动力学、激光 SLAM 与神经网络导航: './ground/road_numpy_nn_slam.md'
 - 空域载具:
+    - 无人机空间围栏与速度门控: './air/uav_box_geofence_guard/index.md'
     - MuJoCo 城市屋顶光伏覆盖率测量: './air/mujoco_uav_rooftop_pv_coverage_survey.md'
     - MuJoCo 屋顶光伏覆盖率测量第二天: './air/mujoco_uav_rooftop_pv_coverage_survey_day2.md'
     - winter 场景无人机圆周飞行: './air/winter_circle.md'
     - AirSim ROS 1 Noetic PPO 联调: './air/airsim_rl_planner_ros1.md'
     - 无人机制动旧入口: './ground/mujoco_drone_distance_stop.md'
-  - 城市道路地面载具二维动力学、激光 SLAM 与神经网络导航: './ground/road_numpy_nn_slam.md'
     - 无人机测距制动与神经控制: './air/mujoco_uav_range_neural_braking.md'
     - 无人机测距制动轨迹指标分析: './air/mujoco_uav_braking_metrics.md'
     - 无人机测距几何一致性检查: './air/mujoco_uav_range_sensor_quality.md'
@@ -406,6 +408,7 @@ nav:
     - AirSim ROS 2 Humble 最小桥接: './air/airsim_ros2_bringup.md'
     - AirSim ROS 2 Humble GNSS 桥接: './air/airsim_ros2_gnss.md'
     - AirSim ROS 2 Humble 磁力计桥接: './air/airsim_ros2_magnetometer.md'
+    - AirSim ROS 2 Humble 气压计桥接: './air/airsim_ros2_barometer.md'
     - 无人机 LiDAR 地面/障碍分割: './air/uav_lidar_ground_filter.md'
     - 无人机激光雷达三维安全走廊与自适应高度避障: './air/uav_lidar_safety_corridor.md'
     - 无人机最小加加速度轨迹生成与跟踪: './air/uav_minimum_jerk_tracking.md'
@@ -532,6 +535,7 @@ nav:
     - 倾转旋翼过渡走廊与倾转角调度: './air/uav_tiltrotor_transition_corridor/index.md'
     - AirSim 无人机 IMU 姿态估计（MLP）: './air/uav_airsim_attitude_estimator.md'
     - 四旋翼无人机 MuJoCo 建图导航与神经网络控制: './air/aerial_mujoco_slam_nn_nav/README.md'
+  - 四旋翼无人机物理仿真、激光 SLAM 与禁飞区规避: './air/uav_numpy_nn_slam.md'
 - 水域载具:
     - 水域载具 ROS2 接口: './water/HoloOcean.md'
     - 无人艇自主靠泊：激光雷达与神经网络末段对准: './water/usv_docking_nn.md'
@@ -541,6 +545,7 @@ nav:
         - Docker 开发环境: './water/docker.md'
         - HoloOcean ROS2 运行时容器: './water/docker_runtime.md'
     - 水域载具示例: './water/holoocean_examples.md'
+    - USV 会遇局面判定与 COLREGs 避让: './water/usv_colregs_avoidance.md'
     - 水下ROV仿真键盘控制与摄像头目标追踪: './water/rov_gazebo_sim.md'
     - 水下机器人物理仿真与 6-DOF 键盘运动控制: './water/rov_physical_simulation.md'
     - 水下 ROV 六自由度手操与抗流能力评测仿真: './water/rov_handling_eval.md'
