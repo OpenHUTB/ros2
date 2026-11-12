@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>turtlebot3_keyboard_teleop</name>
+  <version>0.1.0</version>
+  <description>
+    TurtleBot3 差速底盘键盘遥控 ROS 2 功能包 —— 机器人操作系统及应用课程作业。
+
+    通过键盘 w/s/a/d 发布 geometry_msgs/Twist 到 /cmd_vel，带超时悬停：
+    松开按键 0.5 秒后自动发零速度，防止车辆失控。
+  </description>
+  <maintainer email="Enemy52@users.noreply.github.com">Enemy52</maintainer>
+  <license>MIT</license>
+
+  <url type="repository">https://github.com/OpenHUTB/ros2</url>
+
+  <depend>rclpy</depend>
+  <depend>geometry_msgs</depend>
+
+  <exec_depend>ros2launch</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

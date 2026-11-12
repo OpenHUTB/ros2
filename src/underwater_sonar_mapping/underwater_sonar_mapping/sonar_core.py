@@ -3,13 +3,16 @@
 from __future__ import annotations
 
 import math
-from typing import Iterable, Sequence
+from typing import Iterable, Sequence, Tuple
 
 import numpy as np
 
 
-Obstacle = tuple[float, float, float]
-SonarReturn = tuple[float, float, bool]
+# 注意：这里是**运行时求值**的别名赋值，不是注解，``from __future__ import annotations``
+# 管不到它。内置泛型 tuple[...] 在 Python 3.8（课程虚拟机的版本）会抛
+# "TypeError: 'type' object is not subscriptable"，所以用 typing.Tuple。
+Obstacle = Tuple[float, float, float]
+SonarReturn = Tuple[float, float, bool]
 DEFAULT_MAP_ORIGIN = (0.0, 0.0)
 DEFAULT_INITIAL_POSE = (10.0, 10.0, 0.0)
 DEFAULT_OBSTACLES: tuple[Obstacle, ...] = (

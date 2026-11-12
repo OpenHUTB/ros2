@@ -1,0 +1,194 @@
+source SHA256 094729bff205c2693dfdb2db98ecd32077e1dcc5cbf238f81e5c2babafdab7ea
+/home/ros/patrol_check_fixed/turtle_patrol_fixed/src/chap1/turtle_waypoint_patrol/verify_turtlesim.py:27: ResourceWarning: unclosed <socket.socket fd=10, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('127.0.0.1', 57798), raddr=('127.0.0.1', 34267)>
+  rospy.wait_for_service('/reset', timeout=10)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+test_01_pause_resume_completion (__main__.PatrolChecks) ... /opt/ros/noetic/lib/python3/dist-packages/rospy/impl/masterslave.py:450: ResourceWarning: unclosed <socket.socket fd=14, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('127.0.0.1', 39666), raddr=('127.0.0.1', 46139)>
+  xmlrpcapi(pub_uri, cache=False).requestTopic(caller_id, topic, protocols)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/opt/ros/noetic/lib/python3/dist-packages/rospy/impl/tcpros_service.py:502: ResourceWarning: unclosed <socket.socket fd=13, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('127.0.0.1', 57816), raddr=('127.0.0.1', 34267)>
+  service_uri = self._get_service_uri(request)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/opt/ros/noetic/lib/python3/dist-packages/rospy/impl/masterslave.py:450: ResourceWarning: unclosed <socket.socket fd=15, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('127.0.0.1', 39672), raddr=('127.0.0.1', 46139)>
+  xmlrpcapi(pub_uri, cache=False).requestTopic(caller_id, topic, protocols)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/opt/ros/noetic/lib/python3/dist-packages/rospy/impl/masterslave.py:450: ResourceWarning: unclosed <socket.socket fd=18, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('127.0.0.1', 59412), raddr=('127.0.0.1', 44093)>
+  xmlrpcapi(pub_uri, cache=False).requestTopic(caller_id, topic, protocols)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/opt/ros/noetic/lib/python3/dist-packages/rospy/impl/masterslave.py:450: ResourceWarning: unclosed <socket.socket fd=19, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('127.0.0.1', 59428), raddr=('127.0.0.1', 44093)>
+  xmlrpcapi(pub_uri, cache=False).requestTopic(caller_id, topic, protocols)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/ros/patrol_check_fixed/turtle_patrol_fixed/src/chap1/turtle_waypoint_patrol/verify_turtlesim.py:69: ResourceWarning: unclosed <socket.socket fd=20, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('127.0.0.1', 57824), raddr=('127.0.0.1', 34267)>
+  rospy.wait_for_service('/waypoint_patrol/' + action, timeout=5)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/opt/ros/noetic/lib/python3/dist-packages/rospy/impl/tcpros_service.py:502: ResourceWarning: unclosed <socket.socket fd=20, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('127.0.0.1', 57826), raddr=('127.0.0.1', 34267)>
+  service_uri = self._get_service_uri(request)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+__main__.PatrolChecks.test_01_pause_resume_completion stationary displacement 0.0
+/home/ros/patrol_check_fixed/turtle_patrol_fixed/src/chap1/turtle_waypoint_patrol/verify_turtlesim.py:69: ResourceWarning: unclosed <socket.socket fd=20, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('127.0.0.1', 57838), raddr=('127.0.0.1', 34267)>
+  rospy.wait_for_service('/waypoint_patrol/' + action, timeout=5)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/opt/ros/noetic/lib/python3/dist-packages/rospy/impl/tcpros_service.py:502: ResourceWarning: unclosed <socket.socket fd=20, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('127.0.0.1', 57846), raddr=('127.0.0.1', 34267)>
+  service_uri = self._get_service_uri(request)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/ros/patrol_check_fixed/turtle_patrol_fixed/src/chap1/turtle_waypoint_patrol/verify_turtlesim.py:69: ResourceWarning: unclosed <socket.socket fd=20, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('127.0.0.1', 51280), raddr=('127.0.0.1', 34267)>
+  rospy.wait_for_service('/waypoint_patrol/' + action, timeout=5)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/opt/ros/noetic/lib/python3/dist-packages/rospy/impl/tcpros_service.py:502: ResourceWarning: unclosed <socket.socket fd=20, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('127.0.0.1', 51290), raddr=('127.0.0.1', 34267)>
+  service_uri = self._get_service_uri(request)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+exit signal=15 seconds=0.781
+/opt/ros/noetic/lib/python3/dist-packages/rospy/impl/masterslave.py:450: ResourceWarning: unclosed <socket.socket fd=18, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('127.0.0.1', 42902), raddr=('127.0.0.1', 33349)>
+  xmlrpcapi(pub_uri, cache=False).requestTopic(caller_id, topic, protocols)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ok
+test_02_cancel (__main__.PatrolChecks) ... /opt/ros/noetic/lib/python3/dist-packages/rospy/impl/tcpros_service.py:502: ResourceWarning: unclosed <socket.socket fd=8, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('127.0.0.1', 51302), raddr=('127.0.0.1', 34267)>
+  service_uri = self._get_service_uri(request)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/opt/ros/noetic/lib/python3/dist-packages/rospy/impl/masterslave.py:450: ResourceWarning: unclosed <socket.socket fd=8, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('127.0.0.1', 59156), raddr=('127.0.0.1', 46139)>
+  xmlrpcapi(pub_uri, cache=False).requestTopic(caller_id, topic, protocols)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/opt/ros/noetic/lib/python3/dist-packages/rospy/impl/masterslave.py:450: ResourceWarning: unclosed <socket.socket fd=18, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('127.0.0.1', 59594), raddr=('127.0.0.1', 46067)>
+  xmlrpcapi(pub_uri, cache=False).requestTopic(caller_id, topic, protocols)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/opt/ros/noetic/lib/python3/dist-packages/rospy/impl/masterslave.py:450: ResourceWarning: unclosed <socket.socket fd=18, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('127.0.0.1', 59602), raddr=('127.0.0.1', 46067)>
+  xmlrpcapi(pub_uri, cache=False).requestTopic(caller_id, topic, protocols)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/ros/patrol_check_fixed/turtle_patrol_fixed/src/chap1/turtle_waypoint_patrol/verify_turtlesim.py:69: ResourceWarning: unclosed <socket.socket fd=20, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('127.0.0.1', 51322), raddr=('127.0.0.1', 34267)>
+  rospy.wait_for_service('/waypoint_patrol/' + action, timeout=5)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/opt/ros/noetic/lib/python3/dist-packages/rospy/impl/tcpros_service.py:502: ResourceWarning: unclosed <socket.socket fd=20, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('127.0.0.1', 51334), raddr=('127.0.0.1', 34267)>
+  service_uri = self._get_service_uri(request)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/ros/patrol_check_fixed/turtle_patrol_fixed/src/chap1/turtle_waypoint_patrol/verify_turtlesim.py:69: ResourceWarning: unclosed <socket.socket fd=20, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('127.0.0.1', 51336), raddr=('127.0.0.1', 34267)>
+  rospy.wait_for_service('/waypoint_patrol/' + action, timeout=5)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/opt/ros/noetic/lib/python3/dist-packages/rospy/impl/tcpros_service.py:502: ResourceWarning: unclosed <socket.socket fd=20, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('127.0.0.1', 51348), raddr=('127.0.0.1', 34267)>
+  service_uri = self._get_service_uri(request)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+__main__.PatrolChecks.test_02_cancel stationary displacement 0.0
+/opt/ros/noetic/lib/python3/dist-packages/rospy/impl/masterslave.py:450: ResourceWarning: unclosed <socket.socket fd=17, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('127.0.0.1', 42454), raddr=('127.0.0.1', 33349)>
+  xmlrpcapi(pub_uri, cache=False).requestTopic(caller_id, topic, protocols)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+FAIL
+test_03_invalid_waypoint (__main__.PatrolChecks) ... /opt/ros/noetic/lib/python3/dist-packages/rospy/impl/tcpros_service.py:502: ResourceWarning: unclosed <socket.socket fd=17, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('127.0.0.1', 36914), raddr=('127.0.0.1', 34267)>
+  service_uri = self._get_service_uri(request)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/opt/ros/noetic/lib/python3/dist-packages/rospy/impl/masterslave.py:450: ResourceWarning: unclosed <socket.socket fd=17, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('127.0.0.1', 37710), raddr=('127.0.0.1', 46139)>
+  xmlrpcapi(pub_uri, cache=False).requestTopic(caller_id, topic, protocols)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/opt/ros/noetic/lib/python3/dist-packages/rospy/impl/masterslave.py:450: ResourceWarning: unclosed <socket.socket fd=20, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('127.0.0.1', 42484), raddr=('127.0.0.1', 33349)>
+  xmlrpcapi(pub_uri, cache=False).requestTopic(caller_id, topic, protocols)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ok
+test_04_missing_pose (__main__.PatrolChecks) ... /opt/ros/noetic/lib/python3/dist-packages/rospy/impl/tcpros_service.py:502: ResourceWarning: unclosed <socket.socket fd=19, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('127.0.0.1', 36922), raddr=('127.0.0.1', 34267)>
+  service_uri = self._get_service_uri(request)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/opt/ros/noetic/lib/python3/dist-packages/rospy/impl/masterslave.py:450: ResourceWarning: unclosed <socket.socket fd=17, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('127.0.0.1', 37720), raddr=('127.0.0.1', 46139)>
+  xmlrpcapi(pub_uri, cache=False).requestTopic(caller_id, topic, protocols)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/opt/ros/noetic/lib/python3/dist-packages/rospy/impl/masterslave.py:450: ResourceWarning: unclosed <socket.socket fd=20, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('127.0.0.1', 49284), raddr=('127.0.0.1', 46773)>
+  xmlrpcapi(pub_uri, cache=False).requestTopic(caller_id, topic, protocols)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/opt/ros/noetic/lib/python3/dist-packages/rospy/impl/masterslave.py:450: ResourceWarning: unclosed <socket.socket fd=20, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('127.0.0.1', 49300), raddr=('127.0.0.1', 46773)>
+  xmlrpcapi(pub_uri, cache=False).requestTopic(caller_id, topic, protocols)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+exit signal=15 seconds=0.841
+/opt/ros/noetic/lib/python3/dist-packages/rospy/impl/masterslave.py:450: ResourceWarning: unclosed <socket.socket fd=20, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('127.0.0.1', 34352), raddr=('127.0.0.1', 33349)>
+  xmlrpcapi(pub_uri, cache=False).requestTopic(caller_id, topic, protocols)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ok
+test_05_sigterm_during_motion (__main__.PatrolChecks) ... /opt/ros/noetic/lib/python3/dist-packages/rospy/impl/tcpros_service.py:502: ResourceWarning: unclosed <socket.socket fd=20, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('127.0.0.1', 43478), raddr=('127.0.0.1', 34267)>
+  service_uri = self._get_service_uri(request)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/opt/ros/noetic/lib/python3/dist-packages/rospy/impl/masterslave.py:450: ResourceWarning: unclosed <socket.socket fd=17, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('127.0.0.1', 48496), raddr=('127.0.0.1', 46139)>
+  xmlrpcapi(pub_uri, cache=False).requestTopic(caller_id, topic, protocols)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/opt/ros/noetic/lib/python3/dist-packages/rospy/impl/masterslave.py:450: ResourceWarning: unclosed <socket.socket fd=22, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('127.0.0.1', 55864), raddr=('127.0.0.1', 33271)>
+  xmlrpcapi(pub_uri, cache=False).requestTopic(caller_id, topic, protocols)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/opt/ros/noetic/lib/python3/dist-packages/rospy/impl/masterslave.py:450: ResourceWarning: unclosed <socket.socket fd=23, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('127.0.0.1', 55874), raddr=('127.0.0.1', 33271)>
+  xmlrpcapi(pub_uri, cache=False).requestTopic(caller_id, topic, protocols)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/opt/ros/noetic/lib/python3/dist-packages/rospy/impl/masterslave.py:450: ResourceWarning: unclosed <socket.socket fd=20, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('127.0.0.1', 35880), raddr=('127.0.0.1', 33349)>
+  xmlrpcapi(pub_uri, cache=False).requestTopic(caller_id, topic, protocols)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+FAIL
+test_06_pose_interruption (__main__.PatrolChecks) ... /opt/ros/noetic/lib/python3/dist-packages/rospy/impl/tcpros_service.py:502: ResourceWarning: unclosed <socket.socket fd=14, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('127.0.0.1', 44258), raddr=('127.0.0.1', 34267)>
+  service_uri = self._get_service_uri(request)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/opt/ros/noetic/lib/python3/dist-packages/rospy/impl/masterslave.py:450: ResourceWarning: unclosed <socket.socket fd=17, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('127.0.0.1', 57454), raddr=('127.0.0.1', 46139)>
+  xmlrpcapi(pub_uri, cache=False).requestTopic(caller_id, topic, protocols)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/opt/ros/noetic/lib/python3/dist-packages/rospy/impl/masterslave.py:450: ResourceWarning: unclosed <socket.socket fd=24, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('127.0.0.1', 57452), raddr=('127.0.0.1', 42585)>
+  xmlrpcapi(pub_uri, cache=False).requestTopic(caller_id, topic, protocols)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/opt/ros/noetic/lib/python3/dist-packages/rospy/impl/masterslave.py:450: ResourceWarning: unclosed <socket.socket fd=25, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('127.0.0.1', 57468), raddr=('127.0.0.1', 42585)>
+  xmlrpcapi(pub_uri, cache=False).requestTopic(caller_id, topic, protocols)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+__main__.PatrolChecks.test_06_pose_interruption stationary displacement 0.0
+exit signal=15 seconds=0.958
+/opt/ros/noetic/lib/python3/dist-packages/rospy/impl/masterslave.py:450: ResourceWarning: unclosed <socket.socket fd=24, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('127.0.0.1', 58244), raddr=('127.0.0.1', 33349)>
+  xmlrpcapi(pub_uri, cache=False).requestTopic(caller_id, topic, protocols)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ok
+test_07_sigint_during_motion (__main__.PatrolChecks) ... /opt/ros/noetic/lib/python3/dist-packages/rospy/impl/tcpros_service.py:502: ResourceWarning: unclosed <socket.socket fd=22, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('127.0.0.1', 33504), raddr=('127.0.0.1', 34267)>
+  service_uri = self._get_service_uri(request)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/opt/ros/noetic/lib/python3/dist-packages/rospy/impl/masterslave.py:450: ResourceWarning: unclosed <socket.socket fd=17, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('127.0.0.1', 59308), raddr=('127.0.0.1', 46139)>
+  xmlrpcapi(pub_uri, cache=False).requestTopic(caller_id, topic, protocols)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/opt/ros/noetic/lib/python3/dist-packages/rospy/impl/masterslave.py:450: ResourceWarning: unclosed <socket.socket fd=24, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('127.0.0.1', 35986), raddr=('127.0.0.1', 40247)>
+  xmlrpcapi(pub_uri, cache=False).requestTopic(caller_id, topic, protocols)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/opt/ros/noetic/lib/python3/dist-packages/rospy/impl/masterslave.py:450: ResourceWarning: unclosed <socket.socket fd=24, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('127.0.0.1', 35988), raddr=('127.0.0.1', 40247)>
+  xmlrpcapi(pub_uri, cache=False).requestTopic(caller_id, topic, protocols)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+exit signal=2 seconds=0.795
+__main__.PatrolChecks.test_07_sigint_during_motion stationary displacement 0.0
+/opt/ros/noetic/lib/python3/dist-packages/rospy/impl/masterslave.py:450: ResourceWarning: unclosed <socket.socket fd=24, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('127.0.0.1', 58270), raddr=('127.0.0.1', 33349)>
+  xmlrpcapi(pub_uri, cache=False).requestTopic(caller_id, topic, protocols)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ok
+
+======================================================================
+FAIL: test_02_cancel (__main__.PatrolChecks)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/ros/patrol_check_fixed/turtle_patrol_fixed/src/chap1/turtle_waypoint_patrol/verify_turtlesim.py", line 94, in stop
+    result = p.wait(timeout=8)
+  File "/usr/lib/python3.8/subprocess.py", line 1083, in wait
+    return self._wait(timeout=timeout)
+subprocess.TimeoutExpired: Command '['python3', '/home/ros/patrol_check_fixed/turtle_patrol_fixed/src/chap1/turtle_waypoint_patrol/main.py', '__name:=waypoint_patrol', '_trace_path:=/tmp/patrol_check_eg4sZ2fK/cases/test_02_cancel.csv', '_waypoints:=[[2,2]]']' timed out after 8 seconds
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/ros/patrol_check_fixed/turtle_patrol_fixed/src/chap1/turtle_waypoint_patrol/verify_turtlesim.py", line 107, in tearDown
+    self.stop()
+  File "/home/ros/patrol_check_fixed/turtle_patrol_fixed/src/chap1/turtle_waypoint_patrol/verify_turtlesim.py", line 101, in stop
+    self.fail('exit timeout: thread stacks saved in ' + str(OUTPUT))
+AssertionError: exit timeout: thread stacks saved in /tmp/patrol_check_eg4sZ2fK/cases
+
+======================================================================
+FAIL: test_05_sigterm_during_motion (__main__.PatrolChecks)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/ros/patrol_check_fixed/turtle_patrol_fixed/src/chap1/turtle_waypoint_patrol/verify_turtlesim.py", line 94, in stop
+    result = p.wait(timeout=8)
+  File "/usr/lib/python3.8/subprocess.py", line 1083, in wait
+    return self._wait(timeout=timeout)
+subprocess.TimeoutExpired: Command '['python3', '/home/ros/patrol_check_fixed/turtle_patrol_fixed/src/chap1/turtle_waypoint_patrol/main.py', '__name:=waypoint_patrol', '_trace_path:=/tmp/patrol_check_eg4sZ2fK/cases/test_05_sigterm_during_motion.csv', '_waypoints:=[[2,9]]']' timed out after 8 seconds
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/ros/patrol_check_fixed/turtle_patrol_fixed/src/chap1/turtle_waypoint_patrol/verify_turtlesim.py", line 152, in test_05_sigterm_during_motion
+    self.stop(signal.SIGTERM)
+  File "/home/ros/patrol_check_fixed/turtle_patrol_fixed/src/chap1/turtle_waypoint_patrol/verify_turtlesim.py", line 101, in stop
+    self.fail('exit timeout: thread stacks saved in ' + str(OUTPUT))
+AssertionError: exit timeout: thread stacks saved in /tmp/patrol_check_eg4sZ2fK/cases
+
+----------------------------------------------------------------------
+Ran 7 tests in 349.888s
+
+FAILED (failures=2)

@@ -1,0 +1,13 @@
+/**:
+  ros__parameters:
+    use_sim_time: false
+
+brake_load_transfer_node:
+  ros__parameters:
+    rate: 50.0
+    v0_kmh: 100.0
+    mass: 1500.0          # 整备质量 kg
+    payload: 0.0          # 载重 kg（实验档位：0 / 300 / 500）
+    payload_x: 1.35       # 载重质心距前轴 m（0.3 靠前 ~ 2.4 靠后）
+    brake_bias: 0.62      # 前轴制动力占比
+    mu: 0.90              # 路面附着系数（干沥青 0.9 / 湿滑 0.5）

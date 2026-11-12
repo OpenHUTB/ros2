@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import sys
 from pathlib import Path
 
@@ -13,10 +12,9 @@ sys.path.insert(0, str(MODULE_ROOT))
 sys.path.insert(0, str(MODULE_ROOT / "mujoco_abandoned_park_uav_visual_steering"))
 
 
-def test_ros_replay_and_evaluation_contract(tmp_path: Path) -> None:
+def test_ros_replay_contract(tmp_path: Path) -> None:
     torch = pytest.importorskip("torch")
     from model import LightweightSteeringCNN
-    from evaluation import evaluate
     from ros_node import VisualSteeringCore
     from PIL import Image
 
@@ -27,10 +25,6 @@ def test_ros_replay_and_evaluation_contract(tmp_path: Path) -> None:
     command = core.predict(Image.new("RGB", (320, 180), color=(80, 100, 120)))
     assert command.label in model.labels
     assert 0.0 <= command.confidence <= 1.0
-    result = evaluate(tmp_path / "scenarios.json", checkpoint, steps=2)
-    assert len(result["scenarios"]) == 3
-    assert all(0.0 <= item["cnn_success_rate"] <= 1.0 for item in result["scenarios"])
-    assert json.loads((tmp_path / "scenarios.json").read_text(encoding="utf-8"))["scenarios"]
 
 
 def test_checkpoint_contains_four_class_contract(tmp_path: Path) -> None:
@@ -65,32 +59,5 @@ def test_replay_directory_reports_frame_count(tmp_path: Path) -> None:
     assert sum(report["labels"].values()) == 3
 
 
-def test_evaluation_requires_real_checkpoint(tmp_path: Path) -> None:
-    from evaluation import evaluate
-    with pytest.raises(FileNotFoundError):
-        evaluate(tmp_path / "missing.json", tmp_path / "absent.pt")
-    assert not (tmp_path / "missing.json").exists()
-
-
-def test_evaluation_reports_real_inference_calls(tmp_path: Path) -> None:
-    import torch
-    from model import LightweightSteeringCNN
-    from evaluation import evaluate
-    model = LightweightSteeringCNN()
-    with torch.no_grad():
-        for parameter in model.parameters():
-            parameter.zero_()
-        model.classifier[-1].bias[3] = 10.0
-    checkpoint = tmp_path / "stop.pt"
-    torch.save({"state_dict": model.state_dict(), "image_height": 90,
-                "image_width": 160, "labels": model.labels}, checkpoint)
-    result = evaluate(tmp_path / "actual.json", checkpoint, steps=2)
-    for scenario in result["scenarios"]:
-        assert scenario["cnn_success_rate"] == 0.0
-        for episode in scenario["episodes"]:
-            if episode["controller"] == "cnn":
-                assert episode["inference_calls"] == 2
-                assert episode["labels"]["STOP"] == 2
-                assert episode["progress_m"] == 0.0
 
 

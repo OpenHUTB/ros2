@@ -1,0 +1,40 @@
+name: Muscle fatigue tests
+
+on:
+  push:
+    paths:
+      - "src/musculoskeletal/muscle_fatigue/**"
+      - ".github/workflows/muscle_fatigue_tests.yml"
+  pull_request:
+    paths:
+      - "src/musculoskeletal/muscle_fatigue/**"
+      - ".github/workflows/muscle_fatigue_tests.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Muscle fatigue tests (no ROS / simulator)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: src/musculoskeletal/muscle_fatigue
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install pytest
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pytest
+
+      - name: Run unit tests
+        run: python -m pytest tests -q

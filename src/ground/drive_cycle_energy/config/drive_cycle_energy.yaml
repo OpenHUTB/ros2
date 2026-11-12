@@ -1,0 +1,23 @@
+# drive_cycle_energy default parameters
+# loaded by launch/main.launch via <rosparam command="load" ...>
+# roslaunch arg xxx:=yyy overrides these values.
+# NOTE: keep this file pure ASCII -- ROS Melodic (Python 2.7) loads it with
+# an ASCII codec and fails on non-ASCII comments.
+
+# ---- vehicle and battery ----
+vehicle/mass: 1800.0
+vehicle/c_rr: 0.012
+vehicle/cd: 0.31
+vehicle/area: 2.2
+vehicle/battery_kwh: 60.0
+vehicle/regen_eff: 0.6
+
+# ---- assertion tolerances ----
+check/breakdown_tolerance: 0.02
+check/regen_limit: 1.0
+
+# ---- publishing ----
+rate/publish_hz: 10.0
+topic/report: /energy/report
+topic/breakdown: /energy/breakdown
+topic/range: /energy/range

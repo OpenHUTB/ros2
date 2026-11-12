@@ -1,0 +1,29 @@
+# 仿真侧参数（默认值真源）。
+#
+# 顶层键用通配 `/**`：ROS2 按节点名匹配参数，写死节点名一旦和 launch 里的
+# name= 对不上，整份 yaml 会静默失效（PR #604 的教训）。
+# 这里的键必须与 ros_node._declare_parameters() 一一对应；
+# launch 只覆盖常改的几项（场景/故障/时长），其余以本文件为准。
+/**:
+  ros__parameters:
+    # -- 仿真 --
+    scene: "open_ground"        # open_ground / obstacle_field / corridor / gate_track / urban_block
+    seed: 0
+    dt: 0.01                    # 物理步长
+    substeps: 4                 # MuJoCo 子步
+
+    # -- 故障 --
+    fault: "degradation"        # healthy / loss / degradation / stuck / dual_loss / progressive
+    rotor: 1
+    onset: 2.0                  # 故障注入时刻（s）
+    severity: 0.5               # degradation 的衰减比例；progressive 的每秒衰减量
+
+    # -- 控制 --
+    trajectory: "hover"         # hover / circle / zigzag / climb
+    mode: "neural"              # geometric / naive / ls / neural
+    checkpoint: "results/allocator.pt"
+
+    # -- 运行 --
+    duration: 12.0              # 节点运行总时长（s），到点自动退出
+    publish_rate: 50.0          # 状态发布频率（Hz）
+    enable_tf: true

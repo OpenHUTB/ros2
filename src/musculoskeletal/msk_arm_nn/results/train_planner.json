@@ -1,0 +1,129 @@
+{
+  "accuracy": 0.9307,
+  "architecture": [
+    28,
+    128,
+    128,
+    8
+  ],
+  "augment_samples": 3600,
+  "batch": 64,
+  "confusion": [
+    [
+      4,
+      2,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      28,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      10,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      1,
+      5,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      1,
+      5,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      4,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      15,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      2,
+      23
+    ]
+  ],
+  "directions": [
+    "east",
+    "north_east",
+    "north",
+    "north_west",
+    "west",
+    "south_west",
+    "south",
+    "south_east"
+  ],
+  "epochs": 50,
+  "input": "EE polar + target polar + q + dq + activation + depth = 28",
+  "input_dim": 28,
+  "lr": 0.0012,
+  "model": "planner_mlp",
+  "per_class_accuracy": {
+    "east": 0.667,
+    "north": 1.0,
+    "north_east": 0.966,
+    "north_west": 0.833,
+    "south": 1.0,
+    "south_east": 0.92,
+    "south_west": 1.0,
+    "west": 0.833
+  },
+  "seconds": 58.24,
+  "target_accuracy": 0.65,
+  "task": "discrete end-effector motion direction (8 classes)",
+  "train_samples": 4096,
+  "val_episodes": [
+    1,
+    1000,
+    1005,
+    2000
+  ],
+  "val_samples": 101
+}

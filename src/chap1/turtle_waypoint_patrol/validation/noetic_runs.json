@@ -1,0 +1,44 @@
+[
+  {
+    "run": "patrol_check_BxasJslJ",
+    "seconds": 34.253,
+    "passed": 7,
+    "exit_seconds": [
+      0.867,
+      0.824,
+      0.766,
+      0.82,
+      0.816,
+      0.766
+    ],
+    "source_sha256": "ca4ebe41a970f0c912ab034f089e94721ce3e3f963468de14617707286a836b2"
+  },
+  {
+    "run": "patrol_check_tnSRa3gL",
+    "seconds": 34.348,
+    "passed": 7,
+    "exit_seconds": [
+      0.816,
+      0.768,
+      0.816,
+      0.816,
+      0.815,
+      0.767
+    ],
+    "source_sha256": "ca4ebe41a970f0c912ab034f089e94721ce3e3f963468de14617707286a836b2"
+  },
+  {
+    "run": "patrol_check_QwdR1gfd",
+    "seconds": 34.157,
+    "passed": 7,
+    "exit_seconds": [
+      0.77,
+      0.815,
+      0.766,
+      0.816,
+      0.766,
+      0.815
+    ],
+    "source_sha256": "ca4ebe41a970f0c912ab034f089e94721ce3e3f963468de14617707286a836b2"
+  }
+]
