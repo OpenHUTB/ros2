@@ -359,6 +359,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [无人机航向角 PD 稳定控制与阶跃转向仿真](./air/uav_yaw_stabilize.md) —— 阵风力矩与往复风扰下的航向保持精度、阵风恢复时间，附实现动图
 * [AirSim ROS 1 Noetic PPO 联调](./air/airsim_rl_planner_ros1.md)
 * [无人机制动旧入口](./ground/mujoco_drone_distance_stop.md)
+* [城市道路地面载具：二维自行车动力学、激光 SLAM 与纯 NumPy 神经网络导航](./ground/road_numpy_nn_slam.md)
 
 
 * [Town10 立面自主巡航与图像采集](./air/town10_facade_cruise_capture/index.md)
