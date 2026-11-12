@@ -165,6 +165,16 @@ def _class_counts_pairs(ds, pairs, hw) -> np.ndarray:
     return cnt
 
 
+def _pixel_prob(p: np.ndarray, seg: np.ndarray) -> np.ndarray:
+    """取每个像素在目标类别上的概率。
+
+    ``p`` 为 (N,C,H,W)，``seg`` 为 (N,H,W)。直接用
+    ``p[..., seg]`` 会把未索引的 H/W 维一起广播成 (N,H,W,H,W)，
+    评估损失因此不是逐像素交叉熵，与训练口径不一致。
+    """
+    return np.take_along_axis(p, seg[:, None].astype(np.int64), axis=1)[:, 0]
+
+
 def evaluate_pairs(net: SegNet, ds, pairs, hw, wgt=None, max_frames: int = 0
                    ) -> Dict[str, float]:
     """在 (集号, 帧号) 列表上算指标。"""
@@ -179,13 +189,12 @@ def evaluate_pairs(net: SegNet, ds, pairs, hw, wgt=None, max_frames: int = 0
         seg = resize_nearest(ds.episodes[i].seg[k], hw)[None].astype(np.int32)
         lg = net.forward(rgb)
         p = softmax(lg, axis=1)
+        nll = -np.log(np.maximum(_pixel_prob(p, seg), 1e-12))
         if wgt is None:
-            loss += float(-np.mean(np.log(np.maximum(
-                p[np.arange(1)[:, None, None], seg], 1e-12))))
+            loss += float(np.mean(nll))
         else:
             w = np.asarray(wgt)[seg]
-            loss += float(-np.mean(w * np.log(np.maximum(
-                p[np.arange(1)[:, None, None], seg], 1e-12))))
+            loss += float(np.mean(w * nll))
         nb += 1
         conf += confusion(np.argmax(lg, axis=1), seg, N_CLASS)
     return {"loss": loss / max(nb, 1), "miou": miou(conf),
@@ -213,6 +222,7 @@ def evaluate(net: SegNet, ds: SegDataset, idx: Sequence[int],
              ) -> Dict[str, float]:
     """在若干集上算混淆矩阵、mIoU、像素准确率与损失。"""
     cfg = cfg or SegTrainConfig()
+    from .nn import softmax
     conf = np.zeros((N_CLASS, N_CLASS), np.int64)
     loss, nb = 0.0, 0
     counts = _class_counts(ds, list(idx), cfg.in_hw, 8)
@@ -224,10 +234,9 @@ def evaluate(net: SegNet, ds: SegDataset, idx: Sequence[int],
             rgb = np.clip(resize_area(ep.rgb[k], cfg.in_hw), 0, 255)[None] / 255.0
             seg = resize_nearest(ep.seg[k], cfg.in_hw)[None].astype(np.int32)
             lg = net.forward(rgb)
-            from .nn import softmax
             p = softmax(lg, axis=1)
-            loss += float(-np.mean(np.log(np.maximum(
-                p[np.arange(1)[:, None, None], seg], 1e-12))))
+            nll = -np.log(np.maximum(_pixel_prob(p, seg), 1e-12))
+            loss += float(np.mean(wgt[seg] * nll))
             nb += 1
             conf += confusion(np.argmax(lg, axis=1), seg, N_CLASS)
     return {"loss": loss / max(nb, 1), "miou": miou(conf),
