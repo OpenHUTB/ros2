@@ -1,0 +1,127 @@
+{
+  "accuracy": 0.9753,
+  "architecture": [
+    41,
+    128,
+    128,
+    8
+  ],
+  "augment_samples": 3600,
+  "batch": 64,
+  "confusion": [
+    [
+      469,
+      4,
+      0,
+      0,
+      0,
+      0,
+      0,
+      3
+    ],
+    [
+      3,
+      38,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      3,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      6
+    ]
+  ],
+  "directions": [
+    "ahead",
+    "ahead_left",
+    "left",
+    "back_left",
+    "back",
+    "back_right",
+    "right",
+    "ahead_right"
+  ],
+  "epochs": 50,
+  "input": "18 lidar sectors (min+mean) + goal polar + speed + balance = 41",
+  "input_dim": 41,
+  "lr": 0.0012,
+  "model": "planner_mlp",
+  "per_class_accuracy": {
+    "ahead": 0.985,
+    "ahead_left": 0.927,
+    "ahead_right": 0.667,
+    "back": null,
+    "back_left": null,
+    "back_right": null,
+    "left": null,
+    "right": null
+  },
+  "seconds": 4.87,
+  "target_accuracy": 0.65,
+  "task": "discrete local action (8 directions) classification",
+  "train_samples": 4632,
+  "val_episodes": [
+    0,
+    1
+  ],
+  "val_samples": 526
+}

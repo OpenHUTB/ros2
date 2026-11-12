@@ -1,0 +1,37 @@
+{
+  "architecture": {
+    "conv1_stride": 2,
+    "conv_channels": [
+      8,
+      16
+    ],
+    "fc": 64,
+    "in_ch": 1,
+    "in_h": 32,
+    "in_w": 32,
+    "out_dim": 2
+  },
+  "augmentation": "left-right mirror (flip depth image, negate turn)",
+  "batch": 32,
+  "epochs": 25,
+  "loss_weights": {
+    "omega": 1.0,
+    "v": 1.0
+  },
+  "lr": 0.0005,
+  "mean_baseline_omega_mae": 0.1474,
+  "mean_baseline_v_mae": 0.0533,
+  "model": "e2e_cnn",
+  "normalised_rmse": 0.133,
+  "omega_mae": 0.1858,
+  "seconds": 7.31,
+  "task": "depth image (32x32) -> (walk speed, turn rate) behaviour cloning",
+  "train_samples": 1032,
+  "v_mae": 0.1057,
+  "val_episodes": [
+    0,
+    1
+  ],
+  "val_samples": 526,
+  "weight_decay": 0.0005
+}
