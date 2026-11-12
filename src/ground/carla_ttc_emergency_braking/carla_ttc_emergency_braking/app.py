@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
-"""carla_ttc_emergency_braking — 基于激光雷达前向测距的自动紧急制动（AEB）实验。
+"""carla_ttc_emergency_braking — 基于语义激光雷达前向测距的自动紧急制动（AEB）实验。
 
 设计要点
 --------
-1. **感知**：32 线激光雷达只取「车体前方锥形区域」的点，算出与前车的最近纵向距离。
-   真实 AEB 用的是毫米波雷达，这里用激光雷达等价替代，好处是不依赖任何训练权重，
-   在任何地图上都能复现。
+1. **感知**：语义激光雷达（`sensor.lidar.ray_cast_semantic`）按实例号分组，只保留车辆
+   语义标签，取前方本车道最近实例的最近点作为与前车的距离。仿真器 actor 真值只用于
+   评估对账，不参与制动。真实 AEB 用的是毫米波雷达，这里用激光雷达等价替代，好处是
+   不依赖任何训练权重，在任何地图上都能复现。
 2. **决策**：TTC（Time To Collision）= 距离 / 相对速度。TTC 小于阈值或距离小于安全距离
-   立即满制动（brake=1.0），否则按巡航油门加速。
+   立即满制动（brake=1.0），否则按巡航油门加速；触发后锁存到停稳。
 3. **取证**：运行中保存关键帧（逼近 → 触发制动 → 停稳），结束后输出
-   `run_log.csv`（逐帧速度/距离/TTC）与 `result.png`（曲线 + 俯视照片）。
+   `run_log.csv`（逐帧速度/距离/TTC）与 `result.png`（速度/距离/TTC 三联图）。
 
 运行
 ----
@@ -92,15 +93,31 @@ def merge_params(cfg, args):
 # --------------------------------------------------------------------------- #
 
 def client_flavor():
-    """返回当前安装的是配套 hutb 客户端还是上游 carla 客户端。"""
+    """返回实际 import 到的客户端是配套 hutb 还是上游 carla。
+
+    不能只看「哪个 distribution 装上了」：配套客户端的顶层包名同样叫 ``carla``
+    （distribution 名是 ``hutb``），两个都装时按安装顺序取第一个会把上游客户端
+    误判成 hutb，``check_client_compat`` 不退出，接着 ``get_world()`` 就会 core dump。
+    这里优先看实际 import 到的模块能力：``set_files_base_folder`` 是 OpenHUTB
+    地图按需下载机制的接口，只有配套客户端才有。
+    """
+    if carla is None:
+        return "unknown"
+    client_cls = getattr(carla, "Client", None)
+    if client_cls is not None:
+        return "hutb" if hasattr(client_cls, "set_files_base_folder") else "carla"
+
+    # 没有 Client 时退回 distribution 归属判断（只用于报告，不参与安全判定）
     import importlib.metadata as md
-    for name in ("hutb", "carla"):
-        try:
-            md.version(name)
-            return name
-        except Exception:
-            continue
-    return "unknown"
+    mod_root = (getattr(carla, "__name__", "") or "carla").split(".")[0]
+    try:
+        dists = [d.lower() for d in (md.packages_distributions().get(mod_root) or [])]
+    except Exception:
+        dists = []
+    for name in dists:
+        if name.startswith("hutb"):
+            return "hutb"
+    return "carla" if dists else "unknown"
 
 
 def check_client_compat(server_version):
@@ -233,6 +250,9 @@ def place_vehicle_pair(world, spawn_index, gap, ego_blueprint, lead_blueprint):
     lead_bp.set_attribute("role_name", ROLE_PREFIX + "lead")
     ego = world.spawn_actor(ego_bp, ego_tf)
     lead = world.spawn_actor(lead_bp, lead_tf)
+    # 刚 spawn 的 actor 在服务端 tick 之前 get_location() 还是 (0,0,0)，
+    # 直接量距会把初始车距算成「到世界原点」，等一拍再量（实测曾打出 110.5 m）。
+    time.sleep(0.2)
     actual_gap = ego.get_location().distance(lead.get_location())
     return ego, lead, actual_gap
 
@@ -340,7 +360,11 @@ def decide_brake(lidar_distance, speed, min_brake_distance, ttc_threshold, senso
     return brake, ttc, source
 
 
-VEHICLE_TAGS = (14, 15, 16, 18)   # Car / Truck / Bus / Motorcycle
+# 语义激光雷达里「车辆」的 ObjectTag。本环境（OpenHUTB 2.10.1 / 服务端 3ea2130ed）
+# 用 probe 读 lead.semantic_tags 实测为 [14]；15/16/18 在 CARLA 的 CityObjectLabel 里
+# 分别是 bridge / railtrack / traffic light，不是车辆，混进来会把桥、轨道当成前车。
+# 需要换环境时改 config/params.yaml 的 sensor.vehicle_tags，不要在这里硬编码。
+VEHICLE_TAGS = (14,)
 
 
 def parse_semantic_lidar(image):
@@ -354,23 +378,30 @@ def parse_semantic_lidar(image):
 
 
 def front_vehicle_distance(xyz, obj_idx, obj_tag, max_range=60.0, min_x=3.0,
-                           z_min=-1.75, z_max=1.6, min_points=4):
+                           half_width=2.2, z_min=-1.75, z_max=1.6, min_points=4,
+                           vehicle_tags=VEHICLE_TAGS):
     """正前方最近的**车辆实例**距离（米）；没有返回 (None, None)。
 
     只用传感器观测：按实例号分组、只保留车辆语义标签，取该实例点的最小 x。
-    比几何走廊稳——不会把自车、路沿、路灯当成目标。
+
+    横向门限用「实例质心」而不是单个点：相邻车道的车（中心 y≈3.5 m）常有边缘点
+    落进 2.2 m 以内，按单点判断会把隔壁车道更近的车当成本车道前车而误刹
+    （PR #955 评审给出过 x=10/y=3.5 的反例）。质心判断与真值对账口径
+    （truth_front_target 的 |y| < half_width）一致。
     """
     if xyz is None or len(xyz) == 0:
         return None, None
     x, y, z = xyz[:, 0], xyz[:, 1], xyz[:, 2]
-    mask = ((x > min_x) & (x < max_range) & (np.abs(y) < 4.0)
-            & (z > z_min) & (z < z_max) & np.isin(obj_tag, VEHICLE_TAGS))
-    if not mask.any():
+    cand = ((x > min_x) & (x < max_range) & (z > z_min) & (z < z_max)
+            & np.isin(obj_tag, vehicle_tags))
+    if not cand.any():
         return None, None
     best = None
-    for inst in np.unique(obj_idx[mask]):
-        sel = mask & (obj_idx == inst)
+    for inst in np.unique(obj_idx[cand]):
+        sel = cand & (obj_idx == inst)
         if sel.sum() < min_points:
+            continue
+        if abs(float(y[sel].mean())) > half_width:      # 实例中心不在本车道 -> 不是前车
             continue
         d = float(x[sel].min())
         if best is None or d < best[0]:
@@ -384,7 +415,12 @@ def speed_of(actor):
 
 
 def save_plot(csv_rows, out_png, meta):
-    """把速度/距离/TTC 画成三条曲线 + 关键信息，作为实验证据。"""
+    """把速度/距离/TTC 画成三联图 + 关键信息，作为实验证据。
+
+    距离面板同时给两条线：激光雷达观测（决策输入，只在检出帧有点）和真值距离
+    （评估口径，逐帧都有）。只画激光雷达时，远距稀疏漏检会让曲线出现大片空白，
+    看不出逼近过程（PR #955 评审要求证据与实现一致）。
+    """
     if not csv_rows:
         return
     import matplotlib
@@ -393,25 +429,34 @@ def save_plot(csv_rows, out_png, meta):
 
     t = [r["t"] for r in csv_rows]
     v = [r["speed_kmh"] for r in csv_rows]
-    d = [r["distance_m"] if r["distance_m"] >= 0 else float("nan") for r in csv_rows]
-    ttc = [r["ttc"] if r["ttc"] > 0 else float("nan") for r in csv_rows]
+    lidar = [(r["t"], r["lidar_m"]) for r in csv_rows if r["lidar_m"] > 0]
+    truth = [(r["t"], r["truth_distance_m"]) for r in csv_rows if r["truth_distance_m"] > 0]
+    ttc_pts = [(r["t"], r["ttc"]) for r in csv_rows if r["ttc"] > 0]
 
     fig, axes = plt.subplots(3, 1, figsize=(9, 8), sharex=True)
     axes[0].plot(t, v, color="#c0392b", lw=2)
     axes[0].set_ylabel("speed (km/h)")
     axes[0].grid(alpha=.3)
-    axes[1].plot(t, d, color="#2980b9", lw=2)
+    if truth:
+        axes[1].plot([p[0] for p in truth], [p[1] for p in truth], color="#7f8c8d", lw=1.6,
+                     label="truth distance (eval only)")
+    if lidar:
+        axes[1].plot([p[0] for p in lidar], [p[1] for p in lidar], "o", color="#2980b9",
+                     ms=4, label="lidar distance (decision)")
     axes[1].axhline(meta["min_brake_distance"], ls="--", c="gray", label="min brake distance")
     axes[1].set_ylabel("front distance (m)")
-    axes[1].legend(loc="upper right")
+    axes[1].legend(loc="upper right", fontsize=8)
     axes[1].grid(alpha=.3)
-    axes[2].plot(t, ttc, color="#8e44ad", lw=2)
+    if ttc_pts:
+        axes[2].plot([p[0] for p in ttc_pts], [p[1] for p in ttc_pts], "o", color="#8e44ad", ms=4,
+                     label="TTC from lidar")
     axes[2].axhline(meta["ttc_threshold"], ls="--", c="gray", label="TTC threshold")
+    axes[2].set_ylim(0, max(3.0, 2.0 * float(meta["ttc_threshold"])))   # 远处 TTC 很大，截掉不占版面
     axes[2].set_ylabel("TTC (s)")
     axes[2].set_xlabel("time (s)")
-    axes[2].legend(loc="upper right")
+    axes[2].legend(loc="upper right", fontsize=8)
     axes[2].grid(alpha=.3)
-    fig.suptitle("AEB: ego stopped at %.1f m (min %.1f m), brake at %.1f s"
+    fig.suptitle("AEB: ego stopped at %.1f m (truth min %.1f m), brake at %.1f s"
                  % (meta["final_distance"], meta["min_distance"], meta["brake_time"]))
     fig.tight_layout()
     fig.savefig(out_png, dpi=110)
@@ -429,6 +474,9 @@ def run(cfg):
     out_cfg = cfg["output"]
     save_dir = os.path.join(_output_root(), out_cfg["save_dir"])
     os.makedirs(save_dir, exist_ok=True)
+    # 目标横向门限与车辆语义标签都从配置读：不同平台/地图的标签编号可能不同
+    target_half_width = float(sensors_cfg.get("target_half_width", 2.2))
+    vehicle_tags = tuple(int(t) for t in sensors_cfg.get("vehicle_tags", VEHICLE_TAGS))
 
     client, world = connect(cfg)
     cleanup_leftovers(world)
@@ -519,10 +567,16 @@ def run(cfg):
         gt_distance = ego.get_location().distance(lead.get_location())
         lidar_dist, lidar_inst = (front_vehicle_distance(
             lidar_state["xyz"], lidar_state["idx"], lidar_state["tag"],
-            float(sensors_cfg["lidar_range"])) if lidar_state["xyz"] is not None else (None, None))
+            max_range=float(sensors_cfg["lidar_range"]),
+            half_width=target_half_width,
+            vehicle_tags=vehicle_tags) if lidar_state["xyz"] is not None else (None, None))
         # 真值只用于评估/日志，不参与决策
-        truth = truth_front_target(world, ego)
+        truth = truth_front_target(world, ego, half_width=target_half_width)
         truth_dist = truth[0] if truth is not None else None
+        lidar_tag = -1
+        if lidar_inst is not None:
+            sel_tag = lidar_state["tag"][lidar_state["idx"] == lidar_inst]
+            lidar_tag = int(sel_tag[0]) if len(sel_tag) else -1
 
         # 失效安全：只有「点云流停了」才算传感器故障；
         # 走廊里暂时没有目标（例如前车还在 100 m 外、超出量程）是正常工况，不能刹停。
@@ -569,7 +623,6 @@ def run(cfg):
         rows.append({
             "t": round(t, 3),
             "speed_kmh": round(speed * 3.6, 3),
-            "distance_m": round(dist, 3) if dist is not None else -1.0,
             "lidar_m": round(lidar_dist, 3) if lidar_dist is not None else -1.0,
             "truth_distance_m": round(truth_dist, 3) if truth_dist is not None else -1.0,
             "ttc": round(ttc, 3),
@@ -577,6 +630,7 @@ def run(cfg):
             "sensor_lost": int(sensor_lost),
             "decision_source": decision_source,
             "instance": lidar_inst if lidar_inst is not None else -1,
+            "tag": lidar_tag,
         })
 
         # ---------------- 停止判定 ----------------

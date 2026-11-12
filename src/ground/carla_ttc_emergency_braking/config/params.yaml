@@ -22,6 +22,8 @@ sensor:
   lidar_range: 60.0
   lidar_points_per_second: 1200000
   lidar_rotation_frequency: 20.0
+  target_half_width: 2.2   # 前车横向门限（米）：车辆实例质心到本车中线的偏移，和真值对账口径一致
+  vehicle_tags: [14]       # 语义激光雷达里车辆的 ObjectTag；本环境 probe 实测 14=Car，15/16/18 分别是桥/轨道/红绿灯
 
 control:
   cruise_throttle: 0.75     # 巡航油门

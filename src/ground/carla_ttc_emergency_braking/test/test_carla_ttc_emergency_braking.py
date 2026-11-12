@@ -7,6 +7,7 @@
 """
 import os
 import sys
+import types
 
 import numpy as np
 import pytest
@@ -15,8 +16,10 @@ import yaml
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
+from carla_ttc_emergency_braking import app as aeb_app  # noqa: E402
 from carla_ttc_emergency_braking.app import (  # noqa: E402
     VEHICLE_TAGS,
+    client_flavor,
     decide_brake,
     front_vehicle_distance,
     owned_by_module,
@@ -95,6 +98,38 @@ def test_front_vehicle_picks_nearest_vehicle_instance():
     assert inst == 9 and d == pytest.approx(10.0, abs=0.2)
 
 
+def test_front_vehicle_prefers_own_lane_over_closer_neighbour():
+    """评审反例：本车道前车 30 m，相邻车道 10 m 有更近的车 -> 仍选本车道那辆。"""
+    car = VEHICLE_TAGS[0]
+    rows = [(30.0 + i * 0.1, 0.0, 0.2, 7, car) for i in range(6)]
+    rows += [(10.0 + i * 0.1, 3.5, 0.2, 9, car) for i in range(6)]
+    d, inst = front_vehicle_distance(*_cloud(rows))
+    assert inst == 7
+    assert d == pytest.approx(30.0, abs=0.2)
+
+
+def test_front_vehicle_rejects_instance_centred_outside_lane():
+    """邻道车只有边缘点压到 2.2 m 以内，也不能按单点就把整辆车当本车道目标。"""
+    car = VEHICLE_TAGS[0]
+    rows = [(10.0 + i * 0.1, 2.0 if i < 2 else 3.3, 0.2, 3, car) for i in range(8)]
+    assert front_vehicle_distance(*_cloud(rows)) == (None, None)
+
+
+def test_vehicle_tags_default_only_car():
+    """本环境实测车辆标签只有 14；15/16/18（桥/轨道/红绿灯）不能被当前车。"""
+    assert VEHICLE_TAGS == (14,)
+    for tag in (15, 16, 18):
+        rows = [(6.0 + i * 0.1, 0.0, 0.2, 5, tag) for i in range(8)]
+        assert front_vehicle_distance(*_cloud(rows)) == (None, None)
+
+
+def test_vehicle_tags_configurable():
+    """换平台时标签编号可能不同，通过参数传入即可，不在代码里写死。"""
+    rows = [(8.0 + i * 0.1, 0.0, 0.2, 2, 10) for i in range(8)]
+    d, inst = front_vehicle_distance(*_cloud(rows), vehicle_tags=(10,))
+    assert inst == 2 and d == pytest.approx(8.0, abs=0.3)
+
+
 def test_front_vehicle_ignores_non_vehicle_semantics():
     """路沿/建筑（非车辆标签）不能被当成前车。"""
     rows = [(5.0 + i * 0.1, 0.0, 0.2, 3, 7) for i in range(8)]          # tag=7 = 路面
@@ -148,3 +183,34 @@ def test_low_speed_has_no_ttc():
     brake, ttc = should_brake(50.0, 0.3, 22.0, 1.6)
     assert ttc == -1.0
     assert brake is False
+
+
+# ---------------------------------------------------------------- 客户端识别
+def test_client_flavor_uses_actually_imported_client(monkeypatch):
+    """两个客户端都装时，按实际 import 到的 Client 能力判断，而不是 distribution 顺序。"""
+
+    class HutbClient:
+        def set_files_base_folder(self, *_):
+            pass
+
+    class UpstreamClient:      # 上游 carla 没有地图按需下载接口
+        pass
+
+    monkeypatch.setattr(aeb_app, "carla", types.SimpleNamespace(
+        Client=HutbClient, __name__="carla", __file__=".../carla/__init__.py"))
+    assert client_flavor() == "hutb"
+
+    monkeypatch.setattr(aeb_app, "carla", types.SimpleNamespace(
+        Client=UpstreamClient, __name__="carla", __file__=".../carla/__init__.py"))
+    assert client_flavor() == "carla"
+
+
+def test_client_flavor_unknown_without_client(monkeypatch):
+    monkeypatch.setattr(aeb_app, "carla", None)
+    assert client_flavor() == "unknown"
+
+
+def test_config_declares_lane_gate_and_tags():
+    cfg = _cfg()["sensor"]
+    assert float(cfg["target_half_width"]) == pytest.approx(2.2)
+    assert [int(t) for t in cfg["vehicle_tags"]] == [14]
