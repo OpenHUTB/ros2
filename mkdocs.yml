@@ -218,6 +218,7 @@ nav:
     - 视觉 SLAM 建图与自主导航（EKF-SLAM + 端到端对照）: './ground/ugv_visual_slam_nav.md'
     - DVS 事件相机背景活动抑制与运动目标跟踪: './ground/dvs_event_motion_tracking.md'
     - 差速机器人里程计标定与神经网络滑移补偿: './ground/diff_drive_odom_calib.md'
+    - 差速底盘驱动系统选型核算: './ground/diff_drive_powertrain_sizing.md'
     - IMU 噪声 Allan 方差辨识与倾角滤波整定: './ground/imu_allan_noise_identification.md'
     - 基于 IMU 的路面异常检测（坑洼 / 减速带 / 粗糙路面）: './ground/imu_road_anomaly_detection.md'
     - 两轮自平衡机器人（倾角PD + 神经网络策略克隆）: './ground/balance_bot.md'
