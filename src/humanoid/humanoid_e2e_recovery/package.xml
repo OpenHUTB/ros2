@@ -6,7 +6,10 @@
   <maintainer email="WZJ6666wudu@users.noreply.github.com">WZJ6666wudu</maintainer>
   <license>MIT</license>
 
-  <!-- ament_python 包无需 buildtool_depend；构建方式由下方 build_type 决定 -->
+  <!-- 构建期工具依赖。buildtool_depend 是构建期声明，不经过 rosdep resolve，
+       因此"rosdep 无规则"不构成省略理由；按 ament_python 的 colcon 构建惯例声明。 -->
+  <buildtool_depend>ament_python</buildtool_depend>
+
   <exec_depend>rclpy</exec_depend>
   <exec_depend>std_msgs</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
