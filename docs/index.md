@@ -224,6 +224,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [ROS2 A*+DWA 的 Gazebo 三维验证](./ground/ros2_dwa_gazebo.md)
 * [UWB 多基站测距定位布站几何精度对比评测](./ground/uwb_baseline_geometry_eval.md) —— 四种布站构型的 GDOP 与蒙特卡洛定位精度对比
 * [TurtleBot3 仿真自主导航与避障参数优化](./ground/turtlebot3_auto_nav/README.md)
+* [ROS2 TurtleBot3 激光雷达避障实验](./ground/ros2_turtlebot3_obstacle.md) —— 课程作业二独立归档：/scan 前方扇区测距、量程过滤、左右择优转向与断流看门狗（最小闭环）
 * [地面无人车视觉 SLAM 建图与自主导航](./ground/ugv_visual_slam_nav.md) —— 单目 RGB-D 做 EKF-SLAM 与占据栅格，A\* 规划 + 纯追踪执行，并排训练端到端 CNN 做对照
 * [DVS 事件相机背景活动抑制与运动目标跟踪](./ground/dvs_event_motion_tracking.md) —— 直接解析 CARLA 13 字节事件流，用 BAF 学习静态树冠噪声、残差连通域分割运动车辆，实测抑制 79.7% 背景事件、检出率 100%、质心 MAE 2.35 px，事件量仅为等价整帧像素的 3.21%
 * [MuJoCo Locomotion 强化学习对比实验](./ground/rl_mujoco_locomotion.md)
