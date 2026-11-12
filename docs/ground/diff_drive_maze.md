@@ -140,7 +140,7 @@ python3 test/record_demo_gif.py
 
 - 闭环 `4491` 步（`dt=0.005 s`），脚本复用 `main.py` 的起点、终点、隔墙、航点与 `control_step`，每 `16` 步录一帧后写入 GIF；
 - 实测：768×576、280 帧、每帧 80 ms（约 22.4 s）、循环播放，文件 525,989 B（0.50 MB）；
-- 脚本直接输出约 1.1 MB，入库前再用 ffmpeg 调色板量化压到 0.50 MB：
+- 脚本直接输出 `823,688 B`（约 0.79 MB，实测），入库前再用 ffmpeg 调色板量化压到 `525,989 B`（0.50 MB）：
   `ffmpeg -i in.gif -vf "split[s0][s1];[s0]palettegen=max_colors=128:stats_mode=diff[p];[s1][p]paletteuse=dither=bayer:bayer_scale=3" -loop 0 out.gif`；
 - 复现：在包目录执行 `python3 test/record_demo_gif.py`（录帧需 Pillow；离屏后端 `MUJOCO_GL=egl`，mesa 软件渲染）；
 - 小车先沿下方向东绕过横墙东端，再沿右侧向北绕过竖墙北端，最后驶向绿色终点球。

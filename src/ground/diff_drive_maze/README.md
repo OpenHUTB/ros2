@@ -74,7 +74,7 @@ ros2 launch diff_drive_maze main.launch.py headless:=true # 无头模式
 python3 test/record_demo_gif.py
 ```
 
-脚本复用 `main.py` 的起点、终点、隔墙、航点与控制律，输出到 `docs/img/ground/diff_drive_maze_demo.gif`。闭环 `4491` 步、每 `16` 步录一帧，实测 768×576、`280` 帧、每帧 `80 ms`、文件 `525,989` B（脚本直出约 1.1 MB，入库前用 ffmpeg 调色板量化压到 0.50 MB）。
+脚本复用 `main.py` 的起点、终点、隔墙、航点与控制律，输出到 `docs/img/ground/diff_drive_maze_demo.gif`。闭环 `4491` 步、每 `16` 步录一帧，实测 768×576、`280` 帧、每帧 `80 ms`、文件 `525,989` B（脚本直出实测 `823,688 B`，入库前用 ffmpeg 调色板量化压到 `525,989 B`）。
 
 ## 测试
 
