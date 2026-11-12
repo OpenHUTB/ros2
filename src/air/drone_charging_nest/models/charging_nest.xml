@@ -1,0 +1,102 @@
+<mujoco model="drone charging nest">
+  <compiler angle="degree" autolimits="true"/>
+  <option timestep="0.002" integrator="implicitfast" gravity="0 0 -9.81"/>
+
+  <visual>
+    <headlight diffuse="0.55 0.55 0.55" ambient="0.38 0.38 0.38" specular="0.1 0.1 0.1"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+    <global azimuth="120" elevation="-20"/>
+  </visual>
+
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1="0.30 0.45 0.65" rgb2="0.02 0.02 0.04"
+             width="256" height="1536"/>
+    <texture type="2d" name="floor_tex" builtin="checker" mark="edge"
+             rgb1="0.22 0.24 0.28" rgb2="0.14 0.15 0.18" markrgb="0.55 0.55 0.55"
+             width="300" height="300"/>
+    <material name="floor_mat" texture="floor_tex" texuniform="true" texrepeat="8 8" reflectance="0.15"/>
+    <material name="pad_base_mat" rgba="0.17 0.19 0.22 1"/>
+    <material name="pad_ring_mat" rgba="0.10 0.90 0.35 1" specular="0.5" shininess="0.6"/>
+    <material name="pad_center_mat" rgba="0.85 0.85 0.88 1" specular="0.4" shininess="0.4"/>
+    <material name="drone_body_mat" rgba="0.88 0.89 0.92 1"/>
+    <material name="arm_mat" rgba="0.13 0.14 0.17 1"/>
+    <material name="drone_accent_mat" rgba="1.00 0.42 0.05 1"/>
+    <material name="prop_mat" rgba="0.28 0.30 0.35 0.78"/>
+    <material name="target_mat" rgba="0.20 0.50 1.00 1" specular="0.6" shininess="0.5"/>
+  </asset>
+
+  <worldbody>
+    <light pos="0.5 -1.5 3.0" dir="0 0 -1" directional="true" diffuse="0.7 0.7 0.7"/>
+    <light pos="2.5 -2.5 2.2" diffuse="0.45 0.45 0.45"/>
+
+    <geom name="floor" type="plane" size="0 0 0.05" material="floor_mat"/>
+
+    <!-- charging nest / landing pad -->
+    <body name="charging_pad" pos="0 0 0">
+      <geom name="pad_base" type="cylinder" size="0.38 0.03" pos="0 0 0.03" material="pad_base_mat"/>
+      <geom name="pad_ring" type="cylinder" size="0.30 0.004" pos="0 0 0.064" material="pad_ring_mat"
+            contype="0" conaffinity="0"/>
+      <geom name="pad_center" type="cylinder" size="0.075 0.006" pos="0 0 0.066" material="pad_center_mat"
+            contype="0" conaffinity="0"/>
+      <site name="pad_center_site" pos="0 0 0.07" size="0.01" rgba="0.1 0.9 0.3 0.4"/>
+      <!-- four landing alignment bars -->
+      <geom name="pad_bar1" type="box" size="0.10 0.012 0.004" pos="0.26 0 0.062" material="pad_center_mat"
+            contype="0" conaffinity="0"/>
+      <geom name="pad_bar2" type="box" size="0.10 0.012 0.004" pos="-0.26 0 0.062" material="pad_center_mat"
+            contype="0" conaffinity="0"/>
+      <geom name="pad_bar3" type="box" size="0.012 0.10 0.004" pos="0 0.26 0.062" material="pad_center_mat"
+            contype="0" conaffinity="0"/>
+      <geom name="pad_bar4" type="box" size="0.012 0.10 0.004" pos="0 -0.26 0.062" material="pad_center_mat"
+            contype="0" conaffinity="0"/>
+    </body>
+
+    <!-- inspection target -->
+    <body name="inspection_target" pos="1.75 1.15 0">
+      <geom name="target_ring" type="cylinder" size="0.24 0.004" pos="0 0 0.02" material="target_mat"
+            contype="0" conaffinity="0"/>
+      <geom name="target_pole" type="cylinder" size="0.012 0.32" pos="0 0 0.34" material="target_mat"
+            contype="0" conaffinity="0"/>
+      <geom name="target_top" type="sphere" size="0.05" pos="0 0 0.68" material="target_mat"
+            contype="0" conaffinity="0"/>
+    </body>
+
+    <!-- quadrotor -->
+    <body name="drone" pos="0 0 0.16">
+      <freejoint name="drone_free"/>
+      <inertial mass="1.0" pos="0 0 0.02" diaginertia="0.010 0.010 0.018"/>
+      <geom name="body_geom" type="box" size="0.11 0.11 0.035" pos="0 0 0.02" material="drone_body_mat"/>
+      <geom name="top_stripe" type="box" size="0.06 0.018 0.004" pos="0.02 0 0.058" material="drone_accent_mat"/>
+      <geom name="nose_geom" type="box" size="0.025 0.035 0.018" pos="0.13 0 0.02" material="drone_accent_mat"/>
+      <geom name="arm1" type="capsule" fromto="0 0 0.02 0.17 0.17 0.05" size="0.010" material="arm_mat"/>
+      <geom name="arm2" type="capsule" fromto="0 0 0.02 0.17 -0.17 0.05" size="0.010" material="arm_mat"/>
+      <geom name="arm3" type="capsule" fromto="0 0 0.02 -0.17 0.17 0.05" size="0.010" material="arm_mat"/>
+      <geom name="arm4" type="capsule" fromto="0 0 0.02 -0.17 -0.17 0.05" size="0.010" material="arm_mat"/>
+      <geom name="rotor1" type="cylinder" size="0.10 0.004" pos="0.17 0.17 0.055" material="prop_mat"
+            contype="0" conaffinity="0"/>
+      <geom name="rotor2" type="cylinder" size="0.10 0.004" pos="0.17 -0.17 0.055" material="prop_mat"
+            contype="0" conaffinity="0"/>
+      <geom name="rotor3" type="cylinder" size="0.10 0.004" pos="-0.17 0.17 0.055" material="prop_mat"
+            contype="0" conaffinity="0"/>
+      <geom name="rotor4" type="cylinder" size="0.10 0.004" pos="-0.17 -0.17 0.055" material="prop_mat"
+            contype="0" conaffinity="0"/>
+      <!-- landing legs -->
+      <geom name="leg1" type="capsule" fromto="0.075 0.075 -0.005 0.105 0.105 -0.055" size="0.008"
+            material="arm_mat"/>
+      <geom name="leg2" type="capsule" fromto="0.075 -0.075 -0.005 0.105 -0.105 -0.055" size="0.008"
+            material="arm_mat"/>
+      <geom name="leg3" type="capsule" fromto="-0.075 0.075 -0.005 -0.105 0.105 -0.055" size="0.008"
+            material="arm_mat"/>
+      <geom name="leg4" type="capsule" fromto="-0.075 -0.075 -0.005 -0.105 -0.105 -0.055" size="0.008"
+            material="arm_mat"/>
+      <site name="rotor1_site" pos="0.17 0.17 0.06" size="0.005"/>
+      <site name="rotor2_site" pos="0.17 -0.17 0.06" size="0.005"/>
+      <site name="rotor3_site" pos="-0.17 0.17 0.06" size="0.005"/>
+      <site name="rotor4_site" pos="-0.17 -0.17 0.06" size="0.005"/>
+    </body>
+
+    <camera name="overview" pos="2.2000 -2.4500 1.8500"
+            xyaxes="0.911922 0.410365 -0.000000 -0.130132 0.289183 0.948388" fovy="45"/>
+    <camera name="padcam" pos="0.8200 -0.8200 0.7200"
+            xyaxes="0.707107 0.707107 -0.000000 -0.265600 0.265600 0.926776" fovy="50"/>
+  </worldbody>
+</mujoco>

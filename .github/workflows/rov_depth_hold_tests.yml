@@ -1,0 +1,44 @@
+name: rov_depth_hold tests
+
+on:
+  push:
+    paths:
+      - "src/water/rov_depth_hold/**"
+      - ".github/workflows/rov_depth_hold_tests.yml"
+  pull_request:
+    paths:
+      - "src/water/rov_depth_hold/**"
+      - ".github/workflows/rov_depth_hold_tests.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r src/water/rov_depth_hold/requirements.txt pytest
+      - name: Run tests
+        working-directory: src/water/rov_depth_hold
+        run: python -m pytest tests -v
+      - name: Run simulation
+        working-directory: src/water/rov_depth_hold
+        run: python main.py --out-dir results
+      - name: Check artifacts
+        working-directory: src/water/rov_depth_hold
+        run: |
+          test -s results/depth_response.png
+          test -s results/depth_demo.gif
+          test -s results/summary.json
+          python - <<'PY'
+          import json
+          d = json.load(open("results/summary.json", encoding="utf-8"))
+          m = d["metrics"]
+          assert m["steady_err"] < 0.05, m
+          assert m["recovery_time"] is not None, m
+          print("metrics ok:", m)
+          PY
