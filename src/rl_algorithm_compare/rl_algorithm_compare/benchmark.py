@@ -109,6 +109,8 @@ def run_benchmark(configs, seeds, episodes=120, eval_interval=20,
         raise ValueError('至少需要一组配置')
     if not seeds:
         raise ValueError('至少需要一个随机种子')
+    if len(set(seeds)) != len(seeds):
+        raise ValueError('随机种子不能重复：%s' % (seeds,))
     trainer = trainer or train_agent
 
     results = []
@@ -117,7 +119,7 @@ def run_benchmark(configs, seeds, episodes=120, eval_interval=20,
         runs = []
         for seed in seeds:
             res = trainer(algo, layer_list, episodes,
-                          eval_interval=eval_interval, seed=seed)
+                          eval_interval=eval_interval, seed=seed, tag=tag)
             runs.append(res)
         finals = [r['final_return'] for r in runs]
         stats = summarize(finals)
@@ -184,7 +186,7 @@ def main():
     ap = argparse.ArgumentParser(description='多随机种子基准评测')
     ap.add_argument('--configs', default='',
                     help='分号分隔的 algo:layers[:tag]；默认三组对比配置')
-    ap.add_argument('--seeds', default='0,1,2', help='随机种子，逗号分隔')
+    ap.add_argument('--seeds', default='0,1,2,3,4', help='随机种子，逗号分隔（建议 >= 5 个）')
     ap.add_argument('--episodes', type=int, default=120)
     ap.add_argument('--eval-interval', type=int, default=20)
     ap.add_argument('--out', default=_DEFAULT_OUT)

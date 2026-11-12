@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 from rl_algorithm_compare import benchmark as B  # noqa: E402
 
 
-def fake_trainer(algo, layers, episodes, eval_interval=20, seed=0):
+def fake_trainer(algo, layers, episodes, eval_interval=20, seed=0, tag=None):
     """固定返回：seed 越大回报越高，方便验证统计。"""
     return {
         "algo": algo,
@@ -136,12 +136,28 @@ class TestRunBenchmark(unittest.TestCase):
     def test_seeds_are_passed_through(self):
         seen = []
 
-        def trainer(algo, layers, episodes, eval_interval=20, seed=0):
+        def trainer(algo, layers, episodes, eval_interval=20, seed=0, tag=None):
             seen.append(seed)
             return fake_trainer(algo, layers, episodes, eval_interval, seed)
 
         B.run_benchmark([("dqn", "16", "a")], [3, 7], trainer=trainer, verbose=False)
         self.assertEqual(seen, [3, 7])
+
+    def test_duplicate_seeds_rejected(self):
+        """重复 seed 会得到 std=0 的假"完美"结果，必须直接拒绝。"""
+        with self.assertRaises(ValueError):
+            B.run_benchmark([("dqn", "16", "a")], [0, 0],
+                            trainer=fake_trainer, verbose=False)
+
+    def test_tag_is_forwarded(self):
+        seen = []
+
+        def trainer(algo, layers, episodes, eval_interval=20, seed=0, tag=None):
+            seen.append(tag)
+            return fake_trainer(algo, layers, episodes, eval_interval, seed, tag)
+
+        B.run_benchmark([("dqn", "16", "mytag")], [0], trainer=trainer, verbose=False)
+        self.assertEqual(seen, ["mytag"])
 
 
 class TestOutputs(unittest.TestCase):
@@ -175,6 +191,33 @@ class TestOutputs(unittest.TestCase):
         table = B.format_table(results)
         self.assertIn("配置", table)
         self.assertIn("a", table)
+
+
+class TestNetworkSeed(unittest.TestCase):
+    """网络初始化必须受 seed 影响——否则多 seed 的方差会系统性偏小。"""
+
+    def test_different_seed_different_weights(self):
+        import numpy as np
+        from rl_algorithm_compare.nn import MLP
+        a = MLP([4, 8, 2], seed=0)
+        b = MLP([4, 8, 2], seed=1)
+        self.assertFalse(np.allclose(a.W[0], b.W[0]))
+
+    def test_same_seed_same_weights(self):
+        import numpy as np
+        from rl_algorithm_compare.nn import MLP
+        a = MLP([4, 8, 2], seed=7)
+        b = MLP([4, 8, 2], seed=7)
+        for wa, wb in zip(a.W, b.W):
+            self.assertTrue(np.allclose(wa, wb))
+
+    def test_default_seed_keeps_old_behaviour(self):
+        import numpy as np
+        from rl_algorithm_compare.nn import MLP
+        a = MLP([4, 8, 2])
+        b = MLP([4, 8, 2], seed=0)
+        for wa, wb in zip(a.W, b.W):
+            self.assertTrue(np.allclose(wa, wb))
 
 
 if __name__ == "__main__":

@@ -74,7 +74,8 @@ def train_agent(algo, layers, episodes, eval_interval=30, seed=None,
         # 延迟导入：让 benchmark / 单元测试在没装 mujoco 的机器上也能 import 本模块
         from rl_algorithm_compare.cartpole_env import CartPoleEnv
         env = CartPoleEnv()
-    agent = ALGOS[algo](env.observation_dim, env.action_dim, layers)
+    # seed 同时管三件事：环境初值/探索（全局 np.random）、回放采样、网络初始化
+    agent = ALGOS[algo](env.observation_dim, env.action_dim, layers, seed=seed)
 
     tag = tag or algo
     csv_path = None
