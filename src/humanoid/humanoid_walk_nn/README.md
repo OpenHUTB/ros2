@@ -30,7 +30,7 @@ humanoid_walk_nn/
 ├── scripts/                      # ROS 节点（sim/slam/nav/perception/e2e/metrics/viewer/teleop）
 ├── launch/                       # teleop / slam_nav / perception / e2e / benchmark / bringup
 ├── tools/                        # 采集、训练、评测、GIF 录制
-├── models/                       # 模型的 meta 与指标（*.json）；权重 *.npz 由 main.sh train 生成
+├── models/                       # 模型的 meta 与指标（*.json）+ 权重（*.npz，约 1.34 MB，已入库）
 ├── results/                      # 训练指标、三场景 benchmark 汇总（JSON/CSV）
 └── tests/                        # 物理 / 建图 / 规划 / 控制自测
 ```
@@ -46,7 +46,7 @@ humanoid_walk_nn/
 ```bash
 cd src/humanoid/humanoid_walk_nn
 bash main.sh setup
-bash main.sh train                 # 生成 models/*.npz 与 results/*.npz（权重不入库，首次必跑）
+bash main.sh train                 # 可选：重新训练并覆盖 models/*.npz 与 results/*（权重已入库，clone 后无需先训练）
 bash scripts/build_ros.sh          # 独立工作空间 ~/humanoid_ws
 source ~/humanoid_ws/devel/setup.bash
 roslaunch humanoid_walk_nn teleop.launch scene:=hall
