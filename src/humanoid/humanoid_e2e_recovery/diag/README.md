@@ -1,6 +1,6 @@
 # 诊断脚本（diag/）
 
-本目录保存排查 `humanoid_e2e_recovery` 闭环失稳时用过的 16 个诊断脚本。
+本目录保存排查 `humanoid_e2e_recovery` 闭环失稳时用过的 18 个诊断脚本。
 它们**不是**主流程的一部分，作用是把 README 与 `docs/humanoid/humanoid_e2e_recovery.md`
 里的实测数值变成可复现的：每个脚本只回答一个问题，输出可直接与下表对照。
 
@@ -8,7 +8,7 @@
 
 | 需要 | 说明 |
 |---|---|
-| 运行环境 | Linux + MuJoCo 4.0.0 + Python 3.12（EGL 离屏渲染，64×64 一帧约 65.6 ms）。**例外**：16 号只需 NumPy，不装 MuJoCo 也能跑 |
+| 运行环境 | Linux + MuJoCo 4.0.0 + Python 3.12（EGL 离屏渲染，64×64 一帧约 65.6 ms）。**例外**：16 号只需 NumPy，不装 MuJoCo 也能跑；17/18 必须 MuJoCo（真跑闭环） |
 | 数据集 | `data/e2e_dataset.npz`：`python3 main.py --collect --episodes 8`，约 166 s，得 4 272 条；或直接下载 Release `e2e-dataset-v2` 的 `e2e_dataset.npz`（4 652 064 B） |
 | 权重 | `models_trained/e2e_policy.npz`（随仓库提供，同 Release 也有同名文件可对照 sha256） |
 
@@ -42,6 +42,8 @@ python3 diag/03_correlation_ceiling.py --help
 | 14 | `14_pipeline_check.py` | 一条命令复现入库权重的全流程 | `python3 diag/14_pipeline_check.py --episodes 8` | 4 272 条、8/8 回合站住；X 逐维 std 均值 **0.00250**、X_mean 0.3675、X_std 均值 0.0200（大量格子被 floor 钳住）；Y 踝 pitch **58.0/33.8**（−124~300）；离线预测 std 28.27 / 目标 27.74；稳态首帧网络 **9.04** vs 专家 0.00；空站 **3.53 s** 跌倒 63.6°（单帧权重口径） |
 | 15 | `15_pool_temporal_ablation.py` | 同一批数据上，32 格 / 双帧 6 ms / 双帧 102 ms 到底哪个能站住 | `python3 diag/15_pool_temporal_ablation.py --episodes 8` | 一次采集 32 格数据后四档对照：A 16×16 单帧 **2.63 s**、B 32×32 单帧 **1.72 s**、C 双帧 6 ms **2.85 s**、D 双帧 102 ms **站满 10 s**；离线 val_mse 1.48/1.42 好看不等于闭环能站 → 只有 D 采纳入库 |
 | 16 | `16_offline_metrics.py` | 不装 MuJoCo 能不能独立复算留出集指标、第一层是否真死 | `python3 diag/16_offline_metrics.py` | 纯 NumPy，读 Release `e2e-dataset-v2` 数据集 + 随包权重：4 136 对、827 对留出集；val MSE 标准化 **0.01798** / 物理 **2.0918 N·m²**、RMSE **1.4463 N·m**、**R²=+0.9822**（常数基线 RMSE 10.8526）；第一层 **128/128 存活**（激活率 40.83%）、输出跨样本极差 **425.99 N·m**；并核对权重里 `X_mean/X_std` 与数据现算值 `max|Δ|=0.000e+00` |
+| 17 | `17_random_push_stress.py` | 连续随机推扰（幅值/时长/方向都随机）下能站多久 | `python3 diag/17_random_push_stress.py --seconds 15 --seeds 3 --rate 0.25 --dir-deg 25 --warmup 4` | 前后向 15 s × 3 回合 **3/3 站满**，最大倾角 6.1/7.5/6.1°、漂移 ≤0.088 m；全向 ±180° 2 回合 **2/2 站满**（7.6/6.1°）；把 `--warmup` 调回 1~2 s 则 **1/3 站满**，另两个在 2.30/2.68 s 跌倒 → 脆弱的是 2 s 相位，不是连续推扰本身 |
+| 18 | `18_ros_node_contract.py` | ROS 双节点的时序（10 ms 一帧、t 自累加）是否改变闭环结论 | `python3 diag/18_ros_node_contract.py --suite --seconds 10` | A 基准(4 ms/仿真时间) **站满 6.1°**；B 修复前节点(10 ms/自累加 0.01) **跌倒于 4.32 s、61.4°**；C 修复后(4 ms/自累加 0.004) **站满 6.1°**；D C+1 tick 延迟 **站满 5.5°** → 旧时序是真实缺陷，修复后结论不变 |
 
 > 时间窗口提醒：闭环类脚本的 `--seconds` 必须长于预期失稳时间，否则会把"还没倒"读成"站稳"。
 > 例如 β=0 实际在 3.53 s 才倒，用 `--seconds 3` 会显示"站稳 3.0s / 16.0°"。上表的闭环数字默认 10 s 窗口。
