@@ -1,0 +1,30 @@
+{
+  "architecture": {
+    "conv1_stride": 4,
+    "conv_channels": [
+      8,
+      16
+    ],
+    "fc": 64,
+    "out_dim": 2
+  },
+  "batch": 64,
+  "epochs": 20,
+  "loss_weights": {
+    "vx": 1.0,
+    "yaw": 1.0
+  },
+  "lr": 0.001,
+  "model": "e2e_cnn",
+  "normalised_rmse": 0.35627,
+  "seconds": 31.4,
+  "task": "camera image (48x64x3) -> (vx, yaw_rate) behaviour cloning",
+  "train_samples": 800,
+  "val_episodes": [
+    0,
+    1
+  ],
+  "val_samples": 527,
+  "vx_mae": 0.2473,
+  "yaw_mae": 0.3962
+}

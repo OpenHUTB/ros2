@@ -1,0 +1,739 @@
+{
+  "controllers": {
+    "classical": {
+      "scenes": {
+        "cave": {
+          "episodes": 2,
+          "mean_collisions": 0.0,
+          "mean_final_depth_error": 0.001,
+          "mean_final_error": 0.698,
+          "mean_path_length": 21.98,
+          "mean_time": 21.93,
+          "source": "MissionController",
+          "success_rate": 1.0
+        },
+        "harbor": {
+          "episodes": 2,
+          "mean_collisions": 0.0,
+          "mean_final_depth_error": 0.002,
+          "mean_final_error": 0.692,
+          "mean_path_length": 17.91,
+          "mean_time": 16.38,
+          "source": "MissionController",
+          "success_rate": 1.0
+        },
+        "pool": {
+          "episodes": 2,
+          "mean_collisions": 0.0,
+          "mean_final_depth_error": 0.003,
+          "mean_final_error": 0.7,
+          "mean_path_length": 14.52,
+          "mean_time": 13.6,
+          "source": "MissionController",
+          "success_rate": 1.0
+        }
+      }
+    },
+    "e2e": {
+      "scenes": {
+        "cave": {
+          "episodes": 2,
+          "mean_collisions": 0.0,
+          "mean_final_depth_error": 0.609,
+          "mean_final_error": 13.853,
+          "mean_path_length": 20.99,
+          "mean_time": 40.0,
+          "safety": "SafetyFilter",
+          "source": "e2e_cnn",
+          "success_rate": 0.0
+        },
+        "harbor": {
+          "episodes": 2,
+          "mean_collisions": 0.0,
+          "mean_final_depth_error": 0.579,
+          "mean_final_error": 12.886,
+          "mean_path_length": 24.0,
+          "mean_time": 40.0,
+          "safety": "SafetyFilter",
+          "source": "e2e_cnn",
+          "success_rate": 0.0
+        },
+        "pool": {
+          "episodes": 2,
+          "mean_collisions": 0.0,
+          "mean_final_depth_error": 0.497,
+          "mean_final_error": 10.368,
+          "mean_path_length": 3.59,
+          "mean_time": 40.0,
+          "safety": "SafetyFilter",
+          "source": "e2e_cnn",
+          "success_rate": 0.0
+        }
+      }
+    },
+    "neural": {
+      "scenes": {
+        "cave": {
+          "episodes": 2,
+          "mean_collisions": 0.0,
+          "mean_final_depth_error": 0.588,
+          "mean_final_error": 13.757,
+          "mean_path_length": 1.1,
+          "mean_time": 40.0,
+          "safety": "SafetyFilter",
+          "source": "control_mlp",
+          "success_rate": 0.0
+        },
+        "harbor": {
+          "episodes": 2,
+          "mean_collisions": 0.0,
+          "mean_final_depth_error": 0.116,
+          "mean_final_error": 1.973,
+          "mean_path_length": 16.4,
+          "mean_time": 40.0,
+          "safety": "SafetyFilter",
+          "source": "control_mlp",
+          "success_rate": 0.0
+        },
+        "pool": {
+          "episodes": 2,
+          "mean_collisions": 1.5,
+          "mean_final_depth_error": 0.359,
+          "mean_final_error": 7.311,
+          "mean_path_length": 6.15,
+          "mean_time": 40.0,
+          "safety": "SafetyFilter",
+          "source": "control_mlp",
+          "success_rate": 0.0
+        }
+      }
+    },
+    "neural_two_level": {
+      "scenes": {
+        "cave": {
+          "episodes": 2,
+          "mean_collisions": 0.0,
+          "mean_final_depth_error": 0.171,
+          "mean_final_error": 3.242,
+          "mean_path_length": 33.45,
+          "mean_time": 40.0,
+          "source": "planner_mlp+control_mlp",
+          "success_rate": 0.0
+        },
+        "harbor": {
+          "episodes": 2,
+          "mean_collisions": 0.0,
+          "mean_final_depth_error": 0.599,
+          "mean_final_error": 13.284,
+          "mean_path_length": 38.22,
+          "mean_time": 40.0,
+          "source": "planner_mlp+control_mlp",
+          "success_rate": 0.0
+        },
+        "pool": {
+          "episodes": 2,
+          "mean_collisions": 0.0,
+          "mean_final_depth_error": 0.1,
+          "mean_final_error": 0.694,
+          "mean_path_length": 15.38,
+          "mean_time": 14.69,
+          "source": "planner_mlp+control_mlp",
+          "success_rate": 1.0
+        }
+      }
+    }
+  },
+  "episodes_per_scene": 2,
+  "generated": "2026-11-10T12:33:11",
+  "max_seconds": 40.0,
+  "model_metrics": {
+    "control_mlp": {
+      "architecture": [
+        20,
+        128,
+        128,
+        2
+      ],
+      "augment_samples": 3000,
+      "batch": 64,
+      "epochs": 60,
+      "expert": "reactive",
+      "input": "16 sonar sectors + goal polar (20)",
+      "lr": 0.0015,
+      "model": "control_mlp",
+      "normalised_rmse": 0.04438,
+      "seconds": 43.41,
+      "task": "behaviour cloning of the reactive vector-field expert (vx, yaw_rate)",
+      "train_samples": 6980,
+      "val_episodes": [
+        "random-holdout"
+      ],
+      "val_samples": 332,
+      "vx_mae": 0.0169,
+      "yaw_mae": 0.0551
+    },
+    "e2e_cnn": {
+      "architecture": {
+        "conv1_stride": 4,
+        "conv_channels": [
+          8,
+          16
+        ],
+        "fc": 64,
+        "out_dim": 2
+      },
+      "batch": 64,
+      "epochs": 20,
+      "loss_weights": {
+        "vx": 1.0,
+        "yaw": 1.0
+      },
+      "lr": 0.001,
+      "model": "e2e_cnn",
+      "normalised_rmse": 0.35627,
+      "seconds": 31.4,
+      "task": "camera image (48x64x3) -> (vx, yaw_rate) behaviour cloning",
+      "train_samples": 800,
+      "val_episodes": [
+        0,
+        1
+      ],
+      "val_samples": 527,
+      "vx_mae": 0.2473,
+      "yaw_mae": 0.3962
+    },
+    "perception_mlp": {
+      "architecture": [
+        64,
+        128,
+        128,
+        64
+      ],
+      "augment_pairs": 7500,
+      "batch": 64,
+      "epochs": 40,
+      "hidden": 128,
+      "history": [
+        {
+          "epoch": 1,
+          "train_mse": 0.046503,
+          "val_rmse_norm": 0.14146
+        },
+        {
+          "epoch": 5,
+          "train_mse": 0.017612,
+          "val_rmse_norm": 0.13736
+        },
+        {
+          "epoch": 10,
+          "train_mse": 0.014401,
+          "val_rmse_norm": 0.12362
+        },
+        {
+          "epoch": 15,
+          "train_mse": 0.011439,
+          "val_rmse_norm": 0.11126
+        },
+        {
+          "epoch": 20,
+          "train_mse": 0.009678,
+          "val_rmse_norm": 0.10237
+        },
+        {
+          "epoch": 25,
+          "train_mse": 0.00868,
+          "val_rmse_norm": 0.09767
+        },
+        {
+          "epoch": 30,
+          "train_mse": 0.007865,
+          "val_rmse_norm": 0.0922
+        },
+        {
+          "epoch": 35,
+          "train_mse": 0.00683,
+          "val_rmse_norm": 0.08634
+        },
+        {
+          "epoch": 40,
+          "train_mse": 0.006191,
+          "val_rmse_norm": 0.08206
+        }
+      ],
+      "lr": 0.001,
+      "mae_m": 0.3532,
+      "mae_norm": 0.04586,
+      "model": "perception_mlp",
+      "rmse_denoised": 0.6319,
+      "rmse_denoised_norm": 0.08206,
+      "rmse_denoised_valid": 0.529,
+      "rmse_improvement_pct": 42.15,
+      "rmse_improvement_valid_pct": 17.25,
+      "rmse_noisy": 1.0923,
+      "rmse_noisy_norm": 0.14186,
+      "rmse_noisy_valid": 0.6393,
+      "seconds": 125.1,
+      "target": "residual (clean - noisy), output = noisy + residual clipped",
+      "task": "sonar denoising (64 beams), predicts residual clean-noisy",
+      "train_samples": 8300,
+      "val_episodes": [
+        0,
+        1
+      ],
+      "val_samples": 527
+    },
+    "planner_mlp": {
+      "accuracy": 0.7894,
+      "architecture": [
+        20,
+        64,
+        64,
+        8
+      ],
+      "batch": 64,
+      "confusion": [
+        [
+          391,
+          32,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          35,
+          25,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          42,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "directions": [
+        "ahead",
+        "ahead_left",
+        "left",
+        "back_left",
+        "back",
+        "back_right",
+        "right",
+        "ahead_right"
+      ],
+      "epochs": 50,
+      "input": "16 sonar sectors + goal polar (20)",
+      "lr": 0.001,
+      "model": "planner_mlp",
+      "per_class_accuracy": {
+        "ahead": 0.922,
+        "ahead_left": 0.417,
+        "ahead_right": 0.0,
+        "back": null,
+        "back_left": null,
+        "back_right": null,
+        "left": null,
+        "right": null
+      },
+      "seconds": 1.51,
+      "task": "discrete local action (8 directions) classification",
+      "train_samples": 800,
+      "val_episodes": [
+        0,
+        1
+      ],
+      "val_samples": 527
+    },
+    "rl_dqn": {
+      "algorithm": "DQN",
+      "best_epoch": 175,
+      "episodes": 200,
+      "final_recent_success": 0.5,
+      "hidden": [
+        64,
+        64
+      ],
+      "mean_collisions": 1.0,
+      "mean_return": 14.523,
+      "mean_steps": 75.0,
+      "success_rate": 0.6,
+      "train_seconds": 32.1,
+      "train_steps": 18452
+    },
+    "rl_pg": {
+      "algorithm": "REINFORCE",
+      "episodes": 250,
+      "final_recent_success": 1.0,
+      "hidden": [
+        64,
+        64
+      ],
+      "mean_collisions": 0.5,
+      "mean_return": 21.556,
+      "mean_steps": 52.4,
+      "success_rate": 0.967,
+      "train_seconds": 16.69,
+      "train_steps": 21627
+    }
+  },
+  "runs": [
+    {
+      "collisions": 0,
+      "controller": "classical",
+      "episode": 0,
+      "final_depth_error": 0.003,
+      "final_error": 0.7,
+      "path_length": 14.43,
+      "scene": "pool",
+      "seed": 20261110,
+      "success": true,
+      "time": 13.44
+    },
+    {
+      "collisions": 0,
+      "controller": "classical",
+      "episode": 1,
+      "final_depth_error": 0.003,
+      "final_error": 0.7,
+      "path_length": 14.62,
+      "scene": "pool",
+      "seed": 20261127,
+      "success": true,
+      "time": 13.76
+    },
+    {
+      "collisions": 0,
+      "controller": "neural",
+      "episode": 0,
+      "final_depth_error": 0.359,
+      "final_error": 7.31,
+      "path_length": 6.13,
+      "scene": "pool",
+      "seed": 20261211,
+      "success": false,
+      "time": 40.0
+    },
+    {
+      "collisions": 3,
+      "controller": "neural",
+      "episode": 1,
+      "final_depth_error": 0.359,
+      "final_error": 7.312,
+      "path_length": 6.18,
+      "scene": "pool",
+      "seed": 20261228,
+      "success": false,
+      "time": 40.0
+    },
+    {
+      "collisions": 0,
+      "controller": "neural_two_level",
+      "episode": 0,
+      "final_depth_error": 0.098,
+      "final_error": 0.697,
+      "path_length": 15.4,
+      "scene": "pool",
+      "seed": 20261312,
+      "success": true,
+      "time": 14.86
+    },
+    {
+      "collisions": 0,
+      "controller": "neural_two_level",
+      "episode": 1,
+      "final_depth_error": 0.101,
+      "final_error": 0.69,
+      "path_length": 15.36,
+      "scene": "pool",
+      "seed": 20261329,
+      "success": true,
+      "time": 14.52
+    },
+    {
+      "collisions": 0,
+      "controller": "e2e",
+      "episode": 0,
+      "final_depth_error": 0.497,
+      "final_error": 10.365,
+      "path_length": 3.59,
+      "scene": "pool",
+      "seed": 20261413,
+      "success": false,
+      "time": 40.0
+    },
+    {
+      "collisions": 0,
+      "controller": "e2e",
+      "episode": 1,
+      "final_depth_error": 0.497,
+      "final_error": 10.371,
+      "path_length": 3.59,
+      "scene": "pool",
+      "seed": 20261430,
+      "success": false,
+      "time": 40.0
+    },
+    {
+      "collisions": 0,
+      "controller": "classical",
+      "episode": 0,
+      "final_depth_error": 0.002,
+      "final_error": 0.696,
+      "path_length": 17.9,
+      "scene": "harbor",
+      "seed": 20262110,
+      "success": true,
+      "time": 16.3
+    },
+    {
+      "collisions": 0,
+      "controller": "classical",
+      "episode": 1,
+      "final_depth_error": 0.002,
+      "final_error": 0.689,
+      "path_length": 17.91,
+      "scene": "harbor",
+      "seed": 20262127,
+      "success": true,
+      "time": 16.46
+    },
+    {
+      "collisions": 0,
+      "controller": "neural",
+      "episode": 0,
+      "final_depth_error": 0.116,
+      "final_error": 1.964,
+      "path_length": 16.41,
+      "scene": "harbor",
+      "seed": 20262211,
+      "success": false,
+      "time": 40.0
+    },
+    {
+      "collisions": 0,
+      "controller": "neural",
+      "episode": 1,
+      "final_depth_error": 0.116,
+      "final_error": 1.981,
+      "path_length": 16.39,
+      "scene": "harbor",
+      "seed": 20262228,
+      "success": false,
+      "time": 40.0
+    },
+    {
+      "collisions": 0,
+      "controller": "neural_two_level",
+      "episode": 0,
+      "final_depth_error": 0.587,
+      "final_error": 12.755,
+      "path_length": 37.91,
+      "scene": "harbor",
+      "seed": 20262312,
+      "success": false,
+      "time": 40.0
+    },
+    {
+      "collisions": 0,
+      "controller": "neural_two_level",
+      "episode": 1,
+      "final_depth_error": 0.612,
+      "final_error": 13.813,
+      "path_length": 38.53,
+      "scene": "harbor",
+      "seed": 20262329,
+      "success": false,
+      "time": 40.0
+    },
+    {
+      "collisions": 0,
+      "controller": "e2e",
+      "episode": 0,
+      "final_depth_error": 0.652,
+      "final_error": 14.91,
+      "path_length": 34.95,
+      "scene": "harbor",
+      "seed": 20262413,
+      "success": false,
+      "time": 40.0
+    },
+    {
+      "collisions": 0,
+      "controller": "e2e",
+      "episode": 1,
+      "final_depth_error": 0.505,
+      "final_error": 10.862,
+      "path_length": 13.05,
+      "scene": "harbor",
+      "seed": 20262430,
+      "success": false,
+      "time": 40.0
+    },
+    {
+      "collisions": 0,
+      "controller": "classical",
+      "episode": 0,
+      "final_depth_error": 0.001,
+      "final_error": 0.699,
+      "path_length": 22.0,
+      "scene": "cave",
+      "seed": 20263110,
+      "success": true,
+      "time": 21.92
+    },
+    {
+      "collisions": 0,
+      "controller": "classical",
+      "episode": 1,
+      "final_depth_error": 0.001,
+      "final_error": 0.698,
+      "path_length": 21.97,
+      "scene": "cave",
+      "seed": 20263127,
+      "success": true,
+      "time": 21.94
+    },
+    {
+      "collisions": 0,
+      "controller": "neural",
+      "episode": 0,
+      "final_depth_error": 0.588,
+      "final_error": 13.757,
+      "path_length": 1.1,
+      "scene": "cave",
+      "seed": 20263211,
+      "success": false,
+      "time": 40.0
+    },
+    {
+      "collisions": 0,
+      "controller": "neural",
+      "episode": 1,
+      "final_depth_error": 0.588,
+      "final_error": 13.757,
+      "path_length": 1.1,
+      "scene": "cave",
+      "seed": 20263228,
+      "success": false,
+      "time": 40.0
+    },
+    {
+      "collisions": 0,
+      "controller": "neural_two_level",
+      "episode": 0,
+      "final_depth_error": 0.179,
+      "final_error": 3.317,
+      "path_length": 33.39,
+      "scene": "cave",
+      "seed": 20263312,
+      "success": false,
+      "time": 40.0
+    },
+    {
+      "collisions": 0,
+      "controller": "neural_two_level",
+      "episode": 1,
+      "final_depth_error": 0.164,
+      "final_error": 3.167,
+      "path_length": 33.52,
+      "scene": "cave",
+      "seed": 20263329,
+      "success": false,
+      "time": 40.0
+    },
+    {
+      "collisions": 0,
+      "controller": "e2e",
+      "episode": 0,
+      "final_depth_error": 0.611,
+      "final_error": 13.934,
+      "path_length": 20.88,
+      "scene": "cave",
+      "seed": 20263413,
+      "success": false,
+      "time": 40.0
+    },
+    {
+      "collisions": 0,
+      "controller": "e2e",
+      "episode": 1,
+      "final_depth_error": 0.606,
+      "final_error": 13.772,
+      "path_length": 21.1,
+      "scene": "cave",
+      "seed": 20263430,
+      "success": false,
+      "time": 40.0
+    }
+  ],
+  "sample_hz": 10.0,
+  "scenes": [
+    "pool",
+    "harbor",
+    "cave"
+  ],
+  "seconds": 350.0,
+  "seed": 20261110
+}

@@ -1,0 +1,77 @@
+{
+  "algorithms": {
+    "dqn_2x64": {
+      "algorithm": "DQN",
+      "best_epoch": 175,
+      "episodes": 200,
+      "final_recent_success": 0.5,
+      "hidden": [
+        64,
+        64
+      ],
+      "mean_collisions": 1.0,
+      "mean_return": 14.523,
+      "mean_steps": 75.0,
+      "success_rate": 0.6,
+      "train_seconds": 32.1,
+      "train_steps": 18452
+    },
+    "dqn_3x64": {
+      "algorithm": "DQN",
+      "best_epoch": 100,
+      "episodes": 200,
+      "final_recent_success": 0.133,
+      "hidden": [
+        64,
+        64,
+        64
+      ],
+      "mean_collisions": 5.0,
+      "mean_return": 4.143,
+      "mean_steps": 71.6,
+      "success_rate": 0.267,
+      "train_seconds": 44.91,
+      "train_steps": 19665
+    },
+    "pg_2x64": {
+      "algorithm": "REINFORCE",
+      "episodes": 250,
+      "final_recent_success": 1.0,
+      "hidden": [
+        64,
+        64
+      ],
+      "mean_collisions": 0.5,
+      "mean_return": 21.556,
+      "mean_steps": 52.4,
+      "success_rate": 0.967,
+      "train_seconds": 16.69,
+      "train_steps": 21627
+    }
+  },
+  "env": {
+    "actions": 8,
+    "max_steps": 120,
+    "random_start": true,
+    "scene": "pool",
+    "state": "7x7 local occupancy + goal polar (52 dims)",
+    "step_size": 0.25
+  },
+  "eval_episodes": 30,
+  "hidden_layer_comparison": {
+    "algorithm": "DQN",
+    "three_hidden_layers": {
+      "mean_return": 4.143,
+      "success_rate": 0.267,
+      "train_seconds": 44.91
+    },
+    "two_hidden_layers": {
+      "mean_return": 14.523,
+      "success_rate": 0.6,
+      "train_seconds": 32.1
+    }
+  },
+  "seconds": 96.39,
+  "seed": 2026,
+  "task": "reach goal in pool (discrete action abstraction)"
+}
