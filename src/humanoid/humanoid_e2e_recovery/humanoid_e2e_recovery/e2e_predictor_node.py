@@ -40,6 +40,10 @@ class E2EPredictorNode(Node):
             weights = _weights_path()
 
         self.predictor = E2EPredictor(weights)
+        # 双帧时序输入需要一个"仿真时间轴"：sim 节点每 tick 步进 5×0.002 s = 0.01 s
+        # 仿真时间并发一帧图，所以这里按每条图像累加 0.01 s 即可对齐 sim 时钟。
+        self.image_dt = float(self.declare_parameter('image_dt', 0.01).value)
+        self._t = 0.0
         self.tau_pub = self.create_publisher(Float64MultiArray, 'torque_delta', 10)
 
         self.create_subscription(Image, 'front_camera/image', self._img_cb, 10)
@@ -52,7 +56,9 @@ class E2EPredictorNode(Node):
             return
         # uint8 [0,255] → float [0,1]，与训练数据一致
         img_float = arr.astype(np.float32) / 255.0
-        tau = self.predictor.predict_from_image(img_float)
+        # 双帧权重按 102 ms 前那一帧拼输入；单帧权重忽略 t
+        self._t += self.image_dt
+        tau = self.predictor.predict_from_image(img_float, t=self._t)
 
         out = Float64MultiArray()
         out.data = tau.tolist()
