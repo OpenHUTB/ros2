@@ -481,6 +481,7 @@ nav:
     - 浑浊水体视觉增强与目标追踪（合成视频演示）: './water/water_vision_enhancement.md'
     - 水下 ROV 海底管道往返巡检（视觉感知 + EKF-SLAM + 端到端）: './water/rov_pipeline_follow.md'
     - 水面无人艇：激光雷达建图与神经网络局部规划: './water/usv_mujoco_nn.md'
+    - USV 弗劳德缩比换算与拖曳功率估算: './water/usv_froude_scaling.md'
     - 声呐数据滤波初步验证: './water/rov_sonar_filter.md'
     - ROV 水下机器人 MuJoCo 建图导航与神经网络控制: './water/rov_mujoco_slam_nn_nav/README.md'
     - DAVE 水下机器人仿真环境搭建与 REXROV/Oberon7 机械臂作业演示: './water/dave_underwater_sim.md'

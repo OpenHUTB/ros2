@@ -524,6 +524,8 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 
 * [水面无人艇：激光雷达建图与神经网络局部规划](./water/usv_mujoco_nn.md) —— MuJoCo 三自由度船体，射线激光雷达 + log-odds 占据栅格建图，MLP 输出局部目标点实现自主避障，封装为 ROS Noetic 节点
 
+* [USV 弗劳德缩比换算与拖曳功率估算](./water/usv_froude_scaling.md) —— 弗劳德相似定模型速度、λ³ 定阻力、λ^3.5 定功率；默认 10 m 船 10 倍缩尺，模型 2.5 N 换算实船总阻力 1925 N、轴功率 17.5 kW
+
 * [DAVE 水下机器人仿真环境搭建与 REXROV/Oberon7 机械臂作业演示](./water/dave_underwater_sim.md) —— 基于 Project DAVE（ROS Noetic + Gazebo 11）的 REXROV + Oberon7 机械臂水下作业仿真，附安装脚本与截图/动图
 
 ### 规划
