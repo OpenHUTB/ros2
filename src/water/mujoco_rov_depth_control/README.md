@@ -18,7 +18,7 @@
 ## 3. 环境要求
 
 - Windows / Linux 均可；Python 3.10
-- `mujoco`（3.17+）、`numpy`、`matplotlib`、`PyYAML`
+- `mujoco`（实测 3.17.0；3.1x 均可）、`numpy`、`matplotlib`、`PyYAML`
 - 不需要 CARLA 服务端，不需要 GPU
 
 > 说明：HoloOcean 路线需要另外下载数 GB 的世界包和独立渲染器，本机没有对应资源；
@@ -40,14 +40,15 @@ python main.py            :: 或 main.bat / bash main.sh
 ## 6. 预期输出
 
 ```text
-[rov] 目标深度序列: [-5.0, -5.0, -2.0, -2.0, -0.5, -0.5]，每个保持 7.0 s，仿真步长 0.002 s
-[rov] 实际机体质量 16.60 kg，净浮力 3.3 N
-[rov] t=0.0s 切换到目标深度 -5.00 m
-[rov] t=14.0s 切换到目标深度 -2.00 m
-[rov] t=28.0s 切换到目标深度 -0.50 m
+[rov] 任务: [[-5.0, 14.0], [-2.0, 14.0], [-0.5, 14.0]]（每段 (深度, 保持秒数)）
+[rov] 机体质量 16.60 kg（hull 15.00 + fin 1.60），净浮力 3.26 N，控制频率 20 Hz
+[rov] t=0.0s 切换到目标深度 -5.00 m（保持 14.0 s）
+[rov] t=14.0s 切换到目标深度 -2.00 m（保持 14.0 s）
+[rov] t=28.0s 切换到目标深度 -0.50 m（保持 14.0 s）
 [rov] 定深 0：目标 -5.00 m，稳态平均误差 0.013 m，最大 0.042 m
 [rov] 定深 1：目标 -2.00 m，稳态平均误差 0.002 m，最大 0.005 m
 [rov] 定深 2：目标 -0.50 m，稳态平均误差 0.000 m，最大 0.001 m
+[rov] 最差稳态误差 0.013 m（阈值 0.050 m）
 [rov] 结论：PASS（三段定深均收敛）
 ```
 
@@ -71,7 +72,6 @@ mujoco_rov_depth_control/
 │   ├── __init__.py
 │   └── app.py               # 全部实现（感知 / 决策 / 控制 / 取证）
 ├── launch/
-│   ├── main.launch          # ROS1 风格（直连，不需要 bridge）
 │   └── main.launch.py       # ROS2 launch（Node 调 console_scripts）
 ├── config/
 │   └── params.yaml          # 全部可调参数
@@ -79,6 +79,10 @@ mujoco_rov_depth_control/
 │   └── mujoco_rov_depth_control           
 ├── test/
 │   └── test_mujoco_rov_depth_control.py   # 纯逻辑单元测试（不需要仿真器）
+├── tools/
+│   └── summarize_csv.py     # 从 depth_log.csv 重算摘要（不重跑仿真）
+├── requirements.txt         # pip 依赖（numpy / matplotlib / PyYAML / mujoco）
+├── LICENSE                  # MIT（与 package.xml 一致）
 ├── docs/                    # 运行证据（曲线图 / CSV / 关键帧 / summary.md）
 └── README.md
 ```
@@ -105,6 +109,10 @@ mujoco_rov_depth_control/
 `docs/depth_log.csv`（840 行 / 20 Hz 逐点记录）、`docs/result.png`（深度与推力曲线）、
 `docs/summary.md`（各段稳态误差与判定）是**实际运行的证据文件**，保留以便评审不重跑仿真也能核对数字；
 如需干净源码包，可删除 `docs/` 后重新运行生成。
+
+> 注意：这三个文件是 **tracked**（随仓库提交），重新运行 `python main.py` 会**覆盖**它们，
+> 从而在 `git status` 里显示修改。如果只是复算数字，用 `python tools/summarize_csv.py --csv docs/depth_log.csv`
+> 即可，不必重跑仿真。
 
 ## 许可证
 
