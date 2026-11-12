@@ -192,7 +192,7 @@ graph TD
 | `scripts/train.py` | 采集专家示范并训练 |
 | `scripts/evaluate.py` | 专家 vs 神经网络闭环评测 |
 | `scripts/main.py` | 可视化与 GIF 导出 |
-| `scripts/test_expert.py` | 专家控制器单独诊断工具 |
+| `test/test_expert.py` | 5 项 unittest：靠泊容差、无碰撞、同种子可复现、随包权重加载、路径起点一致 |
 | `scripts/make_figures.py` | 生成文档配图 |
 | `nodes/usv_dock_node.py` | ROS Noetic 节点 |
 | `launch/main.launch` | 启动文件 |
