@@ -98,4 +98,14 @@ mujoco_rov_depth_control/
 
 ![ROV 定深控制（深度跟踪 + 垂向推力曲线动画） 截图 kf2](../../../docs/img/water/mujoco_rov_depth_control_kf2.png)
 
-> 动图由实际运行的帧合成（GIF < 5 MB）；素材与生成脚本见 `tools/build_media.py`、`tools/build_lidar_media.py`、`tools/build_air_media.py`。
+> 动图由本次实际运行产生的帧合成（GIF < 5 MB，PNG < 3 MB）。
+
+## 运行证据文件
+
+`docs/depth_log.csv`（840 行 / 20 Hz 逐点记录）、`docs/result.png`（深度与推力曲线）、
+`docs/summary.md`（各段稳态误差与判定）是**实际运行的证据文件**，保留以便评审不重跑仿真也能核对数字；
+如需干净源码包，可删除 `docs/` 后重新运行生成。
+
+## 许可证
+
+MIT，见同目录 `LICENSE`（与 `package.xml` 声明一致）。

@@ -1,0 +1,54 @@
+name: mujoco_rov_depth_control tests
+
+# 纯 Python + MuJoCo，不需要 ROS / CARLA：单元测试 + 42 s 定深仿真 + 证据断言。
+on:
+  push:
+    paths:
+      - "src/water/mujoco_rov_depth_control/**"
+      - ".github/workflows/mujoco_rov_depth_control_tests.yml"
+  pull_request:
+    paths:
+      - "src/water/mujoco_rov_depth_control/**"
+      - ".github/workflows/mujoco_rov_depth_control_tests.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r src/water/mujoco_rov_depth_control/requirements.txt pytest
+
+      - name: Run unit tests
+        working-directory: src/water/mujoco_rov_depth_control
+        run: python -m pytest test -v
+
+      - name: Run 42 s depth-keeping simulation
+        working-directory: src/water/mujoco_rov_depth_control
+        run: python main.py
+
+      - name: Check evidence artifacts
+        working-directory: src/water/mujoco_rov_depth_control
+        run: |
+          test -s docs/result.png
+          test -s docs/summary.md
+          grep -q "结论: PASS" docs/summary.md
+          python - <<'PY'
+          import csv
+          rows = list(csv.DictReader(open("docs/depth_log.csv", encoding="utf-8")))
+          assert len(rows) >= 800, len(rows)
+          worst = max(abs(float(r["error"])) for r in rows[-200:])
+          assert worst < 0.05, worst
+          print("rows:", len(rows), "worst(last200):", worst)
+          PY
+
+      - name: Check launch file parses
+        run: |
+          python -c "import ast,sys; ast.parse(open('src/water/mujoco_rov_depth_control/launch/main.launch.py', encoding='utf-8').read()); print('launch py ok')"
