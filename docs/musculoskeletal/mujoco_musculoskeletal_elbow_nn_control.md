@@ -88,9 +88,19 @@ ros2 topic echo /muscle_activations
 
 ## 实测演示
 
-![MuJoCo 肘关节轨迹与肌腱力回放](../img/musculoskeletal/elbow_trajectory.gif)
+![MuJoCo 肘关节轨迹与肌腱力回放](../img/musculoskeletal/mujoco_musculoskeletal_elbow_nn_control/elbow_trajectory.gif)
 
-该动图由 MuJoCo 模型和同一套 PD 专家控制器实际运行导出，记录目标角、实测肘角以及两路肌腱力，不是手工绘制的示意图。
+该动图由 MuJoCo 模型和同一套 PD 专家控制器实际运行导出，记录目标角、实测肘角以及两路肌腱力。仿真时长为 4 秒，动图共 200 帧，每帧 20 毫秒，播放时长同为 4 秒；肌腱力纵轴根据全部实测数据设置范围。
+
+在仓库根目录执行以下命令，可用包内的录制脚本重新生成同一场景：
+
+```bash
+python3 -m pip install -r src/musculoskeletal/mujoco_musculoskeletal_elbow_nn_control/requirements-demo.txt
+python3 src/musculoskeletal/mujoco_musculoskeletal_elbow_nn_control/tools/record_gif.py \
+  --output docs/img/musculoskeletal/mujoco_musculoskeletal_elbow_nn_control/elbow_trajectory.gif
+```
+
+录制脚本直接加载包内的 `models/elbow.xml`，在无图形窗口的环境中运行 MuJoCo 和 PD 控制器，并导出角度与肌腱力曲线。
 
 ## 验收
 
