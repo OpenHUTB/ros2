@@ -1072,7 +1072,8 @@
 与 AirSim(<code>src/air/drone_airsim_bringup</code>, Noetic, 跨版本需 ros1_bridge)。
 模块只依赖电量与位置两条话题, 换底座时不改代码, 只改话题名参数。</p>
 <h2 id="_3">构建与运行</h2>
-<div class="highlight"><pre><span></span><code>colcon<span class="w"> </span>build<span class="w"> </span>--packages-select<span class="w"> </span>uav_battery_rth_failsafe
+<div class="highlight"><pre><span></span><code><span class="c1"># 在 ROS2 工作区根目录（含 src/ 的那一层）</span>
+colcon<span class="w"> </span>build<span class="w"> </span>--packages-select<span class="w"> </span>uav_battery_rth_failsafe
 <span class="nb">source</span><span class="w"> </span>install/setup.bash
 ros2<span class="w"> </span>run<span class="w"> </span>uav_battery_rth_failsafe<span class="w"> </span>battery_rth_node
 <span class="c1"># 或</span>
