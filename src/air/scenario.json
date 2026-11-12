@@ -1,0 +1,10 @@
+{
+  "n_agents": 5,
+  "formation": "triangle",
+  "topology": "ring",
+  "max_steps": 500,
+  "dt": 0.1,
+  "k_consensus": 0.5,
+  "k_shape": 1.2,
+  "formation_types_available": ["triangle", "diamond", "line"]
+}

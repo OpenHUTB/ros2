@@ -1,3 +1,11 @@
-mujoco>=2.3.0
-mujoco-python-viewer>=0.1.0
-numpy>=1.21.0
+# 运行依赖（实测版本见 README「运行环境」一节）
+# 仓库要求用到 MuJoCo；这里用下界约束，避免镜像源缺某个具体版本导致装不上。
+mujoco>=3.0.0
+numpy>=1.21
+
+# 可选：只有需要导出 PNG 曲线时才装（缺依赖时程序自动跳过绘图、只写 CSV，退出码仍为 0）
+# matplotlib>=3.7
+#
+# 可选：只有 --gui 可视化窗口才需要（无图形界面的虚拟机不要装）
+# mujoco-python-viewer>=0.1.0
+# glfw>=2.6
