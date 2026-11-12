@@ -540,6 +540,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/train_ato_stop/">列车 ATO 自动运行与站台精确停车</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="ground/train_consist_coupler/">多编组列车纵向动力学与车钩力</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="ground/ros2_path_smoothing/">ROS2 A* 全局路径平滑（Catmull-Rom）</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/carla_platoon/">多车协同编队（CARLA）</a>
@@ -1402,6 +1404,7 @@
 </li>
 <li><a href="ground/mujoco_multi_goal_nav/">MuJoCo小车多目标导航</a></li>
 <li><a href="ground/train_ato_stop/">列车 ATO 自动运行与站台精确停车</a> —— 按线路限速与坡道生成目标速度曲线，站台停车误差 0.02～0.18 m（标尺 0.3 m），另有 ATP 超速监督与晚制动对照</li>
+<li><a href="ground/train_consist_coupler/">多编组列车纵向动力学与车钩力</a> —— N 节车 + N-1 个弹簧-阻尼-间隙车钩逐节积分，指令按车传播；理想同步时车钩力严格为 0，头尾两种方向给出镜像的压钩/拉钩，8 节 100 ms 延迟到 125 kN，停车误差仍在 0.3 m 内</li>
 <li><a href="ground/ros2_path_smoothing/">ROS2 A* 全局路径平滑（Catmull-Rom）</a></li>
 <li><a href="ground/carla_platoon/">多车协同编队（CARLA）</a> —— Leader 沿参考轨迹领航，3 辆 follower 沿同轨迹保持恒定弧长间距跟进的一字纵队编队</li>
 <li><a href="ground/ros2_occupancy_mapping/">ROS2 2D 激光占据栅格建图</a></li>
