@@ -144,6 +144,7 @@ nav:
     - 基于里程计反馈与 A* 算法的差速底盘静态全局路径规划: './ground/diff_drive_astar_odom_nav.md'
     - 视觉-惯性时间偏移互相关估计: './ground/vio_time_offset_estimation.md'
     - 手动控制: './set_up_and_connect_to_carla.md'
+    - 动态障碍物避让：激光雷达帧间差分与神经网络时机决策: './ground/dyn_avoid_nn.md'
     - MNIST 手写数字视觉感知与机器人运动控制: './ground/mnist_digit_control.md'
     - 生成对象: './ground/carla_spawn_objects.md'
     - 地面载具物理仿真与键盘运动控制: './ground/carla_keyboard_control.md'
