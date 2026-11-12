@@ -1,0 +1,17 @@
+<launch>
+  <arg name="sim_python"/>
+  <arg name="sim_entry"/>
+  <arg name="assets"/>
+  <arg name="seed" default="7"/>
+  <arg name="real_time_factor" default="1.0"/>
+  <arg name="task" default="perception"/>
+  <arg name="weights" default="$(find g1_rgb_floor_patrol)/models"/>
+  <arg name="output" default="results"/>
+  <arg name="seconds" default="45"/>
+    <node pkg="g1_rgb_floor_patrol" type="task_runner.py" name="humanoid_task_runner" output="screen" required="true">
+      <param name="sim_python" value="$(arg sim_python)"/><param name="sim_entry" value="$(arg sim_entry)"/>
+      <param name="assets" value="$(arg assets)"/><param name="task" value="$(arg task)"/>
+      <param name="weights" value="$(arg weights)"/><param name="output" value="$(arg output)"/>
+      <param name="seconds" value="$(arg seconds)"/>
+    </node>
+</launch>

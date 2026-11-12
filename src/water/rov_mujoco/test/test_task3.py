@@ -324,7 +324,7 @@ def run_task3_tests():
         sim_node.destroy_node()
 
     print("\n" + "=" * 70)
-    print("  🎉 任务 3 全部三大子项测试 100% 通过！课程作业满分 (15/15) 达成！")
+    print("  🎉 全部三大子项测试 100% 通过！技术指标完全达成！")
     print("=" * 70)
 
     if rclpy.ok():

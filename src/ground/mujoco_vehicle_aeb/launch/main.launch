@@ -1,0 +1,33 @@
+# -*- coding: utf-8 -*-
+"""一键启动：`roslaunch mujoco_vehicle_aeb main.launch`
+
+默认走离线批跑（不需要图形界面），`gui:=true` 才打开 MuJoCo 窗口。
+所有 <arg> 都真正拼进节点参数里——ROS 对未声明的 launch 参数不报错、直接忽略，
+"声明了却没传"会让使用者以为改生效了。
+"""
+<launch>
+  <arg name="ttc"      default="5.0"   doc="TTC 阈值 (s)"/>
+  <arg name="gain"     default="1.4"   doc="比例增益（0 = 相当于关闭 AEB）"/>
+  <arg name="v_ego"    default="5.0"   doc="自车初速度 (m/s)"/>
+  <arg name="v_lead"   default="0.0"   doc="前车初速度 (m/s)，0 = 静止障碍车"/>
+  <arg name="lead_x"   default="35.0"  doc="前车初始位置 (m)"/>
+  <arg name="sim_time" default="12.0"  doc="仿真时长 (s)"/>
+  <arg name="save_dir" default="$(find mujoco_vehicle_aeb)/shots" doc="CSV/PNG 输出目录"/>
+  <arg name="gui"      default="false" doc="true = 打开 MuJoCo 窗口（需要图形界面）"/>
+
+  <group if="$(arg gui)">
+    <node pkg="mujoco_vehicle_aeb" type="main.py" name="mujoco_vehicle_aeb"
+          output="screen" required="true"
+          args="--gui --ttc $(arg ttc) --gain $(arg gain) --v-ego $(arg v_ego)
+                --v-lead $(arg v_lead) --lead-x $(arg lead_x)
+                --sim-time $(arg sim_time) --save-dir $(arg save_dir)"/>
+  </group>
+
+  <group unless="$(arg gui)">
+    <node pkg="mujoco_vehicle_aeb" type="main.py" name="mujoco_vehicle_aeb"
+          output="screen" required="true"
+          args="--headless --ttc $(arg ttc) --gain $(arg gain) --v-ego $(arg v_ego)
+                --v-lead $(arg v_lead) --lead-x $(arg lead_x)
+                --sim-time $(arg sim_time) --save-dir $(arg save_dir)"/>
+  </group>
+</launch>
