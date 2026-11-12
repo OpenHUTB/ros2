@@ -413,6 +413,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/imu_allan_noise_identification/">IMU 噪声 Allan 方差辨识与倾角滤波整定</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="ground/imu_road_anomaly_detection/">基于 IMU 的路面异常检测（坑洼 / 减速带 / 粗糙路面）</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="ground/balance_bot/">两轮自平衡机器人（倾角PD + 神经网络策略克隆）</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/hill_start_assist/">差速 AGV 坡道起步辅助（防溜车）</a>
@@ -1175,6 +1177,7 @@
 <li><a href="ground/ros2_dwa_avoidance/">ROS2 差速机器人 A* 全局规划与 DWA 局部避障</a> —— A* 全局路线 + DWA 局部跟踪，5 场景 3 控制器对比，窄走廊与 U 形陷阱通过</li>
 <li><a href="ground/diff_drive_odom_calib/">差速机器人里程计标定与神经网络滑移补偿（ROS 1 + MuJoCo）</a> —— MuJoCo 物理仿真下的 catkin 包；两个解耦实验辨识路程/轮距系数，再用 MLP 学转向滑移的非线性补偿，方形路径终点误差 2.91 m → 1.94 m → 0.98 m</li>
 <li><a href="ground/imu_allan_noise_identification/">IMU 噪声 Allan 方差辨识与倾角滤波整定</a> —— 1 h 静止陀螺记录辨识 ARW（中位数 +0.46%）与零偏不稳定性（+3.77%，95% 区间 [−16.7, +44.4]），ARW→角度噪声、BI→偏置游走；倾角卡尔曼 NEES 1.61，过程噪声偏小 4 倍时 10.07</li>
+<li><a href="ground/imu_road_anomaly_detection/">基于 IMU 的路面异常检测（坑洼 / 减速带 / 粗糙路面）</a> —— 三轴重力投影（静态姿态）、3σ 滑窗能量检测与规则分类，四分之一车仿真 + CARLA 实采两套带真值数据，事件挂接 GNSS 经纬度</li>
 <li><a href="ground/passive_walker/">无动力被动行走（轮辐式 Rimless Wheel）</a></li>
 <li><a href="ground/lidar_camera_calibration/">相机-激光雷达外参标定</a> —— 合成多姿态棋盘格场景，PnP 求 LiDAR→相机外参并与真值对比，附噪声与摆位次数敏感性实验</li>
 <li>
