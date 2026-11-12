@@ -252,6 +252,66 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#6">6 参考</a>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#7">7 键盘控制与可重复操作</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#8">8 神经网络真实接触力控制</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#81">8.1 观测、动作与训练回合</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#82">8.2 网络和闭环更新</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#83">8.3 算法流程与源码对应</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#9">9 从真实渲染像素到肌肉激活</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#91">9.1 图像输入与监督学习</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#92">9.2 抓取闭环与评价</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#10-docker-ros-2-humble">10 Docker 与 ROS 2 Humble 复现</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#101">10.1 环境与构建</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#102">10.2 模型、键盘、网络和动图入口</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#103">10.3 输出文件与读图顺序</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#11_1">11 容器实测结果与图像记录</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#111">11.1 运行记录和数据来源</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#112">11.2 训练、验证与保留测试集</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#113">11.3 真实接触力闭环对比</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#114">11.4 视觉策略抓取</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#12-slam">12 夹爪移动底座的 SLAM 与神经导航</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#121">12.1 场景、运动与传感器</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#122">12.2 神经里程计与在线地图配准</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#123">12.3 神经价值迭代与运动控制</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#124">12.4 训练、测试与源码流程</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#125">12.5 三场景实际结果</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#126">12.6 复现入口</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#13">13 实验结论</a>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../muscle_leg_gait/">肌肉驱动的下肢关节与步态</a>
@@ -997,6 +1057,7 @@ l = l_0 - q,\qquad F = F_{max}\left[a\,f_l f_v + f_p\right]
 </p>
 <p>肌力经 <code>qfrc_applied</code> 施加到手指滑块；回位弹簧负责张开。</p>
 <h2 id="2">2 八组实验</h2>
+<p>下表数值按 Ubuntu 22.04 / ROS 2 Humble 容器中的 MuJoCo 3.3.7 实测统一更新，完整记录见<a href="../msk_gripper_data/classical_metrics.json">基准指标</a>。原有 G2/G8 动图保留，用于观察相同场景的运动过程；新增神经网络图像与数据见第 11 节。</p>
 <h3 id="21-g1">2.1 G1 肌肉激活 → 夹持力</h3>
 <table>
 <thead>
@@ -1032,16 +1093,16 @@ l = l_0 - q,\qquad F = F_{max}\left[a\,f_l f_v + f_p\right]
 </tr>
 <tr>
 <td>0.40</td>
-<td>7.70 N</td>
-<td>7.35 N</td>
-<td><strong>0.70 N</strong></td>
+<td>7.67 N</td>
+<td>7.42 N</td>
+<td><strong>0.50 N</strong></td>
 <td>8</td>
 </tr>
 <tr>
 <td>0.80</td>
-<td>14.65 N</td>
-<td>8.46 N</td>
-<td><strong>12.38 N</strong></td>
+<td>14.13 N</td>
+<td>9.20 N</td>
+<td><strong>9.86 N</strong></td>
 <td>8</td>
 </tr>
 </tbody>
@@ -1078,8 +1139,8 @@ l = l_0 - q,\qquad F = F_{max}\left[a\,f_l f_v + f_p\right]
 </tr>
 </tbody>
 </table>
-<p><strong>阈值在 0.2 与 0.4 之间</strong>：0.2 时手指行程 5.4 mm，还没碰到方块（接触点数 0）；0.4 时每指真实法向力约 0.35 N 即可夹住。这是真实的"夹得住 / 夹不住"分界：
-低于阈值时方块原封不动，高于阈值时方块跟着手走 98 mm。</p>
+<p><strong>阈值在 0.2 与 0.4 之间</strong>：0.2 时手指行程 5.4 mm，还没碰到方块（接触点数 0）；0.4 时每指真实法向力约 0.25 N 即可夹住。这是真实的"夹得住 / 夹不住"分界：
+低于阈值时方块保持在桌面附近，高于阈值时方块跟着手走约 98 mm。</p>
 <p><img alt="G2 抬升阈值" src="../../img/msk_gripper/g2_lift_threshold.png"/></p>
 <p>抓住时的画面：</p>
 <p><img alt="G2 抓住抬起" src="../../img/msk_gripper/g2_grasp_lift.gif"/></p>
@@ -1096,7 +1157,7 @@ l = l_0 - q,\qquad F = F_{max}\left[a\,f_l f_v + f_p\right]
 <tbody>
 <tr>
 <td>0.3</td>
-<td>6.4 mm（抬 6 mm 就滑脱）</td>
+<td>3.7 mm（抬起后滑脱）</td>
 </tr>
 <tr>
 <td>0.8</td>
@@ -1123,7 +1184,7 @@ l = l_0 - q,\qquad F = F_{max}\left[a\,f_l f_v + f_p\right]
 <tbody>
 <tr>
 <td>抬升高度</td>
-<td>95.4 mm</td>
+<td>95.3 mm</td>
 </tr>
 <tr>
 <td>松开后掉落时间</td>
@@ -1133,7 +1194,7 @@ l = l_0 - q,\qquad F = F_{max}\left[a\,f_l f_v + f_p\right]
 </table>
 <p>这一组用来验证前面的"抓住"确实是摩擦维持的——松开肌肉，方块立刻掉。</p>
 <h3 id="25-g5">2.5 G5 抓持力闭环</h3>
-<p>PI 调节激活，跟踪目标夹持力。力估计用准静态平衡：接触法向力 ≈ 肌肉力 − 弹簧回位力。</p>
+<p>PI 调节激活，跟踪目标夹持力。反馈通过 <code>mj_contactForce()</code> 读取两指与方块的真实接触法向力并求和，与 G1 使用同一测量口径。</p>
 <table>
 <thead>
 <tr>
@@ -1147,24 +1208,24 @@ l = l_0 - q,\qquad F = F_{max}\left[a\,f_l f_v + f_p\right]
 <tr>
 <td>2 N</td>
 <td>2.00 N</td>
-<td>0.27 s</td>
-<td>0.51</td>
+<td>0.576 s</td>
+<td>0.474</td>
 </tr>
 <tr>
 <td>4 N</td>
 <td>4.00 N</td>
-<td>0.22 s</td>
-<td>0.64</td>
+<td>0.445 s</td>
+<td>0.554</td>
 </tr>
 <tr>
 <td>8 N</td>
 <td>8.00 N</td>
-<td>0.24 s</td>
-<td>0.93</td>
+<td>0.390 s</td>
+<td>0.713</td>
 </tr>
 </tbody>
 </table>
-<p>结论：所需激活随目标力近线性增长，8 N 时已用掉 0.93 的激活度——接近肌肉上限。</p>
+<p>所需激活随目标力增长。上升时间取真实接触力首次到达目标值 90% 的时刻；稳态值由结束前的采样计算。</p>
 <p><img alt="G5 力闭环" src="../../img/msk_gripper/g5_force_loop.png"/></p>
 <h3 id="26-g6">2.6 G6 滑移反射</h3>
 <p>40 g 方块，初始激活固定 0.33（略低于静摩擦阈值）：</p>
@@ -1184,7 +1245,7 @@ l = l_0 - q,\qquad F = F_{max}\left[a\,f_l f_v + f_p\right]
 </tr>
 <tr>
 <td>有反射</td>
-<td><strong>86.2 mm</strong></td>
+<td><strong>86.0 mm</strong></td>
 <td>6 步（每步 +0.01，合计 +0.06）</td>
 </tr>
 </tbody>
@@ -1260,10 +1321,10 @@ l = l_0 - q,\qquad F = F_{max}\left[a\,f_l f_v + f_p\right]
 <h2 id="3">3 复现</h2>
 <div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>src/musculoskeletal/mujoco_muscle_gripper
 python3<span class="w"> </span>main.py<span class="w"> </span>check
-python3<span class="w"> </span>main.py<span class="w"> </span>bench<span class="w"> </span>--out<span class="w"> </span>out<span class="w">       </span><span class="c1"># 复现 2.1-2.4 全部数字</span>
+python3<span class="w"> </span>main.py<span class="w"> </span>bench<span class="w"> </span>--out<span class="w"> </span>out<span class="w">       </span><span class="c1"># 复现 G1–G8 全部数字</span>
 python3<span class="w"> </span>main.py<span class="w"> </span>gif<span class="w"> </span>--out<span class="w"> </span>gif<span class="w">         </span><span class="c1"># 复现本页动图</span>
 python3<span class="w"> </span>tools/plot_metrics.py<span class="w"> </span>out/metrics.json<span class="w"> </span>out
-python3<span class="w"> </span>-m<span class="w"> </span>unittest<span class="w"> </span>discover<span class="w"> </span>-s<span class="w"> </span>tests<span class="w"> </span><span class="c1"># 13 项</span>
+python3<span class="w"> </span>-m<span class="w"> </span>unittest<span class="w"> </span>discover<span class="w"> </span>-s<span class="w"> </span>tests<span class="w"> </span><span class="c1"># 基础依赖 24 项；安装 requirements-slam 后含 SLAM 共 27 项</span>
 </code></pre></div>
 <h2 id="4">4 已知限制</h2>
 <ol>
@@ -1280,7 +1341,666 @@ python3<span class="w"> </span>-m<span class="w"> </span>unittest<span class="w"
 <ul>
 <li>A. V. Hill, <em>The heat of shortening and the dynamic constants of muscle</em>, 1938</li>
 <li>R. M. Murray, Z. Li, S. S. Sastry, <em>A Mathematical Introduction to Robotic Manipulation</em>, 1994</li>
-</ul></div>
+</ul>
+<h2 id="7">7 键盘控制与可重复操作</h2>
+<p><code>main.py manual</code> 将键盘指令直接作用于同一套 Hill 肌肉和 MuJoCo 接触模型。每次按键后推进 0.1 s 物理仿真，并输出时间、激活、抬升目标、接触点数和真实接触法向力。</p>
+<table>
+<thead>
+<tr>
+<th>按键</th>
+<th>操作</th>
+<th>范围</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>W</td>
+<td>双指激活增加 0.05</td>
+<td>0–1</td>
+</tr>
+<tr>
+<td>S</td>
+<td>双指激活减少 0.05</td>
+<td>0–1</td>
+</tr>
+<tr>
+<td>R</td>
+<td>手掌抬升目标增加 10 mm</td>
+<td>0–150 mm</td>
+</tr>
+<tr>
+<td>F</td>
+<td>手掌抬升目标减少 10 mm</td>
+<td>0–150 mm</td>
+</tr>
+<tr>
+<td>空格</td>
+<td>肌肉激活归零，松开方块</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Q</td>
+<td>结束当前操作</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p>在有标准输入的终端运行：</p>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>main.py<span class="w"> </span>manual
+</code></pre></div>
+<p>同一映射支持按键序列复现。以下序列逐步合拢、抬升、降低，再退出；序列参数使用小写字母：</p>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>main.py<span class="w"> </span>manual<span class="w"> </span>--keys<span class="w"> </span>wwwwwwwwwwwwrrrrffffq
+ros2<span class="w"> </span>launch<span class="w"> </span>mujoco_muscle_gripper<span class="w"> </span>main.launch.py<span class="w"> </span>mode:<span class="o">=</span>manual<span class="w"> </span>keys:<span class="o">=</span>wwwwwwwwwwwwrrrrffffq
+</code></pre></div>
+<p><code>manual.command()</code> 对激活与高度分别限幅；<code>manual.run()</code> 在每个仿真子步先更新肌肉激活动力学，再施加肌力，最后由 <code>mj_step()</code> 计算接触运动。按键改变的是驱动力与抬升目标，方块运动由求解器计算。</p>
+<h2 id="8">8 神经网络真实接触力控制</h2>
+<h3 id="81">8.1 观测、动作与训练回合</h3>
+<p>力控制策略使用 MuJoCo 当前接触力、手指行程和速度作为反馈。<code>runs._finger_contact()</code> 只累加手指与方块之间的接触，通过 <code>mj_contactForce()</code> 读取法向分量，排除方块与桌面的接触。控制周期为 10 ms，每个控制周期执行 20 个 0.5 ms 物理子步。</p>
+<p>网络输入为五维归一化状态：</p>
+<p>
+<script type="math/tex; mode=display">
+\mathbf{x}_t=\left[\frac{F^*}{10},\frac{F_t}{15},\frac{\bar q_t}{0.02},\frac{\bar v_t}{0.10},u_{t-1}\right].
+</script>
+</p>
+<p>其中，$F^*$ 为目标双指接触法向力，$F_t$ 为测得的双指法向力之和，$\bar q_t$、$\bar v_t$ 为两指平均行程和速度，$u$ 为肌肉激活指令。训练教师产生激活增量：</p>
+<p>
+<script type="math/tex; mode=display">
+\Delta u_t^*=\operatorname{clip}\left(0.30(F^*-F_t)\Delta t_c,-0.02,0.02\right),\qquad \Delta t_c=0.01\ \mathrm{s}.
+</script>
+</p>
+<p>训练数据来自 24 个完整仿真回合，每回合 240 个控制时刻；回合随机改变质量（20–60 g）、摩擦系数（0.7–1.5）、目标力（1–10 N）和初始激活。<code>split_episodes()</code> 按回合编号划分训练、验证和测试集，避免同一回合的相邻帧落入不同集合。默认种子为 21，训练、验证、测试分别使用 16、4、4 个回合。</p>
+<h3 id="82">8.2 网络和闭环更新</h3>
+<p>策略是一个 5–24–1 的多层感知机。训练集均值和标准差用于输入与输出标准化，隐层使用双曲正切：</p>
+<p>
+<script type="math/tex; mode=display">
+\hat{\mathbf{x}}=\operatorname{clip}\left(\frac{\mathbf{x}-\boldsymbol\mu_x}{\boldsymbol\sigma_x},-6,6\right),\qquad
+\Delta u_\theta=\sigma_y\left[\tanh(\hat{\mathbf{x}}W_1+\mathbf b_1)W_2+b_2\right]+\mu_y.
+</script>
+</p>
+<p><code>MLP.fit()</code> 使用 Adam 和均方误差训练，批大小为 128。闭环运行时用学习到的增量更新指令：</p>
+<p>
+<script type="math/tex; mode=display">
+u_t=\operatorname{clip}\left(u_{t-1}+\operatorname{clip}(\Delta u_\theta,-0.02,0.02),0,1\right).
+</script>
+</p>
+<p>同一物理环境中的独立 PI 基准使用比例增益 0.025、积分增益 0.30。测试目标为 2 N、4 N、8 N，记录整段均方根误差、最后 0.5 s 的平均绝对误差、稳态力和最终激活。教师模仿误差与闭环接触力误差分别统计，前者衡量动作预测，后者衡量控制效果。</p>
+<h3 id="83">8.3 算法流程与源码对应</h3>
+<div class="highlight"><pre><span></span><code>随机化完整物理回合 → 采集反馈与教师动作 → 按回合划分数据
+→ 训练集标准化 → Adam 训练 → 验证损失 → 保留测试集评估
+→ 保存网络参数 → 神经网络闭环与 PI 基准对比 → 导出 CSV、曲线、指标
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>文件与函数</th>
+<th>职责</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>core.py / HillMuscle.update_activation()</code></td>
+<td>以激活、去激活两个时间常数更新肌肉内部激活</td>
+</tr>
+<tr>
+<td><code>core.py / HillMuscle.force()</code></td>
+<td>根据肌长、速度和激活计算 Hill 肌力</td>
+</tr>
+<tr>
+<td><code>runs.py / _finger_contact()</code></td>
+<td>读取手指与方块之间的真实接触法向力</td>
+</tr>
+<tr>
+<td><code>neural.py / GripEnvironment.step()</code></td>
+<td>应用肌力、执行物理子步、返回反馈</td>
+</tr>
+<tr>
+<td><code>neural.py / collect_force_data()</code></td>
+<td>在质量、摩擦和目标随机化的回合中采样</td>
+</tr>
+<tr>
+<td><code>neural.py / split_episodes()</code></td>
+<td>按完整回合划分数据</td>
+</tr>
+<tr>
+<td><code>neural.py / MLP.fit()</code></td>
+<td>标准化、前向传播、误差反传和 Adam 参数更新</td>
+</tr>
+<tr>
+<td><code>neural.py / force_rollout()</code></td>
+<td>对同一目标分别评估网络和 PI 控制</td>
+</tr>
+</tbody>
+</table>
+<p>肌肉内部激活也有一阶动态，而非瞬间等于网络输出：</p>
+<p>
+<script type="math/tex; mode=display">
+a_{k+1}=\operatorname{clip}\left(a_k+(u-a_k)\min\left(1,\frac{\Delta t}{\tau}\right),0,1\right).
+</script>
+</p>
+<p>当 $u&gt;a_k$ 时，$\tau=0.01\ \mathrm{s}$；否则 $\tau=0.04\ \mathrm{s}$。</p>
+<p>这使网络输出、肌肉激活、肌肉力和接触法向力形成连续的物理因果链。对于两侧对称夹持，静摩擦支撑重量的必要条件为 $\mu(N_L+N_R)\ge mg$；抬升加速度为 $\ddot z$ 时对应 $\mu(N_L+N_R)\ge m(g+\ddot z)$。实际滑移仍由 MuJoCo 的接触与摩擦求解器决定。</p>
+<h2 id="9">9 从真实渲染像素到肌肉激活</h2>
+<h3 id="91">9.1 图像输入与监督学习</h3>
+<p><code>GripEnvironment.render()</code> 从当前 MuJoCo 场景生成 320×240 RGB 图像。<code>image_features()</code> 将图像转为灰度、缩小至 16×16 并除以 255，得到 256 维像素向量。视觉策略采用 256–24–1 多层感知机，其部署输入为当前图像，输出为双指肌肉激活指令：</p>
+<p>
+<script type="math/tex; mode=display">
+\mathbf p_t=\frac{\operatorname{vec}(\operatorname{resize}_{16\times16}(\operatorname{gray}(I_t)))}{255},\qquad
+u_t=\operatorname{clip}(\pi_\theta(\mathbf p_t),0,1).
+</script>
+</p>
+<p>视觉训练的 18 个回合随机化初始行程（0–8 mm）、质量（20–40 g）和摩擦系数（1–1.5），每回合采集 24 张真实渲染图像。教师根据仿真行程产生标签：</p>
+<p>
+<script type="math/tex; mode=display">
+u^*=0.60+0.20\operatorname{clip}\left(\frac{0.009-\bar q}{0.009},0,1\right).
+</script>
+</p>
+<p>行程用于训练教师生成标签；部署时 <code>visual_rollout()</code> 只把图像特征传给网络。默认训练、验证、测试分别使用 12、3、3 个完整回合。像素模型学习当前固定机位、场景和随机化范围内的闭合策略。</p>
+<h3 id="92">9.2 抓取闭环与评价</h3>
+<p>视觉控制以 20 ms 为周期执行 280 次。网络控制手指激活，手掌执行给定的竖直抬升轨迹：</p>
+<p>
+<script type="math/tex; mode=display">
+z_d(t)=0.10\operatorname{clip}\left(\frac{t-1}{4},0,1\right)\ \mathrm{m}.
+</script>
+</p>
+<p>因此，图像到控制的学习任务是夹持激活；竖直抬升采用给定轨迹。输出包含独立测试动作误差、方块实际抬升高度、最终接触力、平均激活以及完整的闭环时序。<code>camera_frame.png</code> 是实际相机帧，<code>visual_control.gif</code> 由连续相机帧组成，<code>visual_lift.png</code> 根据保存的高度时序绘制。</p>
+<div class="highlight"><pre><span></span><code>当前物理场景 → RGB 渲染 → 灰度缩放 → 256 维像素
+→ 视觉网络 → 双指激活 → Hill 肌肉力 → 接触与摩擦求解
+→ 新物理状态 → 下一帧图像
+</code></pre></div>
+<h2 id="10-docker-ros-2-humble">10 Docker 与 ROS 2 Humble 复现</h2>
+<h3 id="101">10.1 环境与构建</h3>
+<p>模块提供 <code>Dockerfile</code>，基于 <code>ros:humble-ros-base-jammy</code>：Ubuntu 22.04、ROS 2 Humble，固定 NumPy 1.26.4、MuJoCo 3.3.7、Pillow 11.3.0 与 Matplotlib 3.9.4。Linux 容器采用 EGL 离屏渲染，运行时无需操作宿主桌面。</p>
+<p>在模块目录执行以下 Docker 命令。Windows PowerShell 中 <code>${PWD}</code> 指当前模块目录：</p>
+<div class="highlight"><pre><span></span><code><span class="n">docker</span> <span class="n">build</span> <span class="n">-t</span> <span class="n">lyzzzz0921-msk-gripper</span><span class="p">:</span><span class="n">humble</span> <span class="p">.</span>
+<span class="nb">New-Item</span> <span class="n">-ItemType</span> <span class="n">Directory</span> <span class="n">-Path</span> <span class="n">results</span> <span class="n">-Force</span>
+<span class="n">docker</span> <span class="n">run</span> <span class="p">-</span><span class="n">-rm</span> <span class="n">-v</span> <span class="s2">"${PWD}/results:/results"</span> <span class="n">lyzzzz0921-msk-gripper</span><span class="p">:</span><span class="n">humble</span>
+</code></pre></div>
+<p>镜像构建执行 <code>colcon build</code> 并验证包安装路径；镜像默认命令通过 ROS 2 launch 运行 G1–G8 全部基准实验，结果写入挂载目录。</p>
+<h3 id="102">10.2 模型、键盘、网络和动图入口</h3>
+<p>模块具有 <code>main.py</code>、<code>main.sh</code>、<code>main.bat</code> 统一入口；ROS 2 launch 参数 <code>mode</code> 选择 <code>check</code>、<code>run</code>、<code>bench</code>、<code>manual</code>、<code>neural</code>、<code>gif</code> 或 <code>slam</code>。</p>
+<div class="highlight"><pre><span></span><code><span class="nb">source</span><span class="w"> </span>/opt/ros/humble/setup.bash
+<span class="nb">source</span><span class="w"> </span>/ws/install/setup.bash
+ros2<span class="w"> </span>launch<span class="w"> </span>mujoco_muscle_gripper<span class="w"> </span>main.launch.py<span class="w"> </span>mode:<span class="o">=</span>check
+ros2<span class="w"> </span>launch<span class="w"> </span>mujoco_muscle_gripper<span class="w"> </span>main.launch.py<span class="w"> </span>mode:<span class="o">=</span>run<span class="w"> </span>scene:<span class="o">=</span>g8
+ros2<span class="w"> </span>launch<span class="w"> </span>mujoco_muscle_gripper<span class="w"> </span>main.launch.py<span class="w"> </span>mode:<span class="o">=</span>bench<span class="w"> </span>out:<span class="o">=</span>/results/base
+ros2<span class="w"> </span>launch<span class="w"> </span>mujoco_muscle_gripper<span class="w"> </span>main.launch.py<span class="w"> </span>mode:<span class="o">=</span>manual<span class="w"> </span>keys:<span class="o">=</span>wwwwwwwwwwwwrrrrffffq
+ros2<span class="w"> </span>launch<span class="w"> </span>mujoco_muscle_gripper<span class="w"> </span>main.launch.py<span class="w"> </span>mode:<span class="o">=</span>neural<span class="w"> </span>out:<span class="o">=</span>/results/neural
+ros2<span class="w"> </span>launch<span class="w"> </span>mujoco_muscle_gripper<span class="w"> </span>main.launch.py<span class="w"> </span>mode:<span class="o">=</span>gif<span class="w"> </span>out:<span class="o">=</span>/results/gif
+</code></pre></div>
+<p>训练轮数可通过神经网络模块的直接入口设置；该入口与 launch 的网络模式调用同一实验实现：</p>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>-m<span class="w"> </span>mujoco_muscle_gripper.neural<span class="w"> </span>--out<span class="w"> </span>/results/neural<span class="w"> </span>--seed<span class="w"> </span><span class="m">21</span><span class="w"> </span>--epochs<span class="w"> </span><span class="m">300</span>
+python3<span class="w"> </span>-m<span class="w"> </span>unittest<span class="w"> </span>discover<span class="w"> </span>-s<span class="w"> </span>/ws/src/mujoco_muscle_gripper/tests
+</code></pre></div>
+<h3 id="103">10.3 输出文件与读图顺序</h3>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>metrics.json</code></td>
+<td>数据划分、训练损失、独立测试误差、各目标闭环统计</td>
+</tr>
+<tr>
+<td><code>force_training_loss.png</code></td>
+<td>力策略训练与验证损失曲线</td>
+</tr>
+<tr>
+<td><code>force_tracking.png</code></td>
+<td>三个目标力下网络与 PI 的真实接触力时序</td>
+</tr>
+<tr>
+<td><code>force_nn_*n.csv</code>、<code>force_baseline_*n.csv</code></td>
+<td>时间、目标力、接触力、激活、行程、接触点数</td>
+</tr>
+<tr>
+<td><code>visual_training_loss.png</code></td>
+<td>图像策略训练与验证损失</td>
+</tr>
+<tr>
+<td><code>camera_frame.png</code></td>
+<td>当前物理场景的真实相机帧</td>
+</tr>
+<tr>
+<td><code>visual_control.gif</code></td>
+<td>图像驱动夹持与给定抬升轨迹下的连续运动</td>
+</tr>
+<tr>
+<td><code>visual_closed_loop.csv</code>、<code>visual_lift.png</code></td>
+<td>时间、激活、真实接触力、方块实际高度及高度曲线</td>
+</tr>
+<tr>
+<td><code>force_policy.npz</code>、<code>visual_policy.npz</code></td>
+<td>网络参数及训练集标准化统计量</td>
+</tr>
+<tr>
+<td><code>force_dataset.npz</code>、<code>visual_dataset.npz</code></td>
+<td>特征、标签、回合编号与数据划分索引</td>
+</tr>
+</tbody>
+</table>
+<p>先检查训练集与验证集损失，再检查独立测试误差，最后对照闭环曲线、相机帧和动图。网络动作误差较小并不自动等于抓取稳定；评价以物理闭环的真实接触力和方块位移为依据。</p>
+<h2 id="11_1">11 容器实测结果与图像记录</h2>
+<h3 id="111">11.1 运行记录和数据来源</h3>
+<p>本节数据来自 Docker 中 ROS 2 Humble 的完整运行，MuJoCo 版本为 3.3.7，随机种子为 21，两个网络均训练 200 轮。18 项测试全部通过，用时 22.38 s；键盘、G1–G8 基准和神经网络三种 launch 进程均正常结束。原始<a href="../msk_gripper_data/docker_acceptance.log">运行日志</a>、<a href="../msk_gripper_data/metrics.json">网络指标 JSON</a>与<a href="../msk_gripper_data/classical_metrics.json">基准指标 JSON</a>可逐项核对。</p>
+<p>键盘实测从 0 激活逐次合拢，激活 0.40 时形成 8 个接触点；升至 0.50 后，双指真实法向力为 2.562 N。随后四次 R 指令将目标高度从 0 提高到 40 mm，保持 8 个接触点，最后法向力为 2.631 N。</p>
+<h3 id="112">11.2 训练、验证与保留测试集</h3>
+<table>
+<thead>
+<tr>
+<th>策略</th>
+<th>总样本</th>
+<th>训练/验证/测试回合</th>
+<th>初始训练 MSE</th>
+<th>最终训练 MSE</th>
+<th>最终验证 MSE</th>
+<th>独立测试 MSE</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>接触力反馈网络</td>
+<td>5760</td>
+<td>16 / 4 / 4</td>
+<td>1.341×10⁻⁵</td>
+<td>4.709×10⁻⁹</td>
+<td>3.017×10⁻⁸</td>
+<td>1.377×10⁻⁸</td>
+</tr>
+<tr>
+<td>像素视觉网络</td>
+<td>432</td>
+<td>12 / 3 / 3</td>
+<td>7.493×10⁻⁴</td>
+<td>2.499×10⁻⁶</td>
+<td>3.007×10⁻⁶</td>
+<td>2.214×10⁻⁶</td>
+</tr>
+</tbody>
+</table>
+<p>MSE 在原始动作尺度上计算：力反馈网络对应激活增量，视觉网络对应激活指令。</p>
+<p><img alt="接触力网络训练与验证损失" src="../../img/msk_gripper/neural_force_training_loss.png"/></p>
+<p><img alt="像素网络训练与验证损失" src="../../img/msk_gripper/neural_visual_training_loss.png"/></p>
+<h3 id="113">11.3 真实接触力闭环对比</h3>
+<table>
+<thead>
+<tr>
+<th>目标力</th>
+<th>控制器</th>
+<th>稳态真实力</th>
+<th>稳态 MAE</th>
+<th>全程 RMSE</th>
+<th>最终激活</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2 N</td>
+<td>神经网络</td>
+<td>2.0046 N</td>
+<td>0.00459 N</td>
+<td>0.5492 N</td>
+<td>0.4740</td>
+</tr>
+<tr>
+<td>2 N</td>
+<td>PI 基准</td>
+<td>2.0000 N</td>
+<td>0.0000121 N</td>
+<td>0.5011 N</td>
+<td>0.4738</td>
+</tr>
+<tr>
+<td>4 N</td>
+<td>神经网络</td>
+<td>3.9872 N</td>
+<td>0.01276 N</td>
+<td>0.9320 N</td>
+<td>0.5530</td>
+</tr>
+<tr>
+<td>4 N</td>
+<td>PI 基准</td>
+<td>4.0000 N</td>
+<td>0.0000052 N</td>
+<td>0.8329 N</td>
+<td>0.5535</td>
+</tr>
+<tr>
+<td>8 N</td>
+<td>神经网络</td>
+<td>7.9933 N</td>
+<td>0.00668 N</td>
+<td>1.7491 N</td>
+<td>0.7124</td>
+</tr>
+<tr>
+<td>8 N</td>
+<td>PI 基准</td>
+<td>8.0000 N</td>
+<td>0.0000321 N</td>
+<td>1.4329 N</td>
+<td>0.7127</td>
+</tr>
+</tbody>
+</table>
+<p>网络在三个目标下均收敛到目标附近，稳态平均绝对误差不超过 0.013 N。PI 基准在本次固定目标实验中的误差更低；网络结果体现了从随机化仿真数据中学习的闭环控制能力。</p>
+<p><img alt="网络与 PI 的真实接触力轨迹" src="../../img/msk_gripper/neural_force_tracking.png"/></p>
+<p>原始 CSV：<a href="../msk_gripper_data/force_nn_2n.csv">网络 2 N</a>、<a href="../msk_gripper_data/force_nn_4n.csv">网络 4 N</a>、<a href="../msk_gripper_data/force_nn_8n.csv">网络 8 N</a>、<a href="../msk_gripper_data/force_baseline_2n.csv">PI 2 N</a>、<a href="../msk_gripper_data/force_baseline_4n.csv">PI 4 N</a>、<a href="../msk_gripper_data/force_baseline_8n.csv">PI 8 N</a>。</p>
+<h3 id="114">11.4 视觉策略抓取</h3>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>Docker 实测</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>视觉控制时刻数</td>
+<td>280</td>
+</tr>
+<tr>
+<td>图像输入</td>
+<td>16×16 灰度像素</td>
+</tr>
+<tr>
+<td>方块最大实际抬升</td>
+<td>98.114 mm</td>
+</tr>
+<tr>
+<td>最终双指接触法向力</td>
+<td>10.186 N</td>
+</tr>
+<tr>
+<td>平均肌肉激活指令</td>
+<td>0.6271</td>
+</tr>
+<tr>
+<td>动图文件大小</td>
+<td>360944 字节（0.361 MB）</td>
+</tr>
+</tbody>
+</table>
+<p>下图直接来自 MuJoCo 的当前物理场景渲染，红色方块位于绿色双指之间：</p>
+<p><img alt="视觉闭环的真实相机帧" src="../../img/msk_gripper/neural_camera_frame.png"/></p>
+<p>动图由 280 个控制时刻中每隔三个时刻采集的相机帧组成，展示闭合、接触和抬升过程：</p>
+<p><img alt="真实像素策略闭环抓取动图" src="../../img/msk_gripper/neural_visual_control.gif"/></p>
+<p>高度曲线与<a href="../msk_gripper_data/visual_closed_loop.csv">视觉闭环 CSV</a>使用同一时序数据：</p>
+<p><img alt="视觉控制的实际方块抬升曲线" src="../../img/msk_gripper/neural_visual_lift.png"/></p>
+<p>补充运行记录：<a href="../msk_gripper_data/docker_other_modes.log">模型自检、机械臂实验与动图入口</a>。三个补充 launch 进程正常退出，三段动图分别为 2.99、1.01、2.77 MB；结合前述记录，六种入口模式均完成容器运行。</p>
+<h2 id="12-slam">12 夹爪移动底座的 SLAM 与神经导航</h2>
+<h3 id="121">12.1 场景、运动与传感器</h3>
+<p>移动底座承载肌肉夹爪，在工作台、货架与转角工位之间行驶。底座通过编码器和二维激光持续估计自身位姿、建立未知环境地图，并根据更新后的地图前往指定工位，形成与夹爪抓取主题衔接的移动作业环节。本节实测环境为 <strong>Windows / Python 本机二维仿真</strong>；前述 Ubuntu / Humble 容器结果保持第 11 节的独立运行记录。</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>数值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>本机环境</td>
+<td>Python 3.11.8、PyTorch 2.5.1+cpu、SciPy 1.17.1</td>
+</tr>
+<tr>
+<td>工作区栅格</td>
+<td>32×32，分辨率 0.20 m</td>
+</tr>
+<tr>
+<td>底座半径 / 轮距</td>
+<td>0.13 m / 0.32 m</td>
+</tr>
+<tr>
+<td>控制周期</td>
+<td>0.15 s</td>
+</tr>
+<tr>
+<td>起点与目标</td>
+<td>起点 (1.0, 1.0, 0)，目标 (5.3, 5.3) m</td>
+</tr>
+<tr>
+<td>激光</td>
+<td>360° 共 96 束，最大量程 7.5 m，距离噪声标准差 0.007 m</td>
+</tr>
+<tr>
+<td>编码器</td>
+<td>左右比例偏差 1.07 / 0.94，独立噪声标准差 0.0015 m/s</td>
+</tr>
+</tbody>
+</table>
+<p>设左右轮线速度为 $v_L,v_R$，轮距为 $b$，则底座速度与角速度为：</p>
+<p>
+<script type="math/tex; mode=display">
+v=\frac{v_L+v_R}{2},\qquad \omega=\frac{v_R-v_L}{b}.
+</script>
+</p>
+<p><code>integrate()</code> 使用区间中点航向积分，$\bar\theta=\theta_t+\omega\Delta t/2$：</p>
+<p>
+<script type="math/tex; mode=display">
+x_{t+1}=x_t+v\Delta t\cos\bar\theta,\quad
+y_{t+1}=y_t+v\Delta t\sin\bar\theta,\quad
+\theta_{t+1}=\operatorname{wrap}(\theta_t+\omega\Delta t).
+</script>
+</p>
+<p><code>DifferentialWorld</code> 负责真实运动、碰撞检测和射线量测。在线估计器接收编码器、激光、已知初始位姿先验，导航器另接收指定目标坐标。真值轨迹和地图用于生成观测、离线监督与最终评价，在线定位、建图和规划均使用估计状态。</p>
+<h3 id="122">12.2 神经里程计与在线地图配准</h3>
+<p>编码器标定网络为 <strong>2–24–2</strong>，隐藏层采用 Tanh，把有偏编码器量测转换成左右轮速度。<code>ScanSlam.observe()</code> 先以网络校正后的轮速预测位姿，再把当前激光端点与上一时刻的占据地图配准，最后加入当前扫描：</p>
+<p>
+<script type="math/tex; mode=display">
+(\hat v_L,\hat v_R)=f_\phi(e_L,e_R),\qquad
+\hat p_t^-=\operatorname{integrate}(\hat p_{t-1},\hat v_L,\hat v_R).
+</script>
+</p>
+<p>地图配准使用历史占据栅格的距离场。设激光端点为 $q_i(p)$，距离场为 $D$，搜索目标为：</p>
+<p>
+<script type="math/tex; mode=display">
+J(p)=\frac{1}{n}\sum_i\min\{D(q_i(p)),0.45\}
++0.12\|p_{xy}-\hat p^-_{xy}\|_2
++0.08\left|\operatorname{wrap}(\theta-\hat\theta^-)\right|.
+</script>
+</p>
+<p>实现对 x、y 分别尝试 ±0.018 m、航向尝试 ±0.010 rad 的局部修正，接受降低代价的候选。当前扫描先与历史地图对齐，随后更新地图，避免用当前扫描给自身配准评分。</p>
+<p><code>OccupancyMap.update()</code> 沿激光射线标记自由栅格，对有效回波端点标记障碍。地图从未知状态开始，采用对数概率累积：</p>
+<p>
+<script type="math/tex; mode=display">
+L_t(c)=\operatorname{clip}\bigl(L_{t-1}(c)+\Delta L(c),-4,4\bigr).
+</script>
+</p>
+<p>射线经过的自由格取 $\Delta L=-0.35$，障碍端点取 $+0.95$，$L&gt;0.65$ 判为占据。达到最大量程的射线更新自由空间，未产生障碍端点；未被量测覆盖的格子继续保留未知状态。</p>
+<h3 id="123">12.3 神经价值迭代与运动控制</h3>
+<p><code>ValueIterationNetwork</code> 由 3×3 卷积（1→4 通道）、ReLU 和 1×1 卷积（4→1 通道）学习地图通行代价，再使用 Softplus 保证代价为正。四邻域移位、取最大值和减去通行代价构成递归 Bellman 层：</p>
+<p>
+<script type="math/tex; mode=display">
+c_\psi=\operatorname{softplus}(\operatorname{CNN}_\psi(M))+0.05,
+\qquad V^{k+1}(c)=\max_{a\in\mathcal N_4}V^k(c+a)-c_\psi(c).
+</script>
+</p>
+<p>每轮固定目标价值为 0、障碍价值为 −100，在当前 32×32 地图上递推 64 轮。在线输入为 SLAM 占据地图，障碍向外膨胀一格；从相邻可行方向中结合价值与转向代价选取局部目标。训练阶段的 BFS 距离场作为监督标签，在线动作由训练后的价值网络和运动网络计算。</p>
+<p>运动控制器为 <strong>4–40–24–2</strong> Tanh 网络。输入包含局部目标航向误差的正弦与余弦、归一化距离、前方激光净空，输出线速度与角速度：</p>
+<p>
+<script type="math/tex; mode=display">
+z_t=[\sin e_\theta,\cos e_\theta,\min(d,0.6)/0.6,\min(r_{\mathrm{front}},2)/2],
+\qquad (v_t,\omega_t)=g_\eta(z_t).
+</script>
+</p>
+<p>线速度限制在 0–0.38 m/s，角速度限制在 ±2.3 rad/s；大角度转向时先原地转向，前方距离小于 0.25 m 时停止前进。价值网络每四步或接近局部目标时更新方向，位姿和地图每步更新，因此建图、定位与导航在同一闭环内同步进行。</p>
+<h3 id="124">12.4 训练、测试与源码流程</h3>
+<p>随机种子为 21。标定与控制网络采用 Adam，学习率 0.012；价值网络采用 Adam，学习率 0.018。训练、验证和保留测试分别统计：</p>
+<table>
+<thead>
+<tr>
+<th>网络</th>
+<th>数据与划分</th>
+<th style="text-align: right;">训练轮数</th>
+<th style="text-align: right;">保留测试均方误差</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>编码器标定 2–24–2</td>
+<td>5120 对轮速样本；32 条完整序列按 22/5/5 划分</td>
+<td style="text-align: right;">160</td>
+<td style="text-align: right;">0.00001514 (m/s)²</td>
+</tr>
+<tr>
+<td>运动控制 4–40–24–2</td>
+<td>6000 个样本，4200/900/900 划分</td>
+<td style="text-align: right;">150</td>
+<td style="text-align: right;">0.0008348，两输出综合误差</td>
+</tr>
+<tr>
+<td>神经价值迭代</td>
+<td>20 张随机 12×12 训练地图，14/3/3 按整图划分</td>
+<td style="text-align: right;">35</td>
+<td style="text-align: right;">0.0007232，栅格距离平方</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="移动底座三个网络的训练与验证曲线" src="../../img/msk_gripper/slam_training.png"/></p>
+<p>完整在线流程为：编码器、激光 → 神经轮速校正 → 位姿预测 → 历史地图配准 → 占据图更新 → 价值网络选择局部目标 → 运动网络输出速度 → 底座运动及新观测。</p>
+<table>
+<thead>
+<tr>
+<th>源码入口（<code>slam_navigation.py</code>）</th>
+<th>职责</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DifferentialWorld.move_and_encode()</code>、<code>scan()</code></td>
+<td>差速运动、噪声编码器和二维激光观测</td>
+</tr>
+<tr>
+<td><code>train_models()</code>、<code>_fit_mlp()</code></td>
+<td>三个网络训练、验证及保留测试</td>
+</tr>
+<tr>
+<td><code>ScanSlam.observe()</code></td>
+<td>神经里程计预测和 scan-to-map 配准</td>
+</tr>
+<tr>
+<td><code>OccupancyMap.update()</code></td>
+<td>自由、障碍与未知栅格的增量更新</td>
+</tr>
+<tr>
+<td><code>ValueIterationNetwork.forward()</code>、<code>plan()</code></td>
+<td>神经 Bellman 递推与局部方向选择</td>
+</tr>
+<tr>
+<td><code>run_scene()</code></td>
+<td>同步建图、导航、速度控制和逐步记录</td>
+</tr>
+<tr>
+<td><code>benchmark()</code>、<code>make_plots()</code></td>
+<td>三场景验收、CSV/JSON、曲线和连续动图</td>
+</tr>
+</tbody>
+</table>
+<h3 id="125">12.5 三场景实际结果</h3>
+<p>本机完整训练与三场景仿真用时 <strong>7.36 s</strong>，验收字段 <code>passed=true</code>。到达条件按真实位置距目标小于 0.35 m 评价；位置 RMSE 是估计位置与真实位置之间欧氏误差的均方根。地图 IoU 按占据格的交集与并集计算，并同时给出已观测区域的 IoU。</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>到达 / 碰撞</th>
+<th style="text-align: right;">步数</th>
+<th style="text-align: right;">路径长度</th>
+<th style="text-align: right;">最终目标误差</th>
+<th style="text-align: right;">组合定位 RMSE</th>
+<th style="text-align: right;">原始里程计 RMSE</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>工作台绕行</td>
+<td>到达 / 0</td>
+<td style="text-align: right;">196</td>
+<td style="text-align: right;">7.190 m</td>
+<td style="text-align: right;">0.287 m</td>
+<td style="text-align: right;">0.097 m</td>
+<td style="text-align: right;">3.024 m</td>
+</tr>
+<tr>
+<td>双货架通道</td>
+<td>到达 / 0</td>
+<td style="text-align: right;">205</td>
+<td style="text-align: right;">7.683 m</td>
+<td style="text-align: right;">0.191 m</td>
+<td style="text-align: right;">0.098 m</td>
+<td style="text-align: right;">3.698 m</td>
+</tr>
+<tr>
+<td>转角工位</td>
+<td>到达 / 0</td>
+<td style="text-align: right;">185</td>
+<td style="text-align: right;">6.971 m</td>
+<td style="text-align: right;">0.176 m</td>
+<td style="text-align: right;">0.109 m</td>
+<td style="text-align: right;">3.478 m</td>
+</tr>
+</tbody>
+</table>
+<p>神经轮速校正与激光地图配准共同将三场景位置 RMSE 控制在 0.11 m 以内。下图对照真值工作区、实际轨迹与在线估计的地图、轨迹；浅灰色为尚未观测区域，深色为占据格：</p>
+<p><img alt="三个工作区的真实轨迹与在线 SLAM 地图" src="../../img/msk_gripper/slam_navigation.png"/></p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th style="text-align: right;">全图占据 IoU</th>
+<th style="text-align: right;">已观测区域 IoU</th>
+<th style="text-align: right;">地图覆盖率</th>
+<th style="text-align: right;">有效地图配准次数</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>工作台绕行</td>
+<td style="text-align: right;">0.486</td>
+<td style="text-align: right;">0.603</td>
+<td style="text-align: right;">93.75%</td>
+<td style="text-align: right;">57</td>
+</tr>
+<tr>
+<td>双货架通道</td>
+<td style="text-align: right;">0.407</td>
+<td style="text-align: right;">0.616</td>
+<td style="text-align: right;">90.72%</td>
+<td style="text-align: right;">101</td>
+</tr>
+<tr>
+<td>转角工位</td>
+<td style="text-align: right;">0.478</td>
+<td style="text-align: right;">0.613</td>
+<td style="text-align: right;">94.63%</td>
+<td style="text-align: right;">78</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="组合定位与原始里程计的位置误差曲线" src="../../img/msk_gripper/slam_errors.png"/></p>
+<p>动图由同一运行中记录的轨迹与在线地图快照组成，包含各场景到达画面，共 34 帧、298650 字节（0.299 MB），连续展示三种工作区的移动、绕障与地图更新：</p>
+<p><img alt="夹爪移动底座的同步建图与神经导航" src="../../img/msk_gripper/slam_navigation.gif"/></p>
+<p>原始记录：<a href="../msk_gripper_data/slam_metrics.json">完整指标 JSON</a>、<a href="../msk_gripper_data/slam_scene_1_trajectory.csv">工作台轨迹 CSV</a>、<a href="../msk_gripper_data/slam_scene_2_trajectory.csv">货架轨迹 CSV</a>、<a href="../msk_gripper_data/slam_scene_3_trajectory.csv">转角轨迹 CSV</a>、<a href="../msk_gripper_data/slam_summary.txt">中文运行摘要</a>。CSV 同时包含真值、SLAM、原始里程计、网络速度指令与逐时刻误差，可复核各项指标与曲线。</p>
+<h3 id="126">12.6 复现入口</h3>
+<p>进入 <code>src/musculoskeletal/mujoco_muscle_gripper</code>，安装包含 CPU 神经网络依赖的环境后运行：</p>
+<div class="highlight"><pre><span></span><code><span class="n">python3</span> <span class="n">-m</span> <span class="n">pip</span> <span class="n">install</span> <span class="n">-r</span> <span class="n">requirements-slam</span><span class="p">.</span><span class="n">txt</span>
+<span class="n">python</span> <span class="n">main</span><span class="p">.</span><span class="n">py</span> <span class="n">slam</span> <span class="p">-</span><span class="n">-out</span> <span class="n">out</span><span class="p">/</span><span class="n">slam</span> <span class="p">-</span><span class="n">-seed</span> <span class="n">21</span>
+</code></pre></div>
+<p>独立模块入口与主脚本调用同一个 <code>benchmark()</code>：</p>
+<div class="highlight"><pre><span></span><code><span class="n">python</span> <span class="n">-m</span> <span class="n">mujoco_muscle_gripper</span><span class="p">.</span><span class="n">slam_navigation</span> <span class="p">-</span><span class="n">-out</span> <span class="n">out</span><span class="p">/</span><span class="n">slam</span> <span class="p">-</span><span class="n">-seed</span> <span class="n">21</span>
+</code></pre></div>
+<p>ROS 2 环境对应的 launch 入口为：</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>mujoco_muscle_gripper<span class="w"> </span>main.launch.py<span class="w"> </span>mode:<span class="o">=</span>slam<span class="w"> </span>out:<span class="o">=</span>/results/slam
+</code></pre></div>
+<p>本节记录的是 Windows / Python 本机运行，新增 SLAM 的三项测试全部通过，用时 2.95 s，覆盖观测边界、自由/障碍/未知栅格更新及场景净空可达性；第 11 节记录的 18 项测试和六种原有 launch 模式来自此前 Ubuntu / Humble 容器运行。两次记录分别保留，图表均与各自的原始数据对应。</p>
+<h2 id="13">13 实验结论</h2>
+<p>接触法向力由手指与方块之间的物理接触直接测得，激活与夹持力之间的映射同时受到肌肉动力学、弹簧回位和摩擦约束影响。基准扫描揭示了形成接触、维持摩擦和抬升负载三个环节的关系。</p>
+<p>力反馈网络在三个目标下的稳态平均绝对误差均小于 0.013 N；图像策略使用真实渲染像素生成肌肉激活，在给定抬升轨迹下将方块实际抬升 98.114 mm。移动底座的神经里程计、在线地图配准、神经价值迭代与运动控制完成三个工作区的同步建图导航，全部到达目标且碰撞为零。</p>
+<p>物理仿真与键盘操作、传感器反馈控制、SLAM 与导航、图像到控制四类任务形成完整的夹爪移动作业项目。原始 CSV、训练和闭环曲线、相机与地图图像、连续动图及运行记录共同构成可复核的实验链条。</p></div>
 </div>
 </div><footer>
 <div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
