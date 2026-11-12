@@ -269,6 +269,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/vio_time_offset_estimation/">视觉-惯性时间偏移互相关估计</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="ground/ros2_ekf_localization/">ROS2 差速机器人 EKF 多传感器融合定位</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="set_up_and_connect_to_carla/">手动控制</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/dyn_avoid_nn/">动态障碍物避让：激光雷达帧间差分与神经网络时机决策</a>
@@ -572,6 +574,8 @@
 <li class="toctree-l1"><a class="reference internal" href="ground/lateral_stability_margin/">不足转向梯度与侧向稳定裕度</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/torque_vectoring_yaw_control/">四轮独立驱动扭矩矢量横摆控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ground/ros2_stuck_recovery/">ROS2 差速机器人卡死检测与自动脱困</a>
 </li>
 </ul>
 <p class="caption"><span class="caption-text">空域载具</span></p>
@@ -1219,8 +1223,9 @@
 </li>
 <li><a href="ground/vehicle_pygame_teleop/">车辆键盘遥操作与二维模拟</a></li>
 <li><a href="ground/ugv_cruise_pid/">地面车 PID 巡航速度跟踪仿真</a></li>
+<li><a href="ground/mujoco_motor_sensor_recorder/">差速小车电机温度与电流观测记录</a></li>
 <li>
-<p><a href="ground/mujoco_motor_sensor_recorder/">差速小车电机温度与电流观测记录</a></p>
+<p><a href="ground/ros2_stuck_recovery/">ROS2 差速机器人卡死检测与自动脱困</a> —— 用指令/里程计/IMU/测距的一致性区分顶住、打滑、单轮悬空，分级执行倒车-转向-试探脱困，3 级失败停车上报；7 个场景 × 10 种子可离线复现</p>
 </li>
 <li>
 <p><a href="robot_tasks/teleop_control/">任务1：机器人键盘控制模块</a></p>
@@ -1369,6 +1374,7 @@
 <p><a href="ground/gap_nav_nn/">狭窄通道通行：激光雷达开口辨识与神经网络选口穿行</a> —— 隔墙三个开口（0.7/1.4/2.4 m），车宽 0.6 m，专家按可通行性与绕路代价选口，行为克隆 MLP 仅凭雷达判断孔径，20 回合成功率 100% / 90%</p>
 </li>
 <li><a href="ground/torque_vectoring_yaw_control/">四轮独立驱动扭矩矢量横摆控制</a> —— 附着椭圆约束下的加权最小二乘分配 + 带前馈横摆率跟踪 + 单电机失效降级</li>
+<li><a href="ground/ros2_ekf_localization/">ROS2 差速机器人 EKF 多传感器融合定位</a> —— 轮式里程计 + IMU 航向 + 绝对位置观测的 EKF，输出 /odometry/filtered 供控制器直接使用</li>
 </ul>
 <h2 id="5">5. 空域载具 <span id="air_vehicle"></span></h2>
 <ul>
