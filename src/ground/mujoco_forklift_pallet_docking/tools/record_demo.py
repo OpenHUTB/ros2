@@ -30,12 +30,13 @@ def main() -> None:
     parser.add_argument("--json-output", required=True, help="与本次 GIF 同回合的 JSON 输出路径")
     parser.add_argument("--start-x", type=float, default=-4.0)
     parser.add_argument("--speed", type=float, default=2.0)
+    parser.add_argument("--brake-scale", type=float, default=1.0, help="显式制动力校准系数")
     parser.add_argument("--seed", type=int, default=17, help="无权重文件时训练策略所用的种子")
     args = parser.parse_args()
     checkpoint = Path(__file__).parents[1] / "mujoco_forklift_pallet_docking" / "models" / "pallet_docking_policy.npz"
     policy_source = "checkpoint" if checkpoint.is_file() else "trained_fallback"
     policy = ImagePolicy.load(str(checkpoint)) if checkpoint.is_file() else train_policy(seed=args.seed)[0]
-    sim = ForkliftDockingSimulation(start_x=args.start_x, speed=args.speed)
+    sim = ForkliftDockingSimulation(start_x=args.start_x, speed=args.speed, brake_scale=args.brake_scale)
     frames = []
     final = None
     try:
@@ -48,7 +49,7 @@ def main() -> None:
             if sim.distance < -0.5 or (step > 0 and sim.speed <= 0.025) or step == 450:
                 break
             action = policy.predict(sim.image())[0].copy()
-            action[1] *= 0.8
+            action[1] *= args.brake_scale
             sim.step(action)
         final = {
             "steps": sim.steps,
@@ -71,7 +72,7 @@ def main() -> None:
     # GIF episode, so their metadata can be compared without mixing runs.
     scenarios = []
     for start_x in (-5.0, -4.0, -3.0):
-        evaluation = ForkliftDockingSimulation(start_x=start_x, speed=args.speed)
+        evaluation = ForkliftDockingSimulation(start_x=start_x, speed=args.speed, brake_scale=args.brake_scale)
         try:
             result = evaluation.run(policy)
             scenarios.append({
@@ -86,6 +87,7 @@ def main() -> None:
     metadata = {
         "schema_version": "1.0",
         "mujoco_version": mujoco.__version__,
+        "brake_scale": args.brake_scale,
         "seed": args.seed,
         "seed_usage": "fallback training only; checkpoint evaluation is deterministic",
         "command": "python " + " ".join(shlex.quote(value) for value in sys.argv),

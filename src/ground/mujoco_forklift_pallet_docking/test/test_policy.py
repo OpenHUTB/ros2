@@ -1,5 +1,6 @@
 from pathlib import Path
 import json
+import os
 import sys
 
 import numpy as np
@@ -99,7 +100,7 @@ def test_training_improves_over_untrained_policy(tmp_path):
     actions = np.stack((labels, ~labels), axis=1).astype(float)
     policy = ImagePolicy(seed=3)
     before = np.mean((policy.predict(images) - actions) ** 2)
-    policy.train(images, actions, epochs=500, lr=0.15)
+    policy.train(images, actions, epochs=2000, lr=0.15)
     after = np.mean((policy.predict(images) - actions) ** 2)
     assert after < before * 0.7
     checkpoint = tmp_path / "trained.npz"
@@ -113,9 +114,12 @@ def test_evaluate_reports_safe_docking_metrics_from_multiple_starts(monkeypatch,
     probe = _simulation_or_skip()
     probe.close()
     import main
-    monkeypatch.setattr(sys, "argv", ["main.py", "--mode", "evaluate"])
+    brake_scale = os.environ.get("FORKLIFT_TEST_BRAKE_SCALE", "1.0")
+    monkeypatch.setattr(sys, "argv", ["main.py", "--mode", "evaluate", "--brake-scale", brake_scale])
     main.main()
-    results = json.loads(capsys.readouterr().out)["scenarios"]
+    report = json.loads(capsys.readouterr().out)
+    assert report["brake_scale"] == float(brake_scale)
+    results = report["scenarios"]
     assert [result["start_x_m"] for result in results] == [-5.0, -4.0, -3.0]
     for result in results:
         assert 0.0 < result["insertion_depth_m"] <= 0.5

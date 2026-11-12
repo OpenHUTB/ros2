@@ -25,6 +25,7 @@ def main() -> None:
     parser.add_argument("--mode", choices=("train", "run", "evaluate", "manual"), default="run")
     parser.add_argument("--start-x", type=float, default=-4.0)
     parser.add_argument("--speed", type=float, default=2.0)
+    parser.add_argument("--brake-scale", type=float, default=1.0, help="自动控制的制动力校准系数，默认1.0")
     parser.add_argument("--seed", type=int, default=17)
     parser.add_argument("--model-path", type=Path, default=None)
     parser.add_argument("--output", type=Path, default=None)
@@ -81,12 +82,12 @@ def main() -> None:
     starts = [-5.0, -4.0, -3.0] if args.mode == "evaluate" else [args.start_x]
     results = []
     for start_x in starts:
-        sim = ForkliftDockingSimulation(start_x=start_x, speed=args.speed)
+        sim = ForkliftDockingSimulation(start_x=start_x, speed=args.speed, brake_scale=args.brake_scale)
         try:
             results.append({"start_x_m": start_x, **sim.run(policy)})
         finally:
             sim.close()
-    report = {"held_out_mse": None if mse is None else round(mse, 6), "scenarios": results}
+    report = {"brake_scale": args.brake_scale, "held_out_mse": None if mse is None else round(mse, 6), "scenarios": results}
     output = json.dumps(report, ensure_ascii=False, indent=2)
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)

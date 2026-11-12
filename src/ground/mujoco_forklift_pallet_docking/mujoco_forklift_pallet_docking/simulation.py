@@ -15,7 +15,10 @@ FORK_TIP = 0.72
 
 
 class ForkliftDockingSimulation:
-    def __init__(self, start_x: float = -4.0, speed: float = 2.0, width: int = 64, height: int = 64) -> None:
+    def __init__(self, start_x: float = -4.0, speed: float = 2.0, width: int = 64, height: int = 64, brake_scale: float = 1.0) -> None:
+        if not np.isfinite(brake_scale) or brake_scale <= 0.0:
+            raise ValueError("brake_scale must be finite and positive")
+        self.brake_scale = brake_scale
         self.model = mujoco.MjModel.from_xml_path(str(MODEL_PATH))
         self.data = mujoco.MjData(self.model)
         self.data.qpos[0] = start_x
@@ -56,8 +59,7 @@ class ForkliftDockingSimulation:
                 over_inserted = True
                 break
             action = policy.predict(self.image())[0].copy()
-            # Calibrate braking effort so the forks enter the pallet before stopping.
-            action[1] *= 0.8
+            action[1] *= self.brake_scale
             self.step(action)
             if self.speed <= 0.025:
                 break
