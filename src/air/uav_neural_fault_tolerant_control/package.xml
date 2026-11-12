@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>uav_neural_fault_tolerant_control</name>
+  <version>1.0.0</version>
+  <description>
+    无人机桨故障下的神经容错控制：几何控制器给出期望合推力与力矩，加权最小二乘分配负责在
+    故障后重新分配推力（并在桨彻底失效时主动放弃偏航），小型 MLP 学习"精确解 − 近似解"的
+    分配残差。对应课程任务②的"给定轨迹控制"部分。
+  </description>
+  <maintainer email="2920111320@qq.com">Fortranquility</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <!-- 仿真底座：数据生成与在线联调都复用它，本包不修改它 -->
+  <exec_depend>uav_mujoco_sim</exec_depend>
+
+  <!-- torch / mujoco 通过 pip 安装（见 requirements.txt），不在此声明 -->
+
+  <test_depend>ament_pytest</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

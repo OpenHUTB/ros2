@@ -1,0 +1,23 @@
+[INFO] [launch]: All log files can be found below /root/.ros/log/2026-11-09-18-31-10-907081-bd2ffbfd5aa6-22
+[INFO] [launch]: Default logging verbosity is set to INFO
+[INFO] [python3-1]: process started with pid [23]
+[python3-1] mujoco 3.3.7
+[python3-1]   模型 nv=9（手掌 + 两指 + 方块），方块 z=-0.045 OK
+[python3-1]   手指行程上限 0.030 m，肌肉 F_max=25 N
+[INFO] [python3-1]: process has finished cleanly [pid 23]
+[INFO] [launch]: All log files can be found below /root/.ros/log/2026-11-09-18-31-11-402553-bd2ffbfd5aa6-25
+[INFO] [launch]: Default logging verbosity is set to INFO
+[INFO] [python3-1]: process started with pid [26]
+[python3-1] {
+[python3-1]   "obj_start_z": -0.34510775542021505,
+[python3-1]   "obj_end_z": -0.25748965735305906,
+[python3-1]   "lift_mm": 87.61809806715598
+[python3-1] }
+[INFO] [python3-1]: process has finished cleanly [pid 26]
+[INFO] [launch]: All log files can be found below /root/.ros/log/2026-11-09-18-31-12-284757-bd2ffbfd5aa6-1
+[INFO] [launch]: Default logging verbosity is set to INFO
+[INFO] [python3-1]: process started with pid [28]
+[python3-1]   g2_grasp_lift.gif  300 帧, 2.99 MB
+[python3-1]   g2_slip.gif  150 帧, 1.01 MB
+[python3-1]   g8_arm_grasp.gif  187 帧, 2.77 MB
+[INFO] [python3-1]: process has finished cleanly [pid 28]

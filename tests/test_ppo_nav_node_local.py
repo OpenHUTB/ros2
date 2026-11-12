@@ -135,7 +135,7 @@ def _install_stub_modules():
 
 
 # ================================================================= A. parse_goal
-def test_parse_goal(N):
+def _check_parse_goal(N):
     print("== A. parse_goal ==")
     check(np.allclose(N.parse_goal([1.0, 2.0, 3.0]), [1, 2, 3]), "列表形式")
     check(np.allclose(N.parse_goal("[1.0, 2.0, 3.0]"), [1, 2, 3]),
@@ -145,7 +145,7 @@ def test_parse_goal(N):
 
 
 # ================================================================= B. cloud_to_xyz
-def test_cloud_to_xyz(N):
+def _check_cloud_to_xyz(N):
     print("== B. cloud_to_xyz ==")
     pts = np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], dtype=np.float32)
     pc = N.PointCloud2()
@@ -156,7 +156,7 @@ def test_cloud_to_xyz(N):
 
 
 # ================================================================= C. 节点主逻辑
-def test_node(N, rospy):
+def _check_node(N, rospy):
     print("== C. PpoNavNode 观测装配 / 推理 / 发布 ==")
     rospy.params["nav/weights"] = WEIGHTS
     rospy.params["nav/goal"] = [10.0, 0.0, 0.0]
@@ -200,7 +200,7 @@ def test_node(N, rospy):
 
 
 # ================================================================= D. 边界
-def test_edge(N, rospy):
+def _check_edge(N, rospy):
     print("== D. 边界：尚无点云 ==")
     rospy.params["nav/weights"] = WEIGHTS
     rospy.params["nav/goal"] = [10.0, 0.0, 0.0]
@@ -222,7 +222,7 @@ def test_edge(N, rospy):
 
 
 # ================================================================= F. 空点云
-def test_empty_cloud(N, rospy):
+def _check_empty_cloud(N, rospy):
     print("== F. 空点云 -> 零速度 ==")
     rospy.params["nav/weights"] = WEIGHTS
     rospy.params["nav/goal"] = [10.0, 0.0, 0.0]
@@ -248,7 +248,7 @@ def test_empty_cloud(N, rospy):
 
 
 # ================================================================= G. 过期点云
-def test_stale_cloud(N, rospy):
+def _check_stale_cloud(N, rospy):
     print("== G. 过期点云 -> 零速度 ==")
     rospy.params["nav/weights"] = WEIGHTS
     rospy.params["nav/goal"] = [10.0, 0.0, 0.0]
@@ -274,7 +274,7 @@ def test_stale_cloud(N, rospy):
 
 
 # ================================================================= E. body_frame 安全校验
-def test_body_frame_guard(N, rospy):
+def _check_body_frame_guard(N, rospy):
     print("== G. body_frame 安全校验（防止世界系速度被机体系执行）==")
     rospy.params["nav/weights"] = WEIGHTS
     rospy.params["nav/goal"] = [10.0, 0.0, 0.0]
@@ -300,17 +300,23 @@ def test_body_frame_guard(N, rospy):
           "读不到 control/body_frame（桥接未启动）时打印 logwarn")
 
 
+def test_offline_regression():
+    """pytest 入口：装桩、导入模块并跑完所有检查，失败时列出失败项。"""
+    rc = main()
+    assert rc == 0, "失败项: %s" % "; ".join(FAIL)
+
+
 def main():
     rospy = _install_stub_modules()
     import ppo_nav_node as N  # noqa: E402  (必须在装好桩之后导入)
 
-    test_parse_goal(N)
-    test_cloud_to_xyz(N)
-    test_node(N, rospy)
-    test_edge(N, rospy)
-    test_empty_cloud(N, rospy)
-    test_stale_cloud(N, rospy)
-    test_body_frame_guard(N, rospy)
+    _check_parse_goal(N)
+    _check_cloud_to_xyz(N)
+    _check_node(N, rospy)
+    _check_edge(N, rospy)
+    _check_empty_cloud(N, rospy)
+    _check_stale_cloud(N, rospy)
+    _check_body_frame_guard(N, rospy)
 
     print("\n==================== 结果 ====================")
     print("通过 %d 项，失败 %d 项" % (len(PASS), len(FAIL)))

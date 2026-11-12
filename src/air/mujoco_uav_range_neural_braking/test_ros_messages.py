@@ -1,5 +1,7 @@
 """Regression tests for the ROS-independent UAV message projection."""
 
+import pytest
+
 from ros_messages import (
     TOPIC_BRAKING_ACCEL,
     TOPIC_FRONT_RANGE,
@@ -33,3 +35,22 @@ def test_scalar_topics_match_state_values():
 
     assert payload.front_range_m == payload.state[1]
     assert payload.braking_accel_m_s2 == -1.4
+
+
+@pytest.mark.parametrize("invalid_flag", [0.5, -1, float("nan"), float("inf")])
+def test_payload_rejects_non_binary_sensor_flags(invalid_flag):
+    row = _row()
+    row["sensor_valid"] = invalid_flag
+
+    with pytest.raises(ValueError, match="sensor_valid 必须为 0 或 1"):
+        build_message_payload(row)
+
+
+def test_payload_preserves_control_command_when_sensor_is_invalid():
+    row = _row()
+    row["sensor_valid"] = 0
+    row["accel_m_s2"] = -2.5
+
+    payload = build_message_payload(row)
+
+    assert payload.braking_accel_m_s2 == row["accel_m_s2"]

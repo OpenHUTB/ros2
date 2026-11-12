@@ -1,0 +1,21 @@
+/* 让长表格在窄屏上可横向滚动，并统一图注样式 */
+.md-typeset table:not([class]) {
+  display: block;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.md-typeset .figure-caption {
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--md-default-fg-color--light);
+  margin-top: -0.6rem;
+}
+
+.md-typeset img {
+  border-radius: 4px;
+}
+
+.md-typeset .grid.cards > ul > li {
+  border-radius: 8px;
+}
