@@ -706,6 +706,15 @@ ___
 
 
 
+## 9. 反应式导航与覆盖 <span id='reactive_navigation'></span>
+
+* [人工势场（APF）：梯度下降式反应式避障与局部极小逃逸](./reactive_navigation/potential_field_avoidance.md) —— 目标引力 + 障碍斥力逐点求梯度，50 m 地图走出 57 m 近直线绕障，含切向滑行逃逸与“卡死”一等结果
+
+* [Bug2 导航：不建图的完备导航与确定性不可达判据](./reactive_navigation/bug2_navigation.md) —— 撞墙—沿墙—回线三行为状态机，目标可达必达、不可达时确定性宣告失败（A*/RRT 给不了的答案）
+
+* [牛耕式全覆盖：扫遍整个房间的最简单方案](./reactive_navigation/boustrophedon_coverage.md) —— 等距平行线扫掠 + 之字掉头，L 形房间 100% 覆盖，路径长度 ≈ 面积/行距 + 掉头开销，作业时长可预算
+
+
 ## 参考文献
 * [MuJoCo 失落公园无人机端到端视觉转向](./air/mujoco_abandoned_park_uav_visual_steering.md)
 * [四旋翼无人机物理仿真、激光 SLAM 与禁飞区规避](./air/uav_numpy_nn_slam.md) —— 城市/峡谷/机场三场景、72 波束激光 SLAM、A* 绕禁飞区、纯 NumPy 神经网络与端到端 CNN
