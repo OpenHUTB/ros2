@@ -33,6 +33,7 @@ import rospy
 from std_msgs.msg import String
 
 import gesture_map as gm
+import gesture_mlp_classifier as gmc
 from camera_utils import Camera, DEFAULT_HEIGHT, DEFAULT_WIDTH
 from gesture_detection import GestureDetector
 from gesture_gate import CommandGate
@@ -42,6 +43,11 @@ NODE_NAME = "gesture_ros_node"
 
 def _p(name, default):
     return rospy.get_param("~" + name, default)
+
+
+def describe_model_path(value):
+    """日志里怎么描述"要找的模型路径"：留空时别打出空括号。"""
+    return value or "自动查找 <包>/models/ 与 install/share/<包>/models/"
 
 
 class GestureControlNode(object):
@@ -60,6 +66,11 @@ class GestureControlNode(object):
             stable_frames=_p("stable_frames", 3),
             cooldown=_p("command_cooldown", 1.5))
 
+        # 分类器实现：rules（几何规则，默认）/ mlp（gesture_train.py 训出来的模型）
+        self.classifier_name = str(_p("classifier", "rules")).strip().lower()
+        self.mlp = None
+        self.mlp_threshold = float(_p("mlp/threshold", gmc.DEFAULT_THRESHOLD))
+
         self.camera = camera or Camera(
             camera_index=self.camera_index, width=self.width, height=self.height)
         self.detector = detector or GestureDetector(
@@ -73,6 +84,8 @@ class GestureControlNode(object):
         self._last_gesture = None
         self._frames = 0
         rospy.on_shutdown(self.shutdown)
+        # 可能加载失败（还没训练过模型），所以放在日志之前构建
+        self._maybe_build_mlp()
 
         rospy.loginfo("[gesture] 已启动：摄像头索引 %d，%dx%d，%.1f Hz"
                       % (self.camera_index, self.width, self.height,
@@ -82,11 +95,58 @@ class GestureControlNode(object):
                       % (self.command_topic, self.state_topic))
 
     # ------------------------------------------------------------------ #
+    def _maybe_build_mlp(self):
+        """按 ``classifier`` 参数加载 MLP；**出任何问题都回退到规则法**。
+
+        模型缺失是最常见的情况（刚 clone 下来还没训练）；但也要挡住"文件在、
+        内容坏了"——0 字节 npz 会抛 EOFError、截断的 npz 会抛 BadZipFile，
+        这些都不该让节点起不来。
+        """
+        if self.classifier_name in ("", "rules", "rule"):
+            self.classifier_name = "rules"
+            return
+        if self.classifier_name not in ("mlp", "model", "nn"):
+            rospy.logwarn("[gesture] 未知 classifier=%r，回退到 rules"
+                          % self.classifier_name)
+            self.classifier_name = "rules"
+            return
+
+        # 留空 = 自动按布局找（源码树 / install 的 share/<pkg>/models/）
+        model_path = _p("mlp/model_path", "")
+        found = gmc.find_model_path(model_path)
+        if not found:
+            rospy.logwarn("[gesture] classifier=mlp 但没找到模型（%s），回退到 rules；"
+                          "先用 gesture_train.py 训练一份"
+                          % describe_model_path(model_path))
+            self.classifier_name = "rules"
+            return
+        try:
+            self.mlp = gmc.MLPClassifier.from_file(
+                found, threshold=self.mlp_threshold)
+        except Exception as exc:                       # noqa: BLE001
+            # 这里刻意捕获所有异常：加载模型失败的唯一后果应该是"退回规则法"，
+            # 而不是让整个感知节点崩掉（断点/坏文件/依赖缺失都算）。
+            rospy.logwarn("[gesture] 加载模型失败（%s，%s: %s），回退到 rules"
+                          % (found, type(exc).__name__, exc))
+            self.classifier_name = "rules"
+            return
+        self.classifier_name = "mlp"
+        rospy.loginfo("[gesture] 分类器 = mlp（%s，阈值 %.2f，类别 %d 个）"
+                      % (found, self.mlp_threshold, len(self.mlp.classes)))
+
+    # ------------------------------------------------------------------ #
     def handle_result(self, result, now=None):
         """处理一次识别结果，返回本次**实际发布**的指令（没有则 None）。
 
         抽成独立方法是为了能脱离 ROS 单测（见 tests/）。
         """
+        # classifier=mlp 时，用模型重新判一次（关键点相同，判定逻辑不同）
+        if self.mlp is not None:
+            gesture, confidence = self.mlp.predict(result.landmarks)
+            result.gesture = gesture
+            result.command = gm.gesture_to_command(gesture)
+            result.confidence = float(confidence)
+
         if result.gesture != self._last_gesture:
             self._last_gesture = result.gesture
             if result.gesture != gm.GESTURE_NONE:

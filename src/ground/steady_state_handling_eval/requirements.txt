@@ -1,0 +1,5 @@
+numpy
+matplotlib
+Pillow
+# 可选：用于 MuJoCo 离屏渲染三车场景静态图与演示动图；未安装时自动跳过，不影响曲线图与数据表
+mujoco>=3.0
