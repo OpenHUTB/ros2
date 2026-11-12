@@ -115,6 +115,8 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../chapter/chap9/gazebo_camera_sim/">Gazebo 仿真相机与图像话题验证</a>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap9/rov_thruster_allocation_ls/">ROV 六自由度推力分配</a>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../chapter/turtlebot3_gazebo_control/">10. Turtlebot3 Gazebo键盘控制</a>
@@ -629,21 +631,83 @@
 </li>
 <li class="toctree-l1 current"><a class="reference internal current" href="#">无人机载荷质量估计</a>
 <ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="#_2">数据与方法</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#_3">实验结果</a>
+<li class="toctree-l2"><a class="reference internal" href="#1">1. 任务定义与设计取舍</a>
 <ul>
-<li class="toctree-l3"><a class="reference internal" href="#_4">正常标定条件</a>
+<li class="toctree-l3"><a class="reference internal" href="#11">1.1 与社区模型的关系</a>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#_5">推力标定偏差</a>
+<li class="toctree-l3"><a class="reference internal" href="#12">1.2 功能与入口</a>
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_6">运行</a>
+<li class="toctree-l2"><a class="reference internal" href="#2">2. 运行环境与快速开始</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#21">2.1 环境</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#ros2">ROS2 接口</a>
+<li class="toctree-l3"><a class="reference internal" href="#22">2.2 安装与自检</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_7">复现实验</a>
+<li class="toctree-l3"><a class="reference internal" href="#23">2.3 跑回放</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#24">2.4 重新采集（可选）</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#3">3. 数据与仿真</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#31">3.1 仿真设置</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#32">3.2 数据规模与划分</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#4">4. 计算原理</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#41">4.1 窗口与特征</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#42">4.2 物理基线（冲量法）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#43">4.3 网络</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#44">4.4 损失与训练目标</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#45">4.5 评价指标</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#5">5. 算法流程</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#51">5.1 总体流程</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#52">5.2 训练</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#53">5.3 在线估计</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#6">6. 训练设置</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#7">7. 实验结果</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#71">7.1 正常标定条件</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#72">7.2 推力标定敏感性扫描</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#73">7.3 为什么重训也救不回来：可辨识性</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#74">7.4 复现一致性</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#8-ros2">8. ROS2 接口</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#9">9. 源代码解析</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#10">10. 复现步骤</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#11_1">11. 局限与适用范围</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#12_1">12. 维护说明</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#13">13. 参考资料</a>
 </li>
 </ul>
 </li>
@@ -1045,158 +1109,691 @@
 <div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
 <div class="section" itemprop="articleBody">
 <div><h1 id="_1">无人机载荷质量估计</h1>
-<p>这个项目用飞行中的推力和速度数据估计无人机搭载物的质量。比如同样的推力下，载荷变化会影响竖直运动响应，模型据此给出以 kg 为单位的估计值。</p>
-<p>项目复用 OpenHUTB 社区 <a href="https://github.com/OpenHUTB/ros2/pull/178">PR #178</a> 的四旋翼模型，增加质量变化实验、神经网络训练、物理公式对照和 ROS2 回放。模型文件、来源版本及许可说明见 <a href="models/source.json">来源记录</a> 和 <a href="THIRD_PARTY_NOTICES/">第三方说明</a>。采集数据和估计程序为本项目新增。</p>
-<p>目前实验限定为水平姿态下的竖直飞行，已知空机质量及推力标定。这里的“载荷”是附加质量，与着陆时的接地力不同。</p>
-<p><img alt="MuJoCo 仿真场景" src="docs/simulation.png"/></p>
-<p>载荷通过调整机身质量表示，没有单独绘制货物。上图由同一实验重新运行后渲染，脚本检查重跑的物理数据与保存记录一致。</p>
-<h2 id="_2">数据与方法</h2>
-<p>共采集 180 次 MuJoCo 飞行，每次 12 秒。90 次训练、30 次验证、30 次正常测试，另外 30 次用于推力标定偏差测试。整次飞行只属于一个集合；归一化只使用训练集。原始数据和校验清单保存在 <code>assets/flights.zip</code>。</p>
-<p>空机总质量为 0.95 kg，其中机身 0.85 kg，四个旋翼合计 0.10 kg。附加质量在 0～0.4 kg 间随机选取。控制器使用固定参数，不读取真实载荷；高度目标含小幅正弦变化。改变质量时沿用原有转动惯量，本实验不讨论载荷偏心和姿态控制。</p>
-<p>物理步长为 2.5 ms，记录频率为 20 Hz。在记录的竖直速度上加入标准差为 0.025 m/s 的高斯噪声。传感器延迟、推力噪声、风和姿态扰动没有包含在正常实验中。</p>
-<p>模型使用最近 20 个采样点中的 19 个推力值和 19 个速度差分加速度，共 38 个输入。推力按前一采样时刻对齐，因为该指令作用于随后一段时间。高度、真实质量、飞行编号和未来观测不进入网络。20 个点覆盖 0.95 秒。</p>
-<p>网络为 38→48→24→1 的 MLP，隐藏层使用 Tanh，输出载荷质量。训练 160 轮，按验证集均方误差保存模型。使用 42、43、44 三个随机种子；ROS2 演示固定使用 <code>mlp_42</code>。消融模型 <code>no_thrust_42</code> 只保留加速度输入。</p>
-<p>物理基线使用同一窗口的冲量关系：</p>
-<div class="highlight"><pre><span></span><code>总质量 = sum(指令推力 × dt) / (窗口末速度 - 窗口初速度 + g × 窗口时长)
-载荷质量 = 总质量 - 0.95 kg
-</code></pre></div>
-<h2 id="_3">实验结果</h2>
-<h3 id="_4">正常标定条件</h3>
+<p>本页记录一个可复现的载荷质量估计实验：用飞行中的<strong>推力指令</strong>与<strong>竖直速度响应</strong>，估计无人机当前搭载物的质量（kg）。同一个推力下，载荷越重、竖直加速越慢——模型要学的就是这个关系。</p>
+<p>实验在 MuJoCo 里做：把同一架四旋翼的机身质量改成"空机 + 载荷"，用固定参数的控制器飞出一段高度轨迹，记录推力与速度，再用神经网络和物理公式分别反推载荷。</p>
+<p><img alt="ROS2 回放中的质量估计：三条曲线对应三次飞行，虚线是真实载荷" src="../../img/air/payload_mass_estimation/demo.gif"/></p>
+<p>上图的每一帧都来自真实运行：<code>payload_estimator</code> 节点订阅回放话题，逐条发布 <code>/payload/estimate</code>，共 663 条估算。三次飞行的真实载荷分别是 0.207、0.219、0.368 kg。</p>
+<hr/>
+<h2 id="1">1. 任务定义与设计取舍</h2>
+<p><strong>输入</strong>：最近 20 个采样点（20 Hz，约 0.95 秒）的推力指令与竖直速度。</p>
+<p><strong>输出</strong>：载荷质量估计值（kg），范围 0～0.4 kg。</p>
+<p><strong>边界</strong>：只做<strong>水平姿态下的竖直飞行</strong>，且空机质量与推力标定已知。这里的"载荷"是附加质量，与着陆时的接地力不是一回事。</p>
+<p>三个关键取舍：</p>
 <table>
 <thead>
 <tr>
-<th>方法</th>
-<th style="text-align: right;">窗口 MAE（g）</th>
-<th style="text-align: right;">窗口 RMSE（g）</th>
-<th style="text-align: right;">整次飞行平均值 MAE（g）</th>
+<th>取舍</th>
+<th>选择</th>
+<th>理由</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>mlp_42</td>
-<td style="text-align: right;">3.538</td>
-<td style="text-align: right;">4.436</td>
-<td style="text-align: right;">1.463</td>
+<td>特征</td>
+<td>推力序列 + 速度差分加速度序列</td>
+<td>动力学上，推力与加速度之比直接给出质量；网络不必自己学微分</td>
 </tr>
 <tr>
-<td>mlp_43</td>
+<td>网络</td>
+<td>小 MLP（38→48→24→1）</td>
+<td>输入已是物理量，样本只有 90 次飞行；深层网络没有增益</td>
+</tr>
+<tr>
+<td>对照</td>
+<td>同一窗口的冲量物理基线</td>
+<td>这个问题有闭式解，<strong>必须</strong>与它比较，否则无法说明神经网络的价值</td>
+</tr>
+</tbody>
+</table>
+<h3 id="11">1.1 与社区模型的关系</h3>
+<p>四旋翼模型复用 OpenHUTB 社区 <a href="https://github.com/OpenHUTB/ros2/pull/178">PR #178</a>，版本与许可见 <code>models/source.json</code> 与 <code>THIRD_PARTY_NOTICES.md</code>。<strong>质量变化实验、数据采集、训练与 ROS2 估计程序都是本项目新增的</strong>。</p>
+<h3 id="12">1.2 功能与入口</h3>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>入口</th>
+<th>输出</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>自检</td>
+<td><code>bash main.sh doctor</code></td>
+<td><code>artifacts/environment.json</code></td>
+</tr>
+<tr>
+<td>数据</td>
+<td><code>bash main.sh prepare</code></td>
+<td>解压语料到 <code>data/</code></td>
+</tr>
+<tr>
+<td>采集</td>
+<td><code>bash main.sh collect</code></td>
+<td>180 次 MuJoCo 飞行（另存目录）</td>
+</tr>
+<tr>
+<td>训练</td>
+<td><code>bash main.sh train</code></td>
+<td><code>models/&lt;name&gt;/model.pt</code>、<code>meta.json</code>、<code>loss.csv</code></td>
+</tr>
+<tr>
+<td>评估</td>
+<td><code>bash main.sh evaluate</code></td>
+<td><code>results/metrics.json</code>、逐窗口 CSV、2 张图</td>
+</tr>
+<tr>
+<td>测试</td>
+<td><code>bash main.sh test</code></td>
+<td>8 项单元测试</td>
+</tr>
+<tr>
+<td>构建</td>
+<td><code>bash main.sh build</code></td>
+<td><code>install/</code>、<code>build/</code>、<code>log/</code></td>
+</tr>
+<tr>
+<td>ROS2</td>
+<td><code>bash main.sh demo</code></td>
+<td>两个话题 + 订阅曲线</td>
+</tr>
+<tr>
+<td>仿真图</td>
+<td><code>python render_validation.py</code></td>
+<td><code>results/simulation.png</code></td>
+</tr>
+</tbody>
+</table>
+<hr/>
+<h2 id="2">2. 运行环境与快速开始</h2>
+<h3 id="21">2.1 环境</h3>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>配置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>系统</td>
+<td>Ubuntu 20.04.6（VMware），6 核 / 8.5 GB</td>
+</tr>
+<tr>
+<td>ROS</td>
+<td>ROS2 <strong>Humble</strong>（<code>/opt/ros/humble</code>，Python 3.8）</td>
+</tr>
+<tr>
+<td>深度学习</td>
+<td>PyTorch <strong>2.4.1+cpu</strong></td>
+</tr>
+<tr>
+<td>仿真</td>
+<td><strong>MuJoCo 3.1.6</strong>（CPU，无需下载场景）</td>
+</tr>
+<tr>
+<td>Python</td>
+<td>3.8.10，venv <code>--system-site-packages</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="22">2.2 安装与自检</h3>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/ros2/src/air/payload_mass_estimation
+<span class="nb">source</span><span class="w"> </span>/opt/ros/humble/setup.bash
+/usr/bin/python3<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>--system-site-packages<span class="w"> </span>~/uav_prediction_env
+<span class="nb">source</span><span class="w"> </span>~/uav_prediction_env/bin/activate
+python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt<span class="w">      </span><span class="c1"># 含 mujoco==3.1.6</span>
+bash<span class="w"> </span>main.sh<span class="w"> </span>doctor
+bash<span class="w"> </span>main.sh<span class="w"> </span>prepare
+bash<span class="w"> </span>main.sh<span class="w"> </span><span class="nb">test</span>
+bash<span class="w"> </span>main.sh<span class="w"> </span>build
+</code></pre></div>
+<p><code>doctor</code> 检查 13 个模块，其中 <strong><code>mujoco</code> 只在重新采集时需要</strong>：训练与评估只用 numpy + torch。但如果跳过安装，<code>doctor</code> 会直接失败——这是有意的，避免"以为能采集、实际不能"。</p>
+<p><code>ROS_SETUP</code> 与 <code>UAV_ENV</code> 可覆盖 ROS setup 与虚拟环境路径。</p>
+<h3 id="23">2.3 跑回放</h3>
+<p>两个终端：</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 终端 1：订阅绘图（只写文件，不开窗口）</span>
+<span class="nv">MPLBACKEND</span><span class="o">=</span>Agg<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>payload_mass_estimation.dashboard
+
+<span class="c1"># 终端 2：回放 3 次测试飞行</span>
+bash<span class="w"> </span>main.sh<span class="w"> </span>demo
+</code></pre></div>
+<p>回放约 36 秒。订阅端在无新消息 5 秒后落盘（最多等 90 秒），输出 <code>results/ros_subscriber.png</code>、<code>ros_subscriber.json</code>、<code>ros_node.json</code>。约定俗成的现象是：<strong>台阶对应三次独立飞行的切换</strong>，不代表飞行途中装卸货物。</p>
+<h3 id="24">2.4 重新采集（可选）</h3>
+<p>采集会覆盖同目录数据，<strong>务必先复制项目目录</strong>：</p>
+<div class="highlight"><pre><span></span><code>cp<span class="w"> </span>-r<span class="w"> </span>~/ros2/src/air/payload_mass_estimation<span class="w"> </span>~/paymass_run
+<span class="nb">cd</span><span class="w"> </span>~/paymass_run<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>bash<span class="w"> </span>main.sh<span class="w"> </span>collect<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>bash<span class="w"> </span>main.sh<span class="w"> </span>train<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>bash<span class="w"> </span>main.sh<span class="w"> </span>evaluate
+</code></pre></div>
+<hr/>
+<h2 id="3">3. 数据与仿真</h2>
+<h3 id="31">3.1 仿真设置</h3>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>模型</td>
+<td>社区四旋翼 <code>models/community_quadrotor.xml</code></td>
+</tr>
+<tr>
+<td>空机总质量</td>
+<td><strong>0.95 kg</strong> = 机身 0.85 + 四个旋翼各 0.025</td>
+</tr>
+<tr>
+<td>载荷范围</td>
+<td>0～0.4 kg，均匀随机</td>
+</tr>
+<tr>
+<td>控制器</td>
+<td>固定参数 PID，<strong>不读取真实载荷</strong></td>
+</tr>
+<tr>
+<td>高度目标</td>
+<td>
+<script type="math/tex">3 + 0.25\sin(0.8t + \varphi)</script> m，相位随机</td>
+</tr>
+<tr>
+<td>物理步长</td>
+<td>2.5 ms</td>
+</tr>
+<tr>
+<td>记录频率</td>
+<td>20 Hz（DT = 0.05 s）</td>
+</tr>
+<tr>
+<td>每次时长</td>
+<td>12 s</td>
+</tr>
+<tr>
+<td>观测量</td>
+<td>高度加标准差 <strong>0.025 m/s</strong> 的高斯噪声</td>
+</tr>
+</tbody>
+</table>
+<p>控制器是</p>
+<p>
+<script type="math/tex; mode=display">
+u_t = \mathrm{clip}\Big(0.85g + 5e_t - 3\dot z_t + 2\!\!\int\!\! e,\ 0,\ 22\Big)\ \text{N},
+\qquad e_t = z^{\text{target}}_t - z_t
+</script>
+</p>
+<p>它只用到目标高度、当前高度与速度——<strong>载荷标签不进入控制律</strong>，否则"质量可从控制响应推断"就成了循环论证。</p>
+<p>改变质量时沿用原有转动惯量，本实验不讨论载荷偏心与姿态控制。传感器延迟、推力噪声、风扰动<strong>都没有</strong>包含在正常实验中。</p>
+<h3 id="32">3.2 数据规模与划分</h3>
+<table>
+<thead>
+<tr>
+<th>集合</th>
+<th style="text-align: right;">飞行数</th>
+<th>种子范围</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>训练</td>
+<td style="text-align: right;">90</td>
+<td>40000–40089</td>
+<td>拟合权重与标准化</td>
+</tr>
+<tr>
+<td>验证</td>
+<td style="text-align: right;">30</td>
+<td>40090–40119</td>
+<td>选模型（验证 MSE）</td>
+</tr>
+<tr>
+<td>测试</td>
+<td style="text-align: right;">30</td>
+<td>40120–40149</td>
+<td>只报告</td>
+</tr>
+<tr>
+<td>推力偏差</td>
+<td style="text-align: right;">30</td>
+<td>40150–40179</td>
+<td>鲁棒性测试</td>
+</tr>
+</tbody>
+</table>
+<p>每次飞行 12 s × 20 Hz = 240 个采样点；滑窗步长 10，每个 20 点窗口 → <strong>每段 23 个窗口</strong>，30 段共 <strong>690 个重叠窗口</strong>。</p>
+<p>推力偏差组的实际推力被缩放为指令的 <strong>95% 或 105%</strong>，但估计器<strong>仍只看到原指令</strong>，也不重新训练——模拟"推力标定不准"。</p>
+<p>原始数据与校验清单在 <code>assets/flights.zip</code>；<code>prepare</code> 解压后，<code>manifest.json</code> 记录每个文件的质量、推力比例与 SHA256，训练与评估前都会校验。</p>
+<hr/>
+<h2 id="4">4. 计算原理</h2>
+<h3 id="41">4.1 窗口与特征</h3>
+<p>每个采样点是一行 <script type="math/tex">[t_k, z_k, v_k, f_k]</script>：时间、高度、竖直速度、<strong>指令推力</strong>（N）。取最近 20 行，计算 19 个加速度差分：</p>
+<p>
+<script type="math/tex; mode=display">
+a_k = \frac{v_{k+1}-v_k}{\Delta t},\qquad k=0,\dots,18,\quad \Delta t = 0.05\ \text{s}
+</script>
+</p>
+<p>特征向量把推力与加速度拼起来：</p>
+<p>
+<script type="math/tex; mode=display">
+\mathbf{x} = \big[f_0,\dots,f_{18},\ a_0,\dots,a_{18}\big]^{\top}\in\mathbb{R}^{38}
+</script>
+</p>
+<p><strong>推力按前一时刻对齐</strong>：第 <script type="math/tex">k</script> 条指令作用在 <script type="math/tex">[t_k, t_{k+1})</script>，因此驱动 <script type="math/tex">a_k</script> 的是 <script type="math/tex">f_k</script>，不是 <script type="math/tex">f_{k+1}</script>。这个错位如果搞反，物理基线与网络都会系统性偏差。</p>
+<p>高度、真实质量、飞行编号、未来观测都<strong>不进入</strong>输入。</p>
+<h3 id="42">4.2 物理基线（冲量法）</h3>
+<p>对同一窗口用冲量关系：</p>
+<p>
+<script type="math/tex; mode=display">
+m_{\text{total}} = \frac{\sum_{k=0}^{18} f_k}{\sum_{k=0}^{18}\big(a_k + g\big)},
+\qquad
+\hat m_{\text{payload}} = m_{\text{total}} - 0.95
+</script>
+</p>
+<p>分母里的 <script type="math/tex">a_k + g</script> 是"比力"：加速度加上重力，正是推力要克服的部分。基线<strong>不含任何学习参数</strong>，是这个问题的闭式解参考。</p>
+<h3 id="43">4.3 网络</h3>
+<p>
+<script type="math/tex; mode=display">
+\mathbf{h}_1=\tanh(\mathbf{W}_1\mathbf{x}+\mathbf{b}_1)\in\mathbb{R}^{48},\quad
+\mathbf{h}_2=\tanh(\mathbf{W}_2\mathbf{h}_1+\mathbf{b}_2)\in\mathbb{R}^{24},\quad
+\hat m = \mathbf{w}_3^{\top}\mathbf{h}_2 + b_3
+</script>
+</p>
+<p>参数量 <script type="math/tex">38\times48+48 + 48\times24+24 + 24+1 = 3073</script>。</p>
+<p>输入先按训练集标准化：<script type="math/tex">\tilde{\mathbf{x}} = (\mathbf{x}-\boldsymbol\mu)/\boldsymbol\sigma</script>，<script type="math/tex">\boldsymbol\sigma</script> 下限 0.001。</p>
+<h3 id="44">4.4 损失与训练目标</h3>
+<p>
+<script type="math/tex; mode=display">
+\mathcal{L}(\theta)=\frac{1}{N}\sum_{n=1}^{N}\big(\hat m_n - m_n\big)^2
+</script>
+</p>
+<p>直接对<strong>以 kg 为单位</strong>的质量做 MSE，而不是对归一化值——这样验证损失就是物理量，判读更直接（本次最好约 <script type="math/tex">1.3\times10^{-5}\,\text{kg}^2</script>，对应 RMSE ≈ 3.6 g）。</p>
+<h3 id="45">4.5 评价指标</h3>
+<p>
+<script type="math/tex; mode=display">
+\mathrm{MAE}_{\text{win}}=\frac{1}{N}\sum_{n}\big|\hat m_n-m_n\big|,\qquad
+\mathrm{RMSE}_{\text{win}}=\sqrt{\frac{1}{N}\sum_{n}\big(\hat m_n-m_n\big)^2}
+</script>
+</p>
+<p>以及更贴近实际的<strong>整次飞行平均误差</strong>：</p>
+<p>
+<script type="math/tex; mode=display">
+\mathrm{MAE}_{\text{flight}}=\frac{1}{F}\sum_{i=1}^{F}\Big|\frac{1}{n_i}\sum_{k\in i}\hat m_k - m_i\Big|
+</script>
+</p>
+<p>690 个窗口来自 30 次飞行、彼此重叠，<strong>不是 690 次独立试验</strong>。整次飞行平均把同一飞行的窗口先平均，回答的是"这一趟估得准不准"。</p>
+<hr/>
+<h2 id="5">5. 算法流程</h2>
+<h3 id="51">5.1 总体流程</h3>
+<div class="mermaid">flowchart TD
+    A[社区四旋翼模型<br/>机身质量 = 0.85 + 载荷] --&gt;|MuJoCo 12 s 飞行| B[推力 / 高度 / 竖直速度<br/>20 Hz 记录]
+    B --&gt;|按整次飞行划分| C[90 / 30 / 30 / 30]
+    C --&gt;|20 点滑窗, 步长 10| D[38 维特征<br/>19 推力 + 19 加速度]
+    D --&gt;|训练 4 个模型| E[mlp_42/43/44<br/>no_thrust_42]
+    D --&gt;|同一窗口| F[物理冲量基线]
+    E --&gt;|evaluate| G[窗口与整次飞行指标]
+    F --&gt; G
+    D --&gt;|ROS2 回放| H[payload_replay]
+    H --&gt;|/payload/observation| I[payload_estimator]
+    I --&gt;|/payload/estimate| J[dashboard 订阅曲线]
+</div>
+<h3 id="52">5.2 训练</h3>
+<div class="highlight"><pre><span></span><code>输入: 训练/验证窗口 X, 标签 y(kg), 种子 s
+1  固定 torch 种子; 线程数 2
+2  μ, σ ← 训练集均值/标准差, σ 下限 0.001
+3  对 mlp_42/43/44 与 no_thrust_42:
+      no_thrust_42 只取加速度 19 维, 其余取 38 维
+      for epoch = 1..160:
+          打乱训练集, batch = 128, MSE 反传, Adam(lr = 0.001)
+          若验证 MSE 创新低 → 保存 model.pt 与 meta.json(含 μ, σ, 训练集均值)
+4  写出 loss.csv
+</code></pre></div>
+<h3 id="53">5.3 在线估计</h3>
+<div class="highlight"><pre><span></span><code>每条 /payload/observation:
+1  校验 4 个字段有限; 否则清空窗口
+2  若与上一条的时间差偏离 0.05 s 超过 25% → 清空窗口
+3  入队, 只保留最近 20 条
+4  不足 20 条 → 不输出
+5  计算 19 个加速度 → 38 维特征 → MLP → mass_kg
+   同时用冲量公式算 physics_kg
+6  发布 {stamp_s, mass_kg, physics_kg}
+7  断流 3 秒 → 保存 ros_node.json 并退出
+</code></pre></div>
+<hr/>
+<h2 id="6">6. 训练设置</h2>
+<table>
+<thead>
+<tr>
+<th>超参数</th>
+<th>值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>网络</td>
+<td>38 → 48(tanh) → 24(tanh) → 1</td>
+</tr>
+<tr>
+<td>参数量</td>
+<td>3,073</td>
+</tr>
+<tr>
+<td>优化器</td>
+<td>Adam，lr = 0.001</td>
+</tr>
+<tr>
+<td>批量</td>
+<td>128</td>
+</tr>
+<tr>
+<td>轮数</td>
+<td>160（固定，不早停）</td>
+</tr>
+<tr>
+<td>模型保存</td>
+<td>验证 MSE 创新低时覆盖</td>
+</tr>
+<tr>
+<td>种子</td>
+<td>42 / 43 / 44</td>
+</tr>
+<tr>
+<td>消融</td>
+<td><code>no_thrust_42</code>：只保留 19 维加速度</td>
+</tr>
+<tr>
+<td>基线</td>
+<td><code>physics_impulse</code>（冲量法）、<code>train_mean</code>（训练集均值）</td>
+</tr>
+</tbody>
+</table>
+<p><code>train_mean</code> 是"永远猜训练集平均载荷"的常数基线，用来标定误差的量级下界。</p>
+<hr/>
+<h2 id="7">7. 实验结果</h2>
+<p>以下全部由本机重跑得到：<code>bash main.sh evaluate</code> 直接用随附权重算，<code>bash main.sh train</code> 在副本里重训。</p>
+<h3 id="71">7.1 正常标定条件</h3>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th style="text-align: right;">窗口 MAE (g)</th>
+<th style="text-align: right;">窗口 RMSE (g)</th>
+<th style="text-align: right;">整次飞行 MAE (g)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>mlp_44</code></td>
+<td style="text-align: right;"><strong>2.843</strong></td>
+<td style="text-align: right;"><strong>3.619</strong></td>
+<td style="text-align: right;">0.849</td>
+</tr>
+<tr>
+<td><code>mlp_43</code></td>
 <td style="text-align: right;">2.919</td>
 <td style="text-align: right;">3.794</td>
 <td style="text-align: right;">0.973</td>
 </tr>
 <tr>
-<td>mlp_44</td>
-<td style="text-align: right;">2.843</td>
-<td style="text-align: right;">3.619</td>
-<td style="text-align: right;">0.849</td>
+<td><code>mlp_42</code></td>
+<td style="text-align: right;">3.538</td>
+<td style="text-align: right;">4.436</td>
+<td style="text-align: right;">1.463</td>
 </tr>
 <tr>
-<td>no_thrust_42</td>
+<td><code>no_thrust_42</code></td>
 <td style="text-align: right;">79.825</td>
 <td style="text-align: right;">100.110</td>
 <td style="text-align: right;">72.744</td>
 </tr>
 <tr>
-<td>physics_impulse</td>
+<td><code>physics_impulse</code></td>
 <td style="text-align: right;">3.683</td>
 <td style="text-align: right;">4.636</td>
-<td style="text-align: right;">0.709</td>
+<td style="text-align: right;"><strong>0.709</strong></td>
 </tr>
 <tr>
-<td>train_mean</td>
+<td><code>train_mean</code></td>
 <td style="text-align: right;">81.641</td>
 <td style="text-align: right;">100.990</td>
 <td style="text-align: right;">81.641</td>
 </tr>
 </tbody>
 </table>
-<p>表中每种方法都评估 30 次未用于训练的飞行，共 690 个重叠窗口。窗口不是相互独立的飞行样本，因此同时列出“每次飞行先平均预测，再计算误差”的结果。</p>
-<p>主模型的窗口 MAE 为 3.54 g，物理基线为 3.68 g，两者接近；整次飞行平均后，物理基线的表现见表。这里不据此认定神经网络普遍优于物理方法。去掉推力输入后误差明显增大，说明仅靠运动响应不足以完成当前设置下的估计。</p>
-<h3 id="_5">推力标定偏差</h3>
-<p>这一组将实际推力改为指令的 95% 或 105%，但估计器仍只接收原指令，不提供偏差值，也不重新训练。</p>
+<p><img alt="窗口 MAE：正常标定与推力偏差两个场景（纵轴单位 g）" src="../../img/air/payload_mass_estimation/window_mae.png"/></p>
+<p>三点观察：</p>
+<ol>
+<li><strong>窗口级与物理基线接近</strong>：<code>mlp_44</code> 2.843 g vs 3.683 g，网络略好。</li>
+<li><strong>飞行级要看清差距是否真实</strong>：见下面的配对检验。</li>
+<li><strong>去掉推力输入就崩了</strong>：<code>no_thrust_42</code> 的窗口 MAE 79.8 g，几乎等于 <code>train_mean</code>。说明本任务的信息主要在推力里，加速度只是辅助。</li>
+</ol>
+<h4 id="711">7.1.1 逐飞行配对检验</h4>
+<p>整次飞行平均后，物理基线是 0.709 g，三个网络分别是 0.849 / 0.973 / 1.463 g。但 30 次飞行里
+"平均差 0.14 g"是否意味着真的更差？对每个模型做<strong>逐飞行配对</strong>：</p>
 <table>
 <thead>
 <tr>
-<th>方法</th>
-<th style="text-align: right;">窗口 MAE（g）</th>
-<th style="text-align: right;">窗口 RMSE（g）</th>
-<th style="text-align: right;">整次飞行平均值 MAE（g）</th>
+<th>模型</th>
+<th style="text-align: right;">飞行级 MAE (g)</th>
+<th style="text-align: right;">与基线差 (g)</th>
+<th>bootstrap 95% CI</th>
+<th style="text-align: right;">胜场</th>
+<th style="text-align: right;">符号检验 p</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>mlp_42</td>
-<td style="text-align: right;">57.360</td>
-<td style="text-align: right;">57.773</td>
-<td style="text-align: right;">57.360</td>
+<td><code>mlp_44</code></td>
+<td style="text-align: right;">0.849</td>
+<td style="text-align: right;">+0.140</td>
+<td>[−0.161, +0.435]</td>
+<td style="text-align: right;">15/30</td>
+<td style="text-align: right;">1.000</td>
 </tr>
 <tr>
-<td>mlp_43</td>
-<td style="text-align: right;">55.768</td>
-<td style="text-align: right;">56.278</td>
-<td style="text-align: right;">55.768</td>
+<td><code>mlp_43</code></td>
+<td style="text-align: right;">0.973</td>
+<td style="text-align: right;">+0.263</td>
+<td>[−0.050, +0.567]</td>
+<td style="text-align: right;">10/30</td>
+<td style="text-align: right;">0.099</td>
 </tr>
 <tr>
-<td>mlp_44</td>
-<td style="text-align: right;">56.886</td>
-<td style="text-align: right;">57.253</td>
-<td style="text-align: right;">56.886</td>
+<td><code>mlp_42</code></td>
+<td style="text-align: right;">1.463</td>
+<td style="text-align: right;">+0.753</td>
+<td>[+0.365, +1.155]</td>
+<td style="text-align: right;">7/30</td>
+<td style="text-align: right;">0.005</td>
 </tr>
 <tr>
-<td>no_thrust_42</td>
-<td style="text-align: right;">80.685</td>
-<td style="text-align: right;">101.918</td>
-<td style="text-align: right;">72.834</td>
-</tr>
-<tr>
-<td>physics_impulse</td>
-<td style="text-align: right;">57.073</td>
-<td style="text-align: right;">57.560</td>
-<td style="text-align: right;">57.073</td>
-</tr>
-<tr>
-<td>train_mean</td>
-<td style="text-align: right;">78.999</td>
-<td style="text-align: right;">100.276</td>
-<td style="text-align: right;">78.999</td>
+<td><code>physics_impulse</code></td>
+<td style="text-align: right;">0.709</td>
+<td style="text-align: right;">—</td>
+<td>—</td>
+<td style="text-align: right;">—</td>
+<td style="text-align: right;">—</td>
 </tr>
 </tbody>
 </table>
-<p>主模型误差增至约 57 g。神经网络与物理基线都会受推力标定影响；如果推力比例和质量都未知，仅凭这里的输入难以区分两者。</p>
-<p><img alt="训练和验证损失" src="results/loss.png"/>
-<img alt="正常测试集：每次飞行平均估计与真实质量" src="results/comparison.png"/></p>
-<p>运行评估后，详细指标生成到本地 <code>results/metrics.json</code>，逐窗口预测生成到同目录 CSV 中。运行记录不随源码提交，文档保留实验汇总表和展示图片。结果来自当前的简化竖直飞行实验，尚未进行跨控制器、复杂机动、OpenHUTB Unreal 或实机验证。</p>
-<h2 id="_6">运行</h2>
-<p>已验证环境为 VMware Ubuntu 20.04.6、现有 ROS2 Humble、Python 3.8.10、PyTorch 2.4.1+cpu、MuJoCo 3.1.6。使用系统 Python 创建虚拟环境，以便访问 ROS2 库。</p>
-<p>代码目录以下按 <code>~/ros2/src/air/payload_mass_estimation</code> 举例，独立解压时替换为实际路径。系统需已有 ROS2、rclpy、std_msgs 和 launch_ros；缺少 venv 时安装系统 <code>python3-venv</code>。</p>
-<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/ros2/src/air/payload_mass_estimation
-<span class="nb">source</span><span class="w"> </span>/opt/ros/humble/setup.bash
-/usr/bin/python3<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>--system-site-packages<span class="w"> </span>~/uav_prediction_env
-<span class="nb">source</span><span class="w"> </span>~/uav_prediction_env/bin/activate
-python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
-bash<span class="w"> </span>main.sh<span class="w"> </span>doctor
-bash<span class="w"> </span>main.sh<span class="w"> </span>prepare
-bash<span class="w"> </span>main.sh<span class="w"> </span><span class="nb">test</span>
-bash<span class="w"> </span>main.sh<span class="w"> </span>build
-</code></pre></div>
-<p>已有相同虚拟环境时直接激活即可。<code>ROS_SETUP</code> 和 <code>UAV_ENV</code> 可以指定其他 ROS setup 文件和虚拟环境目录。仿真及模型可在 CPU 上运行，无需另下大型场景。</p>
-<p>先在上述终端启动订阅绘图程序：</p>
-<div class="highlight"><pre><span></span><code><span class="nv">MPLBACKEND</span><span class="o">=</span>Agg<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>payload_mass_estimation.dashboard
-</code></pre></div>
-<p>再在第二个终端运行：</p>
-<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/ros2/src/air/payload_mass_estimation
-bash<span class="w"> </span>main.sh<span class="w"> </span>demo
-</code></pre></div>
-<p>默认回放 3 次测试飞行，约 36 秒。节点结束后，订阅程序等待 5 秒无新消息便保存图片和计数，最多等待 90 秒；它保存曲线文件，不打开实时窗口。若没有收到消息会报错。</p>
-<p>输出为 <code>results/ros_subscriber.png</code>、<code>results/ros_subscriber.json</code> 和 <code>results/ros_node.json</code>。本次运行发布 720 条观测、663 条预测，订阅端收到全部 663 条预测，两个节点正常退出。</p>
-<p><img alt="ROS2 订阅曲线" src="results/ros_subscriber.png"/></p>
-<p>图中的台阶对应三次独立飞行的切换，不表示飞行途中加载货物。</p>
-<h2 id="ros2">ROS2 接口</h2>
+<p>结论比"物理基线反超"更细：</p>
+<ul>
+<li><strong><code>mlp_44</code> 与物理基线在统计上无法区分</strong>（CI 含 0，30 次飞行各赢 15 次）；</li>
+<li><code>mlp_43</code> 处于边缘（p = 0.099）；</li>
+<li><strong>只有 <code>mlp_42</code> 显著更差</strong>（CI 不含 0，p = 0.005）。</li>
+</ul>
+<p>所以不能说"物理基线在所有情况下都更好"，也不能说"网络追上了基线"。
+<strong>在 30 次飞行的样本量下，最好的网络与闭式解法打平</strong>，其余两个更差。
+如果目标是"用最低复杂度做对这件事"，物理基线仍然是合理选择；网络要证明价值，需要更大的样本或不同的条件。</p>
+<p><img alt="整次飞行平均误差" src="../../img/air/payload_mass_estimation/flight_mean_mae.png"/></p>
+<p><img alt="每次飞行的平均估计与真实质量" src="../../img/air/payload_mass_estimation/comparison.png"/></p>
+<p><img alt="训练与验证损失" src="../../img/air/payload_mass_estimation/loss.png"/></p>
+<h3 id="72">7.2 推力标定敏感性扫描</h3>
+<p>上面的 95% / 105% 只是两个点。为了看清趋势，我们重新采集了 <strong>7 个推力比例</strong>下的飞行
+（每个比例 10 次新飞行、23 个窗口，种子 50000–50009，载荷仍均匀取 0～0.4 kg）：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">实际/指令推力</th>
+<th style="text-align: right;"><code>mlp_44</code></th>
+<th style="text-align: right;"><code>mlp_42</code></th>
+<th style="text-align: right;"><code>physics_impulse</code></th>
+<th style="text-align: right;"><code>no_thrust_42</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">0.90</td>
+<td style="text-align: right;">119.61</td>
+<td style="text-align: right;">121.76</td>
+<td style="text-align: right;">131.11</td>
+<td style="text-align: right;">109.79</td>
+</tr>
+<tr>
+<td style="text-align: right;">0.95</td>
+<td style="text-align: right;">60.34</td>
+<td style="text-align: right;">61.83</td>
+<td style="text-align: right;">62.66</td>
+<td style="text-align: right;">104.93</td>
+</tr>
+<tr>
+<td style="text-align: right;">0.98</td>
+<td style="text-align: right;">21.06</td>
+<td style="text-align: right;">21.30</td>
+<td style="text-align: right;">22.83</td>
+<td style="text-align: right;">128.76</td>
+</tr>
+<tr>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;"><strong>3.04</strong></td>
+<td style="text-align: right;"><strong>3.55</strong></td>
+<td style="text-align: right;"><strong>3.19</strong></td>
+<td style="text-align: right;">119.65</td>
+</tr>
+<tr>
+<td style="text-align: right;">1.02</td>
+<td style="text-align: right;">22.94</td>
+<td style="text-align: right;">22.33</td>
+<td style="text-align: right;">22.73</td>
+<td style="text-align: right;">98.40</td>
+</tr>
+<tr>
+<td style="text-align: right;">1.05</td>
+<td style="text-align: right;">54.42</td>
+<td style="text-align: right;">54.34</td>
+<td style="text-align: right;">53.26</td>
+<td style="text-align: right;">102.81</td>
+</tr>
+<tr>
+<td style="text-align: right;">1.10</td>
+<td style="text-align: right;">101.68</td>
+<td style="text-align: right;">102.55</td>
+<td style="text-align: right;">101.80</td>
+<td style="text-align: right;">81.04</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="推力标定误差的敏感性" src="../../img/air/payload_mass_estimation/thrust_sweep.png"/></p>
+<p>三个结论：</p>
+<ol>
+<li><strong>误差近似正比于标定偏差</strong>：<script type="math/tex">\mathrm{MAE}\approx|1-s|\times m_{\text{total}}</script>。5% 偏差对应约 57 g
+   ——正好是总质量（约 1.15 kg）的 5%，10% 对应约 110 g。这与推导一致：估计值 <script type="math/tex">\hat m = m/s</script>。</li>
+<li><strong>网络与物理基线几乎完全重合</strong>（三条 V 形曲线），因为它们用的是同一份信息。</li>
+<li><strong><code>no_thrust_42</code> 是平的</strong>（80～130 g）：它不看推力，自然对推力标定免疫——但它对载荷变化也几乎不敏感，
+   在标定准确时反而最差。这组数据里最有价值的反讽是：当偏差大到 10% 时，<strong>"什么都不知道"的模型
+   反而比两个"知道一点"的模型更准</strong>。</li>
+</ol>
+<h3 id="73">7.3 为什么重训也救不回来：可辨识性</h3>
+<p>有人会问：把带推力偏差的数据放进训练，能不能学会补偿？我们做了这个实验：</p>
+<ul>
+<li>训练集扩为 3 份：原始（比例 1.00）+ 比例 0.95 + 比例 1.05，共 270 次飞行、6,210 个窗口；</li>
+<li>验证集仍用比例 1.00 的 30 次飞行（保持选模型的标准不变）；</li>
+<li>同样 160 轮、Adam、种子 42。</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">实际/指令推力</th>
+<th style="text-align: right;">原始 <code>mlp_42</code></th>
+<th style="text-align: right;">增强训练</th>
+<th style="text-align: right;">变化</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">0.90</td>
+<td style="text-align: right;">121.76</td>
+<td style="text-align: right;">90.41</td>
+<td style="text-align: right;">−31.35</td>
+</tr>
+<tr>
+<td style="text-align: right;">0.95</td>
+<td style="text-align: right;">61.83</td>
+<td style="text-align: right;">44.80</td>
+<td style="text-align: right;">−17.03</td>
+</tr>
+<tr>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;"><strong>3.55</strong></td>
+<td style="text-align: right;"><strong>18.09</strong></td>
+<td style="text-align: right;"><strong>+14.54</strong></td>
+</tr>
+<tr>
+<td style="text-align: right;">1.05</td>
+<td style="text-align: right;">54.34</td>
+<td style="text-align: right;">47.03</td>
+<td style="text-align: right;">−7.31</td>
+</tr>
+<tr>
+<td style="text-align: right;">1.10</td>
+<td style="text-align: right;">102.55</td>
+<td style="text-align: right;">93.52</td>
+<td style="text-align: right;">−9.03</td>
+</tr>
+</tbody>
+</table>
+<p>增强训练<strong>把 V 形曲线压平了一点，代价是标定准确时的精度大幅下降</strong>（3.55 g → 18.09 g）。
+它没有解决问题，原因不是训练不充分，而是<strong>这个问题在给定输入下不可辨识</strong>：</p>
+<p>
+<script type="math/tex; mode=display">
+a + g = \frac{s f}{m} \;\Longrightarrow\; \frac{f}{a+g} = \frac{m}{s}
+</script>
+</p>
+<p>观测量只决定比值 <script type="math/tex">m/s</script>——"推力低 5%"与"载荷重 5%"在数学上完全等价，没有任何网络能从这两个通道
+区分它们。要恢复可辨识性，必须引入额外信息，例如</p>
+<ul>
+<li>一次<strong>已知质量的标定飞行</strong>（<script type="math/tex">m</script> 已知，反推 <script type="math/tex">s</script>）；</li>
+<li>直接测量推力（力传感器、电机转速-推力曲线标定）；</li>
+<li>或者引入与质量无关的通道（如加速度计与推力之外的动力学响应）。</li>
+</ul>
+<p>这是我们目前能给出的最强结论：<strong>这类估计器的上限由输入信息决定，而不是由模型容量决定。</strong></p>
+<h3 id="74">7.4 复现一致性</h3>
+<p>在副本 <code>~/paymass_retrain</code> 中重训 4 个模型：</p>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>训练总耗时</td>
+<td><strong>15.7 秒</strong>（4 个模型 × 160 轮）</td>
+</tr>
+<tr>
+<td>重训 vs 随附权重（两个场景 × 6 行指标）</td>
+<td>全部差值 <strong>0.000 g</strong></td>
+</tr>
+</tbody>
+</table>
+<p>验证方法：重训后跑 <code>evaluate</code>，逐项比较 <code>metrics.json</code>。训练脚本固定 <code>torch.manual_seed(seed)</code>，数据顺序由 <code>torch.randperm</code> 决定，因此可复现。</p>
+<hr/>
+<h2 id="8-ros2">8. ROS2 接口</h2>
 <table>
 <thead>
 <tr>
 <th>话题</th>
-<th>消息类型</th>
+<th>类型</th>
 <th>字段</th>
 </tr>
 </thead>
@@ -1213,43 +1810,167 @@ bash<span class="w"> </span>main.sh<span class="w"> </span>demo
 </tr>
 </tbody>
 </table>
-<p>输入包将速度和推力放在同一时间戳下，采样间隔为 0.05 秒。估计器收到 20 个有效点后开始输出；时间倒退、间隔异常或非有限值会清空窗口。当前节点为有限回放设计，接收过数据后断流 3 秒会保存记录并退出。</p>
-<p>本项目没有直接接入 <code>carlair_ros_bridge</code>。若接入其他仿真器，需要同时取得同步后的竖直速度和以牛顿为单位的总推力；仅有 <code>/uav/odom</code> 不够。倾斜飞行还需要处理推力的竖直分量。</p>
-<div class="mermaid">flowchart LR
-  A[社区四旋翼模型] --&gt; B[MuJoCo 质量变化实验]
-  B --&gt; C[按整次飞行划分数据]
-  C --&gt; D[训练 MLP 与消融模型]
-  C --&gt; E[独立飞行测试和物理基线]
-  B --&gt; F[同步速度和推力回放]
-  F --&gt; G[ROS2 质量估计节点]
-  D --&gt; G
-  G --&gt; H[订阅曲线与运行记录]
-</div>
-<h2 id="_7">复现实验</h2>
-<p>恢复数据后评估随附模型：</p>
-<div class="highlight"><pre><span></span><code>bash<span class="w"> </span>main.sh<span class="w"> </span>evaluate
+<table>
+<thead>
+<tr>
+<th>节点</th>
+<th>可执行文件</th>
+<th>职责</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>payload_replay</code></td>
+<td><code>payload_replay</code></td>
+<td>回放 3 段测试飞行（种子 40120–40122），20 Hz</td>
+</tr>
+<tr>
+<td><code>payload_estimator</code></td>
+<td><code>payload_estimator</code></td>
+<td>维护 20 点窗口、推理、同时输出物理估计</td>
+</tr>
+<tr>
+<td>订阅绘图</td>
+<td><code>-m payload_mass_estimation.dashboard</code></td>
+<td>订阅 <code>/payload/estimate</code>，结束后落盘图片</td>
+</tr>
+</tbody>
+</table>
+<p>启动：</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>payload_mass_estimation<span class="w"> </span>main.launch.py<span class="w"> </span>project_root:<span class="o">=</span><span class="s2">"</span><span class="nv">$PWD</span><span class="s2">"</span>
 </code></pre></div>
-<p>随附权重可直接评估，不需要训练过程日志。训练曲线图保留在本文中；重新训练后会生成本地 <code>models/*/loss.csv</code>，再次评估时可据此重绘损失曲线。</p>
-<p>如需重新采集、训练，请先复制项目目录，避免覆盖随附数据和模型。在副本中运行：</p>
-<div class="highlight"><pre><span></span><code>bash<span class="w"> </span>main.sh<span class="w"> </span>collect
-bash<span class="w"> </span>main.sh<span class="w"> </span>train
-bash<span class="w"> </span>main.sh<span class="w"> </span>evaluate
+<p><code>main.launch.py</code> 通过 <code>SetEnvironmentVariable</code> 把 <code>PAYLOAD_PROJECT_ROOT</code> 传给两个节点，模型与数据路径都相对该根目录解析。</p>
+<p><strong>接口约定</strong>：输入包把速度与推力放在<strong>同一时间戳</strong>下，间隔 0.05 s。估计器收到 20 个有效点后才输出；时间倒退、间隔异常、非有限值都会清空窗口。</p>
+<p>本项目<strong>没有</strong>直接接入 <code>carlair_ros_bridge</code>。接其他仿真器时，必须同时拿到<strong>同步的竖直速度</strong>与<strong>以牛顿为单位的总推力</strong>——只有 <code>/uav/odom</code> 不够。倾斜飞行还要把推力投影到竖直方向。</p>
+<hr/>
+<h2 id="9">9. 源代码解析</h2>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th style="text-align: right;">行数</th>
+<th>职责</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>payload_mass_estimation/data.py</code></td>
+<td style="text-align: right;">25</td>
+<td>窗口、加速度差分、冲量基线、在线 <code>Estimator</code></td>
+</tr>
+<tr>
+<td><code>payload_mass_estimation/experiment.py</code></td>
+<td style="text-align: right;">84</td>
+<td>采集调度、数据集、训练、评估、指标</td>
+</tr>
+<tr>
+<td><code>payload_mass_estimation/simulation.py</code></td>
+<td style="text-align: right;">46</td>
+<td>MuJoCo 模型加载、固定控制器、飞行与可选渲染</td>
+</tr>
+<tr>
+<td><code>payload_mass_estimation/ros_nodes.py</code></td>
+<td style="text-align: right;">51</td>
+<td><code>Replay</code> 与 <code>Predict</code> 两个节点</td>
+</tr>
+<tr>
+<td><code>payload_mass_estimation/dashboard.py</code></td>
+<td style="text-align: right;">24</td>
+<td>订阅 <code>/payload/estimate</code>，结束后画图落盘</td>
+</tr>
+<tr>
+<td><code>main.py</code></td>
+<td style="text-align: right;">18</td>
+<td>统一入口（prepare/collect/train/evaluate/test/build/demo）</td>
+</tr>
+<tr>
+<td><code>main.sh</code></td>
+<td style="text-align: right;">6</td>
+<td>加载 ROS 与 venv</td>
+</tr>
+<tr>
+<td><code>course_environment.py</code></td>
+<td style="text-align: right;">52</td>
+<td><code>doctor</code> 与 colcon 构建</td>
+</tr>
+<tr>
+<td><code>render_validation.py</code></td>
+<td style="text-align: right;">11</td>
+<td>重新渲染 MuJoCo 场景图</td>
+</tr>
+</tbody>
+</table>
+<p>五个关键设计：</p>
+<p><strong>训练与在线共用一份特征代码。</strong> <code>data.py</code> 的 <code>features()</code> 同时被 <code>experiment.dataset()</code> 与在线 <code>Estimator.step()</code> 调用，避免"离线一套、在线一套"的经典偏差。</p>
+<p><strong>推力错一位对齐。</strong> <code>force = a[:-1, 3]</code>、<code>acceleration = np.diff(v)/DT</code>：第 <script type="math/tex">k</script> 条推力对应第 <script type="math/tex">k</script> 个加速度。这行代码决定了物理基线与网络的正确性。</p>
+<p><strong>标签不参与控制。</strong> <code>simulation.collect()</code> 里载荷只影响 <code>inertial</code> 的质量；控制器读的是高度与速度。所以"载荷可被推断"不是自证。</p>
+<p><strong>物理基线是代码里的一等公民。</strong> 它在 <code>evaluate()</code> 中与四个网络并列评估，输出同样的指标；不是文档里补的一句说明。</p>
+<p><strong>采集拒绝静默失败。</strong> 飞行出现非有限值或高度低于 0.3 m 时直接 <code>raise</code>，而不是把坏样本混进训练集。</p>
+<hr/>
+<h2 id="10">10. 复现步骤</h2>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/ros2/src/air/payload_mass_estimation
+<span class="nb">source</span><span class="w"> </span>/opt/ros/humble/setup.bash
+<span class="nb">source</span><span class="w"> </span>~/uav_prediction_env/bin/activate
+
+bash<span class="w"> </span>main.sh<span class="w"> </span>doctor<span class="w">      </span><span class="c1"># 13 个模块，含 mujoco</span>
+bash<span class="w"> </span>main.sh<span class="w"> </span>prepare<span class="w">     </span><span class="c1"># 解压语料</span>
+bash<span class="w"> </span>main.sh<span class="w"> </span><span class="nb">test</span><span class="w">        </span><span class="c1"># 8 项单元测试</span>
+bash<span class="w"> </span>main.sh<span class="w"> </span>evaluate<span class="w">    </span><span class="c1"># 用随附权重复现两张表</span>
+bash<span class="w"> </span>main.sh<span class="w"> </span>build
+bash<span class="w"> </span>main.sh<span class="w"> </span>demo<span class="w">        </span><span class="c1"># 需要先开 dashboard</span>
 </code></pre></div>
-<p>在有图形环境的 Ubuntu 桌面运行 <code>python render_validation.py</code> 可重新渲染仿真图，输出到本地 <code>results/simulation.png</code>。</p>
-<p>8 项测试涵盖模型总质量、已知质量物理公式、时间对齐、在线与离线一致性、输入字段、异常值、采样间隔和飞行划分。<code>doctor</code> 生成本地环境记录 <code>artifacts/environment.json</code>；测试、评估和回放结果由运行命令生成。<code>results/</code>、<code>artifacts/</code>、构建目录、日志和训练过程 CSV 均不提交到仓库。</p>
-<p>代码、实验脚本和文档使用 OpenAI Codex 辅助编写。指标与图片来自程序运行。</p></div>
+<p>纯 CPU 环境下：评估约 3 秒，8 项测试 0.14 秒，重训 4 个模型 <strong>15.7 秒</strong>，回放 36 秒。</p>
+<p><strong>注意</strong>：<code>main.sh train</code> 会写入 <code>models/&lt;name&gt;/</code>，<strong>覆盖随附权重</strong>。要验证重训一致性，请先复制整个目录（第 2.4 节）。</p>
+<hr/>
+<h2 id="11_1">11. 局限与适用范围</h2>
+<ol>
+<li><strong>单一运动模式</strong>：只做水平姿态的竖直飞行；倾斜、机动飞行时推力需分解，特征定义会变。</li>
+<li><strong>已知空机质量与推力标定</strong>：这是任务前提。第 7.2 节显示 5% 的标定偏差就会让误差到 57 g。</li>
+<li><strong>与闭式解法打平而非超越</strong>：最好模型 <code>mlp_44</code> 与物理基线在飞行级指标上统计不可区分（第 7.1.1 节），
+   不能声称神经网络普遍优于物理方法。</li>
+<li><strong>推力比例与载荷不可辨识</strong>：只给推力与加速度时，两者在数学上等价（第 7.3 节）；增强训练也救不回来。</li>
+<li><strong>载荷表示过于理想</strong>：只改机身质量、转动惯量沿用空机，不涉及偏心、晃动与姿态变化。</li>
+<li><strong>无外部扰动</strong>：没有风、传感器延迟、推力噪声；这些都会改变误差量级。</li>
+<li><strong>样本量小</strong>：飞行级指标只有 30 次飞行，配对检验的置信区间仍然较宽（见 7.1.1 节）。</li>
+<li><strong>窗口重叠</strong>：690 个窗口来自 30 次飞行，不能当作独立样本。</li>
+<li><strong>未在实机验证</strong>：MuJoCo 简化模型的结果不能外推到真实无人机。</li>
+<li><strong>新增实验的边界</strong>：第 7.2、7.3 节的扫描与增强训练各只用了 10 次飞行/单一种子，趋势清楚但不宜当作精确曲线。</li>
+</ol>
+<hr/>
+<h2 id="12_1">12. 维护说明</h2>
+<ol>
+<li>采集会覆盖数据，<strong>先复制目录</strong>；</li>
+<li>改动特征、窗口或对齐方式后，必须同时更新物理基线——两者共用同一套特征约定；</li>
+<li>重新训练会生成 <code>models/*/loss.csv</code>；随附权重不含训练日志，所以评估时不会重画损失曲线（本文的 <code>loss.png</code> 来自本机重训副本）；</li>
+<li>图片放在 <code>docs/img/air/payload_mass_estimation/</code>（仓库 <code>.gitignore</code> 忽略 <code>*.gif</code>，只对该目录开白名单）；</li>
+<li><code>results/</code>、<code>artifacts/</code>、构建目录与日志都不入库；</li>
+<li>第 7.2、7.3 节的扫描与增强训练是一次性脚本生成的，没有入库：它们直接调用
+   <code>simulation.collect(seed, payload_kg, thrust_scale=...)</code> 与同一套 <code>features()</code>，参数（每个比例 10 次飞行、
+   种子 50000–50009、三种比例的 6,210 个训练窗口）都写在正文里，可按同参数重跑。</li>
+</ol>
+<p><code>assets/flights.zip</code> 为自包含数据；<code>models/</code> 为权重、<code>meta.json</code> 与来源说明；<code>tests/</code> 为契约测试。</p>
+<hr/>
+<h2 id="13">13. 参考资料</h2>
+<ol>
+<li>Mueller M., et al. <em>MuJoCo: A Physics Engine for Model-Based Control.</em> IROS 2012.</li>
+<li>OpenHUTB 社区四旋翼模型：<a href="https://github.com/OpenHUTB/ros2/pull/178">PR #178</a></li>
+<li>ROS 2 Humble 文档：<a href="https://docs.ros.org/en/humble/">https://docs.ros.org/en/humble/</a></li>
+<li>Goodfellow I., Bengio Y., Courville A. <em>Deep Learning.</em> MIT Press, 2016.（回归损失与基线比较）</li>
+</ol>
+<hr/>
+<p><strong>说明</strong>：代码、实验脚本与文档在 OpenAI Codex 辅助下完成；指标与图片均来自本机实际运行。提交者负责检查与维护提交内容。</p></div>
 </div>
 </div><footer>
 <div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
 <a class="btn btn-neutral float-left" href="../fixed_wing_sitl_preflight/" title="Fixed-wing SITL preflight"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
 <a class="btn btn-neutral float-right" href="../uav_payload_balance_guard/" title="无人机载荷重心偏移与配平监测">后一页 <span class="icon icon-circle-arrow-right"></span></a>
 </div>
-<hr/>
+<hr>
 <div role="contentinfo">
 <!-- Copyright etc -->
 <p>OpenHUTB 版权所有 © 2026</p>
 </div>
-</footer>
+</hr></footer>
 </div>
 </div>
 </section>
