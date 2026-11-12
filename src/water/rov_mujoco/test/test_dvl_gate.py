@@ -87,6 +87,37 @@ def test_jump_gate_reacquires_after_reject_streak():
     print('PASS jump baseline reacquired after reject streak')
 
 
+def test_reject_streak_works_at_low_dvl_rates():
+    for rate_hz in (1.0, 2.0, 5.0, 10.0):
+        ekf = make_ekf(
+            max_dvl_jump=0.4,
+            max_dvl_gap=2.0,
+            dvl_jump_reset_count=10)
+        ekf.update_dvl([0.5, 0.0, 0.0], timestamp=0.0)
+        for i in range(1, 21):
+            ekf.update_dvl(
+                [5.0, 0.0, 0.0], timestamp=i / rate_hz)
+        assert ekf.dvl_rejected_jump == 10, (rate_hz, ekf.dvl_rejected_jump)
+        assert ekf.dvl_reacquired == 1, (rate_hz, ekf.dvl_reacquired)
+        assert ekf.dvl_accepted == 11, (rate_hz, ekf.dvl_accepted)
+    print('PASS jump streak remains effective at 1-10 Hz DVL rates')
+
+
+def test_invalid_samples_do_not_clear_jump_streak():
+    ekf = make_ekf(
+        max_dvl_jump=0.4,
+        max_dvl_gap=2.0,
+        dvl_jump_reset_count=5)
+    ekf.update_dvl([0.5, 0.0, 0.0], timestamp=0.0)
+    for i in range(1, 21):
+        value = [5.0, 0.0, 0.0] if i % 2 else [float('nan'), 0.0, 0.0]
+        ekf.update_dvl(value, timestamp=i * 0.1)
+    assert ekf.dvl_rejected_jump == 5, ekf.dvl_rejected_jump
+    assert ekf.dvl_reacquired == 1, ekf.dvl_reacquired
+    assert ekf.dvl_accepted > 1, ekf.dvl_accepted
+    print('PASS invalid samples do not clear jump streak')
+
+
 def test_speed_gate_is_not_bypassed_by_reject_streak():
     ekf = make_ekf(max_dvl_speed=1.5, dvl_jump_reset_count=3)
     for i in range(20):
@@ -104,5 +135,7 @@ if __name__ == '__main__':
     test_non_finite()
     test_jump_gate_reacquires_after_time_gap()
     test_jump_gate_reacquires_after_reject_streak()
+    test_reject_streak_works_at_low_dvl_rates()
+    test_invalid_samples_do_not_clear_jump_streak()
     test_speed_gate_is_not_bypassed_by_reject_streak()
     print('all DVL gate regression tests passed')

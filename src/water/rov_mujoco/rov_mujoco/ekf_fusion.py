@@ -81,7 +81,7 @@ class ROVEKF:
                  sigma_acc=0.05, sigma_gyro=0.01,
                  sigma_ba=1e-4, sigma_bg=1e-5,
                  max_dvl_jump=0.0, max_dvl_speed=0.0,
-                 max_dvl_gap=0.5, dvl_jump_reset_count=10):
+                 max_dvl_gap=2.0, dvl_jump_reset_count=10):
         self.p = np.array(p0, dtype=float)
         self.v = np.array(v0, dtype=float)
         self.q = quat_normalize(np.array(q0, dtype=float))
@@ -104,7 +104,7 @@ class ROVEKF:
         self.max_dvl_gap = max(0.0, float(max_dvl_gap))
         self.dvl_jump_reset_count = max(0, int(dvl_jump_reset_count))
         self._last_dvl = None
-        self._last_dvl_time = None
+        self._last_dvl_seen_time = None
         self._dvl_jump_reject_streak = 0
         self.dvl_accepted = 0
         self.dvl_rejected = 0
@@ -170,29 +170,29 @@ class ROVEKF:
             if measurement_time is not None and not np.isfinite(measurement_time):
                 measurement_time = None
 
+        previous_seen_time = self._last_dvl_seen_time
         if v_meas.size != 3 or not np.all(np.isfinite(v_meas)):
             self.dvl_rejected += 1
             self.dvl_rejected_invalid += 1
-            self._dvl_jump_reject_streak = 0
             return 0.0
+        if measurement_time is not None:
+            self._last_dvl_seen_time = measurement_time
 
         speed = float(np.linalg.norm(v_meas))
         if self.max_dvl_speed > 0.0 and speed > self.max_dvl_speed:
             self.dvl_rejected += 1
             self.dvl_rejected_speed += 1
-            self._dvl_jump_reject_streak = 0
             return 0.0
 
         if self.max_dvl_jump > 0.0 and self._last_dvl is not None:
             gap_expired = False
-            if measurement_time is not None and self._last_dvl_time is not None:
-                gap = measurement_time - self._last_dvl_time
+            if measurement_time is not None and previous_seen_time is not None:
+                gap = measurement_time - previous_seen_time
                 gap_expired = gap < 0.0 or (
                     self.max_dvl_gap > 0.0 and gap > self.max_dvl_gap)
 
             if gap_expired:
                 self._last_dvl = None
-                self._last_dvl_time = None
                 self._dvl_jump_reject_streak = 0
                 self.dvl_reacquired += 1
             else:
@@ -207,13 +207,11 @@ class ROVEKF:
                         # the baseline after a bounded streak, but still reject
                         # this sample so the EKF does not immediately absorb it.
                         self._last_dvl = v_meas.copy()
-                        self._last_dvl_time = measurement_time
                         self._dvl_jump_reject_streak = 0
                         self.dvl_reacquired += 1
                     return 0.0
 
         self._last_dvl = v_meas.copy()
-        self._last_dvl_time = measurement_time
         self._dvl_jump_reject_streak = 0
         self.dvl_accepted += 1
         R = quat_to_rot(self.q)

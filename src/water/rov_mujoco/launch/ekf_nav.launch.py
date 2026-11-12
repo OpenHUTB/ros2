@@ -33,7 +33,7 @@ def generate_launch_description():
                               description='相邻 DVL 速度跳变门限 (m/s, 0 = 关闭)'),
         DeclareLaunchArgument('max_dvl_speed', default_value='0.0',
                               description='DVL 速度模长门限 (m/s, 0 = 关闭)'),
-        DeclareLaunchArgument('max_dvl_gap', default_value='0.5',
+        DeclareLaunchArgument('max_dvl_gap', default_value='2.0',
                               description='超过该间隔后重新捕获 DVL 跳变基准 (s)'),
         DeclareLaunchArgument('dvl_jump_reset_count', default_value='10',
                               description='连续跳变拒绝后重置基准的次数，0 = 关闭'),

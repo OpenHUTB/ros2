@@ -37,7 +37,7 @@ class EKFNode(Node):
         self.declare_parameter('init_delay', 0.1)
         self.declare_parameter('max_dvl_jump', 0.0)
         self.declare_parameter('max_dvl_speed', 0.0)
-        self.declare_parameter('max_dvl_gap', 0.5)
+        self.declare_parameter('max_dvl_gap', 2.0)
         self.declare_parameter('dvl_jump_reset_count', 10)
         self.sigma_dvl = float(self.get_parameter('sigma_dvl').value)
         self.sigma_depth = float(self.get_parameter('sigma_depth').value)
