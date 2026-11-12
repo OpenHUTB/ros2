@@ -221,6 +221,7 @@ nav:
     - ROS2 A*+DWA 的 Gazebo 三维验证: './ground/ros2_dwa_gazebo.md'
     - UWB 多基站测距定位布站几何精度对比评测: './ground/uwb_baseline_geometry_eval.md'
     - TurtleBot3 自主导航与避障参数优化: './ground/turtlebot3_auto_nav/README.md'
+    - TurtleBot3 键盘遥控: './ground/turtlebot3_keyboard_teleop.md'
     - ROS2 TurtleBot3 激光雷达避障实验: './ground/ros2_turtlebot3_obstacle.md'
     - 视觉 SLAM 建图与自主导航（EKF-SLAM + 端到端对照）: './ground/ugv_visual_slam_nav.md'
     - DVS 事件相机背景活动抑制与运动目标跟踪: './ground/dvs_event_motion_tracking.md'
