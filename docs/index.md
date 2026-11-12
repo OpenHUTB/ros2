@@ -286,6 +286,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [前视相机车道偏离预警（视觉横向偏移与地图真值对照）](./ground/carla_visual_lane_departure_warning.md) —— 用前视图像估计横向偏移，并与地图真值逐帧对照
 * [差速 AGV 坡道起步辅助（防溜车）](./ground/hill_start_assist.md) —— MuJoCo 12° 斜坡，四轮轮角保持 PD + 坡度前馈，松刹车 3 s 后溜 2.18 m 降到 0.008 m
 * [地面移动底盘速度指令安全监督](./ground/cmd_vel_guard.md) —— 对 `/cmd_vel` 做限幅、急停、超时与非法值拦截，无需仿真环境
+* [差速小车双侧墙通道居中 PD 巡航仿真](./ground/diff_drive_corridor_centering.md) —— 纯 Python PD 控制器只用左右墙与前方三路测距把差速底盘保持在直通道中线，配套 2D 运动学虚拟测距节点，离线仿真给出轨迹、墙距与速度指令曲线
 * [巡线小车仿真（色带中线 PD 跟踪）](./ground/line_follower_car.md) —— 一排虚拟光电传感器读取线偏差，pure pursuit 预瞄 + PD 转向闭环引导沿黑线巡线
 * [窄道会车让行仿真（避让龛规则）](./ground/narrow_giveway_passing.md) —— 双向共用窄路两侧设避让龛，对向小车按距离远近决定进龛等待，交汇后驶出，纯 NumPy 二维仿真
 * [VRU 冲突风险图](./ground/vru_conflict_risk_map.md) —— 按时间对齐自车与行人、儿童和骑行者轨迹，输出最小距离、TTC 和风险等级
