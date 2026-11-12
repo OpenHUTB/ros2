@@ -21,10 +21,11 @@ WEIGHTS = os.path.join(HERE, "models_trained", "e2e_policy.npz")
 DEFAULT_OUT = os.path.join(HERE, "demo_test.gif")
 
 
-def generate(out_gif: str = DEFAULT_OUT, force: float = 50.0, direction_deg: float = 0.0,
+def generate(out_gif: str = DEFAULT_OUT, force: float = 20.0, direction_deg: float = 0.0,
              stand_seconds: float = 2.0, after_seconds: float = 8.0):
     sim = E2ESim(MODEL)
     predictor = E2EPredictor(WEIGHTS)
+    predictor.reset()
 
     renderer = mujoco.Renderer(sim.model, height=360, width=480)
     cam_id = mujoco.mj_name2id(sim.model, mujoco.mjtObj.mjOBJ_CAMERA, "overview")
@@ -40,7 +41,8 @@ def generate(out_gif: str = DEFAULT_OUT, force: float = 50.0, direction_deg: flo
     u = np.zeros(15)
     for i in range(int(stand_seconds / 0.002)):
         if i % 2 == 0:
-            u = predictor.predict_from_image(sim.render_front(gray=True))
+            u = predictor.predict_from_image(sim.render_front(gray=True),
+                                              t=sim.data.time)
         sim.step(target=DEFAULT_STAND_TARGET, torque_extra=u)
         if i % 6 == 0:
             snap()
@@ -54,7 +56,8 @@ def generate(out_gif: str = DEFAULT_OUT, force: float = 50.0, direction_deg: flo
     fell = None
     for i in range(int(after_seconds / 0.002)):
         if i % 2 == 0:
-            u = predictor.predict_from_image(sim.render_front(gray=True))
+            u = predictor.predict_from_image(sim.render_front(gray=True),
+                                              t=sim.data.time)
         sim.step(target=DEFAULT_STAND_TARGET, torque_extra=u)
         if i % 6 == 0:
             snap()
@@ -77,7 +80,8 @@ if __name__ == "__main__":
     p = argparse.ArgumentParser()
     p.add_argument("--out", default=DEFAULT_OUT,
                    help="输出路径，默认 demo_test.gif（与 README 引用一致）")
-    p.add_argument("--force", type=float, default=50)
+    p.add_argument("--force", type=float, default=20,
+                   help="推力 N。2 s 起推 20N×40 步可站满；25N 起当前相位会失稳")
     p.add_argument("--direction", type=float, default=0)
     p.add_argument("--stand", type=float, default=2.0)
     p.add_argument("--after", type=float, default=8.0)
