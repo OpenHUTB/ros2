@@ -1,0 +1,30 @@
+# 地形跟随在线节点参数（terrain_follow_node）
+#
+# 注意 YAML 层级：参数必须缩进到 ros__parameters 之下，否则 rclpy 会解析成
+# ros__parameters: null，参数读不到默认值（这个坑在 #781 的评审里被指出来过）。
+terrain_follow_node:
+  ros__parameters:
+    # 目标离地高度（米）与安全间隙评估阈值由上层任务给
+    agl_set_m: 15.0
+    # 策略：constant_msl（定高）/ reactive_agl（纯反馈）/ dem_preview（DEM 前馈）
+    strategy: dem_preview
+    # 垂向能力：与飞控实际爬升/加速能力一致，前馈的提前量由它决定
+    climb_rate_max_mps: 3.0
+    climb_accel_max_mps2: 2.0
+    # 前视剖面：从当前位置起、每 profile_step_m 一个高程点，共 profile_len 点
+    profile_step_m: 2.0
+    profile_len: 76
+    # DEM 偏置积分的增益与限幅（越慢越不影响山脊间隙，见文档消融表）
+    trim_ki: 0.02
+    trim_limit_m: 10.0
+    # 纯反馈策略的 PI 增益
+    reactive_kp: 1.2
+    reactive_ki: 0.25
+    # 控制周期（秒），与高度环一致
+    control_dt: 0.05
+    odom_topic: /uav/odom
+    agl_topic: /range/agl
+    profile_topic: /terrain/profile
+    altitude_topic: /uav/altitude_setpoint
+    climb_topic: /uav/climb_rate_setpoint
+    diag_topic: /terrain_follow/diag

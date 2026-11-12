@@ -1,0 +1,23 @@
+<launch>
+  <!-- mode: nn | expert | manual -->
+  <arg name="mode" default="nn"/>
+  <arg name="rate" default="20.0"/>
+  <arg name="seed" default="0"/>
+  <!-- 以下三项默认取 config/params.yaml，可在命令行覆盖 -->
+  <arg name="min_passable" default="0.95"/>
+  <arg name="v_max" default="0.80"/>
+  <arg name="lookahead" default="1.1"/>
+
+  <node pkg="gap_nav_nn" type="gap_nav_node.py" name="gap_nav_node" output="screen">
+    <!-- 参数文件加载到本节点私有命名空间，节点用 ~param 读取 -->
+    <rosparam command="load" file="$(find gap_nav_nn)/config/params.yaml"/>
+
+    <param name="mode" value="$(arg mode)"/>
+    <param name="rate" value="$(arg rate)"/>
+    <param name="seed" value="$(arg seed)"/>
+    <param name="min_passable" value="$(arg min_passable)"/>
+    <param name="v_max" value="$(arg v_max)"/>
+    <param name="lookahead" value="$(arg lookahead)"/>
+    <param name="model_dir" value="$(find gap_nav_nn)/models"/>
+  </node>
+</launch>

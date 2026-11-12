@@ -1,0 +1,10 @@
+vio_sim:
+  ros__parameters:
+    rate_hz: 200.0
+    duration_s: 8.0
+    offset_s: 0.025
+    seed: 0
+time_offset_estimator:
+  ros__parameters:
+    min_samples: 400
+    dt: 0.005

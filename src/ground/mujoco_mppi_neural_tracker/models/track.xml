@@ -1,0 +1,40 @@
+<mujoco model="ackermann track">
+  <compiler angle="radian" autolimits="true"/>
+  <option timestep="0.005" gravity="0 0 -9.81" integrator="RK4"/>
+
+  <visual>
+    <global offwidth="960" offheight="640"/>
+    <headlight ambient="0.5 0.5 0.5" diffuse="0.7 0.7 0.7"/>
+  </visual>
+
+  <asset>
+    <texture name="grid" type="2d" builtin="checker" rgb1="0.18 0.2 0.24" rgb2="0.24 0.26 0.31"
+             width="300" height="300" mark="edge" markrgb="0.3 0.32 0.36"/>
+    <material name="grid" texture="grid" texrepeat="30 30"/>
+    <material name="body" rgba="0.15 0.45 0.85 1"/>
+    <material name="nose" rgba="0.95 0.75 0.1 1"/>
+    <material name="cone" rgba="0.95 0.35 0.15 1"/>
+    <material name="wall" rgba="0.55 0.55 0.6 1"/>
+  </asset>
+
+  <worldbody>
+    <light pos="0 0 12" dir="0 0 -1" diffuse="0.8 0.8 0.8"/>
+    <geom name="floor" type="plane" size="15 15 0.1" material="grid"/>
+
+    <body name="car" pos="6 0 0.12">
+      <freejoint name="car_free"/>
+      <geom name="chassis" type="box" size="0.19 0.10 0.05" material="body"/>
+      <geom name="nose" type="box" pos="0.17 0 0.0" size="0.04 0.08 0.04" material="nose"/>
+      <geom name="wheel_fl" type="cylinder" pos="0.13 0.12 -0.03" size="0.045 0.025"
+            euler="1.5708 0 0" material="wall" contype="0" conaffinity="0"/>
+      <geom name="wheel_fr" type="cylinder" pos="0.13 -0.12 -0.03" size="0.045 0.025"
+            euler="1.5708 0 0" material="wall" contype="0" conaffinity="0"/>
+      <geom name="wheel_rl" type="cylinder" pos="-0.13 0.12 -0.03" size="0.045 0.025"
+            euler="1.5708 0 0" material="wall" contype="0" conaffinity="0"/>
+      <geom name="wheel_rr" type="cylinder" pos="-0.13 -0.12 -0.03" size="0.045 0.025"
+            euler="1.5708 0 0" material="wall" contype="0" conaffinity="0"/>
+      <camera name="chase_cam" pos="-1.5 0 0.9" xyaxes="0 1 0 -0.5 0 0.87" fovy="55"/>
+      <camera name="top_cam" pos="0 0 14" xyaxes="1 0 0 0 1 0" fovy="45"/>
+    </body>
+  </worldbody>
+</mujoco>

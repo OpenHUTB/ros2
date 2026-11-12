@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>pi0_mujoco_grasp</name>
+  <version>0.1.0</version>
+  <description>基于 MuJoCo 的单臂抓取/放置与 pi0 策略推理接口复现（CPU 演示）</description>
+  <maintainer email="Chenjunhua-Dotcom@users.noreply.github.com">Chenjunhua-Dotcom</maintainer>
+  <license>Apache-2.0</license>
+  <!-- mujoco 只能通过 pip 安装（rosdep 无对应键），见 requirements.txt / setup.py；
+       模型网格资源（~33 MB）由 scripts/setup_model.py 按固定 commit 下载并校验，
+       ROS 2 安装态请先下载再 colcon build（使 assets/ 随 data_files 装入 share）。 -->
+  <buildtool_depend>ament_python</buildtool_depend>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>ament_index_python</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-pil</exec_depend>
+  <test_depend>python3-pytest</test_depend>
+  <export><build_type>ament_python</build_type></export>
+</package>

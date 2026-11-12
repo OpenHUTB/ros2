@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>diff_drive_corridor_centering</name>
+  <version>0.1.0</version>
+  <description>
+    差速小车双侧墙通道居中 PD 巡航仿真。控制器为纯 Python 实现，
+    不依赖 Gazebo / CARLA / MuJoCo，通过 /corridor/scan 与
+    /corridor/cmd_vel 两个 std_msgs/String JSON 话题闭环，
+    便于在无 GPU、无物理仿真器的环境中验证通道居中控制。
+  </description>
+  <maintainer email="jiangdong000@example.com">jiangdong000</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
