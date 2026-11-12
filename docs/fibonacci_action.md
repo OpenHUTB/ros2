@@ -19,7 +19,7 @@
 
 | 项目 | 版本 / 说明 |
 |---|---|
-| 操作系统 | Ubuntu 20.04.6 LTS（VMware 虚拟机），宿主为 Windows |
+| 操作系统 | Ubuntu 22.04 LTS（ROS 2 Humble 官方支持版本） |
 | ROS | ROS 2 Humble Hawksbill |
 | Python | 3.10 |
 | 依赖 | 仅使用 ROS 2 自带功能包：`rclpy`、`action_msgs`、`rosidl_default_generators`、`launch`、`launch_ros` |
@@ -127,11 +127,9 @@ ros2 action send_goal /fibonacci fibonacci_action/action/Fibonacci "{order: 10}"
 
 ## 5. 运行效果
 
-### 虚拟机真机截图
+### 运行截图
 
-**Ubuntu 20.04 + ROS 2 Humble VMware 虚拟机完整运行：**
-
-![ROS 2 Humble 虚拟机运行截图](./fibonacci_action/vm_run_screenshot.png)
+> 待补充：本页的终端截图需在 Ubuntu + ROS 2 Humble 上实际执行 `colcon build` 与 `ros2 launch` 后截图替换。此前版本的截图与代码不一致，已移除。
 
 ### 日志解读
 
@@ -278,10 +276,9 @@ self._send_goal_future.add_done_callback(self.goal_response_callback)  # 3. 注�
 
 ## 9. 已知限制
 
-- 仅在 **Ubuntu 20.04 + ROS 2 Humble** 虚拟机上验证通过
-- 斐波那契阶数限制在 `[0, 50]`，避免 Python `int32` 溢出风险
-- 代码中的 `time.sleep(0.3)` 仅用于演示 Feedback 效果，实际应用应替换为真实计算耗时或 `rclpy.sleep_for`
-- 未使用 `ament_python_install_package` 的 console_scripts 入口，可执行名通过 CMakeLists.txt 的 `install(PROGRAMS ...)` 注册
+- 本包用 `ament_cmake` 构建（因为需要在同一个包里生成自定义 action 接口），因此不使用 `setup.py` 的 `console_scripts`；两个入口由 `CMakeLists.txt` 的 `install(PROGRAMS ... RENAME server|client)` 显式安装到 `lib/${PROJECT_NAME}/`
+- 服务端与客户端脚本首行带 `#!/usr/bin/env python3`，`ros2 run` 直接以可执行文件方式调用
+- 本文档的构建步骤按 ROS 2 Humble 编写，尚未在真实 Humble 环境完成端到端验证；首次构建请按第 3 节操作，如有报错请反馈
 
 ---
 
