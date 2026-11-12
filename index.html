@@ -149,6 +149,10 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="chapter/chap9/rov_thruster_allocation_ls/">ROV 六自由度推力分配</a>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="chapter/chap9/uav_geofence_bypass/">无人机禁飞区膨胀绕行</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="chapter/chap9/uav_los_waypoint_guidance/">无人机 LOS 航点制导</a>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="chapter/turtlebot3_gazebo_control/">10. Turtlebot3 Gazebo键盘控制</a>
@@ -719,6 +723,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="air/uav_altitude_command_guard/">无人机目标高度限幅、变化率约束与超时保持</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="air/uav_gnss_integrity_monitor/">无人机 GNSS 定位完整性监测与位置跳变失效保护</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="air/uav_yaw_command_guard/">无人机偏航指令最短路径与角速度限幅</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="air/uav_cg_trim_envelope/">多旋翼重心偏移配平与饱和包线核算</a>
@@ -810,6 +816,8 @@
 <li class="toctree-l1"><a class="reference internal" href="air/uav_perception_confidence_guard/">无人机视觉感知置信度退化保护</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="air/uav_emergency_landing_selector/">无人机应急着陆点安全评估</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="air/uav_fault_emergency_landing/">无人机桨故障后的自主迫降（建图+神经评分+制导）</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="air/state_prediction/">基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析</a>
 </li>
@@ -916,6 +924,8 @@
 <li class="toctree-l1"><a class="reference internal" href="air/geofence/">基于 ROS 2 的禁飞区（电子围栏）动态检测与安全预警系统</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="air/uav_depth_track_nn/">无人机深度相机轨迹跟踪（CNN 行为克隆）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="air/px4_ros2_opencv_tracking/">PX4+ROS2+OpenCV 视觉目标追踪</a>
 </li>
 <li class="toctree-l1"><a class="reference internal">基于神经网络的无人机感知—规划—控制避障</a>
 <ul>
@@ -1052,6 +1062,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="water/rov_sonar_filter/">声呐数据滤波初步验证</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="water/rov_numpy_nn_slam/">水下机器人 MuJoCo 仿真、声呐 SLAM 与纯 NumPy 神经网络导航</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="water/rov_mujoco_slam_nn_nav/">ROV 水下机器人 MuJoCo 建图导航与神经网络控制</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="water/dave_underwater_sim/">DAVE 水下机器人仿真环境搭建与 REXROV/Oberon7 机械臂作业演示</a>
@@ -1170,6 +1182,8 @@
 <li><a href="chapter/chap9/">第 9 章</a> - ROS 2<ul>
 <li><a href="chapter/chap9/gazebo_camera_sim/">Gazebo 仿真相机与图像话题验证</a></li>
 <li><a href="chapter/chap9/rov_thruster_allocation_ls/">ROV 六自由度推力分配</a></li>
+<li><a href="chapter/chap9/uav_geofence_bypass/">无人机禁飞区膨胀绕行</a></li>
+<li><a href="chapter/chap9/uav_los_waypoint_guidance/">无人机 LOS 航点制导</a></li>
 </ul>
 </li>
 <li><a href="chapter/turtlebot3_gazebo_control/">第 10 章</a> - Turtlebot3 Gazebo键盘控制</li>
@@ -1567,6 +1581,9 @@
 </li>
 <li><a href="air/uav_altitude_command_guard/">无人机目标高度限幅、变化率约束与超时保持</a></li>
 <li>
+<p><a href="air/uav_gnss_integrity_monitor/">无人机 GNSS 定位完整性监测与位置跳变失效保护</a> —— 定位输入侧的运动学合理性门控，位置突跳或失锁时冻结最后可信位姿并请求悬停</p>
+</li>
+<li>
 <p><a href="air/uav_yaw_command_guard/">无人机偏航指令最短路径与角速度限幅</a> —— 将偏航误差映射到 <code>[-pi, pi)</code>，避免跨 180° 时绕远路，并限制 <code>Twist.angular.z</code></p>
 </li>
 <li>
@@ -1714,6 +1731,9 @@
 <p><a href="air/uav_fault_e2e_thrust_policy/">桨故障下的端到端推力策略</a> —— 前视深度图 32×32 + 16 维本体量（含四桨健康度与三轴角速率）直接输出四个桨的归一化推力，用 DAgger 从几何控制器蒸馏；healthy/t1e0.3–0.5 工况下约 1/3 成功，诚实记录了"端到端推力输出对回归精度过于敏感"这一限制</p>
 </li>
 <li>
+<p><a href="air/uav_fault_emergency_landing/">无人机桨故障后的自主迫降</a> —— 下视深度相机在线建 2.5D 高度图，全卷积网络给"能不能落"打分选点，另一神经网络输出速度指令闭环飞过去；实测垂直下降穿楼、选点迫降安全着陆（触地垂直速度 0.05 m/s）</p>
+</li>
+<li>
 <p><a href="air/uav_neural_fault_tolerant_control/">无人机桨故障下的神经容错控制</a> —— 几何控制器给出期望合推力与力矩，加权最小二乘按健康度重新分配到四桨（桨彻底失效时主动放弃偏航），再用 5252 参数的 MLP 学分配残差；12 次对比飞行里把跟踪误差降到 0.188 m（相对加权分配降 29%）而生存率不变</p>
 </li>
 <li>
@@ -1751,6 +1771,7 @@
 <li>
 <p><a href="air/allocnet_teleop/">AllocNet 四旋翼避障规划与键盘遥操作</a> —— 在学习型时间分配的避障轨迹规划基础上，补齐键盘航点下发、地图常驻转发与轨迹记录的人机交互层</p>
 </li>
+<li><a href="air/px4_ros2_opencv_tracking/">PX4+ROS2+OpenCV 视觉目标追踪</a> —— 基于 PX4 Offboard 模式的 OpenCV 颜色目标追踪演示（合成图像输入）</li>
 <li>
 <p><a href="air/uav_camera_tracking/">无人机机载相机视觉目标跟踪</a> —— 神经网络感知（图像→目标像素热图）与控制网络解耦训练，与端到端策略在静止/圆周/遮挡/阵风四个场景下闭环对比</p>
 </li>
@@ -1918,6 +1939,7 @@
 <li>
 <p><a href="water/rov_sonar_filter/">声呐数据滤波初步验证</a></p>
 </li>
+<li><a href="water/rov_numpy_nn_slam/">水下机器人 MuJoCo 仿真、声呐 SLAM 与纯 NumPy 神经网络导航</a> —— 6-DOF ROV 物理仿真、键盘遥控、声呐建图定位、A* 导航与端到端 CNN</li>
 </ul>
 <p>如果对文档中的任何问题可以在 <a href="https://github.com/OpenHUTB/ros2">本文档的源码仓库</a> 中的 <a href="https://github.com/OpenHUTB/ros2/issues">问题</a> 页面讨论或者提交 <a href="https://github.com/OpenHUTB/.github/blob/master/CONTRIBUTING.md">拉取请求</a> 直接修改文档。</p>
 <hr/>
