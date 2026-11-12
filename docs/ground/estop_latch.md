@@ -61,7 +61,7 @@ src/ground/estop_latch/
 
 | 参数 | 默认值 | 说明 |
 |---|---|---|
-| `input_timeout` | 1.0 | 收到过输入后，超过这么久没再收到就认为安全链路失效，以秒计；设为 0 关闭该检查，从未收到过输入时不触发 |
+| `input_timeout` | 0.0 | 链路监视，默认关闭。收到过输入后超过这么久没再收到就认为安全链路失效并闩锁；此时复位会被拒绝，直到上游再发任意消息。上游是周期发布（如 `heartbeat_watchdog` 10 Hz）时可设为 1.0，事件驱动上游请保持 0 |
 | `release_hold_time` | 2.0 | 急停信号消失后至少保持这么久才允许复位，防止抖动导致误放行 |
 | `status_rate` | 1.0 | 状态与急停输出的发布频率，Hz |
 | `auto_release` | false | 为 true 时满足复位条件后自动解除，仅供演示，实车应保持 false |
@@ -73,11 +73,16 @@ src/ground/estop_latch/
 |---|---|
 | `latched: start` | 启动时按 `start_latched` 默认闩锁 |
 | `latched: input` | 收到过 `true` 的急停信号 |
-| `latched: input_timeout` | 一直没收到急停信号，按失效安全闩锁 |
+| `latched: input_timeout` | 收到过输入后链路静默超过 `input_timeout`，按失效安全闩锁 |
 
 话题名在代码中是相对名（`emergency_stop`、`estop`、`estop_status`），在默认根命名空间下
 等价于上表的绝对路径；若用 `namespace` 启动，实际话题会带上前缀。服务相对名会带上节点名，
 因此默认是 `/estop_latch/reset`。
+
+`/estop` 使用 `TRANSIENT_LOCAL`（depth 1）发布，最后一条急停值会保留，下游重启后能立刻
+拿到当前状态，不必等一个 `status_rate` 周期。下游用默认 `volatile` 订阅也能收到新消息，
+只是重启后要先等到下一次发布；如果需要「一连上就拿到当前值」，订阅端把 durability 设成
+`transient_local` 即可。
 
 输入与输出刻意分成两个话题：如果把 `estop` 也发布到 `emergency_stop`，节点会收到自己的
 输出，`last_active_time` 被不断刷新，人工复位将永远无法通过。
@@ -102,9 +107,11 @@ ros2 launch estop_latch main.launch.py
 ros2 service call /estop_latch/reset std_srvs/srv/Trigger
 ```
 
-急停信号仍在触发、或消失不足 `release_hold_time`、或输入链路超时（仅限收到过输入之后），
-服务返回 `success: false` 并在 `message` 里说明原因。上游如果是事件驱动（平时不发消息、
-急停才发 `true`），节点不会因为「一直没消息」而自锁，人工复位始终可用。
+急停信号仍在触发、或消失不足 `release_hold_time`、或输入链路超时（仅限收到过输入之后、
+且开启了 `input_timeout`），服务返回 `success: false` 并在 `message` 里说明原因。
+节点当前本来就没闩锁时，复位返回 `success: false`、`message` 为「当前未闩锁，无需复位」，
+不会打印「急停解除」日志，避免现场误判。上游如果是事件驱动（平时不发消息、急停才发
+`true`），保持 `input_timeout` 默认的 0 即可，不会因为「一直没消息」而自锁。
 
 ## 演示步骤
 
@@ -113,8 +120,7 @@ ros2 service call /estop_latch/reset std_srvs/srv/Trigger
 **终端 1**：启动闩锁节点，保持时间设成 0，方便演示
 
 ```bash
-ros2 launch estop_latch main.launch.py \
-    release_hold_time:=0.0 input_timeout:=0.0
+ros2 launch estop_latch main.launch.py release_hold_time:=0.0
 ```
 
 **终端 2**：先告诉节点「当前没有急停」，再复位
@@ -167,10 +173,12 @@ ros2 run cmd_vel_guard cmd_vel_guard --ros-args -r emergency_stop:=estop
 | 复位（条件满足） | 服务返回 `success: true`，状态 `clear`，`/estop` 为 `false` |
 | 复位（急停仍触发） | 服务返回 `success: false`，提示「急停信号仍处于触发状态」 |
 | 复位（从未收到输入） | 服务返回 `success: true`，允许人工确认后放行 |
+| 复位（本就未闩锁） | 服务返回 `success: false`，提示「当前未闩锁，无需复位」，不打解除日志 |
 | 收到 `true` 的响应 | 立即发布 `/estop`，不等 `status_rate` 定时器 |
 | 闩锁后再触发 | 重新进入 `latched: input` |
-| 输入超时 | `latched: input_timeout`，不会因为「没消息」而放行 |
-| 参数非法 | `release_hold_time` / `input_timeout` 为负、`status_rate` 不为正时启动即报错退出 |
+| 链路监视（`input_timeout>0`） | 输入中断后进入 `latched: input_timeout`，复位被拒，直到上游再发消息 |
+| `/estop` 保留最后值 | 下游以 `transient_local` 订阅时，一连接就能拿到当前急停值 |
+| 参数非法 | `release_hold_time` / `input_timeout` 为负、`status_rate` 不为正、bool 参数类型错误时，以退出码 1 结束并打印「参数非法」 |
 
 ## 扩展方向
 
