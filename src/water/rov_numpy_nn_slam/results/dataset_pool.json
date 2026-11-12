@@ -1,0 +1,39 @@
+{
+  "action_counts": {
+    "0": 260,
+    "1": 34,
+    "2": 0,
+    "3": 0,
+    "4": 0,
+    "5": 0,
+    "6": 0,
+    "7": 19
+  },
+  "clean_scan_shape": [
+    313,
+    64
+  ],
+  "cmd_shape": [
+    313,
+    4
+  ],
+  "collisions": 0,
+  "episode_success_rate": 1.0,
+  "episodes": 3,
+  "image_shape": [
+    313,
+    48,
+    64,
+    3
+  ],
+  "random_start": true,
+  "sample_hz": 10.0,
+  "samples": 313,
+  "scan_shape": [
+    313,
+    64
+  ],
+  "scene": "pool",
+  "seconds_wall": 10.01,
+  "seed": 20261110
+}
