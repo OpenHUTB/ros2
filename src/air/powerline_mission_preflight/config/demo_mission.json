@@ -1,0 +1,8 @@
+{
+  "route": [
+    {"pole_index": 1, "side": "left", "x": 0.0, "y": 8.0, "z": 20.0, "yaw_deg": -90.0},
+    {"pole_index": 1, "side": "right", "x": 0.0, "y": -8.0, "z": 20.0, "yaw_deg": 90.0},
+    {"pole_index": 2, "side": "right", "x": 40.0, "y": -8.0, "z": 20.0, "yaw_deg": 90.0},
+    {"pole_index": 2, "side": "left", "x": 40.0, "y": 8.0, "z": 20.0, "yaw_deg": -90.0}
+  ]
+}

@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>telemetry_imputation</name><version>0.1.0</version>
+  <description>Reconstruct dropped telemetry samples with a masked GRU and classical baselines</description>
+  <maintainer email="283521505+AipotuY@users.noreply.github.com">AipotuY</maintainer>
+  <license>MIT</license><buildtool_depend>ament_python</buildtool_depend>
+  <exec_depend>rclpy</exec_depend><exec_depend>std_msgs</exec_depend><exec_depend>launch_ros</exec_depend>
+  <exec_depend>python3-numpy</exec_depend><exec_depend>python3-matplotlib</exec_depend>
+  <!-- torch 不在 apt/rosdep 里，按 requirements.txt 用 pip 安装（仅训练与 torch 推理需要）。 -->
+  <export><build_type>ament_python</build_type></export>
+</package>

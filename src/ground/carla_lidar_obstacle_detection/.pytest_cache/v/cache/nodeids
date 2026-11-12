@@ -1,0 +1,7 @@
+[
+  "test/test_carla_lidar_obstacle_detection.py::test_class_from_tag",
+  "test/test_carla_lidar_obstacle_detection.py::test_detect_objects_none_world_empty_cloud",
+  "test/test_carla_lidar_obstacle_detection.py::test_index_is_not_read_as_tiny_float",
+  "test/test_carla_lidar_obstacle_detection.py::test_replay_runs_without_carla",
+  "test/test_carla_lidar_obstacle_detection.py::test_xyz_and_indices_are_parsed_correctly"
+]
