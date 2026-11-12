@@ -1,0 +1,14 @@
+# 说明：本模块为 OpenHUTB/ros2 仓库的水下机器人示例
+# 运行时生成物（不提交）
+__pycache__/
+*.pyc
+.venv/
+build/
+devel/
+logs/
+*.bag
+results/*.npz
+results/*.yaml
+docs/assets/
+# 逐帧 ROS 运行日志（由 main.sh slam_nav 重新生成，不入库）
+results/ros_*.json

@@ -63,6 +63,7 @@ ROS每章节运行代码:
 * [第 4 章](./chapter/chap4.md) - 机器人仿真
     * [URDF 四轮小车建模与 RViz 显示](./chapter/urdf_car_modeling.md)
 * [第 5 章](./chapter/chap5.md) - 机器人感知
+    * [fire_detect 构建与 ament 资源索引](./chap5/fire_detect.md) —— 资源索引从目录形式改为空文件，`setup.py install` 从 `can't copy 'resource/fire_detect'`（exit 1）变为 exit 0
     * [行人隐私脱敏视觉检测节点](./privacy_mask/README.md)
     * [基于激光雷达扫描的神经网络障碍物分类](./chapter/chap5/lidar_obstacle_nn.md)
 * [第 6 章](./chapter/chap6.md) - 机器人 SLAM 与自主导航
@@ -83,6 +84,9 @@ ROS每章节运行代码:
 * [第 9 章](./chapter/chap9.md) - ROS 2
     * [Gazebo 仿真相机与图像话题验证](./chapter/chap9/gazebo_camera_sim.md)
     * [ROV 六自由度推力分配](./chapter/chap9/rov_thruster_allocation_ls.md)
+    * [无人机禁飞区膨胀绕行](./chapter/chap9/uav_geofence_bypass.md)
+    * [无人机 LOS 航点制导](./chapter/chap9/uav_los_waypoint_guidance.md)
+    * [倒车纯追踪路径跟踪](./chapter/chap9/pure_pursuit_reverse.md)
 * [第 10 章](./chapter/turtlebot3_gazebo_control.md) - Turtlebot3 Gazebo键盘控制
 
 
@@ -103,12 +107,16 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [人形机器人平衡控制与外力抗扰恢复](./humanoid/humanoid_push_recovery.md)
 * [人形机器人 PPO 神经网络平衡控制](./humanoid/humanoid_ppo_locomotion.md)
 * [人形机器人 2D 激光雷达 CNN 感知与避障](./humanoid/humanoid_lidar_nn_perception.md)
+* [G1 图像速度巡检](./humanoid/g1_rgb_velocity_patrol/index.md)
 * [人形足迹下的局部避障算法对比](./humanoid/humanoid_local_planner_bench.md)
 * [MuJoCo单足弹跳机器人简单仿真](./humanoid/mujoco_hopper_demo/index.md)
 * [人形机器人关节轨迹录制与回放工具](./humanoid/humanoid_joint_tools.md)
 * [人形上下台阶步态仿真](./humanoid/humanoid_stair_climb.md)
+* [G1 gmapping 室内建图导航](./humanoid/g1_gmapping_navigation/index.md)
 * [ROS虚拟机器人圆形轨迹rviz可视化示例](./humanoid/ros_topic_demo/index.md)
 * [人形机器人全身逆运动学与可操作性](./humanoid/whole_body_ik.md)
+* [G1 CostNet 栅格规划对照](./humanoid/g1_costnet_grid_planner/index.md)
+* [G1 RGB 地面分割巡检](./humanoid/g1_rgb_floor_patrol/index.md)
 * [人形机器人双臂末端可达域分析](./humanoid/humanoid_reachability.md)
 * [人形机器人跌倒预判与保护性倒地](./humanoid/humanoid_fall_protection.md)
 * [人形机器人 3D 碰撞体边界检测可视化](./humanoid/humanoid_collision_boundary.md)
@@ -120,9 +128,10 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [人形机器人支撑多边形与倾倒裕度核算](./humanoid/humanoid_support_margin.md) —— 双足凸包、稳定裕度与临界推力/冲量；默认 40 kg 样机裕度 125 mm，61 N 推力或 17.5 N·s 冲量即可推倒
 * [人形机器人 IMU 姿态解算：互补滤波与 Madgwick 对比](./humanoid/humanoid_imu_attitude.md)
 * [人形机器人离线语音指令控制](./humanoid/humanoid_voice_command.md)
+* [人形机器人神经网络行走控制：CPG 基线与学习路线可行性分析](./humanoid/humanoid_ars_phase_walk.md)
 * [人形机器人跑步牛顿第二定律理论计算与演示](./humanoid/humanoid_newton_running.md)
 * [人形机器人全身柔顺控制](./humanoid/humanoid_g1_compliance.md)
-
+* [人形机器人 MuJoCo 建图导航与神经网络控制](./humanoid/humanoid_mujoco_slam_nn_nav.md)
 
 ## 3. 肌肉骨骼人 <span id='musculoskeletal'></span>
 
@@ -156,6 +165,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [手动控制](./set_up_and_connect_to_carla.md)
 * [MNIST 手写数字视觉感知与机器人运动控制](./ground/mnist_digit_control.md) —— CNN 识别手写数字为运动指令，防抖确认后控制 turtlesim 平移/旋转
 * [生成对象](./ground/carla_spawn_objects.md)
+* [室内清扫车的沿墙清扫：激光雷达与神经网络贴墙跟随](./ground/wall_clean_nn.md) —— 12×10 m 带家具房间，圆角轮廓 + 纯跟踪专家，行为克隆 MLP；专家 20/20 达标（覆盖 95.1%、贴墙误差 0.086 m），神经网络覆盖 78.9%、达标 5%
 * [地面载具物理仿真与键盘运动控制](./ground/carla_keyboard_control.md)
 * [动态障碍物避让：激光雷达帧间差分与神经网络时机决策](./ground/dyn_avoid_nn.md) —— 两个往复扫动的障碍，专家用前向仿真决定过线时机，行为克隆 MLP 仅凭两帧雷达推断运动，20 回合成功率 90% / 75%
 * [电机温度时序预测与误差评估](./ground/mujoco_motor_temperature_predictor.md)
@@ -172,7 +182,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [激光雷达点云 3D 目标检测与召回率评估](./ground/carla_lidar_obstacle_detection.md) —— 语义点云按实例分组 + 多帧累积；逐帧平均召回率 0.43（precision 0.65）
 * [自动驾驶代理](./ground/ad_agent.md)
 * [端到端神经网络图像驾驶](./ground/carla_end_to_end_nn.md)
-* [环岛汇入端到端驾驶（图像→控制）](./ground/carla_nn_roundabout_entry.md)
+* [Carla PilotNet 端到端控制（离线仿真演示）](./ground/carla_pilotnet_ros.md)
 * [自动驾驶示例](./ground/ad_demo.md)
 * [rostopic 手动驱动](./ground/rostopic_cruise.md)
 * [作业综合整合与性能评价](./ground/carla_benchmark_suite.md)
@@ -286,9 +296,11 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [地面载具动力性测试](./ground/carla_vehicle_dynamics_test.md)
 * [MuJoCo小车多目标导航](./ground/mujoco_multi_goal_nav.md)
 * [列车 ATO 自动运行与站台精确停车](./ground/train_ato_stop.md) —— 按线路限速与坡道生成目标速度曲线，站台停车误差 0.02～0.18 m（标尺 0.3 m），另有 ATP 超速监督与晚制动对照
+* [多编组列车纵向动力学与车钩力](./ground/train_consist_coupler.md) —— N 节车 + N-1 个弹簧-阻尼-间隙车钩逐节积分，指令按车传播；理想同步时车钩力严格为 0，头尾两种方向给出镜像的压钩/拉钩，8 节 100 ms 延迟到 125 kN，停车误差仍在 0.3 m 内
 * [ROS2 A* 全局路径平滑（Catmull-Rom）](./ground/ros2_path_smoothing.md)
 * [多车协同编队（CARLA）](./ground/carla_platoon.md) —— Leader 沿参考轨迹领航，3 辆 follower 沿同轨迹保持恒定弧长间距跟进的一字纵队编队
 * [ROS2 2D 激光占据栅格建图](./ground/ros2_occupancy_mapping.md)
+* [神经网络感知 / 控制 / SLAM 四任务仿真（CARLA）](./ground/carla_nn_perception_control_slam.md) —— 键盘运动控制、YOLOv5 感知与给定轨迹纯跟踪、激光 log-odds 栅格建图与 A* 导航、PilotNet 端到端驾驶（图像 → 控制量）
 * [多传感器融合跟踪（LiDAR+Radar+Camera+IMU）2D 合成仿真与离线验证](./ground/carla_sensor_fusion.md) —— 外参标定 + 时间同步 + EKF 融合；2D 仿真提升约 32%，离线回放 30 s 融合 578 次、RMSE 0.053 m（均可复现；CARLA 为未验证的参考实现）
 * [高精度定位与重定位（AMCL 式粒子滤波）](./ground/turtlebot3_relocalization.md)
 
@@ -325,6 +337,8 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [狭窄通道通行：激光雷达开口辨识与神经网络选口穿行](./ground/gap_nav_nn.md) —— 隔墙三个开口（0.7/1.4/2.4 m），车宽 0.6 m，专家按可通行性与绕路代价选口，行为克隆 MLP 仅凭雷达判断孔径，20 回合成功率 100% / 90%
 * [四轮独立驱动扭矩矢量横摆控制](./ground/torque_vectoring_yaw_control/index.md) —— 附着椭圆约束下的加权最小二乘分配 + 带前馈横摆率跟踪 + 单电机失效降级
 * [ROS2 差速机器人 EKF 多传感器融合定位](./ground/ros2_ekf_localization/index.md) —— 轮式里程计 + IMU 航向 + 绝对位置观测的 EKF，输出 /odometry/filtered 供控制器直接使用
+* [上游心跳看门狗](./ground/heartbeat_watchdog.md) —— 监视上游节点的 `/heartbeat`，超时判定失联并发布急停，与 `cmd_vel_guard` 互补
+* [MuJoCo 地面无人车 SLAM 建图导航与神经网络控制](./ground/mujoco_ground_slam_nn_nav/README.md)
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
 * [仓储通道巡检无人机测距与分级制动](./air/mujoco_warehouse_uav_collision_braking.md)
@@ -350,7 +364,9 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [AirSim Unity 无人机曲线绕柱避障实验](./air/airsim_obstacle_avoidance.md)
 * [AirSim Unity 无人机高度自适应越障实验](./air/airsim_height_aware_overfly.md) —— 深度图逐列恢复障碍顶边，矮墙原地爬升越过、高障碍退回水平绕行；57 项离线测试 + 2026-11-09 两次越障实飞（越障后保持 5.2 m、到点误差 <0.7 m；相机偏移修正后 committed 约 2.6 m，尚未复飞）
 * [无人机深度相机神经网络避障飞行（MuJoCo）](./air/uav_mujoco_depth_avoidance.md) —— 64×64 机载深度图 → numpy CNN → 三扇区通行度 → 速度/偏航闭环，3 场景 × 5 实例共 15/15 成功
+* [MuJoCo 无人机栅格激光建图与路径重规划](./air/uav_grid_navigation.md)
 * [无人机着陆阶段识别与接地载荷预测](./air/landing_assessment.md)
+* [MuJoCo 无人机移动平台着陆](./air/mujoco_uav_moving_pad_landing.md)
 * [高度与倾角检测评估](./air/air_ground_detection_benchmark.md) —— 统计不同相机高度和俯仰角下的检测精度、召回率与小目标召回率
 
 * [Fixed-wing SITL preflight](./air/fixed_wing_sitl_preflight.md): static configuration checks for PX4/ArduPilot fixed-wing SITL
@@ -385,6 +401,8 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 
 * [建立虚拟机和空域载具之间的连接](./air/setup_and_connect.md)
 * [无人机目标高度限幅、变化率约束与超时保持](./air/uav_altitude_command_guard.md)
+* [无人机 GNSS 定位完整性监测与位置跳变失效保护](./air/uav_gnss_integrity_monitor.md) —— 定位输入侧的运动学合理性门控，位置突跳或失锁时冻结最后可信位姿并请求悬停
+
 * [无人机偏航指令最短路径与角速度限幅](./air/uav_yaw_command_guard.md) —— 将偏航误差映射到 `[-pi, pi)`，避免跨 180° 时绕远路，并限制 `Twist.angular.z`
 
 * [多旋翼重心偏移配平与饱和包线核算](./air/uav_cg_trim_envelope.md) —— 四电机悬停拉力分配、配平倾角与饱和包线；默认 1.2 kg 样机重心偏 3 mm 即俯仰 5.7°，6 N 电机上限对应 ±0.13 m 配平包线
@@ -442,6 +460,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [无人机ppo模块研究](./air/uav_experiments.md) —— 把键盘控制、PPO 导航、算法对比、航线巡航、动态交通五个实验合并到一页；各实验独立页面仍然保留
 
 * [无人机终端键盘遥控器](./air/drone_teleop.md)
+* [应急物资投送点选择与投放时机决策](./air/uav_emergency_drop.md) —— 平抛弹道解析解定提前量，加权贪心选点分架次，MuJoCo 真飞落点偏差 0.1 m
 
 * [AirSim无人机键盘遥控与机载云台控制模块](./airsim_drone_gimbal_teleop/README.md)
 
@@ -475,6 +494,9 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [四旋翼吊挂负载防摆控制](./air/uav_slung_load.md) —— MuJoCo 台架上对比 PD、ZV 输入整形与摆角反馈，残余摆角从 7.0° 降到 0.1°
 
 * [无人机桨故障健康度估计](./air/uav_rotor_fault_detector_nn.md) —— 用机载 IMU 与控制器指令（13 维特征）经 1D-CNN+GRU 实时回归四桨剩余推力权限，单桨完全失效 0.10 s 检出、误报率 0，同时提供 ROS2 节点与在线估计接口
+* [桨故障下的端到端推力策略](./air/uav_fault_e2e_thrust_policy.md) —— 前视深度图 32×32 + 16 维本体量（含四桨健康度与三轴角速率）直接输出四个桨的归一化推力，用 DAgger 从几何控制器蒸馏；healthy/t1e0.3–0.5 工况下约 1/3 成功，诚实记录了"端到端推力输出对回归精度过于敏感"这一限制
+
+* [无人机桨故障后的自主迫降](./air/uav_fault_emergency_landing.md) —— 下视深度相机在线建 2.5D 高度图，全卷积网络给"能不能落"打分选点，另一神经网络输出速度指令闭环飞过去；实测垂直下降穿楼、选点迫降安全着陆（触地垂直速度 0.05 m/s）
 
 * [无人机桨故障下的神经容错控制](./air/uav_neural_fault_tolerant_control.md) —— 几何控制器给出期望合推力与力矩，加权最小二乘按健康度重新分配到四桨（桨彻底失效时主动放弃偏航），再用 5252 参数的 MLP 学分配残差；12 次对比飞行里把跟踪误差降到 0.188 m（相对加权分配降 29%）而生存率不变
 
@@ -499,7 +521,10 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [语义分割建图与语义路径规划](./air/uav_semantic_mapping_nav.md)
 
 * [AllocNet 四旋翼避障规划与键盘遥操作](./air/allocnet_teleop.md) —— 在学习型时间分配的避障轨迹规划基础上，补齐键盘航点下发、地图常驻转发与轨迹记录的人机交互层
+* [PX4+ROS2+OpenCV 视觉目标追踪](./air/px4_ros2_opencv_tracking/index.md) —— 基于 PX4 Offboard 模式的 OpenCV 颜色目标追踪演示（合成图像输入）
 * [无人机机载相机视觉目标跟踪](./air/uav_camera_tracking.md) —— 神经网络感知（图像→目标像素热图）与控制网络解耦训练，与端到端策略在静止/圆周/遮挡/阵风四个场景下闭环对比
+
+* [低空起降场进离场排队与容量评估](./air/uav_vertiport_queue.md) —— 起降位占用区间建模三种排队策略（FIFO/优先级抢占/固定间隔），扫描请求率得到容量曲线与饱和点（80 架次/h），MuJoCo 闭环证明排定时刻真飞可执行
 
 * [状态识别与轨迹绘制](./air/drone_trajectory_logger.md)
 
@@ -544,6 +569,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 ### 感知
 
 * [水下声呐 SLAM 占据栅格建图与自主避障导航](./water/rov_sonar_slam_navigation.md)
+* [MuJoCo 水下 ROV 串级定深控制](./water/mujoco_rov_depth_control.md) —— 浮力/阻尼显式建模，三段定深稳态误差 0.013 m
 
 * [水下 ROV AprilTag 视觉定位与定点巡航仿真](./water/rov_apriltag_cruise.md)
 
@@ -591,11 +617,14 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 
 * [同一 ROV 任务 PPO 与 SAC 强化学习算法对比](./water/mjc_rov_rl_compare.md)
 
+* [水下机器人端到端深度神经网络视觉伺服控制模型](./water/rov_end_to_end_nn.md)
+
 * [ROV 水下机器人 MuJoCo 建图导航与神经网络控制](./water/rov_mujoco_slam_nn_nav/README.md)
 
 ### 其他（环境、接口与容器）
 
 * [水域载具 ROS2 接口](./water/HoloOcean.md)
+* [无人艇自主靠泊：激光雷达与神经网络末段对准](./water/usv_docking_nn.md) —— 凹入式泊位，射线激光雷达 + 纯跟踪末段对准专家，行为克隆 MLP 复现，20 回合成功率 100%，末态横向误差 0.23 m
 
 * [HoloOcean Windows 本机环境搭建](./water/HoloOcean-Windows-Setup.md) —— 在 Windows 上用 Conda 安装 Python 客户端、下载场景包并跑通第一个仿真
 
@@ -606,6 +635,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [HoloOcean ROS2 运行时容器](./water/docker_runtime.md) —— 用 `build_container.sh` 构建运行时镜像
 
 * [声呐数据滤波初步验证](./water/rov_sonar_filter.md)
+* [水下机器人 MuJoCo 仿真、声呐 SLAM 与纯 NumPy 神经网络导航](./water/rov_numpy_nn_slam.md) —— 6-DOF ROV 物理仿真、键盘遥控、声呐建图定位、A* 导航与端到端 CNN
 
 如果对文档中的任何问题可以在 [本文档的源码仓库](https://github.com/OpenHUTB/ros2) 中的 [问题](https://github.com/OpenHUTB/ros2/issues) 页面讨论或者提交 [拉取请求](https://github.com/OpenHUTB/.github/blob/master/CONTRIBUTING.md) 直接修改文档。
 
@@ -621,8 +651,11 @@ ___
 
 * [MuJoCo 单臂抓取与 π0 推理接口复现（CPU 演示）](./manipulation/pi0_mujoco_grasp.md) —— 基于 MuJoCo 的单臂抓取/放置仿真，含 π0 观测→动作块接口（CPU 策略替身）
 
-* [拮抗共激活分析（二连杆机械臂肌肉骨骼仿真）](./muscle_arm_cocontraction_simulation.md)
 * [二连杆机械臂 OpenSim 建模与 PD 控制仿真](./two_link_arm_opensim_simulation.md)
+
+* [二连杆机械臂肌肉骨骼建模与 MuJoCo 仿真](./muscle_arm_mujoco_simulation.md)
+
+* [拮抗共激活分析（二连杆机械臂肌肉骨骼仿真）](./muscle_arm_cocontraction_simulation.md)
 
 ## 参考文献
 * [MuJoCo 失落公园无人机端到端视觉转向](./air/mujoco_abandoned_park_uav_visual_steering.md)

@@ -9,7 +9,7 @@
 
 ```
 main.py                 仿真、绘制、键盘/鼠标交互、CLI
-tests/test_main.py      角度归一化、追踪、碰撞、目标反弹、headless 确定性
+tests/test_main.py      角度归一化、追踪、碰撞、绕障、目标反弹、headless 确定性
 requirements.txt        pygame
 ```
 
@@ -89,7 +89,7 @@ mean_dist=33.8px final_dist=20.2px path=1422.1px hits=0
 python -m unittest discover -s src/ground/car_2d_target_tracker/tests -v
 ```
 
-应显示 `Ran 14 tests ... OK`。测试使用 `SDL_VIDEODRIVER=dummy`，不会弹窗。
+应显示 `Ran 17 tests ... OK`。测试使用 `SDL_VIDEODRIVER=dummy`，不会弹窗。
 
 ## 参数
 
@@ -102,11 +102,26 @@ python -m unittest discover -s src/ground/car_2d_target_tracker/tests -v
 | `ARRIVE_RADIUS` | 18 px | 到达判定半径 |
 | `MANUAL_SPEED` | 160 px/s | 手动模式速度 |
 | `FIXED_DT` | 1/60 s | headless/demo 固定步长 |
+| `ESCAPE_SPEED_RATIO` | 0.85 | 被障碍挡住时沿切向绕行的速度比例（0 = 旧行为：停下原地打转） |
+| `ESCAPE_HOLD_S` | 0.5 s | 选定绕行方向后至少保持多久，避免两侧来回抖 |
+| `STUCK_TIME_S` | 1.0 s | 对准切向仍走不动多久就翻到另一侧绕 |
+| `COLLISION_HYSTERESIS_PX` | 4 px | 离开障碍表面超过这么多像素才算解除接触（碰撞计数用） |
 
 ## 限制
 
-- 自动模式是贪心追踪，没有全局路径规划；目标正好在障碍物正后方时可能卡住，
-  只能靠原地转向尝试脱困。
+- 自动模式是贪心追踪，没有全局路径规划。障碍正挡在目标方向上时会沿障碍表面
+  切向绕行（见下），能绕开凸形障碍，但**凹形障碍群**可能来回试探。
 - 目标不避障，可能穿过障碍物。
 - 窗口固定 900×600，没有缩放。
 - 碰撞检测只检查小车新位置，不检查车身扫过的区域。
+
+## 撞到障碍后的绕行
+
+旧实现撞上后把速度清零、只按最大角速度原地转。障碍正压在"车 → 目标"连线上时
+会一直贴墙转圈：实测（车 (120,300)、目标 (800,300)、半径 90 px 的圆正挡中间、30 s）
+**95.6% 的时间速度低于 5 px/s，末距始终 440 px，永远到不了**。
+
+现在改为沿障碍表面切向绕行：取径向 ±90° 的两条切向，选与目标方位夹角更小的一侧，
+以 `0.85 × MAX_SPEED` 前进；贴得太紧切向仍会撞时先沿径向外退一点再转车头
+（否则车会被"正好贴在碰撞边界"钉死）；对准切向仍走不动超过 1 s 就翻到另一侧。
+同一场景改后 **5.45 s 绕过并到达**，卡死占比 14.7%，全程未穿入障碍。

@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>uav_fault_emergency_landing</name>
+  <version>1.0.0</version>
+  <description>
+    四旋翼桨故障后的自主迫降：下视深度相机在线建图，神经网络对"能否安全落地"打分并选点，
+    再用神经制导律闭环飞到落点。对应课程任务③（建图、导航）并复用任务②的感知与控制。
+  </description>
+  <maintainer email="2920111320@qq.com">Fortranquility</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>uav_mujoco_sim</exec_depend>
+
+  <!-- Mujoco / torch / numpy 走 pip（见 requirements.txt），不在 ROS 依赖里 -->
+  <exec_depend>python3-numpy</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

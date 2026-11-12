@@ -1,0 +1,33 @@
+<launch>
+  <!-- End-to-end CNN driving from the bird's-eye camera. -->
+  <arg name="scene" default="warehouse"/>
+  <arg name="seed" default="20261026"/>
+  <arg name="viewer" default="true"/>
+  <arg name="duration" default="90"/>
+  <arg name="goal_x" default="22.0"/>
+  <arg name="goal_y" default="14.0"/>
+
+  <node pkg="mujoco_ground_slam_nn_nav" type="sim_node.py" name="gvnn_sim" output="screen">
+    <param name="scene" value="$(arg scene)"/>
+    <param name="seed" value="$(arg seed)"/>
+    <param name="noise" value="true"/>
+  </node>
+
+  <node pkg="mujoco_ground_slam_nn_nav" type="e2e_node.py" name="gvnn_e2e" output="screen">
+    <param name="goal_x" value="$(arg goal_x)"/>
+    <param name="goal_y" value="$(arg goal_y)"/>
+  </node>
+
+  <node pkg="mujoco_ground_slam_nn_nav" type="mission_node.py" name="gvnn_mission" output="screen">
+    <param name="mode" value="e2e"/>
+    <param name="scene" value="$(arg scene)"/>
+    <param name="goal_x" value="$(arg goal_x)"/>
+    <param name="goal_y" value="$(arg goal_y)"/>
+    <param name="duration" value="$(arg duration)"/>
+  </node>
+
+  <node if="$(arg viewer)" pkg="mujoco_ground_slam_nn_nav" type="viewer_node.py" name="gvnn_viewer" output="screen">
+    <param name="scene" value="$(arg scene)"/>
+    <param name="teleop" value="false"/>
+  </node>
+</launch>

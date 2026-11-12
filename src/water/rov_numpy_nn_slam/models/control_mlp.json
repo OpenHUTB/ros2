@@ -1,0 +1,25 @@
+{
+  "architecture": [
+    20,
+    128,
+    128,
+    2
+  ],
+  "augment_samples": 3000,
+  "batch": 64,
+  "epochs": 60,
+  "expert": "reactive",
+  "input": "16 sonar sectors + goal polar (20)",
+  "lr": 0.0015,
+  "model": "control_mlp",
+  "normalised_rmse": 0.04438,
+  "seconds": 43.41,
+  "task": "behaviour cloning of the reactive vector-field expert (vx, yaw_rate)",
+  "train_samples": 6980,
+  "val_episodes": [
+    "random-holdout"
+  ],
+  "val_samples": 332,
+  "vx_mae": 0.0169,
+  "yaw_mae": 0.0551
+}
