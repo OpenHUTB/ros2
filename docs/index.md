@@ -96,6 +96,8 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros2_qos_compatibility_lab.md)
 
+ROS 2 Action 斐波那契数列计算示例：[chap2/fibonacci_action](./chap2/fibonacci_action.md)
+
 ## 2. 人形机器人 <span id='humanoid'></span>
 * [人形机器人离线语音指令控制：端到端关键词识别（KWS）](./humanoid/humanoid_kws_command.md)
 * [具身人形物理仿真与平衡行走控制](./humanoid/embodied_humanoid_control.md) —— MuJoCo 双足人形：键盘遥控、激光/深度感知、参数化步态与根节点平衡控制
