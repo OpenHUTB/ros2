@@ -1125,9 +1125,13 @@ roslaunch<span class="w"> </span>carla_ros_bridge<span class="w"> </span>carla_r
 <p><strong>直行</strong>：速度 3 m/s，转角 0 rad，以 10 Hz 发布：</p>
 <div class="highlight"><pre><span></span><code>rostopic<span class="w"> </span>pub<span class="w"> </span>/carla/ego_vehicle/ackermann_cmd<span class="w"> </span>ackermann_msgs/AckermannDrive<span class="w"> </span><span class="s2">"{speed: 3.0, steering_angle: 0.0, steering_angle_velocity: 0.0, acceleration: 0.0, jerk: 0.0}"</span><span class="w"> </span>-r<span class="w"> </span><span class="m">10</span>
 </code></pre></div>
+<p>发布直行命令后，主车保持 3 m/s 直行，CARLA 视图中车头方向不变：</p>
+<p><img alt="直行命令发布效果" src="../../img/ground/ackermann_publisher_straight.gif"/></p>
 <p><strong>转向</strong>：速度 2 m/s，转角 0.3 rad：</p>
 <div class="highlight"><pre><span></span><code>rostopic<span class="w"> </span>pub<span class="w"> </span>/carla/ego_vehicle/ackermann_cmd<span class="w"> </span>ackermann_msgs/AckermannDrive<span class="w"> </span><span class="s2">"{speed: 2.0, steering_angle: 0.3, steering_angle_velocity: 0, acceleration: 0, jerk: 0}"</span><span class="w"> </span>-r<span class="w"> </span><span class="m">10</span>
 </code></pre></div>
+<p>发布转向命令后，主车前轮右偏，车辆沿弧线行驶：</p>
+<p><img alt="转向命令发布效果" src="../../img/ground/ackermann_publisher_turn.gif"/></p>
 <p><strong>停止</strong>：目标速度 0：</p>
 <div class="highlight"><pre><span></span><code>rostopic<span class="w"> </span>pub<span class="w"> </span>/carla/ego_vehicle/ackermann_cmd<span class="w"> </span>ackermann_msgs/AckermannDrive<span class="w"> </span><span class="s2">"{speed: 0.0, steering_angle: 0.0}"</span><span class="w"> </span>-r<span class="w"> </span><span class="m">10</span>
 </code></pre></div>
@@ -1179,6 +1183,8 @@ catkin_make
 <span class="nb">source</span><span class="w"> </span>/opt/ros/noetic/setup.bash
 rosrun<span class="w"> </span>ackermann_publisher<span class="w"> </span>ackermann_pub.py
 </code></pre></div>
+<p>节点启动后终端 4 持续打印发送日志，每 0.1 s 一条 <code>speed=2.0</code>、<code>steer=0.2</code>：</p>
+<p><img alt="节点运行日志" src="../../img/ground/ackermann_publisher_node_log.gif"/></p>
 <p>节点启动后以 10 Hz 持续发送 <code>speed=2.0</code>、<code>steer=0.2</code> 的阿克曼命令，主车按该速度与转角行驶。</p>
 <h2 id="_7">运行效果</h2>
 <p>完整操作截图：CARLA 主车已生成、bridge 启动参数、三条 rostopic 命令与 Python 节点循环发送日志（<code>Ctrl+C</code> 正常退出）：</p>
