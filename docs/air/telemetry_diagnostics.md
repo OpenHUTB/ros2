@@ -41,7 +41,7 @@
 | 项 | 配置 |
 |---|---|
 | 系统 | Ubuntu 20.04.6（VMware），6 核 / 8.5 GB |
-| ROS | ROS2 **Humble**（`/opt/ros/humble`，Python 3.8） |
+| ROS | ROS2 **Humble**，在 20.04 上**源码编译**（`/opt/ros/humble`，Python 3.8）；官方二进制目标是 Ubuntu 22.04 / Python 3.10，本机没有 `ros-humble-*` deb |
 | 深度学习 | PyTorch **2.4.1+cpu** |
 | 可视化 | Tk + matplotlib（不用 RViz2，本机缺 Ogre） |
 
@@ -109,6 +109,8 @@ ros2 launch telemetry_diagnostics main.launch.py \
 | `data/final_raw` → 210 个场景 | **210** | 0.03 / 0.1 / 0.3 | **最终指标（第 7 节全部数字）** |
 
 `prepare` 只生成前者（打印 `Prepared 70 scenarios`）；第 7 节的结果来自 `evaluate` 读取 `data/final_raw` 后现场派生的 210 个场景。两套强度不同，**数量与指标都不能互相引用**。
+
+**`data/final_raw` 不入库**：这 10 段 final 飞行由 `collect_holdout.py` 在 AirSim + Unreal 上现场采集，`data/` 整个目录在 `.gitignore` 里。所以干净克隆上 `python main.py evaluate` 会在数据检查处退出——它校验的是「有 10 段 final 数据」，不是模型或代码有问题。想核对第 7 节的数字，直接看已入库的 `results/final/summary.json`；要重新生成，得先用 AirSim 重跑一遍 `collect_holdout.py`。
 
 ### 3.3 异常注入
 
@@ -370,7 +372,7 @@ flowchart TD
 | 项 | 结果 |
 |---|---|
 | `bash main.sh test` | **21 项**通过（4.42 秒） |
-| `python main.py evaluate` | 与随附 `summary.json` 一致（Precision 0.6173、FP 2.6687） |
+| `python main.py evaluate` | 与随附 `results/final/summary.json` 一致（Precision 0.6173、FP 2.6687）；**需要 `data/final_raw`（不入库）**，干净克隆上会明确报错退出 |
 | `python attribution_eval.py` | 与上游记录一致（343 → 98.83%、348 → 4.31%） |
 | `bash main.sh demo` | 361 条诊断记录（`results/final_replay/ros_diagnostics.jsonl` 361 行） |
 | 交付 ZIP 异目录复测 | 上游记录：准备、测试、训练入口、构建、回放全部通过，最终 CSV 逐字节一致 |
@@ -447,7 +449,7 @@ source ~/uav_prediction_env/bin/activate
 bash main.sh doctor        # 13 个模块
 python main.py prepare     # 70 个开发场景
 python main.py test        # 21 项测试
-python main.py evaluate    # 复现随附模型的最终指标
+python main.py evaluate    # 需 data/final_raw（AirSim 采集，不入库）；缺失时会报错退出，此时请对照 results/final/summary.json
 python main.py report      # 三张图与汇总表
 bash main.sh build
 bash main.sh demo          # 另开 dashboard
