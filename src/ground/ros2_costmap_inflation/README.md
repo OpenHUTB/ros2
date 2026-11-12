@@ -37,7 +37,7 @@ ros2 launch ros2_costmap_inflation main_launch.py
 
 ```bash
 cd src/ground/ros2_costmap_inflation
-python3 -m unittest discover -s test -v   # 7 项
+python3 -m unittest discover -s test -v   # 8 项
 python3 -m ros2_costmap_inflation.sim
 ```
 
@@ -66,6 +66,7 @@ python3 -m ros2_costmap_inflation.sim
 
 ## 6. 大模型声明
 
-代码与文档在编写过程中使用了 AI 大模型辅助。作者已实际运行 7 项单元测试和
+代码与文档在编写过程中使用了 AI 大模型辅助。作者已实际运行 8 项单元测试和
 一张 200 × 100 离线地图，并对提交内容的正确性与完整性负全部责任。
+
 

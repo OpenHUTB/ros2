@@ -6,7 +6,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "ros2_costmap_inflation"))
 
-from inflation import analytic_distance, inflate  # noqa: E402
+from inflation import analytic_distance, inflate, summary  # noqa: E402
 from sim import demo_occupancy, run_demo  # noqa: E402
 
 
@@ -53,6 +53,11 @@ class TestInflation(unittest.TestCase):
         full = inflate(np.full((10, 10), 100, dtype=np.int8), resolution=0.1)
         self.assertTrue((full.costs == 100).all())
 
+    def test_summary_handles_all_occupied(self):
+        occ = np.full((8, 8), 100, dtype=np.int8)
+        metrics = summary(inflate(occ, resolution=0.1), resolution=0.1)
+        self.assertEqual(metrics["max_distance_error_m"], 0.0)
+
     def test_summary(self):
         metrics = run_demo()
         self.assertGreater(metrics["inflated_cells"], 0)
@@ -61,4 +66,5 @@ class TestInflation(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
 
