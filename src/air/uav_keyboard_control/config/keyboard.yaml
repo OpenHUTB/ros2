@@ -4,7 +4,7 @@ uav_keyboard_control:
     forward_speed: 2.0     # W/S 前后速度 m/s
     side_speed: 0.5        # A/D 左右速度 m/s
     vert_speed: 1.0        # R/F 升降速度 m/s
-    yaw_rate: 0.4          # Q/E 偏航角速度 rad/s（Q=右转）
+    yaw_rate: 0.4          # Q/E 偏航角速度 rad/s（Q=左转（逆时针））
     hold_timeout: 0.3      # 松开按键后保持指令的最长秒数，超时自动悬停
     publish_hz: 30.0       # 指令发布频率
     cmd_vel_topic: "/uav/cmd_vel"

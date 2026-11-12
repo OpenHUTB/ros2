@@ -4,7 +4,7 @@
 
 坐标约定（机体系）：
     x 前 / y 左 / z 上
-    W/S 前后，A/D 左右，R/F 升降，Q/E 偏航（Q=右转，+angular.z）
+    W/S 前后，A/D 左右，R/F 升降，Q/E 偏航（Q=左转，+angular.z（逆时针））
 """
 from __future__ import annotations
 
