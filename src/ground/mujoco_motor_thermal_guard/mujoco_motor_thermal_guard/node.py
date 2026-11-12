@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import rclpy
 from geometry_msgs.msg import Twist
+from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from sensor_msgs.msg import Temperature
 from std_msgs.msg import Float32
@@ -62,12 +63,9 @@ class MotorThermalGuardNode(Node):
         age = None if self.last_temperature_received_s is None else now - self.last_temperature_received_s
         fresh = age is not None and 0.0 <= age <= timeout
         scale = self.speed_scale if fresh else 0.0
-        outgoing.linear.x = message.linear.x * scale
-        outgoing.linear.y = message.linear.y
-        outgoing.linear.z = message.linear.z
-        outgoing.angular.x = message.angular.x
-        outgoing.angular.y = message.angular.y
-        outgoing.angular.z = message.angular.z * scale
+        for vector in ("linear", "angular"):
+            for axis in ("x", "y", "z"):
+                setattr(getattr(outgoing, vector), axis, getattr(getattr(message, vector), axis) * scale)
         self.command_pub.publish(outgoing)
 
 
@@ -76,6 +74,9 @@ def main(args: list[str] | None = None) -> None:
     node = MotorThermalGuardNode()
     try:
         rclpy.spin(node)
+    except (KeyboardInterrupt, ExternalShutdownException):
+        pass
     finally:
         node.destroy_node()
-        rclpy.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()

@@ -4,6 +4,7 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 
 
 def generate_launch_description() -> LaunchDescription:
@@ -17,10 +18,10 @@ def generate_launch_description() -> LaunchDescription:
             executable="motor_thermal_guard",
             output="screen",
             parameters=[{
-                "limit_c": LaunchConfiguration("limit_c"),
-                "release_c": LaunchConfiguration("release_c"),
-                "horizon_s": LaunchConfiguration("horizon_s"),
-                "temperature_timeout_s": LaunchConfiguration("temperature_timeout_s"),
+                "limit_c": ParameterValue(LaunchConfiguration("limit_c"), value_type=float),
+                "release_c": ParameterValue(LaunchConfiguration("release_c"), value_type=float),
+                "horizon_s": ParameterValue(LaunchConfiguration("horizon_s"), value_type=float),
+                "temperature_timeout_s": ParameterValue(LaunchConfiguration("temperature_timeout_s"), value_type=float),
             }],
         ),
     ])
