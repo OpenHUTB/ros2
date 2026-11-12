@@ -1,74 +1,97 @@
 #!/usr/bin/env python3
-import rclpy
-from rclpy.node import Node
-from geometry_msgs.msg import Twist
+import math
+import os
+import select
 import sys
+import termios
+import time
+import tty
+
+import rclpy
+from geometry_msgs.msg import Twist
+from rclpy.node import Node
+
+from teleop_control.teleop_logic import TeleopCommandState, decode_key
+
 
 class TeleopNode(Node):
     def __init__(self):
-        super().__init__('teleop_node')
-        self.publisher_ = self.create_publisher(Twist, '/cmd_vel', 10)
-        self.twist = Twist()
-        
-       # 判断当前是否在真实终端 (TTY) 中运行，防止在后台 launch 时崩溃
-        if not sys.stdin.isatty():
-            self.get_logger().error("错误：未检测到真实终端 (TTY)。请使用 'ros2 run teleop_control main_teleop' 运行以接收键盘输入。")
-            sys.exit(1)
-            
-        self.get_logger().info("键盘控制已启动！按 W/S/A/D 移动，按 Q 退出。")
+        super().__init__("teleop_node")
+        self.publisher_ = self.create_publisher(Twist, "/cmd_vel", 10)
+        self.declare_parameter("linear_speed", 0.5)
+        self.declare_parameter("angular_speed", 0.5)
+        self.declare_parameter("command_timeout_sec", 0.5)
+        self.declare_parameter("poll_period_sec", 0.05)
+        self.poll_period_sec = float(self.get_parameter("poll_period_sec").value)
+        if not math.isfinite(self.poll_period_sec) or self.poll_period_sec <= 0.0:
+            raise ValueError("poll_period_sec must be finite and greater than zero")
 
-    def get_key(self):
-        import tty, termios
-        fd = sys.stdin.fileno()
-        old_settings = termios.tcgetattr(fd)
-        try:
-            tty.setraw(sys.stdin.fileno())
-            ch = sys.stdin.read(1)
-        finally:
-            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-        return ch
+        self.command_state = TeleopCommandState(
+            linear_speed=self.get_parameter("linear_speed").value,
+            angular_speed=self.get_parameter("angular_speed").value,
+            command_timeout_sec=self.get_parameter("command_timeout_sec").value,
+        )
+        if not sys.stdin.isatty():
+            raise RuntimeError(
+                "No interactive terminal detected. Run main_teleop in a terminal."
+            )
+        self.get_logger().info(
+            "Keyboard control ready: W/S move, A/D turn, Space stops, Q exits."
+        )
+
+    def _publish(self, velocity):
+        message = Twist()
+        message.linear.x, message.angular.z = velocity
+        self.publisher_.publish(message)
+        self.get_logger().info(
+            f"Published: linear={velocity[0]:.2f}, angular={velocity[1]:.2f}",
+            throttle_duration_sec=1.0,
+        )
 
     def run(self):
-        while rclpy.ok():
-            key = self.get_key()
-            
-            key = key.lower() 
-            
-            if key == 'w':
-                self.twist.linear.x = 0.5
-                self.twist.angular.z = 0.0
-            elif key == 's':
-                self.twist.linear.x = -0.5
-                self.twist.angular.z = 0.0
-            elif key == 'a':
-                self.twist.linear.x = 0.0
-                self.twist.angular.z = 0.5
-            elif key == 'd':
-                self.twist.linear.x = 0.0
-                self.twist.angular.z = -0.5
-            elif key == 'q':
-                self.twist.linear.x = 0.0
-                self.twist.angular.z = 0.0
-                self.publisher_.publish(self.twist)
-                self.get_logger().info("已发送停止指令，安全退出。")
-                break
-            else:
-                self.twist.linear.x = 0.0
-                self.twist.angular.z = 0.0
-            
-            self.publisher_.publish(self.twist)
-            self.get_logger().info(f'发布: 线速度={self.twist.linear.x:.2f}, 角速度={self.twist.angular.z:.2f}', throttle_duration_sec=1.0)
+        fd = sys.stdin.fileno()
+        previous_settings = termios.tcgetattr(fd)
+        try:
+            tty.setraw(fd)
+            while rclpy.ok():
+                rclpy.spin_once(self, timeout_sec=0.0)
+                readable, _, _ = select.select([sys.stdin], [], [], self.poll_period_sec)
+                now = time.monotonic()
+                if readable:
+                    key = decode_key(os.read(fd, 1))
+                    if key is None:
+                        self.get_logger().info("Keyboard input closed; publishing zero velocity.")
+                        break
+                    if key == "q":
+                        self.get_logger().info("Stop requested; publishing zero velocity.")
+                        break
+                    self._publish(self.command_state.handle_key(key, now))
+                else:
+                    expired = self.command_state.expire(now)
+                    if expired is not None:
+                        self.get_logger().info("Keyboard command timed out; stopping robot.")
+                        self._publish(expired)
+        finally:
+            try:
+                self._publish(self.command_state.stop())
+            finally:
+                termios.tcsetattr(fd, termios.TCSADRAIN, previous_settings)
+
 
 def main(args=None):
     rclpy.init(args=args)
-    node = TeleopNode()
+    node = None
     try:
+        node = TeleopNode()
         node.run()
     except KeyboardInterrupt:
         pass
     finally:
-        node.destroy_node()
-        rclpy.shutdown()
+        if node is not None:
+            node.destroy_node()
+        if rclpy.ok():
+            rclpy.shutdown()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

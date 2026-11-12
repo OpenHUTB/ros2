@@ -1,0 +1,5 @@
+turtlebot3_keyboard_teleop:
+  ros__parameters:
+    max_vx: 0.5
+    max_wz: 1.0
+    timeout_sec: 0.5

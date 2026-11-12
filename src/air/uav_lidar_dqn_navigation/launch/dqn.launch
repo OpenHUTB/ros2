@@ -1,0 +1,30 @@
+<launch>
+  <!-- 任务 2：激光雷达感知 + DQN 自主导航 -->
+  <arg name="airsim_ip" default="172.25.176.1"/>
+  <arg name="vehicle_name" default="Drone_1"/>
+  <arg name="altitude" default="4.0"/>
+  <arg name="goal_x" default="15.0"/>
+  <arg name="goal_y" default="10.0"/>
+
+  <!-- 桥接、雷达扫描与 TF 复用感知层启动文件 -->
+  <include file="$(find uav_lidar_dqn_navigation)/launch/scan.launch">
+    <arg name="airsim_ip" value="$(arg airsim_ip)"/>
+    <arg name="vehicle_name" value="$(arg vehicle_name)"/>
+    <arg name="auto_takeoff" value="true"/>
+    <arg name="takeoff_height" value="$(arg altitude)"/>
+    <arg name="publish_tf" value="true"/>
+  </include>
+
+  <node name="dqn_nav" pkg="uav_lidar_dqn_navigation" type="dqn_nav_node.py" output="screen">
+    <param name="goal_x" value="$(arg goal_x)"/>
+    <param name="goal_y" value="$(arg goal_y)"/>
+    <param name="goal_z" value="-$(arg altitude)"/>
+    <param name="verbose" value="true"/>
+  </node>
+
+  <!-- 目标点话题，便于演示时动态修改 -->
+  <node name="goal_publisher" pkg="rostopic" type="rostopic"
+        args="pub -r 1 /drone/goal geometry_msgs/PointStamped
+              '{header: {frame_id: world_ned}, point: {x: $(arg goal_x), y: $(arg goal_y), z: -$(arg altitude)}}'"
+        output="log"/>
+</launch>

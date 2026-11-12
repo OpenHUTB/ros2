@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>two_dof_arm_square</name>
+  <version>0.0.1</version>
+  <description>MuJoCo 平面 2R 机械臂画正方形仿真（运动学回放，解析 IK 逐帧摆姿态）</description>
+  <maintainer email="jyhuang916@users.noreply.github.com">jyhuang916</maintainer>
+  <license>Apache-2.0</license>
+  <url type="repository">https://github.com/OpenHUTB/ros2/tree/master/src/chap8/two_dof_arm_square</url>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <!-- numpy 走 apt 包名供 rosdep 解析；mujoco 不在 apt 仓库，仍需按 requirements.txt 用 pip 安装 -->
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-pil</exec_depend>
+</package>

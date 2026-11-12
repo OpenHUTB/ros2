@@ -106,6 +106,7 @@ F = F_max · [ a · f_l(l_n) · f_v(v_n) + f_p(l_n) ]
 | [肌肉-肌腱串联弹性实验](./msk_tendon_basics.md) | 单关节 + 拮抗肌，肌腱的传力损失、储能与松手释放，32 个单元测试 |
 | [肌肉驱动的关节控制与 Hill 肌肉模型](./muscle_joint_control.md) | 单自由度关节 + 拮抗肌对，Hill 模型实现、134 个单元测试与实测数据 |
 | [MuJoCo 双关节肌肉骨骼手臂到达控制](./msk_arm_reach.md) | 肩肘两自由度、六条肌肉、双关节肌与笛卡尔到达 |
+| [MuJoCo 肌肉骨骼手臂本体感觉与串联弹性肌腱](./msk_arm_proprioception.md) | 肌梭、高尔基腱器官、噪声/延迟与共收缩刚度实验 |
 | [MuJoCo 肌肉骨骼人键盘遥操作](./msk_human_walking_teleop.md) | 22 条 Hill 肌肉驱动 13 DoF 全身模型，行走/踢腿/蹲起 |
 | [MuJoCo 肌肉骨骼灵巧手](./msk_hand_teleop.md) | 11 条肌肉驱动灵巧手，键盘遥操作与神经网络激活控制 |
 

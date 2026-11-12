@@ -1,0 +1,47 @@
+#!/usr/bin/env python3
+import rospy
+import math
+from visualization_msgs.msg import Marker
+
+def draw_figure8():
+    rospy.init_node('figure8_sim')
+    pub = rospy.Publisher('/car_visual', Marker, queue_size=10)
+    rate = rospy.Rate(20)
+
+    t = 0.0
+    while not rospy.is_shutdown():
+        x = 2.0 * math.sin(t)
+        y = 2.0 * math.sin(t) * math.cos(t)
+        
+        marker = Marker()
+        marker.header.frame_id = "map"
+        marker.header.stamp = rospy.Time.now()
+        marker.type = Marker.CUBE
+        marker.action = Marker.ADD
+        marker.pose.position.x = x
+        marker.pose.position.y = y
+        marker.pose.position.z = 0.2
+        
+        dx = 2.0 * math.cos(t)
+        dy = 2.0* math.cos(2*t)
+        theta = math.atan2(dy, dx)
+        marker.pose.orientation.z = math.sin(theta / 2)
+        marker.pose.orientation.w = math.cos(theta / 2)
+        
+        marker.scale.x = 0.8
+        marker.scale.y = 0.4
+        marker.scale.z = 0.3
+        marker.color.r = 0.0
+        marker.color.g = 0.5
+        marker.color.b = 1.0
+        marker.color.a = 1.0
+        
+        pub.publish(marker)
+        t += 0.03
+        rate.sleep()
+
+if __name__ == '__main__':
+    try:
+        draw_figure8()
+    except rospy.ROSInterruptException:
+        pass

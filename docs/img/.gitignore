@@ -1,0 +1,13 @@
+# mujoco_offroad_suspension_robot_noetic 的运行产物（每次运行都会重写，不入库）
+# 脚本默认输出到仓库根 docs/img/（见 scripts/offroad_sim_core.py 的 resolve_out_dir）
+/offline_log.csv
+/offline_metrics.json
+/offroad_demo_curves.png
+/offroad_demo_metrics.json
+/offroad_demo_log.csv
+/offroad_demo.mp4
+/offroad_demo_start.png
+/offroad_demo_mid.png
+/offroad_demo_end.png
+
+# 例外：offline_curves.png 与 offroad_demo.gif 是文档页配图，随本 PR 入库
