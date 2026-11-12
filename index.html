@@ -507,6 +507,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/passive_walker/">无动力被动行走（轮辐式 Rimless Wheel）</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="ground/gap_nav_nn/">狭窄通道通行：激光雷达开口辨识与神经网络选口穿行</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="ground/carla_sensor_fusion/">多传感器融合跟踪（LiDAR+Radar+Camera+IMU）2D 合成仿真</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/lidar_camera_calibration/">相机-激光雷达外参标定</a>
@@ -1346,7 +1348,12 @@
 <li><a href="ground/rollover_margin/">横向载荷转移与侧翻裕度</a> —— 用 SSF、临界侧向加速度和内外侧轮垂向力算「这车会不会翻」，纯代数、不依赖 CARLA</li>
 <li><a href="ground/drive_cycle_energy/">工况能耗与续航核算</a> —— 把一段行驶工况拆成滚阻、风阻、制动与动能项，算清楚电花在哪、还能跑多远</li>
 <li><a href="ground/ride_comfort_transmissibility/">乘坐舒适性传递率</a> —— 用二自由度悬架加 ISO 2631 频率加权算路面振动传到人身上剩多少，解释「40 难受、60 反而稳」</li>
-<li><a href="ground/lateral_stability_margin/">不足转向梯度与侧向稳定裕度</a> —— 用不足转向梯度与临界车速算「快点打方向会不会失控」，纯代数、可离线断言</li>
+<li>
+<p><a href="ground/lateral_stability_margin/">不足转向梯度与侧向稳定裕度</a> —— 用不足转向梯度与临界车速算「快点打方向会不会失控」，纯代数、可离线断言</p>
+</li>
+<li>
+<p><a href="ground/gap_nav_nn/">狭窄通道通行：激光雷达开口辨识与神经网络选口穿行</a> —— 隔墙三个开口（0.7/1.4/2.4 m），车宽 0.6 m，专家按可通行性与绕路代价选口，行为克隆 MLP 仅凭雷达判断孔径，20 回合成功率 100% / 90%</p>
+</li>
 </ul>
 <h2 id="5">5. 空域载具 <span id="air_vehicle"></span></h2>
 <ul>
