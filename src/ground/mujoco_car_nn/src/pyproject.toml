@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mujoco_car_nn"
+version = "0.1.0"
+description = "MuJoCo neural-network driving simulation (BC / DAgger + occupancy SLAM)"
+requires-python = ">=3.9"
+dependencies = ["numpy>=1.24", "mujoco>=3.0", "torch>=2.0", "pillow", "matplotlib"]
+
+[tool.setuptools]
+packages = ["mujoco_car_nn"]
