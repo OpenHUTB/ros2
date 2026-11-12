@@ -2,7 +2,7 @@
 
 本模块是 `OpenHUTB/ros2` 仓库的**水下机器人（ROV）**示例，对应课程作业中「水下机器人」选题的完整实现：
 
-1. **物理仿真 + 键盘运动控制**：MuJoCo 3.12.0 构建 6-DOF ROV 刚体模型，显式实现重力/浮力/附加质量/二次流体阻力/六推进器推力分配，`W/A/S/D/R/F/Q/E` 键盘遥控；
+1. **物理仿真 + 键盘运动控制**：MuJoCo 3.2.3 构建 6-DOF ROV 刚体模型，显式实现重力/浮力/附加质量/二次流体阻力/六推进器推力分配，`W/A/S/D/R/F/Q/E` 键盘遥控；
 2. **传感器感知与运动控制**：64 波束 120° 成像声呐（含噪声、野值、丢包）、DVL、IMU、深度计、前视相机；感知 MLP 对声呐去噪后再送入控制器；
 3. **建图与导航**：对数几率占据栅格地图 + 相关性扫描匹配 SLAM、A* 全局规划、DWA 局部规划、纯跟踪 + 深度 PID 控制，导航与 SLAM 同步运行；
 4. **端到端模型**：相机图像（48×64×3）→ 2 层 CNN → 速度指令 `(vx, wz)`，行为克隆训练；
@@ -38,8 +38,8 @@ rov_numpy_nn_slam/
 ## 环境要求
 
 - Ubuntu 20.04.6 LTS + ROS Noetic（`/opt/ros/noetic`）
-- Python ≥ 3.10（MuJoCo 3.12.0 要求；Ubuntu 20.04 自带 3.8，因此项目使用私有 venv）
-- 依赖：`mujoco==3.12.0`、`numpy==1.26.4`、`Pillow`、`PyYAML`、`rospkg`（见 `requirements.txt`）
+- Python ≥ 3.10（MuJoCo 3.2.3 要求；Ubuntu 20.04 自带 3.8，因此项目使用私有 venv）
+- 依赖：`mujoco==3.2.3`、`numpy==1.26.4`、`Pillow`、`PyYAML`、`rospkg`（见 `requirements.txt`）
 - 无 GPU、无网络环境可完整运行（训练与评测均只用 CPU）
 
 ## 快速开始
@@ -116,4 +116,4 @@ bash main.sh train                # 重新训练（约 10 分钟）
 
 - 场景与 ROS 组织方式参考本仓库 `docs/water/rov_physical_simulation.md`、`docs/water/rov_sonar_slam_navigation.md` 等已有实现；
 - 本模块所有代码、模型与数据均由本项目自行实现/生成，未使用他人代码；
-- 物理引擎：MuJoCo 3.12.0；ROS：Noetic；神经网络：纯 NumPy（无 PyTorch/TensorFlow）。
+- 物理引擎：MuJoCo 3.2.3；ROS：Noetic；神经网络：纯 NumPy（无 PyTorch/TensorFlow）。

@@ -217,6 +217,19 @@ class ROVSim:
             self._collision_cooldown = 0.6
         self._collision_active = contact
 
+    def _ray(self, origin, direction):
+        """mj_ray 跨版本兼容（3.1.x 接受 geomid=None，3.2.x 需要 int32 输出数组）。"""
+        geomid = np.zeros(1, dtype=np.int32)
+        try:
+            out = mujoco.mj_ray(self.model, self.data, origin, direction,
+                                self._ray_group, 1, self.body, geomid)
+        except TypeError:
+            out = mujoco.mj_ray(self.model, self.data, origin, direction,
+                                self._ray_group, 1, self.body, None)
+        if isinstance(out, tuple):
+            out = out[0]
+        return float(out)
+
     # ----------------------------------------------------------------- sensors
     def sonar(self) -> np.ndarray:
         """120 deg horizontal sonar fan, 64 beams (metres)."""
@@ -226,8 +239,7 @@ class ROVSim:
         ranges = np.empty(C.SONAR_BEAMS, dtype=np.float64)
         for i, a in enumerate(beam_angles):
             direction = np.array([math.cos(a), math.sin(a), 0.0])
-            dist = mujoco.mj_ray(self.model, self.data, origin, direction,
-                                 self._ray_group, 1, self.body, None)
+            dist = self._ray(origin, direction)
             if dist < 0.0:
                 dist = C.SONAR_RANGE_MAX
             ranges[i] = min(C.SONAR_RANGE_MAX, dist)
@@ -288,8 +300,7 @@ class ROVSim:
         ranges = np.empty(len(self._cam_angles))
         for i, a in enumerate(self._cam_angles + pose[3]):
             direction = np.array([math.cos(a), math.sin(a), 0.0])
-            d = mujoco.mj_ray(self.model, self.data, origin, direction,
-                              self._ray_group, 1, self.body, None)
+            d = self._ray(origin, direction)
             ranges[i] = C.CAM_RANGE if d < 0 else min(C.CAM_RANGE, d)
         if self.noise:
             ranges = ranges + 0.05 * self.rng.normal(size=ranges.shape)
