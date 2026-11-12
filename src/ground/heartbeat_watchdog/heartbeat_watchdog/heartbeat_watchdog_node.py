@@ -11,6 +11,7 @@
 import math
 
 import rclpy
+from rcl_interfaces.msg import ParameterDescriptor
 from rclpy.node import Node
 from std_msgs.msg import Bool, String
 
@@ -41,15 +42,19 @@ def _split_nodes(value):
 class HeartbeatWatchdog(Node):
     """上游心跳看门狗节点。"""
 
-    def __init__(self):
-        super().__init__('heartbeat_watchdog')
+    def __init__(self, **kwargs):
+        super().__init__('heartbeat_watchdog', **kwargs)
 
         self.watched_nodes = _split_nodes(self.declare_parameter(
             'watched_nodes', 'navigator').value)
-        self.heartbeat_timeout = self.declare_parameter(
-            'heartbeat_timeout', 1.0).value
-        self.publish_rate = self.declare_parameter(
-            'publish_rate', 10.0).value
+        self.heartbeat_timeout = float(self.declare_parameter(
+            'heartbeat_timeout', 1.0,
+            descriptor=ParameterDescriptor(
+                dynamic_typing=True)).value)
+        self.publish_rate = float(self.declare_parameter(
+            'publish_rate', 10.0,
+            descriptor=ParameterDescriptor(
+                dynamic_typing=True)).value)
         self.publish_estop = self.declare_parameter(
             'publish_estop', True).value
         self.validate_parameters()
@@ -93,7 +98,7 @@ class HeartbeatWatchdog(Node):
 
     def heartbeat_callback(self, msg):
         name = msg.data.strip()
-        if name:
+        if name and name in self.watched_nodes:
             self.last_seen[name] = self._now_seconds()
 
     def _now_seconds(self):
@@ -114,7 +119,9 @@ class HeartbeatWatchdog(Node):
             self.estop_pub.publish(estop_msg)
 
     def on_timer(self):
-        if not self.last_seen:
+        missing = [name for name in self.watched_nodes
+                   if name not in self.last_seen]
+        if missing:
             self.publish_result('waiting', True)
             return
 
