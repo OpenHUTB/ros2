@@ -482,15 +482,17 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#esc_1">ESC 控制律</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_5">对开路面的制动距离</a>
+<li class="toctree-l2"><a class="reference internal" href="#_5">抖振与死区</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_6">工况设计</a>
+<li class="toctree-l2"><a class="reference internal" href="#_6">对开路面的制动距离</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_7">代码结构</a>
+<li class="toctree-l2"><a class="reference internal" href="#_7">工况设计</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_8">运行</a>
+<li class="toctree-l2"><a class="reference internal" href="#_8">代码结构</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_9">这个模型没做什么</a>
+<li class="toctree-l2"><a class="reference internal" href="#_9">运行</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_10">这个模型没做什么</a>
 </li>
 </ul>
 </li>
@@ -1128,8 +1130,8 @@
 <tr>
 <td>双移线 · ESC 开</td>
 <td><strong>3.8°</strong></td>
-<td><strong>18.9 °/s</strong></td>
-<td><strong>2.1 °/s</strong></td>
+<td><strong>19.0 °/s</strong></td>
+<td><strong>2.2 °/s</strong></td>
 <td><strong>0.59 m</strong></td>
 <td>否</td>
 </tr>
@@ -1145,7 +1147,7 @@
 <td>正弦停滞 · ESC 开</td>
 <td>4.3°</td>
 <td>18.8 °/s</td>
-<td><strong>3.04 °/s</strong></td>
+<td><strong>3.02 °/s</strong></td>
 <td>—</td>
 <td>否</td>
 </tr>
@@ -1176,7 +1178,7 @@
 <tr>
 <td>湿滑换道 · ESC 开</td>
 <td><strong>3.3°</strong></td>
-<td><strong>14.7 °/s</strong></td>
+<td><strong>14.8 °/s</strong></td>
 <td><strong>1.6 °/s</strong></td>
 <td><strong>0.38 m</strong></td>
 <td>否</td>
@@ -1185,7 +1187,7 @@
 </table>
 <p>「甩尾」的判据是侧偏角超过 20° 或横摆角速度超过 1.6 rad/s，只要全程出现过一次就记 1。</p>
 <p>正弦停滞这一组 ESC 的收益最小，侧偏角只从 4.7° 降到 4.3°，因为工况本身没有到附着
-极限，车不会失稳。它证明的是另一件事：ESC 在正常工况下不乱动，介入 4.96 s 但只把
+极限，车不会失稳。它证明的是另一件事：ESC 在正常工况下不乱动，介入 3.56 s 但只把
 横摆跟踪误差压掉三分之二，没有把车拽出驾驶员想要的轨迹。</p>
 <h2 id="_3">消融：稳定到底来自差动制动还是减速</h2>
 <p>侧偏角能从 89.2° 掉到 3.8°，也可能是「ESC 顺便把车速降下来了」的结果 —— 慢车本来
@@ -1210,14 +1212,14 @@
 </tr>
 <tr>
 <td>ESC 默认</td>
-<td><strong>3.79°</strong></td>
+<td><strong>3.81°</strong></td>
 <td><strong>0.59 m</strong></td>
 <td>95.62 km/h</td>
 <td>否</td>
 </tr>
 <tr>
 <td>只留横摆差动制动（<code>speed_brake_gain=0</code>、<code>throttle_cut=1</code>）</td>
-<td><strong>3.86°</strong></td>
+<td><strong>3.89°</strong></td>
 <td><strong>0.61 m</strong></td>
 <td>95.62 km/h</td>
 <td>否</td>
@@ -1231,7 +1233,7 @@
 </tr>
 </tbody>
 </table>
-<p>结论是稳定性来自横摆差动制动，不是减速：把降速降扭关掉，指标几乎不变（3.79° → 3.86°）；
+<p>结论是稳定性来自横摆差动制动，不是减速：把降速降扭关掉，指标几乎不变（3.81° → 3.89°）；
 反过来把横摆环清零，结果和完全不开 ESC 一模一样。</p>
 <p>最后一行完全一致不是巧合 —— 降速降扭这一路是挂在横摆环输出上的附属动作：四轮补刹车
 要求强度大于 <code>throttle_cut</code>，降扭也要求强度超过阈值。横摆环清零后强度恒为 0，这两条
@@ -1276,8 +1278,15 @@
 F_y = -\mu F_z \sin\left(C \arctan(B \alpha)\right)
 </script>
 </p>
-<p>$B = 9.5$、$C = 1.35$，峰值侧偏角 $\alpha_p = \arctan(\tan(\pi/2C)/B) \approx 6.5°$，
+<p>$B = 9.5$、$C = 1.35$，峰值侧偏角 $\alpha_p = \arctan(\tan(\pi/2C)/B) \approx 13.7°$，
 峰值侧向力就是 $\mu F_z$。侧偏角用轮心速度算，前轮还要先减掉转向角：</p>
+<div class="admonition note">
+<p class="admonition-title">这个峰值侧偏角偏大</p>
+<p>真实乘用车轮胎的峰值侧偏角一般在 6°～8°，这里算出来 13.7°，说明 $B = 9.5$ 取得偏小、
+轮胎被写得「更宽容」：侧向力在更大的侧偏角上才饱和，车也更晚才失去控制。所以在
+本模型里，ESC 介入时的侧偏角阈值（5.7°）相对轮胎峰值是偏保守的，而实车上同样的
+5.7° 已经接近峰值附着。结论（有没有 ESC 的差别）不受影响，但绝对数值不能直接对标实车。</p>
+</div>
 <p>
 <script type="math/tex; mode=display">
 \alpha = \arctan\frac{v_y^{\text{wheel}}}{v_x^{\text{wheel}}}, \qquad
@@ -1391,9 +1400,82 @@ d = k_p e + k_i \!\int\! e\,dt + k_d \dot e + k_\beta \beta_{\text{excess}} - k_
 <li>只在强度没打满时积分，误差反号且幅值超过 0.2 rad/s 时清积分，避免把上一段换道的
   偏差带到下一段。</li>
 </ul>
-<h2 id="_5">对开路面的制动距离</h2>
-<p>打开 ESC 之后对开路面的制动距离从 36.6 m 变成 169.5 m，涨了 4.6 倍。这不是 bug，
-是 select-low 的必然结果。</p>
+<p>关于 $k_\beta$ 这一项的符号值得记一笔：$\beta&gt;0$ 表示速度矢量偏在车头左侧，要把车头
+往左带才能减小 $\beta$，也就是需要<strong>正</strong>（左转）力矩，所以这一项与 $\beta$ 同号。第一版
+按「车尾向左甩要用负力矩」写成了反号，结果它和横摆误差项互相抵消：同一初始条件下
+$\beta$ 从 5.7° 只衰减到 1.16°，关掉 ESC 反而能到 0.48°。改过来之后是 1.37° / 0.07°。
+现在有一条方向性单测（<code>test_侧偏角为正时压左轮把车头往左带</code>）守着。</p>
+<h2 id="_5">抖振与死区</h2>
+<p>横摆误差每 20 ms 更新一次，如果死区取 0，误差一离开零就介入，控制强度会在 0.02～1.00
+之间跳，表现为左右轮交替加压、车身一顿一顿。正弦停滞工况里这一点最明显：介入时长
+4.96 s，而车速最低掉到 87.4 km/h（不开 ESC 是 98.7）。把死区提到 0.02 rad/s（约 1.1 °/s）：</p>
+<table>
+<thead>
+<tr>
+<th>死区</th>
+<th>双移线介入时长</th>
+<th>方向翻转次数</th>
+<th>侧偏角</th>
+<th>正弦停滞介入时长</th>
+<th>跟踪误差</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>4.14 s</td>
+<td>6 次</td>
+<td>3.79°</td>
+<td>4.96 s</td>
+<td>3.04 °/s</td>
+</tr>
+<tr>
+<td><strong>0.02</strong></td>
+<td><strong>2.36 s</strong></td>
+<td><strong>4 次</strong></td>
+<td><strong>3.81°</strong></td>
+<td><strong>3.56 s</strong></td>
+<td>3.02 °/s</td>
+</tr>
+</tbody>
+</table>
+<p>介入时长少了四成多，方向翻转少了三分之一，侧偏角只差 0.02°，跟踪误差基本不变。</p>
+<p>一阶低通也试过（<code>intensity_tau = 0.03</code>，约 1.5 个控制周期）：介入时长几乎不动
+（4.10 s 对 4.14 s），跟踪误差反而从 2.10 涨到 2.16 °/s，方向翻转从 6 次增到 8 次 ——
+滤波把强度变化拖慢了，反而让方向判断在穿越点附近多犹豫了一拍。所以这一项保留成参数、
+默认关掉，真正压住抖振的是死区。</p>
+<h2 id="_6">对开路面的制动距离</h2>
+<p>先说口径：这里量的制动距离是<strong>合速度</strong>降到 0.5 m/s 时走过的距离。早先用纵向速度
+$u$ 判定，甩尾横滑那一组会被记成 36.6 m —— 而那一刻车其实还在 61 km/h 横着滑，
+真正停下是在 57.6 m。改用 $\sqrt{u^2+v^2}$ 之后两组都是真的停住了：</p>
+<table>
+<thead>
+<tr>
+<th>配置</th>
+<th>停车距离</th>
+<th>停车时刻</th>
+<th>停车姿态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ESC 关</td>
+<td>57.6 m</td>
+<td>4.92 s</td>
+<td>甩尾 89°，横在路中间</td>
+</tr>
+<tr>
+<td>ESC 开</td>
+<td>169.5 m</td>
+<td>11.34 s</td>
+<td>直线停住</td>
+</tr>
+</tbody>
+</table>
+<p>这里的 2.9 倍不能读成「ESC 让刹车变差」。没 ESC 那一组之所以停得早，是因为车横过来
+之后整个车身侧面在「刮」地面，侧向力吃掉动能比纵向制动还快 —— 代价是车身转了 89°、
+占了三条车道，这个过程对车上的人和周围都是失控的。所以这两个数不能相减当作
+「纵向性能损失」，它只能说明：<strong>保住方向是用纵向距离换来的</strong>。</p>
 <p>要让车不偏，左右纵向力必须相等（横摆力矩 $= (F_L - F_R)\cdot B/2$）。低压侧最多只能
 出 $k_{\mathrm{ABS}}\times0.30\times F_z$，高压侧就也只能出这么多，等于把 0.95 的附着浪费掉了。
 按 100 km/h、$m=1500$ kg 估，两侧纵向力合起来约 $0.27\,mg$，也就是 2.5 m/s² 上下的
@@ -1404,7 +1486,7 @@ d = k_p e + k_i \!\int\! e\,dt + k_d \dot e + k_\beta \beta_{\text{excess}} - k_
 代价就被放大到了极限。<strong>稳定性是买来的</strong>，这个数字就是它的价格。</p>
 <p>要缩短距离，得靠更聪明的分配策略（比如允许一点残余横摆、让 EPS 配合回正），
 那就超出这个模块的范围了。</p>
-<h2 id="_6">工况设计</h2>
+<h2 id="_7">工况设计</h2>
 <p>四个工况各管一件事：</p>
 <table>
 <thead>
@@ -1446,7 +1528,7 @@ d = k_p e + k_i \!\int\! e\,dt + k_d \dot e + k_\beta \beta_{\text{excess}} - k_
 回来：车被减速干预拖到近乎停车之后开始倒车，倒车时制动力方向不对，车越刹越快，
 侧偏角冲到 88°。倒车那段修好之后鱼钩能过了，但和双移线讲的是同一件事（后轴饱和），
 就换成了湿滑路面 —— 低附着下临界车速降到 65 km/h，才真正需要 ESC 出手。</p>
-<h2 id="_7">代码结构</h2>
+<h2 id="_8">代码结构</h2>
 <div class="highlight"><pre><span></span><code>vehicle_esc_stability/
 ├── params.py      车辆、轮胎、ESC 参数（dataclass）
 ├── dynamics.py    四轮受力、载荷转移、RK4 积分
@@ -1461,7 +1543,10 @@ d = k_p e + k_i \!\int\! e\,dt + k_d \dot e + k_\beta \beta_{\text{excess}} - k_
 </code></pre></div>
 <p><code>render.py</code> 是从列车 ATO 那个模块搬过来的，只换了调色板。图里所有标注都是英文大写，
 因为点阵字只有 ASCII 字形；中文说明留在文档里。</p>
-<h2 id="_8">运行</h2>
+<p>单元测试在 <code>tests/</code>（41 项，纯离线，只依赖标准库和 pytest）；<code>test/test_flake8.py</code>
+是风格检查，放在单数的 <code>test/</code> 目录里，只有 <code>colcon test</code> 会收，<code>pytest tests</code> 不受影响。
+许可证是 MIT，见包内的 <code>LICENSE</code>。</p>
+<h2 id="_9">运行</h2>
 <div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>src/ground/vehicle_esc_stability
 
 <span class="c1"># 四个工况全跑，打印指标表并生成图片</span>
@@ -1471,7 +1556,7 @@ python3<span class="w"> </span>-m<span class="w"> </span>vehicle_esc_stability.m
 python3<span class="w"> </span>-m<span class="w"> </span>vehicle_esc_stability.main<span class="w"> </span>--scenario<span class="w"> </span>mu_split<span class="w"> </span>--no-images
 
 <span class="c1"># 测试</span>
-python3<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>tests<span class="w"> </span>-q<span class="w">      </span><span class="c1"># 35 项，约 6 s</span>
+python3<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>tests<span class="w"> </span>-q<span class="w">      </span><span class="c1"># 41 项，约 8 s</span>
 </code></pre></div>
 <p>ROS 2 回放：</p>
 <div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>vehicle_esc_stability<span class="w"> </span>main.launch.py
@@ -1503,7 +1588,7 @@ ros2<span class="w"> </span>launch<span class="w"> </span>vehicle_esc_stability<
 </tr>
 </tbody>
 </table>
-<h2 id="_9">这个模型没做什么</h2>
+<h2 id="_10">这个模型没做什么</h2>
 <ul>
 <li><strong>没有液压模型。</strong> 制动指令直接变成轮上的力，没有建压/减压的滞后。真实 ESC 的
   响应时间在 100 ms 量级，这里假设是瞬时，所以介入会比实车早、峰值侧偏角会比实车小。</li>
