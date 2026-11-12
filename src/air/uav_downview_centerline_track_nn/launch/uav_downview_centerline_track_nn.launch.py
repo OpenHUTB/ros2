@@ -4,6 +4,7 @@
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
 
@@ -16,7 +17,7 @@ def generate_launch_description() -> LaunchDescription:
         executable="track_node",
         name="uav_downview_centerline_track_nn",
         output="screen",
-        parameters=[{"sim_rate": 50.0}],
+        parameters=[{"sim_rate": LaunchConfiguration("sim_rate")}],
     )
 
     return LaunchDescription([sim_rate_arg, track_node])
