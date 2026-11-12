@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>train_consist_coupler</name>
+  <version>0.1.0</version>
+  <description>多编组列车纵向动力学与车钩力仿真：逐节积分车钩弹簧-阻尼-间隙，对比单质点模型，给出编组数与指令传播延迟对压钩/拉钩峰值的影响</description>
+  <maintainer email="openhutb@example.com">OpenHUTB contributors</maintainer>
+  <license>Apache-2.0</license>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>visualization_msgs</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
