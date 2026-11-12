@@ -1,0 +1,216 @@
+{
+  "generated": "2026-11-10 20:58:37",
+  "total_wall_s": 99.1,
+  "summary": {
+    "sparse": {
+      "expert": {
+        "success_rate": 1.0,
+        "collision_rate": 0.0,
+        "duration_s": 43.4,
+        "path_length_m": 51.85,
+        "min_clearance_m": 1.446,
+        "plan_ms": 9.67,
+        "infer_ms": 0.05666666666666667,
+        "episodes": 3
+      },
+      "control": {
+        "success_rate": 1.0,
+        "collision_rate": 0.0,
+        "duration_s": 44.5,
+        "path_length_m": 53.16,
+        "min_clearance_m": 2.054,
+        "plan_ms": 9.35,
+        "infer_ms": 0.06666666666666667,
+        "episodes": 3
+      },
+      "full": {
+        "success_rate": 1.0,
+        "collision_rate": 0.0,
+        "duration_s": 43.4,
+        "path_length_m": 51.79,
+        "min_clearance_m": 1.3,
+        "plan_ms": 15.156666666666666,
+        "infer_ms": 0.25333333333333335,
+        "episodes": 3
+      },
+      "e2e": {
+        "success_rate": 0.0,
+        "collision_rate": 0.0,
+        "duration_s": 44.0,
+        "path_length_m": 51.98,
+        "min_clearance_m": 1.206,
+        "plan_ms": 0.0,
+        "infer_ms": 0.8166666666666668,
+        "episodes": 3
+      }
+    },
+    "dense": {
+      "expert": {
+        "success_rate": 1.0,
+        "collision_rate": 0.0,
+        "duration_s": 42.6,
+        "path_length_m": 50.89000000000001,
+        "min_clearance_m": 1.6160000000000003,
+        "plan_ms": 4.166666666666667,
+        "infer_ms": 0.04666666666666667,
+        "episodes": 3
+      },
+      "control": {
+        "success_rate": 1.0,
+        "collision_rate": 0.0,
+        "duration_s": 43.20000000000001,
+        "path_length_m": 51.60999999999999,
+        "min_clearance_m": 2.071,
+        "plan_ms": 4.003333333333333,
+        "infer_ms": 0.04,
+        "episodes": 3
+      },
+      "full": {
+        "success_rate": 1.0,
+        "collision_rate": 0.0,
+        "duration_s": 42.9,
+        "path_length_m": 51.22,
+        "min_clearance_m": 1.66,
+        "plan_ms": 14.293333333333335,
+        "infer_ms": 0.19000000000000003,
+        "episodes": 3
+      },
+      "e2e": {
+        "success_rate": 0.0,
+        "collision_rate": 0.0,
+        "duration_s": 49.79999999999999,
+        "path_length_m": 58.06,
+        "min_clearance_m": 0.542,
+        "plan_ms": 0.0,
+        "infer_ms": 0.8466666666666667,
+        "episodes": 3
+      }
+    },
+    "dynamic": {
+      "expert": {
+        "success_rate": 1.0,
+        "collision_rate": 0.0,
+        "duration_s": 44.03333333333333,
+        "path_length_m": 52.60666666666666,
+        "min_clearance_m": 1.0196666666666667,
+        "plan_ms": 8.87,
+        "infer_ms": 0.05333333333333334,
+        "episodes": 3
+      },
+      "control": {
+        "success_rate": 1.0,
+        "collision_rate": 0.0,
+        "duration_s": 45.1,
+        "path_length_m": 53.88,
+        "min_clearance_m": 1.399,
+        "plan_ms": 8.863333333333332,
+        "infer_ms": 0.05000000000000001,
+        "episodes": 3
+      },
+      "full": {
+        "success_rate": 1.0,
+        "collision_rate": 0.0,
+        "duration_s": 47.26666666666667,
+        "path_length_m": 56.32333333333333,
+        "min_clearance_m": 1.2423333333333333,
+        "plan_ms": 15.113333333333335,
+        "infer_ms": 0.20666666666666667,
+        "episodes": 3
+      },
+      "e2e": {
+        "success_rate": 1.0,
+        "collision_rate": 0.0,
+        "duration_s": 48.79999999999999,
+        "path_length_m": 58.03,
+        "min_clearance_m": 1.4590000000000003,
+        "plan_ms": 0.0,
+        "infer_ms": 0.7733333333333334,
+        "episodes": 3
+      }
+    },
+    "corridor": {
+      "expert": {
+        "success_rate": 1.0,
+        "collision_rate": 0.0,
+        "duration_s": 42.0,
+        "path_length_m": 50.13,
+        "min_clearance_m": 1.822,
+        "plan_ms": 3.9933333333333336,
+        "infer_ms": 0.04,
+        "episodes": 3
+      },
+      "control": {
+        "success_rate": 1.0,
+        "collision_rate": 0.0,
+        "duration_s": 43.1,
+        "path_length_m": 51.44,
+        "min_clearance_m": 2.048,
+        "plan_ms": 4.263333333333333,
+        "infer_ms": 0.043333333333333335,
+        "episodes": 3
+      },
+      "full": {
+        "success_rate": 1.0,
+        "collision_rate": 0.0,
+        "duration_s": 40.7,
+        "path_length_m": 48.53,
+        "min_clearance_m": 1.453,
+        "plan_ms": 15.793333333333331,
+        "infer_ms": 0.22333333333333336,
+        "episodes": 3
+      },
+      "e2e": {
+        "success_rate": 0.0,
+        "collision_rate": 0.0,
+        "duration_s": 39.0,
+        "path_length_m": 46.29999999999999,
+        "min_clearance_m": 1.401,
+        "plan_ms": 0.0,
+        "infer_ms": 0.8466666666666667,
+        "episodes": 3
+      }
+    },
+    "unseen": {
+      "expert": {
+        "success_rate": 1.0,
+        "collision_rate": 0.0,
+        "duration_s": 46.20000000000001,
+        "path_length_m": 55.15,
+        "min_clearance_m": 1.5569999999999997,
+        "plan_ms": 8.403333333333334,
+        "infer_ms": 0.04,
+        "episodes": 3
+      },
+      "control": {
+        "success_rate": 1.0,
+        "collision_rate": 0.0,
+        "duration_s": 48.6,
+        "path_length_m": 58.01,
+        "min_clearance_m": 2.05,
+        "plan_ms": 8.303333333333333,
+        "infer_ms": 0.03666666666666667,
+        "episodes": 3
+      },
+      "full": {
+        "success_rate": 1.0,
+        "collision_rate": 0.0,
+        "duration_s": 45.6,
+        "path_length_m": 54.330000000000005,
+        "min_clearance_m": 1.389,
+        "plan_ms": 15.976666666666667,
+        "infer_ms": 0.20666666666666667,
+        "episodes": 3
+      },
+      "e2e": {
+        "success_rate": 1.0,
+        "collision_rate": 0.0,
+        "duration_s": 46.20000000000001,
+        "path_length_m": 55.25,
+        "min_clearance_m": 1.204,
+        "plan_ms": 0.0,
+        "infer_ms": 0.7999999999999999,
+        "episodes": 3
+      }
+    }
+  }
+}

@@ -164,6 +164,22 @@ def geofence_alerts(track: UAVTrack, zones: Iterable[Zone]) -> list[Alert]:
     return alerts
 
 
+def validate_window(horizon_s: float | None, step_s: float) -> tuple[float | None, float]:
+    """Validate a sampling window; shared by every entry point that samples time.
+
+    ``horizon_s=None`` means "the whole common interval" and is therefore allowed
+    here, but a NaN/inf step or a non-positive horizon is a programming error and
+    raises ``ValueError`` instead of producing a stretched or empty series.
+    """
+    if not np.isfinite(step_s) or float(step_s) <= 0.0:
+        raise ValueError("step_s must be a positive finite number")
+    if horizon_s is None:
+        return None, float(step_s)
+    if not np.isfinite(horizon_s) or float(horizon_s) <= 0.0:
+        raise ValueError("horizon_s must be a positive finite number")
+    return float(horizon_s), float(step_s)
+
+
 def _interpolate_pair(
     track_a: UAVTrack,
     track_b: UAVTrack,
@@ -172,8 +188,9 @@ def _interpolate_pair(
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Sample the common interval of two tracks, optionally limited to a horizon.
 
-    The horizon starts at the first sample shared by both tracks, so a pair is
-    only evaluated over the first ``horizon_s`` seconds of their common flight.
+    Samples are taken from the shared start with the requested ``step_s`` (not
+    stretched to fit the window); when the window is not a multiple of the step,
+    the exact end point is appended so the last interval is simply shorter.
     """
     start = max(float(track_a.times[0]), float(track_b.times[0]))
     end = min(float(track_a.times[-1]), float(track_b.times[-1]))
@@ -181,8 +198,12 @@ def _interpolate_pair(
         end = min(end, start + float(horizon_s))
     if end <= start:
         return np.empty(0), np.empty((0, 3)), np.empty((0, 3))
-    count = max(2, int(np.floor((end - start) / step_s)) + 1)
-    times = np.linspace(start, end, count)
+    span = end - start
+    step = float(step_s)
+    count = int(np.floor(span / step)) + 1
+    times = start + np.arange(count) * step
+    if times.size == 0 or times[-1] < end - 1e-9:
+        times = np.append(times, end)
     positions_a = np.vstack([track_a.position_at(t) for t in times])
     positions_b = np.vstack([track_b.position_at(t) for t in times])
     return times, positions_a, positions_b
@@ -202,10 +223,7 @@ def pairwise_conflicts(
     the horizon is therefore still reported when the global minimum of the whole
     scenario happens later than the horizon.
     """
-    if horizon_s <= 0:
-        raise ValueError("horizon_s must be positive")
-    if step_s <= 0:
-        raise ValueError("step_s must be positive")
+    horizon_s, step_s = validate_window(horizon_s, step_s)
     conflicts: list[Conflict] = []
     for index, track_a in enumerate(tracks):
         for track_b in tracks[index + 1:]:
@@ -263,13 +281,46 @@ def _separations(
     return distances
 
 
-def evaluate_scenario(scenario: dict[str, Any]) -> dict[str, Any]:
-    """Evaluate a complete scenario dictionary and return a JSON-ready summary.
+def separation_series(
+    tracks: Sequence[UAVTrack],
+    step_s: float = 0.25,
+    horizon_s: float | None = None,
+) -> list[dict[str, Any]]:
+    """Per-sample pairwise separations, for CSV export and plotting.
 
-    ``minimum_separation_m`` is measured inside the same ``horizon_s`` window the
-    conflict detector uses, so the number never contradicts ``conflicts``. The
-    whole common interval is reported separately as ``minimum_separation_full_m``.
+    One row per sampled time step and UAV pair, sorted by ``time_s`` and then by
+    the pair order in ``tracks``. Sampling uses the same true-step scheme as the
+    conflict detector (``horizon_s``/``step_s`` are validated here too), so a row's
+    ``separation_m`` can be compared directly with the warning and critical
+    distances.
     """
+    horizon_s, step_s = validate_window(horizon_s, step_s)
+    rows: list[dict[str, Any]] = []
+    for index, track_a in enumerate(tracks):
+        for track_b in tracks[index + 1:]:
+            times, positions_a, positions_b = _interpolate_pair(
+                track_a, track_b, step_s, horizon_s
+            )
+            if not len(times):
+                continue
+            distances = np.linalg.norm(positions_a - positions_b, axis=1)
+            for time_s, distance_m in zip(times.tolist(), distances.tolist()):
+                rows.append(
+                    {
+                        "time_s": round(float(time_s), 3),
+                        "uav_a": track_a.uav_id,
+                        "uav_b": track_b.uav_id,
+                        "separation_m": round(float(distance_m), 3),
+                    }
+                )
+    rows.sort(key=lambda row: (row["time_s"], row["uav_a"], row["uav_b"]))
+    return rows
+
+
+def parse_scenario(
+    scenario: dict[str, Any],
+) -> tuple[list[UAVTrack], list[Zone], float, float]:
+    """Turn a scenario dictionary into ``(tracks, zones, horizon_s, step_s)``."""
     if not isinstance(scenario, dict):
         raise ValueError("scenario must be a mapping")
     uavs = scenario.get("uavs")
@@ -294,9 +345,26 @@ def evaluate_scenario(scenario: dict[str, Any]) -> dict[str, Any]:
         )
         for item in uavs
     ]
-
     horizon_s = float(scenario.get("horizon_s", 10.0))
     step_s = float(scenario.get("step_s", 0.25))
+    horizon_s, step_s = validate_window(horizon_s, step_s)
+    return tracks, zones, horizon_s, step_s
+
+
+def separation_rows_for_scenario(scenario: dict[str, Any]) -> list[dict[str, Any]]:
+    """Convenience wrapper: scenario dictionary in, CSV-ready rows out."""
+    tracks, _zones, horizon_s, step_s = parse_scenario(scenario)
+    return separation_series(tracks, step_s=step_s, horizon_s=horizon_s)
+
+
+def evaluate_scenario(scenario: dict[str, Any]) -> dict[str, Any]:
+    """Evaluate a complete scenario dictionary and return a JSON-ready summary.
+
+    ``minimum_separation_m`` is measured inside the same ``horizon_s`` window the
+    conflict detector uses, so the number never contradicts ``conflicts``. The
+    whole common interval is reported separately as ``minimum_separation_full_m``.
+    """
+    tracks, zones, horizon_s, step_s = parse_scenario(scenario)
 
     alerts: list[Alert] = []
     for track in tracks:

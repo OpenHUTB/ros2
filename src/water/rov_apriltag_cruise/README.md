@@ -6,7 +6,7 @@
 
 - Ubuntu 20.04 LTS + ROS 2 Humble（22.04 亦可）
 - Gazebo Classic 11
-- OpenCV 4.2（Ubuntu 20.04 系统包，含 ArUco；如缺失需安装 `libopencv-contrib-dev`）
+- OpenCV 4.2（Ubuntu 20.04 系统包含 ArUco；如缺失需安装 libopencv-contrib-dev）
 
 ## 编译
 

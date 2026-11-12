@@ -8,6 +8,8 @@ import rclpy
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from rclpy.node import Node
+from rclpy.executors import ExternalShutdownException
+from rclpy._rclpy_pybind11 import RCLError
 from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import Image
 from std_msgs.msg import Float32
@@ -47,6 +49,10 @@ class AirSimBridgeNode(Node):
         self.declare_parameter('hold_heading', False)
         self.hold_heading = bool(self.get_parameter('hold_heading').value)
         self.declare_parameter('async_image_capture', False)
+        self.declare_parameter('image_width', 0)
+        self.image_width = int(self.get_parameter('image_width').value)
+        if self.image_width < 0:
+            raise ValueError('image_width must be nonnegative')
         self.async_image_capture = bool(self.get_parameter('async_image_capture').value)
         self._command_epoch = 0
 
@@ -307,6 +313,8 @@ class AirSimBridgeNode(Node):
         )
 
         flight_state = self.control_client.getMultirotorState()
+        self._initial_api_control = (self.control_client.isApiControlEnabled()
+                                     if self.hold_heading else None)
         self._heading_degrees = math.degrees(airsim.to_eularian_angles(
             flight_state.kinematics_estimated.orientation)[2])
         flight_ready = bool(flight_state.ready)
@@ -642,7 +650,7 @@ class AirSimBridgeNode(Node):
             )
             return
 
-        if self._stop_worker.is_set():
+        if self._stop_worker.is_set() or not rclpy.ok(context=self.context):
             return
 
         metric = Float32()
@@ -683,6 +691,10 @@ class AirSimBridgeNode(Node):
 
         if frame is None:
             return
+
+        if self.image_width and frame.shape[1] > self.image_width:
+            frame = cv2.resize(frame, (self.image_width,
+                               max(1, round(frame.shape[0]*self.image_width/frame.shape[1]))))
 
         msg = Image()
 
@@ -736,7 +748,14 @@ class AirSimBridgeNode(Node):
             self._image_event.clear()
             if self._stop_worker.is_set():
                 break
-            self.publish_image()
+            try:
+                self.publish_image()
+            except RCLError:
+                # SIGINT can invalidate the context between the check and a
+                # background publish. Suppress only that shutdown race.
+                if rclpy.ok(context=self.context):
+                    raise
+                break
 
     # ================================================================
     # ROS Twist 输入
@@ -799,6 +818,7 @@ class AirSimBridgeNode(Node):
                     self._command_epoch += 1
                 self._filtered_cmd[:] = 0.0
                 self._accumulated_delta[:] = 0.0
+
 
             # 指数速度平滑可削弱学习控制器在航点附近产生的急剧反向指令。
             alpha = self.command_smoothing
@@ -981,6 +1001,12 @@ class AirSimBridgeNode(Node):
                 # ====================================================
                 if self._pose_control:
                     pose = self.control_client.simGetVehiclePose()
+                    # This second RPC can also block after the earlier epoch
+                    # check. Discard obsolete movement before setting pose.
+                    if self.hold_heading:
+                        with self._cmd_lock:
+                            if epoch != self._command_epoch or self._stop_worker.is_set():
+                                continue
                     pose.position.x_val = float(target[0])
                     pose.position.y_val = float(target[1])
                     pose.position.z_val = float(target[2])
@@ -1072,6 +1098,14 @@ class AirSimBridgeNode(Node):
             )
 
         if (
+            self.hold_heading and self.enable_api_control
+        ):
+            try:
+                self.control_client.cancelLastTask()
+                self.control_client.enableApiControl(self._initial_api_control)
+            except Exception as exc:
+                self.get_logger().error(f'Could not restore API control: {exc}')
+        elif (
             not getattr(self, '_pose_control', False)
             and getattr(
             self,
@@ -1101,7 +1135,7 @@ def main(args=None):
             node
         )
 
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, ExternalShutdownException):
         pass
 
     finally:
