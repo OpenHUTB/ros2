@@ -8,9 +8,9 @@ rem   main.bat --mode sim --seconds 30
 rem   main.bat --mode offline
 rem   main.bat --help
 rem
-rem 说明：ROS 1 Noetic 自带 python3.8，而 MuJoCo 3.x 需要 3.9+；
+rem 说明：MuJoCo 3.x 需要 Python 3.9+；
 rem 本脚本按以下优先级挑选解释器：
-rem   1. 环境变量 HUMANoid_PYTHON
+rem   1. 环境变量 HUMANOID_PYTHON
 rem   2. python / python3（PATH 中第一个）
 
 setlocal

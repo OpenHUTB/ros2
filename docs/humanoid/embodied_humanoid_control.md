@@ -249,7 +249,7 @@ MuJoCo 的 `body pos` 是相对父 body 的静止偏移、关节旋转整棵子�
 |---|---|
 | `SimPerception` | 用 `mujoco.mj_ray` 合成激光扫描 + 深度 ROI |
 | `HumanoidSim` | 状态读写、传感器读取、`ctrl` 下发 |
-| `WalkingController` | 感知→决策→步态→平衡的粘合层（sim/offline 共用） |
+| `WalkingController`（`controller.py`） | 感知→决策→步态→平衡的粘合层（sim/offline/节点共用） |
 | `run_sim` / `run_offline` / `run_teleop` | 三种运行模式 |
 | `build_parser` / `main` | CLI 与结果 JSON 输出 |
 
@@ -268,9 +268,9 @@ sim.apply(bf, balance.joint_command(target_vec))
 
 ### 4.6 ROS 节点
 
-`humanoid_embodied_control/nodes/walk_node.py` 是与 ROS 无关的内核，
-`scripts/walk_node_ros1.py` 只做话题转发，因此同一份控制逻辑在
-ROS 1 / ROS 2 下都能跑，单测也不需要 ROS 环境。
+`humanoid_embodied_control/nodes/walk_node.py` 内 `WalkNodeCore` 是与
+ROS 无关的内核，rclpy 适配层（订阅/发布/定时器）在同文件 `main()` 中，
+同一份控制逻辑可被 CLI 与 ROS 2 节点复用，单测不需要 ROS 环境。
 
 | 话题 | 类型 | 方向 |
 |---|---|---|
@@ -292,7 +292,7 @@ ROS 1 / ROS 2 下都能跑，单测也不需要 ROS 环境。
 | Python | 3.9+（本机实测 3.9.13） |
 | MuJoCo | 3.3.7 |
 | NumPy / SciPy | 2.0.2 / 1.13.1 |
-| ROS | 1 Noetic（launch）/ 2 Humble（可选） |
+| ROS | 2 Humble（rclpy 节点 + launch_ros） |
 
 ### 5.2 新手路线
 
@@ -313,7 +313,7 @@ pip3 install -r src/humanoid/humanoid_embodied_control/requirements.txt
 python3 -c "import mujoco; print(mujoco.__version__)"
 ```
 
-> Noetic 自带的 python3.8 装不上 MuJoCo 3.x。`main.sh` 会自动挑 3.9+ 的解释器，
+> MuJoCo 3.x 需要 Python 3.9+。`main.sh` 会自动挑满足版本的解释器，
 > 也可用 `export HUMANOID_PYTHON=/usr/bin/python3.10` 显式指定。
 
 ### 5.4 步骤 1：离线自证（不需要 MuJoCo）<span id="offline"></span>
@@ -353,11 +353,11 @@ python3 main.py --mode teleop
 
 `W/S` 加减速、`A/D` 小角度转向、`Q/E` 大角度转向、空格站立、`ESC` 退出。
 
-### 5.7 步骤 4：ROS 1 Noetic
+### 5.7 步骤 4：ROS 2 Humble
 
 ```bash
-roslaunch humanoid_embodied_control main.launch
-roslaunch humanoid_embodied_control main.launch goal_x:=3.0 goal_y:=0.5
+ros2 launch humanoid_embodied_control main.launch.py
+ros2 launch humanoid_embodied_control main.launch.py goal_x:=3.0 goal_y:=0.5
 ```
 
 `ctrl_hz` 不要调到 100 以下，理由见 [6.3 节](#tuning)。

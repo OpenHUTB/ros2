@@ -7,9 +7,9 @@
 #   bash main.sh --mode offline
 #   bash main.sh --help
 #
-# 说明：ROS 1 Noetic 自带 python3.8，而 MuJoCo 3.x 需要 3.9+。
+# 说明：MuJoCo 3.x 需要 Python 3.9+，本脚本优先挑选满足版本的解释器。
 # 因此本脚本按以下优先级挑选解释器：
-#   1. 环境变量显式指定的 HUMANoid_PYTHON
+#   1. 环境变量显式指定的 HUMANOID_PYTHON
 #   2. python3.10 / python3.11（若存在）
 #   3. 系统 python3
 set -euo pipefail

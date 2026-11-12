@@ -29,11 +29,11 @@
 | Python | 3.9+（MuJoCo 3.x 要求） |
 | MuJoCo | ≥ 3.0（开发时为 3.3.7） |
 | NumPy | ≥ 1.20 |
-| ROS | ROS 1 Noetic（launch/节点）或 ROS 2 Humble |
+| ROS | ROS 2 Humble（rclpy 节点 + launch_ros） |
 | pytest | 单测 |
 
-> **Noetic 的 Python 版本坑**：Noetic 自带 python3.8，装不上 MuJoCo 3.x。
-> `main.sh` 会自动挑选 3.9+ 的解释器；也可用 `HUMANOID_PYTHON=/usr/bin/python3.10` 显式指定。
+> **Python 版本**：ROS 2 Humble 自带 python3.10，可直接安装 MuJoCo 3.x；
+> 脱离 ROS 直跑 `main.py` 时，用 `HUMANOID_PYTHON=/usr/bin/python3.10` 指定 3.9+ 解释器。
 
 ## 安装
 
@@ -68,12 +68,15 @@ python3 main.py --mode teleop
 | 空格 | 停止并站立 |
 | `ESC` | 退出 |
 
-### ROS 1 Noetic
+### ROS 2 Humble
 
 ```bash
-roslaunch humanoid_embodied_control main.launch
-roslaunch humanoid_embodied_control main.launch goal_x:=3.0 goal_y:=0.5 period:=1.3
+ros2 launch humanoid_embodied_control main.launch.py
+ros2 launch humanoid_embodied_control main.launch.py goal_x:=3.0 goal_y:=0.5 period:=1.3
 ```
+
+节点入口：`ros2 run humanoid_embodied_control humanoid_walk_node`。
+订阅 `/uav/lidar`（LaserScan）、`/goal`（PointStamped），发布 `/uav/cmd_vel`（Twist）、`/uav/state`（String）。
 
 > `ctrl_hz` 不要调到 100 以下：步态更新率不足会让机器人"单腿支撑太久"而摔倒，
 > 这是实测结论（见文档"调参记录"）。
@@ -101,7 +104,7 @@ humanoid_embodied_control/
 ├── requirements.txt
 ├── package.xml / setup.py / setup.cfg
 ├── models/humanoid.xml      # MuJoCo 人形模型（19 qpos / 18 执行器）
-├── launch/main.launch       # ROS 1 Noetic 启动文件
+├── launch/main.launch.py    # ROS 2 Humble 启动文件（launch_ros）
 ├── config/                  # 预留参数目录
 ├── resource/                # ament 索引占位
 ├── humanoid_embodied_control/
@@ -110,12 +113,12 @@ humanoid_embodied_control/
 │   ├── planning.py          # 代价地图 + A* + 前视点
 │   ├── gait.py              # 参数化步态（相位→12 关节角）
 │   ├── balance.py           # 姿态 PD + 关节角度指令 + 踝策略
+│   ├── controller.py        # 感知→决策→步态→平衡的闭环控制器
 │   ├── state_machine.py     # WALK / AVOID / REACHED / FALLEN
 │   ├── metrics.py           # RMSE / AoS / 能量
-│   └── nodes/walk_node.py   # 与 ROS 无关的节点内核
+│   └── nodes/walk_node.py   # rclpy 节点（订阅/发布/定时器）+ 纯内核
 └── scripts/
-    ├── main.py              # 三模式实现（sim / offline / teleop）
-    └── walk_node_ros1.py    # ROS 1 适配层
+    └── main.py              # 三模式 CLI 实现（sim / offline / teleop）
 ```
 
 ## 单测

@@ -29,7 +29,7 @@ class TestEntryPoints:
         assert os.path.isfile(os.path.join(PKG, "requirements.txt"))
 
     def test_launch_exists(self):
-        assert os.path.isfile(os.path.join(PKG, "launch", "main.launch"))
+        assert os.path.isfile(os.path.join(PKG, "launch", "main.launch.py"))
 
 
 class TestCLI:
@@ -79,6 +79,6 @@ class TestSourceHygiene:
             capture_output=True, text=True, timeout=180)
         assert r.returncode == 0, r.stdout + r.stderr
 
-    def test_no_conflicting_unicode_in_launch(self):
-        txt = open(os.path.join(PKG, "launch", "main.launch"), encoding="utf-8").read()
-        assert txt.lstrip().startswith("<launch>")
+    def test_launch_is_ros2_python(self):
+        txt = open(os.path.join(PKG, "launch", "main.launch.py"), encoding="utf-8").read()
+        assert "def generate_launch_description" in txt
