@@ -1,0 +1,3 @@
+numpy>=1.21
+mujoco>=3.0
+imageio>=2.9
