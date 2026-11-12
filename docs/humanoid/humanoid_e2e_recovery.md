@@ -173,8 +173,8 @@ python3 main.py --collect --episodes 12
 
 ```bash
 python3 main.py --train
-# 输出：models_trained/e2e_policy.npz（含 Y_scale）
-# 80 epochs，典型验证 MSE 0.373（标准化）/ 27.5 N·m²（物理量）
+# 输出：models_trained/e2e_policy.npz（含 X_mean/X_std/Y_mean/Y_scale）
+# 200 epochs，留出集物理 MSE 1.2828 N·m²、RMSE 1.1326 N·m
 # 数据集缺失时打印提示并以 exit code 2 退出
 ```
 
@@ -183,19 +183,21 @@ python3 main.py --train
 ```bash
 python3 main.py --demo --force 50 --direction 0
 # 先空站 3 s，再由端到端网络抗 50 N 推扰，随后录 10 s
-# 输出：[结果] 恢复并站稳 10s | 最大倾角 6.0° | fell=null
+# 实测输出：[结果] 跌倒于 3.33s | 最大倾角 ...（含 2 s 空站 + 推扰段）
+# 这是单帧视觉的架构上限，不是调参问题；混合 30% 专家力矩可站满 10 s，见第 4 节
 ```
 
 ### 5.6 生成演示动图
 
 ```bash
 python3 generate_gif.py
-# 默认输出：本模块目录下的 demo_test.gif（834 帧 / 480×360）
+# 默认输出：本模块目录下的 demo_test.gif（272 帧 / 480×360 / 30 fps，约 4.7 MB）
+# 用 overview 机位逐帧离屏渲染，非合成示意
 ```
 
 ### 5.7 ROS2 launch（Ubuntu 22.04 LTS + ROS 2 Humble）
 
-Humble 的官方目标系统就是 Ubuntu 22.04（jammy）。实测环境：Ubuntu 22.04.5 LTS、ROS 2 Humble ros-base、MuJoCo 3.17.0。
+Humble 的官方目标系统就是 Ubuntu 22.04（jammy）。ROS 双节点实跑环境：Ubuntu 22.04.5 LTS、ROS 2 Humble ros-base、MuJoCo 3.17.0；第 4 节的闭环指标则在 MuJoCo **4.0.0** + Python 3.12.11 上重测（EGL 离屏渲染），两套环境都验证过同一份代码可运行。
 
 ```bash
 # 1. 依赖（rosdep 会装 pip、numpy、rclpy 等；mujoco 无 rosdep 定义，走 pip）
@@ -252,4 +254,6 @@ python3 -m pytest test -q
 
 ![端到端视觉平衡控制](../img/humanoid/e2e_recovery_demo.gif)
 
-端到端网络驱动，先空站 2 s 再施加 50 N 前向推扰，全程站稳。
+端到端网络驱动，先空站 2 s 再施加 50 N 前向推扰。这段动画按当前权重**如实录制**：空站段站得住，推扰后网络缓慢前倾、在 3.33 s 失稳。这正是第 4 节记录的架构上限——单帧图像不含速度信息，网络只能做位置型控制。补 30% 专家力矩（相当于补上速度阻尼）后可站满 10 s，末段倾角 3.6°。
+
+> 早先那版动图显示"振扰后全程站稳"，是用上一版权重录的：那次踝 pitch 恒为常数 +55 N·m，恰好落在能站住的常数点上，与网络是否真的在控制无关。

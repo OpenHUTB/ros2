@@ -91,8 +91,9 @@ pip install -r requirements.txt
 
 python3 main.py --check                  # 自检（含全零权重对照）
 python3 main.py --collect --episodes 12  # 采集专家数据
-python3 main.py --train                  # 训练（80 epochs）
-python3 main.py --demo --force 50        # 演示：先空站 3 s，再 50 N 推扰后 10 s
+python3 main.py --train                  # 训练（200 epochs）
+python3 main.py --demo --force 50        # 演示：先空站，再 50 N 推扰；纯网络约 3.3 s 后失稳
+python3 generate_gif.py --out demo.gif   # 逐帧离屏渲染录演示 gif（overview 机位，30 fps）
 
 python3 -m pytest test -q                # 单元测试
 ```
