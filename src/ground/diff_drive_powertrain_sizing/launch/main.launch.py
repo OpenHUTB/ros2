@@ -3,7 +3,15 @@
 """启动核算的离线入口（ExecuteProcess, 无需 rclpy）.
 
     ros2 launch diff_drive_powertrain_sizing main.launch.py
+
+可执行入口：优先用 PATH 上的 console script `diff_drive_powertrain_sizing`；找不到时退回
+`python -m diff_drive_powertrain_sizing`（source install/setup.bash 后 PYTHONPATH 已包含本包）。
+ament_python 把 console script 装到 `install/<pkg>/lib/<pkg>/`，source install/setup.bash
+并不会把该目录加入 PATH，所以必须有这条兜底。
 """
+import shutil
+import sys
+
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, ExecuteProcess, OpaqueFunction
 from launch.substitutions import LaunchConfiguration
@@ -26,22 +34,31 @@ ARGUMENTS = (
 )
 
 
+def resolve_command(flags):
+    """console script 优先，缺失时退回 python -m，两者都调同一个 CLI."""
+    executable = shutil.which(PACKAGE)
+    if executable:
+        return [executable] + flags
+    return [sys.executable, '-m', PACKAGE] + flags
+
+
 def _launch_setup(context):
     """按实际参数拼出命令行."""
-    cmd = ['diff_drive_powertrain_sizing',
-           '--mass', LaunchConfiguration('mass').perform(context),
-           '--wheel-radius', LaunchConfiguration('wheel-radius').perform(context),
-           '--driven-wheels', LaunchConfiguration('driven-wheels').perform(context),
-           '--grade', LaunchConfiguration('grade').perform(context),
-           '--accel', LaunchConfiguration('accel').perform(context),
-           '--v-cruise', LaunchConfiguration('v-cruise').perform(context),
-           '--efficiency', LaunchConfiguration('efficiency').perform(context),
-           '--motor-cont-torque', LaunchConfiguration('motor-cont-torque').perform(context),
-           '--motor-peak-torque', LaunchConfiguration('motor-peak-torque').perform(context),
-           '--motor-rated-rpm', LaunchConfiguration('motor-rated-rpm').perform(context),
-           '--bus-voltage', LaunchConfiguration('bus-voltage').perform(context),
-           '--output', LaunchConfiguration('output').perform(context)]
-    return [ExecuteProcess(cmd=cmd, output='screen')]
+    flags = [
+        '--mass', LaunchConfiguration('mass').perform(context),
+        '--wheel-radius', LaunchConfiguration('wheel-radius').perform(context),
+        '--driven-wheels', LaunchConfiguration('driven-wheels').perform(context),
+        '--grade', LaunchConfiguration('grade').perform(context),
+        '--accel', LaunchConfiguration('accel').perform(context),
+        '--v-cruise', LaunchConfiguration('v-cruise').perform(context),
+        '--efficiency', LaunchConfiguration('efficiency').perform(context),
+        '--motor-cont-torque', LaunchConfiguration('motor-cont-torque').perform(context),
+        '--motor-peak-torque', LaunchConfiguration('motor-peak-torque').perform(context),
+        '--motor-rated-rpm', LaunchConfiguration('motor-rated-rpm').perform(context),
+        '--bus-voltage', LaunchConfiguration('bus-voltage').perform(context),
+        '--output', LaunchConfiguration('output').perform(context),
+    ]
+    return [ExecuteProcess(cmd=resolve_command(flags), output='screen')]
 
 
 def generate_launch_description():
