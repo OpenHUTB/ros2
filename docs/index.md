@@ -160,6 +160,7 @@ ROS 2 Action 斐波那契数列计算示例：[chap2/fibonacci_action](./chap2/f
 * [MuJoCo单足弹跳机器人简单仿真：SLIP 模型与 Raibert 弹跳控制](./humanoid/mujoco_hopper_slip_control.md)
 * [人形足迹下的局部避障算法对比：MPPI 与斥力法的窄通道宽度扫描](./humanoid/humanoid_passage_width_sweep.md)
 * [给定黑箱关节轨迹，反推肌肉参数](./musculoskeletal/msk_muscle_ident.md)
+* [肌肉冗余系统的力分配：最小范数与加权最小二乘](./musculoskeletal/muscle_force_distribution.md) —— 冗余拮抗肌的最小范数分配，力矩跟踪误差 < 1e-3 Nm，附激活度与跟踪曲线
 
 ## 4. 地面载具  <span id='ground_vehicle'></span>
 
@@ -683,10 +684,12 @@ ROS 2 Action 斐波那契数列计算示例：[chap2/fibonacci_action](./chap2/f
 ___
 * [欠驱动无人艇低速定点保持与横漂补偿](./water/ros2_usv_station_keeping/index.md) —— 几何制导 + 在线流估计 + 双环控制，无侧推器也能顶流定点
 * [多 AUV 协同围捕](./water/multi_agent_hunting.md) —— 拍卖算法做任务分配，水声信道带真实延迟与丢包，包抄点向目标收缩并有捕获判定，支持 seed 复现
+* [水面无人艇（USV）视线（LOS）路径跟踪制导](./water/usv_los_guidance.md) —— LOS 制导 + 航向包裹，横漂误差收敛至 0.09 m
   
 ## 7. 经典控制 <span id='classical_control'></span>
 
 * [倒立摆平衡小车 (cart-pole, LQR 最优控制)](./classical_control/cartpole_balance.md) —— 用 LQR 让倒立摆从倾斜被拉回竖直保持不倒,演示 ROS 发布/订阅闭环与最优控制
+* [滑模控制（SMC）：二阶系统的鲁棒轨迹跟踪](./classical_control/sliding_mode_control.md) —— 边界层切换律，到达条件 K > D_max；常值扰动下 SMC 平均误差 0.012，PD 0.255
 
 
 ## 8. 机械臂操作 <span id='manipulation'></span>
