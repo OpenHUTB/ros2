@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>usv_froude_scaling</name>
+  <version>0.1.0</version>
+  <description>
+    USV 弗劳德缩比换算：船模-实船速度、阻力与功率换算，ITTC 1957 分解法估算实船总阻力与拖曳功率。纯标准库实现，不依赖 rclpy。
+  </description>
+  <maintainer email="328919000+Hilin-67@users.noreply.github.com">Hilin-67</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>launch</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

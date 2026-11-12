@@ -1,0 +1,90 @@
+{
+  "scenes": {
+    "reach": {
+      "path_found": true,
+      "waypoints": 10,
+      "length_m": 0.2131,
+      "straight_line_m": 0.205,
+      "detour_ratio": 1.04,
+      "min_clearance_m": null,
+      "plan_ms": 1.22,
+      "start_ee": [
+        0.421,
+        0.3091
+      ],
+      "first_target": [
+        0.5,
+        0.12
+      ]
+    },
+    "shelf": {
+      "path_found": true,
+      "waypoints": 8,
+      "length_m": 0.1897,
+      "straight_line_m": 0.196,
+      "detour_ratio": 0.968,
+      "min_clearance_m": 0.0671,
+      "plan_ms": 0.72,
+      "start_ee": [
+        0.421,
+        0.3091
+      ],
+      "first_target": [
+        0.52,
+        0.14
+      ]
+    },
+    "draw": {
+      "path_found": true,
+      "waypoints": 4,
+      "length_m": 0.0683,
+      "straight_line_m": 0.0655,
+      "detour_ratio": 1.042,
+      "min_clearance_m": 0.1166,
+      "plan_ms": 0.34,
+      "start_ee": [
+        0.4595,
+        0.2726
+      ],
+      "first_target": [
+        0.4,
+        0.3
+      ]
+    }
+  },
+  "planner_source": "fallback_astar",
+  "control_sanity": {
+    "scene": "reach",
+    "source": "geometric_expert",
+    "done": true,
+    "reached_targets": 1,
+    "final_ee_error_m": 0.0022,
+    "collisions": 0,
+    "max_torque_nm": 4.461,
+    "effort": 0.1249,
+    "seconds": 0.44
+  },
+  "dwa_reach": {
+    "scene": "reach",
+    "source": "geometric_expert",
+    "done": true,
+    "reached_targets": 1,
+    "final_ee_error_m": 0.0022,
+    "collisions": 0,
+    "max_torque_nm": 4.461,
+    "effort": 0.1249,
+    "seconds": 0.44
+  },
+  "dwa_pool": {
+    "scene": "reach",
+    "source": "geometric_expert",
+    "done": true,
+    "reached_targets": 1,
+    "final_ee_error_m": 0.0022,
+    "collisions": 0,
+    "max_torque_nm": 4.461,
+    "effort": 0.1249,
+    "seconds": 0.44
+  },
+  "generated": "2026-11-11T13:16:45"
+}
