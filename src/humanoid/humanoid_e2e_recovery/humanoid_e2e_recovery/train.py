@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import numpy as np
 from .e2e_nn import E2EMLP
+from .dataset import X_STD_FLOOR
 
 DATASET_HINT = ("数据集文件不存在: {p}\n"
                 "请先采集数据：  python3 main.py --collect --episodes 60")
@@ -26,7 +27,7 @@ def train(dataset_path, out_weight_path, in_dim=256, h1=128, h2=64, out_dim=15,
     X_mean = (d["X_mean"].astype(np.float64) if "X_mean" in d
               else X.mean(axis=0))
     X_std = (d["X_std"].astype(np.float64) if "X_std" in d
-             else np.maximum(X.std(axis=0), 1e-3))
+             else np.maximum(X.std(axis=0), X_STD_FLOOR))
     Xn = (X - X_mean) / X_std
 
     # —— 输出标准化 ——
