@@ -1,0 +1,53 @@
+{
+  "scenes": {
+    "hall": {
+      "path_found": true,
+      "waypoints": 131,
+      "length_m": 28.154,
+      "straight_line_m": 26.0,
+      "detour_ratio": 1.083,
+      "min_clearance_m": 0.7,
+      "plan_ms": 101.77
+    },
+    "warehouse": {
+      "path_found": true,
+      "waypoints": 130,
+      "length_m": 30.025,
+      "straight_line_m": 25.612,
+      "detour_ratio": 1.172,
+      "min_clearance_m": 0.671,
+      "plan_ms": 138.81
+    },
+    "obstacle": {
+      "path_found": true,
+      "waypoints": 106,
+      "length_m": 25.556,
+      "straight_line_m": 22.627,
+      "detour_ratio": 1.129,
+      "min_clearance_m": 0.7,
+      "plan_ms": 149.47
+    }
+  },
+  "planner_source": "fallback_astar",
+  "dwa_hall": {
+    "scene": "hall",
+    "source": "reactive_walking_policy",
+    "done": true,
+    "start_goal_distance_m": 3.57,
+    "final_distance_m": 0.595,
+    "collisions": 0,
+    "falls": 0,
+    "seconds": 3.3
+  },
+  "dwa_pool": {
+    "scene": "hall",
+    "source": "reactive_walking_policy",
+    "done": true,
+    "start_goal_distance_m": 3.57,
+    "final_distance_m": 0.595,
+    "collisions": 0,
+    "falls": 0,
+    "seconds": 3.3
+  },
+  "generated": "2026-11-11T10:24:39"
+}

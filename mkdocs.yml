@@ -85,12 +85,14 @@ nav:
         - ROV 六自由度推力分配: './chapter/chap9/rov_thruster_allocation_ls.md'
         - 无人机禁飞区膨胀绕行: './chapter/chap9/uav_geofence_bypass.md'
         - 无人机 LOS 航点制导: './chapter/chap9/uav_los_waypoint_guidance.md'
+        - 倒车纯追踪路径跟踪: './chapter/chap9/pure_pursuit_reverse.md'
     - 10. Turtlebot3 Gazebo键盘控制: 'chapter/turtlebot3_gazebo_control.md'
 
 - 人形机器人:
     - 具身人形物理仿真与平衡行走控制: './humanoid/embodied_humanoid_control.md'
     - 关节 Stribeck 摩擦辨识与前馈补偿: './humanoid/joint_friction_identification.md'
     - 人形机器人基础: './humanoid/humanoid_basics.md'
+    - 人形机器人双足步行仿真、激光 SLAM 与神经网络导航: './humanoid/humanoid_walk_nn.md'
     - 双臂搬运负载的神经网络平衡控制: './humanoid/humanoid_carry_payload_nn.md'
     - 双足步态生成与 ZMP 稳定性: './humanoid/bipedal_gait_zmp.md'
     - 基于三次样条插值的双足多步态平滑切换: './humanoid/biped_cubic_spline_gait_switch.md'
@@ -102,6 +104,7 @@ nav:
     - 人形机器人平衡控制与外力抗扰恢复: './humanoid/humanoid_push_recovery.md'
     - 人形机器人 PPO 神经网络平衡控制: './humanoid/humanoid_ppo_locomotion.md'
     - 人形机器人 2D 激光雷达 CNN 感知与避障: './humanoid/humanoid_lidar_nn_perception.md'
+    - G1 图像速度巡检: './humanoid/g1_rgb_velocity_patrol/index.md'
     - 人形足迹下的局部避障算法对比: './humanoid/humanoid_local_planner_bench.md'
     - 人形机器人 H1/H1_2 神经网络行走控制: './humanoid/humanoid_h1_walk.md'
     - MuJoCo单足弹跳机器人简单仿真: './humanoid/mujoco_hopper_demo/index.md'
@@ -125,6 +128,7 @@ nav:
     - 人形机器人神经网络行走控制：CPG 基线与学习路线可行性分析: './humanoid/humanoid_ars_phase_walk.md'
     - 人形机器人跑步牛顿第二定律理论计算与演示: './humanoid/humanoid_newton_running.md'
     - 人形机器人全身柔顺控制: './humanoid/humanoid_g1_compliance.md'
+    - 人形机器人 MuJoCo 建图导航与神经网络控制: './humanoid/humanoid_mujoco_slam_nn_nav.md'
 
 - 四足机器人:
     - MuJoCo 四足机器人运动控制与步态评估: './quadruped_mujoco_rl.md'
@@ -148,6 +152,8 @@ nav:
 - 机械臂操作:
     - MuJoCo 单臂抓取与 π0 推理接口复现（CPU 演示）: './manipulation/pi0_mujoco_grasp.md'
     - 二连杆机械臂 OpenSim 建模与 PD 控制仿真: './two_link_arm_opensim_simulation.md'
+    - ROS2 话题桥接（二连杆机械臂肌肉骨骼仿真）: './muscle_arm_ros2_bridge.md'
+    - 二连杆机械臂肌肉骨骼建模与 MuJoCo 仿真: './muscle_arm_mujoco_simulation.md'
 - 地面载具:
     - 小海龟多航点巡航与暂停恢复: 'chapter/chap1/turtle_waypoint_patrol/index.md'
     - 离线测试接入 GitHub Actions: './ground/offline_checks.md'
@@ -164,6 +170,7 @@ nav:
     - 动态障碍物避让：激光雷达帧间差分与神经网络时机决策: './ground/dyn_avoid_nn.md'
     - MNIST 手写数字视觉感知与机器人运动控制: './ground/mnist_digit_control.md'
     - 生成对象: './ground/carla_spawn_objects.md'
+    - 室内清扫车的沿墙清扫：激光雷达与神经网络贴墙跟随: './ground/wall_clean_nn.md'
     - 地面载具物理仿真与键盘运动控制: './ground/carla_keyboard_control.md'
     - CARLA+YOLOv8 目标检测感知与减速避障: './ground/carla_yolo_avoidance.md'
     - 阿克曼控制: './ground/ackermann_control.md'
@@ -198,6 +205,7 @@ nav:
     - ROS2 差速机器人 A* 全局规划与 DWA 局部避障: './ground/ros2_dwa_avoidance.md'
     - 交通标志识别 ROS 封装: './ground/carla_tsr_ros.md'
     - 车辆键盘遥操作与二维模拟: './ground/vehicle_pygame_teleop.md'
+    - 基于 TTC 的前向目标跟踪紧急制动: './ground/carla_ttc_emergency_braking.md'
     - 地面车 PID 巡航速度跟踪仿真: './ground/ugv_cruise_pid.md'
     - 差速小车电机温度与电流观测记录: './ground/mujoco_motor_sensor_recorder.md'
     - 任务1 - 键盘控制: robot_tasks/teleop_control/README.md
@@ -243,6 +251,7 @@ nav:
     - 神经网络强化学习算法与网络结构对比（MuJoCo CartPole）: './ground/rl_algorithm_compare.md'
     - 车辆稳态操稳特性对比（不足/中性/过度转向）: './ground/steady_state_handling_eval.md'
     - 基于Mujoco的键盘遥控小车: './ground/mujoco_car_project.md'
+    - MuJoCo 叉车同步建图与自主导航: './ground/forklift_slam_nav.md'
     - MuJoCo 叉车相机引导的托盘接近与低速插入: './ground/mujoco_forklift_pallet_docking.md'
     - 地面载具横向控制算法对比（纯跟踪/Stanley/LQR）: './ground/lateral_control_benchmark.md'
     - MPPI 采样 MPC 与蒸馏网络的 8 字赛道跟踪对比: './ground/mujoco_mppi_neural_tracker.md'
@@ -427,6 +436,7 @@ nav:
     - 无人机桨故障健康度估计（1D-CNN+GRU）: './air/uav_rotor_fault_detector_nn.md'
     - 桨故障下的端到端推力策略（深度图+健康度）: './air/uav_fault_e2e_thrust_policy.md'
     - 无人机桨故障下的神经容错控制: './air/uav_neural_fault_tolerant_control.md'
+    - 四旋翼风扰下物资精准空投（MuJoCo）: './air/uav_wind_aware_delivery.md'
     - 无人机编队飞行: './air/uav_formation_flight.md'
     - 移动地面目标的后方等距跟随: './air/uav_moving_target_follow.md'
     - 神经安全过滤器: './air/uav_neural_safety_filter.md'
@@ -502,6 +512,7 @@ nav:
     - 四旋翼无人机 MuJoCo 建图导航与神经网络控制: './air/aerial_mujoco_slam_nn_nav/README.md'
 - 水域载具:
     - 水域载具 ROS2 接口: './water/HoloOcean.md'
+    - 无人艇自主靠泊：激光雷达与神经网络末段对准: './water/usv_docking_nn.md'
     - 环境搭建:
         - HoloOcean Windows 本机环境搭建: './water/HoloOcean-Windows-Setup.md'
         - WSL跑通HoloOcean2的ROS2示例方法: './water/WSL_HoloOcean2_ROS2.md'
@@ -517,6 +528,7 @@ nav:
     - ROV 推进器配置矩阵与饱和感知推力分配: './water/rov_thruster_allocation.md'
     - 水下多传感器感知与 3D 轨迹跟踪控制: './water/rov_trajectory_tracking.md'
     - 水下声呐 SLAM 占据栅格建图与自主避障导航: './water/rov_sonar_slam_navigation.md'
+    - MuJoCo 水下 ROV 串级定深控制: './water/mujoco_rov_depth_control.md'
     - 水下机器人端到端深度神经网络视觉控制模型: './water/rov_end_to_end_nn.md'
     - 水下 ROV 对接任务：声呐扫描 + CNN 标记检测 + 逼近导航: './water/mjc_rov_docking_nav.md'
     - 水下 ROV AprilTag 视觉定位与定点巡航仿真: './water/rov_apriltag_cruise.md'

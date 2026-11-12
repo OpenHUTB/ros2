@@ -1,0 +1,5 @@
+mujoco>=3.1
+numpy>=1.17
+matplotlib>=3.1
+pyyaml>=5.3
+rospkg>=1.2
