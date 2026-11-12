@@ -138,3 +138,6 @@ src/air/uav_camera_tracking/results/*.png
 # 用 `python main.py --gen-data` 现场生成（约 1 分钟）。
 !src/air/uav_fault_e2e_thrust_policy/results/*.pt
 !src/air/uav_fault_e2e_thrust_policy/results/*.json
+
+# Python / 运行期缓存（reviewer 指出不应入库）
+.hutb_cache/
