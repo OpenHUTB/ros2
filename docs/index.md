@@ -524,6 +524,8 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [AirSim 无人机 IMU 速度估计（MLP）](./air/uav_airsim_imu_velocity_estimator.md) —— IMU 5 帧 30 维进，单隐层 MLP 出速度大小，验证 R² 0.453、实飞 MAE 1.32 m/s
 * [倾转旋翼过渡走廊与倾转角调度](./air/uav_tiltrotor_transition_corridor/index.md) —— 平飞平衡方程 + 功率/前进比双约束二分求走廊，按走廊调度倾转角并做掉高保护
 
+* [AirSim 无人机 IMU 姿态估计（MLP）](./air/uav_airsim_attitude_estimator.md) —— IMU 5 帧 30 维进单隐层 MLP 回归 roll/pitch，平均 MAE 0.9°
+
 ## 6. 水域载具  <span id='water_vehicle'></span>
 
 ### 感知

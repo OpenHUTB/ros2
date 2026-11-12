@@ -467,6 +467,7 @@ nav:
     - 无人机自主充电/机巢仿真: './air/drone_charging_nest.md'
     - AirSim 无人机 IMU 速度估计（MLP）: './air/uav_airsim_imu_velocity_estimator.md'
     - 倾转旋翼过渡走廊与倾转角调度: './air/uav_tiltrotor_transition_corridor/index.md'
+    - AirSim 无人机 IMU 姿态估计（MLP）: './air/uav_airsim_attitude_estimator.md'
 - 水域载具:
     - 水域载具 ROS2 接口: './water/HoloOcean.md'
     - 环境搭建:
