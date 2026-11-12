@@ -87,6 +87,7 @@ ROS每章节运行代码:
     * [无人机禁飞区膨胀绕行](./chapter/chap9/uav_geofence_bypass.md)
     * [无人机 LOS 航点制导](./chapter/chap9/uav_los_waypoint_guidance.md)
     * [倒车纯追踪路径跟踪](./chapter/chap9/pure_pursuit_reverse.md)
+    * [激光雷达回波强度辅助可通行性](./chapter/chap9/lidar_intensity_traversability.md)
 * [第 10 章](./chapter/turtlebot3_gazebo_control.md) - Turtlebot3 Gazebo键盘控制
 
 
