@@ -221,6 +221,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 
 * [MuJoCo 差速小车到达目标点（go-to-goal）](./ground/mujoco_diff_drive_go_to_goal.md)
 * [MuJoCo 差速小车射线绕行避障](./ground/mujoco_obstacle_avoidance.md)
+* [MuJoCo 差速小车沿墙巡线](./ground/mujoco_wall_following.md) —— 四轮底盘在矩形闭环走廊按航点状态机逆时针绕圈，右侧射线贴墙 PD 微调，前向射线限速防撞
 * [MuJoCo 地面小车射线感知与分级减速避障](./ground/mujoco_car_avoidance.md)
 * [MuJoCo 地面小车神经网络端到端避障](./ground/mujoco_car_nn_avoidance.md)
 * [MuJoCo 两轮自平衡小车](./ground/mujoco_balance_car.md)
