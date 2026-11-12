@@ -291,7 +291,7 @@ t= 30.00s root_z=1.077m tilt=3.9deg max_tilt=5.9deg ankle_tau=+55.0N*m crashed=F
 
 **本轮：双帧权重在节点时序下的验证与修复（`diag/18`）**
 
-双帧权重**没有在真实 ROS 图上重跑**（云主机无 ROS 2/rclpy，Windows 侧 MuJoCo 加载失败），改用 `diag/18_ros_node_contract.py` 把两个节点的时序契约复刻进仿真循环来验证。
+双帧权重**没有在真实 ROS 图上重跑**（云主机无 ROS 2/rclpy；Windows 侧 MuJoCo 不可用，报 `WinError 4551 应用程序控制策略已阻止此文件`，新建 venv 重装仍复现，属系统安全策略而非代码问题），改用 `diag/18_ros_node_contract.py` 把两个节点的时序契约复刻进仿真循环来验证。
 
 发现的缺陷：修复前 `e2e_sim_node` 每 tick 步进 5 步（10 ms）才发一帧，`e2e_predictor_node` 按 `image_dt=0.01` 累加时间戳；而权重是在 4 ms 控制周期下训练与验证的。把这个时序复刻进仿真后，**0 N 空站在 4.32 s 就跌倒（最大倾角 61.4°）**，30 N 推扰后 4.69 s 跌倒——节点时序不是"没测"，是会真的失稳。
 
