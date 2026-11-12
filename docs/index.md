@@ -368,6 +368,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 
 * [AirSim Unity 无人机曲线绕柱避障实验](./air/airsim_obstacle_avoidance.md)
 * [AirSim Unity 无人机高度自适应越障实验](./air/airsim_height_aware_overfly.md) —— 深度图逐列恢复障碍顶边，矮墙原地爬升越过、高障碍退回水平绕行；57 项离线测试 + 2026-11-09 两次越障实飞（越障后保持 5.2 m、到点误差 <0.7 m；相机偏移修正后 committed 约 2.6 m，尚未复飞）
+* [AirSim Unity 无人机双柱连续 S 形绕行实验](./air/airsim_double_pillar_avoidance.md) —— 在前视深度反应式绕柱基础上增加绕行侧解锁与冷却状态机，使沿程后续柱子按自身位置重新选边，形成 S 形路径（已实飞到达目标、第二柱反向绕行验证；降落确认待复验）
 * [无人机深度相机神经网络避障飞行（MuJoCo）](./air/uav_mujoco_depth_avoidance.md) —— 64×64 机载深度图 → numpy CNN → 三扇区通行度 → 速度/偏航闭环，3 场景 × 5 实例共 15/15 成功
 * [MuJoCo 无人机栅格激光建图与路径重规划](./air/uav_grid_navigation.md)
 * [无人机着陆阶段识别与接地载荷预测](./air/landing_assessment.md)

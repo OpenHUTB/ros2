@@ -350,6 +350,7 @@ nav:
     - Town10幕墙图像病害识别: './air/town10_facade_defect_detection/index.md'
     - AirSim Unity 无人机曲线绕柱避障实验: './air/airsim_obstacle_avoidance.md'
     - AirSim Unity 无人机高度自适应越障实验: './air/airsim_height_aware_overfly.md'
+    - AirSim Unity 无人机双柱连续 S 形绕行实验: './air/airsim_double_pillar_avoidance.md'
     - MuJoCo无人机幕墙定距扫描: './air/mujoco_facade_capture/index.md'
     - 无人机任务管理与安全状态机:
       - 模块概览: './air/uav_mission_safety_manager/overview.md'
