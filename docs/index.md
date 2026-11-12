@@ -50,6 +50,7 @@ ROS 相关资料（[网盘下载地址](https://pan.baidu.com/s/1viua4SZ7tP2DtU2
 ROS每章节运行代码:
 
 * [第 1 章](./chapter/chap1/chap1.md) - 认识 ROS
+    * [小海龟多航点巡航与暂停恢复](./chapter/chap1/turtle_waypoint_patrol/index.md)
 * [第 2 章](./chapter/chap2.md) - ROS 基础
     * [ROS 2 话题发布订阅基础实验（talker/listener）](./chap2/ros2_pubsub_py.md)
     * [ROS Noetic 多传感器话题时间同步](./chap2/ros1_message_time_sync/index.md)
