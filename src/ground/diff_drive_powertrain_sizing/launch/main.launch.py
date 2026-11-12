@@ -3,7 +3,14 @@
 """启动核算的离线入口（ExecuteProcess, 无需 rclpy）.
 
     ros2 launch diff_drive_powertrain_sizing main.launch.py
+
+入口用 `python -m diff_drive_powertrain_sizing`：ament_python 把 console script 装到
+`install/<pkg>/lib/<pkg>/`，`source install/setup.bash` 不会把该目录加进 PATH，
+直接用裸脚本名会 FileNotFoundError；而 `python -m` 只依赖 PYTHONPATH，
+setup.bash 一定把它指向本工作区（也避免 PATH 上同名旧脚本被误用）。
 """
+import sys
+
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, ExecuteProcess, OpaqueFunction
 from launch.substitutions import LaunchConfiguration
@@ -28,18 +35,18 @@ ARGUMENTS = (
 
 def _launch_setup(context):
     """按实际参数拼出命令行."""
-    cmd = ['diff_drive_powertrain_sizing',
-           '--mass', LaunchConfiguration('mass').perform(context),
-           '--wheel-radius', LaunchConfiguration('wheel-radius').perform(context),
-           '--driven-wheels', LaunchConfiguration('driven-wheels').perform(context),
-           '--grade', LaunchConfiguration('grade').perform(context),
-           '--accel', LaunchConfiguration('accel').perform(context),
-           '--v-cruise', LaunchConfiguration('v-cruise').perform(context),
-           '--efficiency', LaunchConfiguration('efficiency').perform(context),
-           '--motor-cont-torque', LaunchConfiguration('motor-cont-torque').perform(context),
-           '--motor-peak-torque', LaunchConfiguration('motor-peak-torque').perform(context),
-           '--motor-rated-rpm', LaunchConfiguration('motor-rated-rpm').perform(context),
-           '--bus-voltage', LaunchConfiguration('bus-voltage').perform(context),
+    cmd = [sys.executable, '-m', PACKAGE,
+        '--mass', LaunchConfiguration('mass').perform(context),
+        '--wheel-radius', LaunchConfiguration('wheel-radius').perform(context),
+        '--driven-wheels', LaunchConfiguration('driven-wheels').perform(context),
+        '--grade', LaunchConfiguration('grade').perform(context),
+        '--accel', LaunchConfiguration('accel').perform(context),
+        '--v-cruise', LaunchConfiguration('v-cruise').perform(context),
+        '--efficiency', LaunchConfiguration('efficiency').perform(context),
+        '--motor-cont-torque', LaunchConfiguration('motor-cont-torque').perform(context),
+        '--motor-peak-torque', LaunchConfiguration('motor-peak-torque').perform(context),
+        '--motor-rated-rpm', LaunchConfiguration('motor-rated-rpm').perform(context),
+        '--bus-voltage', LaunchConfiguration('bus-voltage').perform(context),
            '--output', LaunchConfiguration('output').perform(context)]
     return [ExecuteProcess(cmd=cmd, output='screen')]
 
