@@ -79,11 +79,19 @@ source ~/carla-ros-bridge/catkin_ws/devel/setup.bash
 rostopic pub /carla/ego_vehicle/ackermann_cmd ackermann_msgs/AckermannDrive "{speed: 3.0, steering_angle: 0.0, steering_angle_velocity: 0.0, acceleration: 0.0, jerk: 0.0}" -r 10
 ```
 
+发布直行命令后，主车保持 3 m/s 直行，CARLA 视图中车头方向不变：
+
+![直行命令发布效果](../img/ground/ackermann_publisher_straight.gif)
+
 **转向**：速度 2 m/s，转角 0.3 rad：
 
 ```bash
 rostopic pub /carla/ego_vehicle/ackermann_cmd ackermann_msgs/AckermannDrive "{speed: 2.0, steering_angle: 0.3, steering_angle_velocity: 0, acceleration: 0, jerk: 0}" -r 10
 ```
+
+发布转向命令后，主车前轮右偏，车辆沿弧线行驶：
+
+![转向命令发布效果](../img/ground/ackermann_publisher_turn.gif)
 
 **停止**：目标速度 0：
 
@@ -148,6 +156,10 @@ source devel/setup.bash
 source /opt/ros/noetic/setup.bash
 rosrun ackermann_publisher ackermann_pub.py
 ```
+
+节点启动后终端 4 持续打印发送日志，每 0.1 s 一条 `speed=2.0`、`steer=0.2`：
+
+![节点运行日志](../img/ground/ackermann_publisher_node_log.gif)
 
 节点启动后以 10 Hz 持续发送 `speed=2.0`、`steer=0.2` 的阿克曼命令，主车按该速度与转角行驶。
 

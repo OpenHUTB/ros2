@@ -1,0 +1,16 @@
+{
+  "started": "2026-11-10 13:30:45",
+  "modules": {
+    "e2e": {
+      "params": 110546,
+      "seconds": 295.0,
+      "checkpoint": "weights\\e2e.npz",
+      "last": {
+        "epoch": 12,
+        "train_loss": 0.007741360036654479,
+        "val_mae_ms": 0.03478604182600975,
+        "seconds": 295.0
+      }
+    }
+  }
+}

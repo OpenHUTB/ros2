@@ -1,0 +1,11 @@
+# ESC 回放参数
+vehicle_esc_stability:
+  ros__parameters:
+    # 工况：lane_change / sine_dwell / mu_split / wet_lane_change
+    scenario: lane_change
+    # 回放倍速，1.0 表示每 0.05 s 推进一次、每次跨 frame_step 帧
+    playback_rate: 1.0
+    # 每个周期跨过的仿真帧数（单帧 0.05 s），调大放得快
+    frame_step: 4
+    # 上下两条车道的间距，m。两辆车并排跑同一条路，间距太小会看不清
+    lane_gap: 18.0
