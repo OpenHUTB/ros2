@@ -6,10 +6,11 @@ import rospy
 
 def main():
     rospy.init_node('humanoid_task_runner')
-    args = [rospy.get_param('~sim_python'),rospy.get_param('~sim_entry'),
-            '--assets',rospy.get_param('~assets'),'--mode',rospy.get_param('~task'),
-            '--weights',rospy.get_param('~weights'),'--output',rospy.get_param('~output'),
-            '--seconds',str(rospy.get_param('~seconds',45))]
+    args = [
+        rospy.get_param('~sim_python'), rospy.get_param('~sim_entry'),
+        '--weights', rospy.get_param('~weights'),
+        '--output', rospy.get_param('~output'),
+    ]
     child = subprocess.Popen(args)
     try:
         while child.poll() is None and not rospy.is_shutdown():

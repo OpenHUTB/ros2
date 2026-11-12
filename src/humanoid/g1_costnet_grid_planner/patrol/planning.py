@@ -7,6 +7,8 @@ This is neural-assisted search, not an end-to-end replacement of graph search.
 import heapq
 import json
 from pathlib import Path
+from functools import lru_cache
+import math
 
 import numpy as np
 import torch
@@ -27,7 +29,9 @@ class CostNet(nn.Module):
 
 def features(grid,goal):
     yy,xx=np.indices(grid.shape)
-    return np.stack([grid.astype(np.float32),(xx-goal[1])/32.,(yy-goal[0])/32.]).astype(np.float32)
+    height, width = grid.shape
+    return np.stack([grid, (xx - goal[1]) / max(32, width),
+                     (yy - goal[0]) / max(32, height)]).astype(np.float32)
 
 
 def distances(grid,goal):
@@ -45,8 +49,8 @@ def distances(grid,goal):
     return result
 
 
-def train_planner(output,epochs=20):
-    torch.manual_seed(91)
+def train_planner(output, epochs=20, sample_count=240, seed=91):
+    torch.manual_seed(seed)
     torch.set_num_threads(3)
     def samples(seeds):
         xs,ys,masks=[],[],[]
@@ -65,9 +69,12 @@ def train_planner(output,epochs=20):
             xs.append(features(grid,goal));ys.append(np.where(valid,d,0)/32.)
             masks.append(valid)
         return torch.from_numpy(np.asarray(xs)),torch.from_numpy(np.asarray(ys))[:,None],torch.from_numpy(np.asarray(masks))[:,None]
-    x,y,mask=samples(range(240))
-    xv,yv,mv=samples(range(1000,1040))
-    xt,yt,mt=samples(range(2000,2040))
+    first_train_seed = (seed - 91) % 2**32
+    x,y,mask=samples(range(first_train_seed, first_train_seed + sample_count))
+    first_eval_seed = max(1000, first_train_seed + sample_count)
+    xv,yv,mv=samples(range(first_eval_seed, first_eval_seed + 40))
+    first_test_seed = max(2000, first_eval_seed + 40)
+    xt,yt,mt=samples(range(first_test_seed, first_test_seed + 40))
     model=CostNet()
     opt=torch.optim.Adam(model.parameters(),lr=.001)
     best=float('inf');history=[]
@@ -82,7 +89,7 @@ def train_planner(output,epochs=20):
             best=val;torch.save(model.state_dict(),output/'planner.pt')
     model.load_state_dict(torch.load(output/'planner.pt',weights_only=True))
     with torch.inference_mode(): mae=float((model(xt)-yt).abs()[mt].mean()*32)
-    result=dict(train_maps=240,validation_maps=40,test_maps=40,test_mae_cells=mae,
+    result=dict(train_maps=sample_count, epochs=epochs, seed=seed,validation_maps=40,test_maps=40,test_mae_cells=mae,
                 validation_mse=history,scope='synthetic occupancy maps; not visual training scenes')
     (output/'planner_metrics.json').write_text(json.dumps(result,indent=2),encoding='utf-8')
     return result
@@ -112,36 +119,54 @@ def astar(grid,start,goal,learned=None):
     raise ValueError('No path in known free map')
 
 
-def plan_request(request,weights):
+@lru_cache(maxsize=2)
+def load_model(path, revision):
+    model = CostNet()
+    model.load_state_dict(torch.load(path, map_location='cpu', weights_only=True))
+    return model.eval()
+
+
+def predict_costs(grid, goal, weights):
+    path = (Path(weights) / 'planner.pt').resolve()
+    model = load_model(path, path.stat().st_mtime_ns)
+    with torch.inference_mode():
+        return model(torch.from_numpy(features(grid, goal))[None])[0, 0].numpy()
+
+
+def plan_request(request, weights, *, robot_radius=0.3, stride=3):
     original=np.asarray(request['map'],dtype=np.int16).reshape(request['height'],request['width'])
     resolution=float(request['resolution'])
+    robot_radius = float(request.get('robot_radius', robot_radius))
+    stride = request.get('stride', stride)
+    if not math.isfinite(resolution) or resolution <= 0:
+        raise ValueError('resolution must be finite and positive')
+    if not math.isfinite(robot_radius) or robot_radius < 0:
+        raise ValueError('robot_radius must be finite and nonnegative')
+    if type(stride) is not int or not 1 <= stride <= min(original.shape):
+        raise ValueError('stride must be a positive integer within the map dimensions')
     # Exploration mode: inflate known obstacles; unknown space remains provisional.
     # Execution still uses the live local obstacle costmap. No safety claim is made
     # for unobserved portions of this global route.
     blocked=original>50
-    radius=int(np.ceil(.3/resolution))
+    radius=int(np.ceil(robot_radius/resolution))
     inflated=blocked.copy()
-    for dy in range(-radius,radius+1):
-        for dx in range(-radius,radius+1):
+    for dy in range(-min(radius, len(blocked)-1), min(radius, len(blocked)-1)+1):
+        for dx in range(-min(radius, blocked.shape[1]-1), min(radius, blocked.shape[1]-1)+1):
             if dx*dx+dy*dy>radius*radius: continue
             srcy=slice(max(0,-dy),min(len(blocked),len(blocked)-dy))
             srcx=slice(max(0,-dx),min(blocked.shape[1],blocked.shape[1]-dx))
             dsty=slice(max(0,dy),min(len(blocked),len(blocked)+dy))
             dstx=slice(max(0,dx),min(blocked.shape[1],blocked.shape[1]+dx))
             inflated[dsty,dstx]|=blocked[srcy,srcx]
-    stride=3
     hh,ww=inflated.shape[0]//stride,inflated.shape[1]//stride
     grid=inflated[:hh*stride,:ww*stride].reshape(hh,stride,ww,stride).any(axis=(1,3))
     cell=resolution*stride;ox,oy=request['origin']
     def index(xy):
-        p=(int((xy[1]-oy)/cell),int((xy[0]-ox)/cell))
+        p=(math.floor((xy[1]-oy)/cell), math.floor((xy[0]-ox)/cell))
         if not(0<=p[0]<hh and 0<=p[1]<ww):raise ValueError('Goal/start outside map')
         return p
     start,goal=index(request['start']),index(request['goal'])
-    model=CostNet();model.load_state_dict(torch.load(Path(weights)/'planner.pt',weights_only=True));model.eval()
-    torch.set_num_threads(2)
-    with torch.inference_mode():
-        learned=model(torch.from_numpy(features(grid,goal))[None])[0,0].numpy()
+    learned = predict_costs(grid, goal, weights)
     route,expanded=astar(grid,start,goal,learned)
     baseline,baseline_expanded=astar(grid,start,goal)
     # Keep corners and an occasional waypoint on long straight segments.

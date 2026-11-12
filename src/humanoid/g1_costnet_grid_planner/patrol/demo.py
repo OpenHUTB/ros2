@@ -1,11 +1,9 @@
 import json
-from pathlib import Path
 
 import numpy as np
 from PIL import Image, ImageDraw
-import torch
 
-from .planning import CostNet, astar, features
+from .planning import astar, predict_costs
 
 
 def run(weights, output):
@@ -13,12 +11,7 @@ def run(weights, output):
     grid[5:26, 10:13] = True
     grid[8:29, 21:24] = True
     start, goal = (27, 3), (4, 28)
-    model = CostNet()
-    model.load_state_dict(torch.load(Path(weights) / 'planner.pt', weights_only=True))
-    model.eval()
-    torch.set_num_threads(2)
-    with torch.inference_mode():
-        costs = model(torch.from_numpy(features(grid, goal))[None])[0, 0].numpy()
+    costs = predict_costs(grid, goal, weights)
     baseline, baseline_expanded = astar(grid, start, goal)
     assisted, assisted_expanded = astar(grid, start, goal, costs)
     if len(assisted) != len(baseline):
