@@ -18,6 +18,16 @@ import uav_features as uf  # noqa: E402
 class TestScanConvention(unittest.TestCase):
     """AirSim 机体系 y 向右，ROS 扫描逆时针为正，必须取负。"""
 
+    def test_last_scan_angle_matches_last_bin(self):
+        for fov in (180.0, 360.0):
+            first, last, increment = uf.scan_angles(fov, 180)
+            self.assertAlmostEqual(last, first + 179 * increment)
+            self.assertLess(last, math.radians(fov / 2.0))
+
+    def test_invalid_scan_shape_is_rejected(self):
+        with self.assertRaises(ValueError):
+            uf.scan_angles(180, 0)
+
     def test_right_point_goes_to_negative_angle(self):
         # 机身右侧 (y=+10)，±90° 视场：应落在 angle_min 端（索引 0）
         pts = np.array([[0.0, 10.0, 0.0]], dtype=np.float32)

@@ -1,0 +1,17 @@
+map_load_time:
+  secs: 0
+  nsecs:         0
+resolution: 0.10000000149011612
+width: 1184
+height: 1184
+origin:
+  position:
+    x: -60.0
+    y: -60.0
+    z: 0.0
+  orientation:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+---

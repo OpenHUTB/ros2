@@ -20,6 +20,15 @@ MAX_DZ = 10.0
 FEATURE_DIM = NUM_SECTORS + 4
 
 
+def scan_angles(fov_deg, bins):
+    """Angles for equally spaced LaserScan bins, including the last sample."""
+    if bins <= 0 or not 0 < fov_deg <= 360:
+        raise ValueError('bins must be positive and field of view in (0, 360]')
+    first = math.radians(-fov_deg / 2.0)
+    increment = math.radians(fov_deg / bins)
+    return first, first + (bins - 1) * increment, increment
+
+
 def extract_sector_features(points, num_sectors=NUM_SECTORS, fov_deg=FOV_DEG,
                             max_range=MAX_RANGE):
     """点云 -> 每扇区最近距离（归一化到 0~1，1 表示该方向没有障碍或超出量程）。

@@ -1,0 +1,59 @@
+<launch>
+  <!-- 任务 3：SLAM 建图 + 神经网络导航同步仿真 -->
+  <arg name="airsim_ip" default="172.25.176.1"/>
+  <arg name="vehicle_name" default="Drone_1"/>
+  <arg name="altitude" default="15.0"/>
+  <arg name="goal_x" default="0.0"/>
+  <arg name="goal_y" default="20.0"/>
+
+  <!-- 桥接节点：发布 odom 话题和 odom->base_link 的 TF，gmapping 需要 -->
+  <node name="airsim_bridge" pkg="uav_nn_perception_navigation" type="airsim_bridge.py" output="screen">
+    <param name="airsim_ip" value="$(arg airsim_ip)"/>
+    <param name="vehicle_name" value="$(arg vehicle_name)"/>
+    <param name="auto_takeoff" value="false"/>
+    <param name="publish_tf" value="true"/>
+  </node>
+
+  <!-- 随包雷达为前向 180 度；未观测区域不能视为已确认安全 -->
+  <node name="lidar_perception" pkg="uav_nn_perception_navigation" type="lidar_perception.py" output="screen">
+    <param name="airsim_ip" value="$(arg airsim_ip)"/>
+    <param name="vehicle_name" value="$(arg vehicle_name)"/>
+    <param name="scan_bins" value="180"/>
+    <param name="scan_fov" value="180.0"/>
+  </node>
+
+  <!-- 雷达装在机体中心正下方 0.5 米，需要一个静态变换 -->
+  <node pkg="tf2_ros" type="static_transform_publisher" name="base_to_laser"
+        args="0 0 -0.5 0 0 0 base_link laser" />
+
+  <!-- gmapping：用激光扫描建 2D 占据栅格地图 -->
+  <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" output="screen">
+    <param name="base_frame" value="base_link"/>
+    <param name="odom_frame" value="odom"/>
+    <param name="map_frame" value="map"/>
+    <!-- gmapping 不认 scan_topic 参数，必须用话题重映射 -->
+    <remap from="scan" to="/uav/lidar/scan"/>
+    <param name="maxUrange" value="30.0"/>
+    <param name="maxRange" value="40.0"/>
+    <param name="delta" value="0.1"/>
+    <param name="xmin" value="-60.0"/>
+    <param name="ymin" value="-60.0"/>
+    <param name="xmax" value="60.0"/>
+    <param name="ymax" value="60.0"/>
+    <param name="linearUpdate" value="0.3"/>
+    <param name="angularUpdate" value="0.2"/>
+    <param name="temporalUpdate" value="1.0"/>
+    <param name="particles" value="30"/>
+    <param name="minimumScore" value="50"/>
+  </node>
+
+  <!-- 神经网络控制器：与建图同步运行 -->
+  <node name="trajectory_control" pkg="uav_nn_perception_navigation" type="trajectory_control.py" output="screen">
+    <param name="altitude" value="$(arg altitude)"/>
+  </node>
+
+  <node name="goal_publisher" pkg="rostopic" type="rostopic"
+        args="pub -r 1 /uav/goal geometry_msgs/PoseStamped
+              '{header: {frame_id: map}, pose: {position: {x: $(arg goal_x), y: $(arg goal_y), z: $(arg altitude)}}}'"
+        output="log"/>
+</launch>
