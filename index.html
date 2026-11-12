@@ -1092,6 +1092,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="water/usv_froude_scaling/">USV 弗劳德缩比换算与拖曳功率估算</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="water/usv_colreg_avoidance/">水面无人艇 COLREG 会遇避碰</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="water/rov_sonar_filter/">声呐数据滤波初步验证</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="water/rov_numpy_nn_slam/">水下机器人 MuJoCo 仿真、声呐 SLAM 与纯 NumPy 神经网络导航</a>
@@ -1910,6 +1912,9 @@
 </li>
 <li>
 <p><a href="water/usv_mujoco_nn/">水面无人艇：激光雷达建图与神经网络局部规划</a> —— MuJoCo 三自由度船体，射线激光雷达 + log-odds 占据栅格建图，MLP 输出局部目标点实现自主避障，封装为 ROS Noetic 节点</p>
+</li>
+<li>
+<p><a href="water/usv_colreg_avoidance/">水面无人艇 COLREG 会遇避碰</a> —— 按避碰规则判断对遇/交叉/追越局面，让路船自动右转避让</p>
 </li>
 <li>
 <p><a href="water/usv_froude_scaling/">USV 弗劳德缩比换算与拖曳功率估算</a> —— 弗劳德相似定模型速度、λ³ 定阻力、λ^3.5 定功率；默认 10 m 船 10 倍缩尺，模型 2.5 N 换算实船总阻力 1925 N、轴功率 17.5 kW</p>
