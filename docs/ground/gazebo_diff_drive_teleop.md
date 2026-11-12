@@ -289,21 +289,316 @@ ros2 topic echo /clock --once
 | 路径点太少，按 p 没反应 | 确认录制期间确实在移动，并适当减小 `record_min_distance`；路径少于 2 点时节点会拒绝回放 |
 | 回放轨迹偏离或画龙 | 先检查 `/odom` 是否持续更新；再降低 `linear_speed`、增大 `lookahead_distance` 或减小 `replay_linear_gain` |
 
-## 13. 已知限制与后续工作
+## 13. 电量模型与低电量自动返航
 
-- 位姿全部来自轮式里程计，长时间运行会有累积漂移；没有使用激光雷达、相机或全局定位。
-- 仿真场景为平面，未考虑坡道、打滑、悬挂和轮胎形变。
-- 回放依赖里程计坐标系，`/odom` 漂移会直接反映到路径和终点误差；没有做全局重定位。
-- 测试在单台 Ubuntu 24.04 + Jazzy 机器上完成；合并前仍需第二台机器复现。
-- 后续可以加入 IMU/EKF 融合、`slam_toolbox` 或 Nav2，把当前功能扩展到真实定位与导航。
+### 13.1 电池模型
 
-## 14. 与仓库已有模块的区别
+节点根据 `/odom` 的实际线速度和角速度积分耗电：
 
-- `gazebo_diff_drive_teleop` 原模块只做键盘速度和自动巡航，没有轨迹记忆。
-- `odom_trace_recorder` 能记录里程计并发布 Path，但只回放记录结果，不做闭环路径跟踪。
-- 本项目在录制后使用纯追踪闭环生成速度指令，能根据实时位姿修正偏差，属于真正的轨迹回放。
+```text
+drain = idle_drain + drain_per_meter * |v| + drain_per_radian * |w|
+battery = max(0, battery - drain * dt)
+```
 
-## 15. 说明
+进入充电状态后：
+
+```text
+battery = min(100, battery + charge_rate * dt)
+```
+
+电池是仿真量，不读取真实电源；参数 `initial_battery`、`low_battery_threshold`、`charged_threshold` 分别控制初始电量、返航触发阈值和充电完成阈值。
+
+### 13.2 状态机
+
+```text
+manual ──电量 <= low_threshold──▶ returning ──到达充电点──▶ charging
+  ▲                                  │                         │
+  └──────── 手动接管/按 s ◀──────────┘                         │
+  └────────────────── 电量 >= charged_threshold ◀─────────────┘
+```
+
+- `manual`：键盘驾驶，持续耗电。
+- `returning`：自动转向充电点，按距离比例前进，接近时减速；到达位置后对齐 `home_yaw`。
+- `charging`：原地停止并充电。电量达到 `charged_threshold` 后自动回到 manual。
+- 手动按键会取消自动返航；此时 `_auto_return_armed` 置为 false，防止低电量状态每个周期反复抢回控制权。按 `h` 可以重新武装并启动返航。
+
+### 13.3 返航控制
+
+返航使用与差速运动学一致的位姿闭环：
+
+```text
+distance = hypot(home.x - x, home.y - y)
+desired_yaw = atan2(home.y - y, home.x - x)
+heading_error = normalize(desired_yaw - yaw)
+```
+
+- 航向误差大于 0.8 rad：原地转向；
+- 否则线速度与距离成正比，角速度与航向误差成正比；
+- 距离小于 0.35 m 时进一步降速；
+- 位置进入 `goal_tolerance` 后，再对齐充电点的目标航向，然后进入充电状态。
+
+### 13.4 演示与安全
+
+- 按 `b` 会把电量强制设为 `low_threshold - 1%`，用于快速演示低电量返航，不影响真实耗电逻辑。
+- 退出时恢复终端并连续发送零速度。
+- 低电量返航是单机器人、基于里程计的行为，没有避障和全局定位。
+
+## 14. 参数、话题与实测结果
+
+### 14.1 参数
+
+| 参数 | 默认值 | 说明 |
+| --- | --- | --- |
+| `initial_battery` | 100.0 % | 初始电量 |
+| `low_battery_threshold` | 25.0 % | 低电量阈值 |
+| `charged_threshold` | 80.0 % | 充电完成阈值 |
+| `drain_per_meter` | 8.0 %/m | 每米耗电 |
+| `drain_per_radian` | 2.0 %/rad | 每弧度转向耗电 |
+| `idle_drain_per_second` | 0.15 %/s | 静止自放电 |
+| `charge_rate` | 8.0 %/s | 充电速率 |
+| `home_x` / `home_y` / `home_yaw` | 0 / 0 / 0 | 充电点位姿 |
+| `goal_tolerance` | 0.12 m | 位置到达阈值 |
+| `yaw_tolerance` | 0.12 rad | 航向到达阈值 |
+| `return_linear_gain` | 1.2 | 返航线速度增益 |
+| `return_angular_gain` | 2.0 | 返航角速度增益 |
+
+### 14.2 话题与 TF
+
+| 话题 | 类型 | 说明 |
+| --- | --- | --- |
+| `/cmd_vel` | `geometry_msgs/Twist` | 速度指令 |
+| `/odom` | `nav_msgs/Odometry` | 差速控制器里程计 |
+| `/battery_state` | `sensor_msgs/BatteryState` | 仿真电池电压、电流、百分比和状态 |
+| `/battery_return/status` | `std_msgs/String` | `manual` / `returning` / `charging` |
+| `/battery_return/markers` | `visualization_msgs/MarkerArray` | 充电点和返航目标标记 |
+| `/diff_drive_controller/cmd_vel` | `geometry_msgs/TwistStamped` | 控制器原生输入 |
+| `/diff_drive_controller/odom` | `nav_msgs/Odometry` | 控制器原生里程计 |
+
+`/battery_state` 中：
+
+- `percentage` 为 0~1；
+- `power_supply_status` 在充电时为 `CHARGING`，否则为 `DISCHARGING`；
+- `voltage`、`current`、`charge`、`capacity` 是按仿真电量计算的展示值。
+
+TF 关系与基础模块一致：`odom -> base_footprint -> base_link -> wheels/caster`。
+
+### 14.3 实测结果
+
+实验方法：在无界面 Gazebo 中启动完整控制链路，通过伪终端向前台节点注入按键；订阅 `/odom` 和功能话题，记录真实位姿/电量/状态后计算指标。这样既复现了人工键盘操作，又避开了 GUI 截图对测量精度的影响。
+
+```bash
+# 终端 1：启动仿真
+bash main.sh battery gz_args:='-r -s'
+
+# 终端 2：观察话题
+ros2 control list_controllers
+ros2 topic hz /odom
+ros2 topic echo /clock --once
+```
+
+真实 Gazebo 测试：小车从充电点驶出约 0.67 m 后按 `b` 强制低电量，节点自动返回充电点，进入 `charging` 状态，电量从 6.3% 开始回升。
+
+| 阶段 | 结果 |
+| --- | --- |
+| 手动驶离 | 距充电点约 0.67 m |
+| 强制低电量 | 电量降到阈值以下，状态切为 `returning` |
+| 自动返航 | 进入充电点 0.12 m 范围，状态切为 `charging` |
+| 充电 | 电量从 6.3% 开始上升 |
+
+图中左侧为手动驶离（蓝）和自动返回（橙）轨迹，绿色方块为充电点；右侧为电量曲线，阴影区域为充电阶段。
+
+![电量管理与自动返航运行数据](../img/ground/gazebo_diff_drive_teleop_battery_return.png)
+
+### 14.4 结论
+
+实测表明，电量低于阈值后，节点能够基于 `/odom` 自动返回充电点并进入充电状态；返航过程中状态切换清晰，充电后电量开始回升。该结果验证了“能量感知 + 低电量安全返航”的闭环逻辑。电池模型为软件模拟，结论仅针对当前仿真参数和单次运行，不能替代真实电池特性。
+
+## 15. 相对运动原语与闭环停车
+
+### 15.1 动作定义
+
+`precision_moves` 把动作分成两类：
+
+- `move(d)`：沿起始航向移动有符号距离 `d`；
+- `turn(θ)`：绕自身转动有符号角度 `θ`。
+
+按 `6` 会生成一个 8 个动作的队列：
+
+```text
+move(+0.5), turn(+90°), move(+0.5), turn(+90°),
+move(+0.5), turn(+90°), move(+0.5), turn(+90°)
+```
+
+队列执行完自动回到 manual。
+
+### 15.2 直线闭环
+
+直线动作开始时记录 `(x0, y0, yaw0)`，之后用里程计位移在起始航向上的投影作为已走距离：
+
+```text
+traveled = cos(yaw0)(x - x0) + sin(yaw0)(y - y0)
+remaining = target_distance - traveled
+```
+
+控制律：
+
+```text
+v = clip(linear_gain * remaining, -linear_speed, +linear_speed)
+ω = clip(angular_gain * normalize(yaw0 - yaw), -0.5ωmax, +0.5ωmax)
+```
+
+当 `|remaining| <= distance_tolerance` 时结束动作。接近目标时速度自然减小；航向误差过大时先转向再前进。
+
+### 15.3 转向闭环
+
+转向动作在里程计回调中累加航向变化：
+
+```text
+Δψ += normalize(ψ_k - ψ_{k-1})
+remaining = target_angle - Δψ
+ω = clip(angular_gain * remaining, -angular_speed, +angular_speed)
+```
+
+使用累加角而不是直接比较 `normalize(ψ - ψ0)`，可以正确跨越 ±π 处理 180° 转向。进入 `angle_tolerance` 后停止并进入下一个动作。
+
+### 15.4 误差与安全
+
+- 动作执行期间方向键可取消当前动作并回到手动。
+- 失速或里程计缺失时不会静默成功；节点会拒绝启动并给出日志。
+- 动作结束后发送零速度；退出时也连续发送零速度。
+- 当前没有碰撞检测，正方形演示需要空旷场地。
+
+## 16. 参数、话题与实测结果
+
+### 16.1 参数
+
+| 参数 | 默认值 | 说明 |
+| --- | --- | --- |
+| `distance_step` | 0.5 m | 单次移动距离 |
+| `turn_angle` | 90.0° | 单次转向角度 |
+| `distance_tolerance` | 0.01 m | 直线停车容差 |
+| `angle_tolerance` | 0.02 rad | 转向停车容差 |
+| `linear_gain` | 1.8 | 直线比例增益 |
+| `angular_gain` | 2.2 | 转向比例增益 |
+| `linear_speed` | 0.25 m/s | 最大线速度 |
+| `angular_speed` | 1.0 rad/s | 最大角速度 |
+
+### 16.2 话题与 TF
+
+| 话题 | 类型 | 说明 |
+| --- | --- | --- |
+| `/cmd_vel` | `geometry_msgs/Twist` | 速度指令 |
+| `/odom` | `nav_msgs/Odometry` | 差速控制器里程计 |
+| `/precision_moves/status` | `std_msgs/String` | 当前动作状态（如 `move 0.50 m`） |
+| `/precision_moves/markers` | `visualization_msgs/MarkerArray` | 动作方向标记 |
+
+TF 关系与基础模块一致：`odom -> base_footprint -> base_link -> wheels/caster`。
+
+### 16.3 实测结果
+
+实验方法：在无界面 Gazebo 中启动完整控制链路，通过伪终端向前台节点注入按键；订阅 `/odom` 和功能话题，记录真实位姿/电量/状态后计算指标。这样既复现了人工键盘操作，又避开了 GUI 截图对测量精度的影响。
+
+```bash
+# 终端 1：启动仿真
+bash main.sh precision gz_args:='-r -s'
+
+# 终端 2：观察话题
+ros2 control list_controllers
+ros2 topic hz /odom
+ros2 topic echo /clock --once
+```
+
+真实 Gazebo 测试结果：
+
+| 动作 | 结果 |
+| --- | --- |
+| 前进 0.5 m | 实测约 0.542 m，误差 +0.042 m |
+| 左转 90° | 实测约 91.0°，误差 +1.0° |
+| 四边正方形闭合误差 | 约 0.044 m |
+
+图中灰色虚线为理想正方形，蓝色为实际 `/odom` 轨迹。误差主要来自轮式里程计、车轮打滑、车辆惯性以及 20 Hz 控制周期的离散化，不是外部定位误差。
+
+![里程计闭环正方形轨迹](../img/ground/gazebo_diff_drive_teleop_precision_moves.png)
+
+
+
+### 16.4 结论
+
+实测表明，里程计闭环相对运动能够把前进/后退和转向误差控制在厘米/度级，四边正方形演示的闭合误差约 0.044 m。说明在无外部定位的短距离动作中，轮式里程计闭环足以支撑精确运动原语；但误差会随距离和转向次数累积，长距离任务仍需外部定位或轮速标定。
+
+## 17. 定速巡航与航向保持
+
+`cruise_control` 在键盘遥控基础上增加闭环巡航：按 `c` 锁定当前航向并维持目标速度，按 `a/d` 在巡航中微调目标航向，按 `+/-` 调整目标速度。控制量由 `/odom` 的实测线速度和偏航角反馈计算，不是开环发布固定速度。
+
+### 17.1 控制算法
+
+速度通道使用“前馈 + 比例”控制：
+
+```text
+speed_error = target_speed - odom_speed
+linear = target_speed + kp_speed * speed_error + ki_speed * I + kd_speed * d(speed_error)/dt
+```
+
+`ki_speed` 默认 0，避免积分饱和导致冲过目标速度；参数仍保留积分项，便于需要时启用。输出被限制在 `[0, max_speed]`，并对输出饱和时的积分做条件更新。
+
+航向通道使用 PD：
+
+```text
+yaw_error = normalize(target_yaw - odom_yaw)
+angular = kp_yaw * yaw_error + kd_yaw * d(yaw_error)/dt
+```
+
+角速度限制为 `±max_angular`；航向误差较大时自动降低线速度，避免巡航中大幅甩头。
+
+### 17.2 操作
+
+| 按键 | 功能 |
+| --- | --- |
+| `c` | 进入/退出定速巡航 |
+| 巡航中 `a/d` | 左/右微调目标航向（每次 `heading_step`） |
+| 巡航中 `+/-` | 调整目标速度 |
+| `w/x/a/d` | 手动驾驶（自动退出巡航） |
+| `s` / 空格 | 停止并退出巡航 |
+| `q` / `Ctrl-C` | 退出并自动停车 |
+
+## 18. 参数、话题与实测结果
+
+### 18.1 参数与话题
+
+| 参数 | 默认值 | 说明 |
+| --- | --- | --- |
+| `cruise_speed` | 0.3 m/s | 巡航目标速度 |
+| `max_speed` | 0.4 m/s | 线速度上限 |
+| `kp_speed` | 0.5 | 速度比例增益 |
+| `ki_speed` | 0.0 | 速度积分增益 |
+| `kd_speed` | 0.02 | 速度微分增益 |
+| `kp_yaw` | 1.8 | 航向比例增益 |
+| `kd_yaw` | 0.15 | 航向微分增益 |
+| `heading_step` | 0.08 rad | `a/d` 每次调整的目标航向增量 |
+| `max_angular` | 1.0 rad/s | 角速度上限 |
+
+| 话题 | 类型 | 说明 |
+| --- | --- | --- |
+| `/cmd_vel` | `geometry_msgs/Twist` | 巡航/手动速度指令 |
+| `/odom` | `nav_msgs/Odometry` | 速度与偏航角反馈 |
+| `/cruise_control/status` | `std_msgs/String` | `manual` / `cruise ...` |
+| `/cruise_control/state` | `std_msgs/Float32MultiArray` | 目标速度、目标航向、实际速度、实际航向、速度误差、航向误差 |
+
+### 18.2 实测结果
+
+在真实 Gazebo Harmonic 中启动完整控制链路，用伪终端注入按键并记录 `/cruise_control/state`：
+
+- 目标速度 0.30 m/s，稳态速度绝对误差约 **0.002 m/s**；
+- 巡航期间航向误差接近 0；
+- 按 `a` 五次把目标航向增加 0.40 rad，实际航向跟踪误差约 **0.003 rad**。
+
+![定速巡航速度与航向数据](../img/ground/gazebo_diff_drive_teleop_cruise_control.png)
+
+### 18.3 结论
+
+实测表明，速度通道能把稳态误差压到约 0.002 m/s，航向保持和键盘微调也达到约 0.003 rad 的跟踪误差。说明在 Gazebo 差速底盘上，基于 `/odom` 的前馈 + P 控制可以稳定维持巡航。结论仅针对当前速度和增益参数；真实车辆还需考虑执行器延迟、打滑、负载变化和外部定位。
+
+
+## 19. 说明
 
 代码与文档使用 AI 大模型辅助编写。作者已核对代码、参数和实验数据，并对提交内容负责。
-

@@ -1,8 +1,10 @@
 <?xml version="1.0"?>
 <sdf version="1.6">
 <world name="default">
-  <!-- 发布 /clock，供 use_sim_time 的节点使用仿真时间 -->
-  <plugin name="gazebo_ros_init" filename="libgazebo_ros_init.so"/>
+  <!-- /clock 由 launch 里的 gzserver -s libgazebo_ros_init.so 提供 -->
+  <!-- 中性浮力：水下机器人整机密度≈水体，这里直接关闭重力，
+       避免模型下沉贴地后被地面摩擦拖住，导致指令速度无法兑现 -->
+  <gravity>0 0 0</gravity>
   <!-- 水下环境全局配置 -->
   <physics type="ode">
     <max_step_size>0.001</max_step_size>
@@ -58,11 +60,9 @@
           <izz>0.05</izz>
         </inertia>
       </inertial>
-      <!-- 水下流体速度衰减（水阻）：模拟水体阻尼感，加减速更平缓 -->
-      <velocity_decay>
-        <linear>0.997 0.997 0.997</linear>
-        <angular>1.02 1.02 1.02</angular>
-      </velocity_decay>
+      <!-- 注意：SDF 的 velocity_decay 单位是「每秒衰减比例」，
+           填 0.997 等于每秒丢掉 99.7% 的速度，模型几乎不动；
+           这里不启用速度衰减，速度完全由 cmd_vel 决定 -->
       <collision name="base_collision">
         <geometry><box><size>1.0 0.6 0.4</size></box></geometry>
       </collision>
