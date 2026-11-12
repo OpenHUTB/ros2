@@ -1,0 +1,158 @@
+{
+  "case": "town",
+  "outcome": "ok",
+  "algorithm": {
+    "path_waypoints": [
+      [
+        20.0,
+        0.0
+      ],
+      [
+        170.0,
+        0.0
+      ],
+      [
+        170.0,
+        120.0
+      ],
+      [
+        320.0,
+        120.0
+      ]
+    ],
+    "target_speed_mps": 6.0,
+    "path_length_m": 420.0,
+    "duration_s": 70.0,
+    "standoff_m": 12.0,
+    "alt_m": 10.0,
+    "intercept": {
+      "feasible": true,
+      "t_intercept_s": 14.76,
+      "intercept_xy": [
+        96.57,
+        0.0
+      ],
+      "climb_s": 4.0
+    },
+    "reference_samples": [
+      {
+        "t_s": 0.0,
+        "target_xy": [
+          20.0,
+          0.0
+        ],
+        "ref_xy": [
+          8.0,
+          0.0
+        ],
+        "behind_m": 12.0,
+        "ref_alt_m": 10.0
+      },
+      {
+        "t_s": 1.0,
+        "target_xy": [
+          26.0,
+          0.0
+        ],
+        "ref_xy": [
+          14.0,
+          0.0
+        ],
+        "behind_m": 12.0,
+        "ref_alt_m": 10.0
+      },
+      {
+        "t_s": 2.0,
+        "target_xy": [
+          32.0,
+          0.0
+        ],
+        "ref_xy": [
+          20.0,
+          0.0
+        ],
+        "behind_m": 12.0,
+        "ref_alt_m": 10.0
+      },
+      {
+        "t_s": 3.0,
+        "target_xy": [
+          38.0,
+          0.0
+        ],
+        "ref_xy": [
+          26.0,
+          0.0
+        ],
+        "behind_m": 12.0,
+        "ref_alt_m": 10.0
+      },
+      {
+        "t_s": 4.0,
+        "target_xy": [
+          44.0,
+          0.0
+        ],
+        "ref_xy": [
+          32.0,
+          0.0
+        ],
+        "behind_m": 12.0,
+        "ref_alt_m": 10.0
+      },
+      {
+        "t_s": 5.0,
+        "target_xy": [
+          50.0,
+          0.0
+        ],
+        "ref_xy": [
+          38.0,
+          0.0
+        ],
+        "behind_m": 12.0,
+        "ref_alt_m": 10.0
+      },
+      {
+        "t_s": 6.0,
+        "target_xy": [
+          56.0,
+          0.0
+        ],
+        "ref_xy": [
+          44.0,
+          0.0
+        ],
+        "behind_m": 12.0,
+        "ref_alt_m": 10.0
+      },
+      {
+        "t_s": 7.0,
+        "target_xy": [
+          62.0,
+          0.0
+        ],
+        "ref_xy": [
+          50.0,
+          0.0
+        ],
+        "behind_m": 12.0,
+        "ref_alt_m": 10.0
+      }
+    ],
+    "standoff_geometry_ok": true
+  },
+  "closed_loop": {
+    "simulated": true,
+    "intercept_s": 14.76,
+    "follow_error_mean_m": 0.41,
+    "follow_error_max_m": 4.61,
+    "turn_error_max_m": 4.61,
+    "stop_transient_max_m": 0.0,
+    "final_error_m": 0.51,
+    "sim_duration_s": 82.0,
+    "wall_time_s": 1.3,
+    "naive_above_turn_max_m": 12.61,
+    "case": "town"
+  }
+}

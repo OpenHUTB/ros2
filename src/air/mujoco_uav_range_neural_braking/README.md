@@ -1,5 +1,7 @@
 # 室内无人机测距制动与定高仿真 / Indoor UAV ranging, braking and altitude hold
 
+本目录是独立 Python/MuJoCo 模块，不作为 ament/colcon 包构建，不支持 `ros2 run`。独立仿真可直接运行 `python main.py`；ROS 2 Humble 环境可在本目录通过 launch 文件路径启动节点。 / This is a standalone Python/MuJoCo module, not an ament/colcon package, and it does not support `ros2 run`. Run `python main.py` for standalone simulation; in ROS 2 Humble, launch the node by its file path from this directory.
+
 ## 功能 / Features
 
 MuJoCo 纵向飞行模型保留重力、质量和碰撞。水平运动默认使用前向测距与距离差分速度进行连续制动，竖直方向采用重力补偿和 PD 定高反馈。朝向固定，不模拟姿态和电机动力学。控制基线用于检验制动行为与建立学习控制的实验参照。
@@ -25,8 +27,10 @@ ROS 环境中执行 / In a ROS environment:
 
 ```
 source /opt/ros/humble/setup.bash
-ros2 launch ./launch/main.launch.py output:=/tmp/uav_braking
+ros2 launch ./launch/ros_node.launch.py controller:=mlp model:=models/mlp_controller.json
 ```
+
+`ros_node.launch.py` 只推进仿真并发布 ROS 话题；`main.launch.py` 运行完整无窗口仿真并写出 `trajectory.csv`、`summary.json`。两个 launch 都支持 `python3:=`，当 MuJoCo 位于虚拟环境或 conda 时，应指定同时能导入 ROS 2 和 MuJoCo 的 Python 解释器。 / `ros_node.launch.py` steps the simulation and publishes ROS topics. `main.launch.py` runs the complete headless simulation and writes `trajectory.csv` and `summary.json`. Both launch files accept `python3:=`; when MuJoCo is installed in a virtual environment or conda, select an interpreter that can import both ROS 2 and MuJoCo.
 
 `trajectory.csv` 记录时间、间距、速度、高度和控制量，`summary.json` 汇总碰撞步数、最小间距和高度误差。 / `trajectory.csv` records time, clearance, speed, height and action. `summary.json` reports contact steps, minimum clearance and height error.
 
@@ -36,11 +40,23 @@ ros2 launch ./launch/main.launch.py output:=/tmp/uav_braking
 
 Target speed follows the remaining braking distance. Acceleration is a clipped velocity-feedback command and horizontal force equals mass times acceleration. The 0.8 m parameter is a braking reference, not a guaranteed final clearance.
 
+## ROS 2 话题 / ROS 2 topics
+
+节点发布以下话题：`/uav/front_range_m`（`Float32`，前向测距，米）、`/uav/braking_accel_m_s2`（`Float32`，水平控制加速度，米/秒²）和 `/uav/state`（`Float64MultiArray`，依次为仿真时间秒、传感器测距米、闭合速度米/秒和高度米）。节点运行至场景设定时长后停止发布并退出。
+
+The node publishes `/uav/front_range_m` (`Float32`, forward range in metres), `/uav/braking_accel_m_s2` (`Float32`, horizontal control acceleration in m/s²), and `/uav/state` (`Float64MultiArray`, ordered as simulation time in seconds, sensor range in metres, closing speed in m/s, and altitude in metres). Publishing stops and the node exits when the configured scenario duration is reached.
+
+查看状态 / Inspect the state:
+
+```
+ros2 topic echo /uav/state
+```
+
 原路径 `src/ground/mujoco_drone_distance_stop/main.py` 继续转发至本模块。 / The original entry point forwards to this module.
 
 ## 结果与文档 / Results and documentation
 
-测距控制在初速度 0、1.5、3 m/s 的三组 10 s 场景均无碰撞，最小间距分别为 0.668362、0.668331、0.668360 m。神经控制在初速度 0 和 1.5 m/s 时均无碰撞，最小间距分别为 0.759476 m 和 0.470438 m，末速度分别为 0.015899 m/s 和 -0.056074 m/s；3 m/s 外推场景记录 4 个接触步。21 项自动化检查通过。/ Range control has no contacts in three 10 s episodes at initial speeds of 0, 1.5 and 3 m/s; respective minimum gaps are 0.668362, 0.668331 and 0.668360 m. Neural control has no contacts at 0 and 1.5 m/s, with minimum clearances of 0.759476 m and 0.470438 m and final speeds of 0.015899 m/s and -0.056074 m/s, respectively. The 3 m/s extrapolation case records four contact steps. Twenty-one automated checks pass.
+测距控制在初速度 0、1.5、3 m/s 的三组 10 s 场景均无碰撞，最小间距分别为 0.668362、0.668331、0.668360 m。神经控制在初速度 0 和 1.5 m/s 时均无碰撞，最小间距分别为 0.759476 m 和 0.470438 m，末速度分别为 0.015899 m/s 和 -0.056074 m/s；3 m/s 外推场景记录 4 个接触步。24 项自动化检查通过。/ Range control has no contacts in three 10 s episodes at initial speeds of 0, 1.5 and 3 m/s; respective minimum gaps are 0.668362, 0.668331 and 0.668360 m. Neural control has no contacts at 0 and 1.5 m/s, with minimum clearances of 0.759476 m and 0.470438 m and final speeds of 0.015899 m/s and -0.056074 m/s, respectively. The 3 m/s extrapolation case records four contact steps. Twenty-four automated checks pass.
 
 完整方程、曲线和动图见[模块文档](../../../docs/air/mujoco_uav_range_neural_braking.md)。 / See the [module guide](../../../docs/air/mujoco_uav_range_neural_braking.md) for equations, curves and animation.
 
@@ -74,3 +90,7 @@ The default dataset has 30 episodes of 12 s, split into 18/6/6 episodes and 2160
 训练标签来自解析测距控制基线。MLP 使用测距与闭合速度两个特征，高度由独立 PD 回路保持。验证集误差用于选择训练轮次，并在达到耐心阈值后提前停止。/ Training labels come from the analytical ranging controller. The MLP uses range and closing speed; a separate PD loop holds altitude. Validation error selects the retained training epoch and triggers early stopping.
 
 `evaluate.py --controller all` 可重复运行几何参照、测距控制和 MLP 三种控制器在 0、1.5、3 m/s 下的闭环比较，并输出各控制器曲线与 JSON 指标。/ `evaluate.py --controller all` reproduces closed-loop comparisons for the geometric reference, ranging controller and MLP at 0, 1.5 and 3 m/s, and exports controller curves and JSON metrics.
+
+## 大模型使用声明 / Large language model disclosure
+
+本模块及其后续审查修订在 Codex（基于 GPT-5）辅助下完成。提交者已检查代码、测试和文档，并对最终提交内容负责。/ This module and its subsequent review revisions were completed with assistance from Codex (based on GPT-5). The submitter has reviewed the code, tests and documentation and is responsible for the final submission.
