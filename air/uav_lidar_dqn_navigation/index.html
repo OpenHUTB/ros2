@@ -387,6 +387,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../ground/lateral_control_benchmark/">地面载具横向控制算法对比（纯跟踪/Stanley/LQR）</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_mppi_neural_tracker/">MPPI 采样 MPC 与蒸馏网络的 8 字赛道跟踪对比</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../ground/ros2_dwa_avoidance/">ROS2 差速机器人 A* 全局规划与 DWA 局部避障</a>
 </li>
 <li class="toctree-l1"><a class="" href="../../ground/ros2_dwa_benchmark.md">ROS2 DWA 局部规划器随机场景压力测试与舒适性评价</a>
@@ -632,9 +634,13 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#5-dqn">5 DQN 策略训练</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#6">6 话题与服务</a>
+<li class="toctree-l2"><a class="reference internal" href="#6-dqn">6 DQN 导航部署</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#7-pr">7 后续 PR</a>
+<li class="toctree-l2"><a class="reference internal" href="#7-gmapping">7 gmapping 建图</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#8">8 话题与服务</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#9-pr">9 后续 PR</a>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#_2">大模型使用声明</a>
 </li>
@@ -931,8 +937,9 @@ DQN 导航、SLAM 建图与导航同步、图像端到端 DQN 控制。</p>
 <p>与监督学习路线不同，本模块的控制器由<strong>深度强化学习</strong>训练得到：智能体在仿真场景中
 自行探索，以“接近目标、朝向对齐、避开障碍”为奖励信号优化策略，不需要人工标注
 专家轨迹。</p>
-<p>本页说明模块总体设计、键盘遥控（PR #892）、雷达感知（PR #893）与 DQN 策略训练
-（PR #918）；DQN 部署、建图、端到端控制按依赖顺序在后续 PR 中补充。</p>
+<p>本页说明模块总体设计、键盘遥控（PR #892）、雷达感知（PR #893）、DQN 策略训练
+（PR #918）、DQN 在线部署与 gmapping 建图（PR #922）；图像端到端控制按依赖顺序
+在后续 PR 中补充。</p>
 <h2 id="1">1 运行环境</h2>
 <table>
 <thead>
@@ -981,8 +988,10 @@ roslaunch<span class="w"> </span>uav_lidar_dqn_navigation<span class="w"> </span
     B -- /drone/odom, /drone/state --&gt; C[teleop_keyboard]
     C -- /drone/cmd_vel --&gt; B
     A -- lidar_1 点云 --&gt; D[lidar_scan_node]
-    D -- /drone/lidar/sectors --&gt; E[DQN 控制（后续 PR）]
-    D -- /drone/lidar/scan --&gt; F[gmapping（后续 PR）]
+    D -- /drone/lidar/sectors --&gt; E[dqn_nav_node]
+    D -- /drone/lidar/scan --&gt; F[gmapping]
+    E -- /drone/cmd_vel --&gt; B
+    F -- map-&gt;odom TF --&gt; B
 </div>
 <p>桥接节点是模块唯一的 AirSim 客户端：它把 ROS 的机体系速度指令翻译成 AirSim 的
 <code>moveByVelocityZAsync</code> 调用，并把位姿、速度与原始状态发布回 ROS。控制节点只依赖
@@ -1072,14 +1081,86 @@ y = r + \gamma \, Q_{\theta^-}\!\left(s', \arg\max_{a'} Q_\theta(s', a')\right)
 </p>
 <p>经验回放缓冲区打散样本相关性，目标网络 <code>θ⁻</code> 定期从在线网络软/硬更新，
 损失为 Huber 形式，探索用 ε-greedy 并随回合衰减。</p>
-<p>奖励由三部分组成：接近目标为正、远离为负，碰撞大幅扣分，到达目标给终止奖励。
+<p>奖励由距离进度、朝向对齐、时间惩罚、近障惩罚四部分组成：1.2 m 内障碍按距离
+线性扣分，0.5 m 内按事故终止（-20），碰撞 -30，到达目标 +60。
 训练入口：</p>
 <div class="highlight"><pre><span></span><code>roslaunch<span class="w"> </span>uav_lidar_dqn_navigation<span class="w"> </span>train.launch<span class="w"> </span>episodes:<span class="o">=</span><span class="m">200</span>
 rosrun<span class="w"> </span>uav_lidar_dqn_navigation<span class="w"> </span>train_dqn_nav.py<span class="w"> </span>--episodes<span class="w"> </span><span class="m">200</span>
 </code></pre></div>
-<p>权重与日志写入 <code>models/</code>：<code>dqn_nav.pt</code>（最新）、<code>dqn_nav_best.pt</code>（近 20 回合
-成功率最高）、<code>train_nav_log.csv</code>（每回合累计奖励、步数、是否成功）。</p>
-<h2 id="6">6 话题与服务</h2>
+<p>权重与日志写入 <code>models/</code>：<code>dqn_nav.pt</code>（当前最佳，部署默认加载）、
+<code>dqn_nav_best.pt</code>（同一份最佳权重）、<code>dqn_nav_last.pt</code>（最后一回合）、
+<code>train_nav_log.csv</code>（每回合累计奖励、步数、成功/碰撞/近失标记）。</p>
+<h2 id="6-dqn">6 DQN 导航部署</h2>
+<p><code>dqn_nav_node.py</code> 每 10 Hz 读一次 <code>/drone/lidar/sectors</code> 与 <code>/drone/odom</code>，
+按训练时的同一套特征拼出 32 维状态，取 Q 值最大的动作下发 <code>/drone/cmd_vel</code>。
+权重默认从包内 <code>models/dqn_nav.pt</code> 加载，可用 <code>~model_path</code> 覆盖。</p>
+<p>安全层（<code>safety_shield.py</code>）：DQN 学的是“朝目标飞”，障碍进入训练分布外的
+近距范围时 Q 值区分度会变小。部署时先用 24 扇区距离屏蔽会撞的动作——
+正前方 1.0 m 内有障碍时禁用直行/左前/右前，单侧 0.9 m 内有障碍时禁用该侧
+斜向动作，再在剩余动作里取 Q 最大。近障时向空旷一侧转向，前方通畅后
+短暂前进；0.35 m 兜底只检查前向扇区。整条近障行为仍需 AirSim 实机验证。</p>
+<p>速度按 <code>speed_scale</code> 缩放，建图时用 0.5 兼顾扫描重叠。</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 纯导航，目标点 (15, 10)</span>
+roslaunch<span class="w"> </span>uav_lidar_dqn_navigation<span class="w"> </span>main.launch<span class="w"> </span>mode:<span class="o">=</span>dqn
+
+<span class="c1"># 临时改目标点</span>
+roslaunch<span class="w"> </span>uav_lidar_dqn_navigation<span class="w"> </span>dqn.launch<span class="w"> </span>goal_x:<span class="o">=</span><span class="m">10</span><span class="w"> </span>goal_y:<span class="o">=</span><span class="m">15</span>
+</code></pre></div>
+<p>目标点也可以通过 <code>/drone/goal</code>（<code>geometry_msgs/PointStamped</code>，NED）随时修改，
+<code>dqn.launch</code> 里的 <code>goal_publisher</code> 只是演示用的定时发布。</p>
+<h2 id="7-gmapping">7 gmapping 建图</h2>
+<p><code>scan.launch</code> 提供 <code>odom-&gt;base_link-&gt;laser</code>，gmapping 在此基础上发布
+<code>map-&gt;odom</code>，形成 <code>map-&gt;odom-&gt;base_link-&gt;laser</code> 完整 TF 链。</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>值</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>maxUrange</code></td>
+<td>39 m</td>
+<td>略大于雷达有效量程，否则 30~40 m 回波被丢弃</td>
+</tr>
+<tr>
+<td><code>maxRange</code></td>
+<td>40 m</td>
+<td>与 <code>lidar_features.MAX_RANGE</code> 保持一致</td>
+</tr>
+<tr>
+<td><code>particles</code></td>
+<td>50</td>
+<td>稀疏雷达下比默认 30 稳定</td>
+</tr>
+<tr>
+<td><code>linearUpdate</code> / <code>angularUpdate</code></td>
+<td>0.2 m / 0.1 rad</td>
+<td>位姿增量触发更新</td>
+</tr>
+<tr>
+<td><code>delta</code></td>
+<td>0.05 m</td>
+<td>与 2026-11-12 实测地图的 YAML 一致</td>
+</tr>
+</tbody>
+</table>
+<p>选择 gmapping 而不是 hector_slam 的原因：hector 不做里程计融合、依赖扫描匹配
+初值，在 180° 稀疏雷达 + 快速偏航下实测会跟丢，地图呈扇形；gmapping 用里程计
+做运动先验、粒子滤波修正。2026-11-12 在 Blocks + WSL ROS Noetic 下重新运行，
+从 <code>/map</code> 保存的地图为 2208×2272、0.05 m/格、5472 个占用格，
+预览中可见连续墙体。旧地图的 1503 个占用格与此前文档中的 5751
+都不是本次运行结果。</p>
+<p><code>waypoint_goal_node.py</code> 先发布 (0,20)，达到 1.5 m 容差后切换到
+(16,20)。同次运行日志记录了航点切换；第二航点附近的运行中状态为
+(16.49,19.62)，水平误差约 0.62 m：</p>
+<div class="highlight"><pre><span></span><code>roslaunch<span class="w"> </span>uav_lidar_dqn_navigation<span class="w"> </span>main.launch<span class="w"> </span>mode:<span class="o">=</span>slam
+rosrun<span class="w"> </span>map_server<span class="w"> </span>map_saver<span class="w"> </span>-f<span class="w"> </span>~/uav_map<span class="w">   </span><span class="c1"># 或订阅 /map 自行保存</span>
+</code></pre></div>
+<p><img alt="本次重新运行的 gmapping 地图，连续墙体可见" src="../../img/air/uav_lidar_dqn_navigation/uav_map_verified.png"/></p>
+<h2 id="8">8 话题与服务</h2>
 <table>
 <thead>
 <tr>
@@ -1126,7 +1207,7 @@ rosrun<span class="w"> </span>uav_lidar_dqn_navigation<span class="w"> </span>tr
 </tr>
 </tbody>
 </table>
-<h2 id="7-pr">7 后续 PR</h2>
+<h2 id="9-pr">9 后续 PR</h2>
 <table>
 <thead>
 <tr>
@@ -1135,10 +1216,6 @@ rosrun<span class="w"> </span>uav_lidar_dqn_navigation<span class="w"> </span>tr
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>#922</td>
-<td>DQN 导航节点与 gmapping 建图链路</td>
-</tr>
 <tr>
 <td>#932</td>
 <td>图像端到端 DQN 与演示动图</td>
