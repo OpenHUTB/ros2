@@ -1,0 +1,52 @@
+<launch>
+  <!-- MSK-Arm keyboard teleoperation: muscle-arm sim + viewer + key node -->
+  <arg name="scene"          default="reach"/>
+  <arg name="seed"           default="20261111"/>
+  <arg name="noise"          default="true"/>
+  <arg name="display"        default=":0"/>
+  <arg name="viewer"         default="true"/>
+  <arg name="keyboard"       default="true"/>
+  <arg name="viewer_teleop"  default="false"/>
+  <arg name="duration"       default="0.0"/>
+  <arg name="mode"           default="TELEOP"/>
+  <arg name="auto_snapshot"  default=""/>
+  <arg name="render_width"   default="760"/>
+  <!-- reproducible muscle-activation timeline (key:seconds, '+' = combo) used
+       by scripts/demo_desktop.sh: co-contract, lift the arm over the reach
+       workspace, small shoulder/elbow adjustments, then relax; validated
+       collision-free in the reach scene -->
+  <arg name="script"         default="q:0.30,a:0.10,none:1.8,e:0.10,none:1.0,q:0.08,none:1.0,s:0.5,space:0.5"/>
+  <arg name="script_loop"    default="false"/>
+  <arg name="snapshot_delay" default="3.0"/>
+
+  <node pkg="msk_arm_nn" type="sim_node.py" name="sim_node" output="screen">
+    <env name="MSK_ROOT" value="$(find msk_arm_nn)"/>
+    <param name="scene"    value="$(arg scene)"/>
+    <param name="seed"     value="$(arg seed)"/>
+    <param name="noise"    value="$(arg noise)"/>
+    <param name="duration" value="$(arg duration)"/>
+    <param name="mode"     value="$(arg mode)"/>
+    <param name="state_hz" value="20.0"/>
+    <param name="camera_hz" value="10.0"/>
+  </node>
+
+  <node if="$(arg viewer)" pkg="msk_arm_nn" type="viewer_node.py"
+        name="viewer_node" output="screen">
+    <env name="DISPLAY"    value="$(arg display)"/>
+    <env name="MSK_ROOT"   value="$(find msk_arm_nn)"/>
+    <param name="scene"         value="$(arg scene)"/>
+    <param name="teleop"        value="$(arg viewer_teleop)"/>
+    <param name="display"       value="$(arg display)"/>
+    <param name="auto_snapshot" value="$(arg auto_snapshot)"/>
+    <param name="render_width"  value="$(arg render_width)"/>
+    <param name="snapshot_delay" value="$(arg snapshot_delay)"/>
+  </node>
+
+  <node if="$(arg keyboard)" pkg="msk_arm_nn" type="teleop_keyboard.py"
+        name="teleop_keyboard" output="screen">
+    <env name="MSK_ROOT" value="$(find msk_arm_nn)"/>
+    <param name="rate"  value="20.0"/>
+    <param name="script" value="$(arg script)"/>
+    <param name="script_loop" value="$(arg script_loop)"/>
+  </node>
+</launch>

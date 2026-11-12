@@ -1,8 +1,12 @@
 # 无人机键盘控制（uav_keyboard_control）
 
+
 任务①「无人机仿真 + 键盘控制」的 ROS 侧实现：把终端按键转换为**机体系速度指令**，
 发布到 `/uav/cmd_vel`，由 `carlair_ros_bridge` 连仿真器执行。仿真/坐标换算/安全限幅
 集中在桥接层，键盘、规划器、神经网络控制器共用同一条指令通道。
+
+> **版本说明**：本文档主体（第 2、4、7、8 节及参数表、引言段）描述的是 v0.1（ROS 1）历史实现，包含多键组合斜飞、加速度平滑、技能宏（1/2/3）、KeyTracker 按键保持集合、转义序列解析等功能。本次合并的是 **v0.2（ROS 2 ament_python）**，是精简版：单键锁存 + `hold_timeout` 超时悬停，已移除组合键、加速度平滑与技能宏，退出只支持 Ctrl-C。当前实现的准确说明见包内 README.md。
+
 
 在"一个键一个轴"的基础上，本模块还支持**多键组合**（`W`+`A` 斜飞、`W`+`Q` 边走边转）、
 **加速度限幅的平滑调速**（速度按斜坡逼近目标，松开后同样斜坡回零），以及把键盘从
@@ -26,13 +30,13 @@
 | `W` / `S` | 前进 / 后退 | `linear.x = ±horiz_speed` |
 | `A` / `D` | 左移 / 右移 | `linear.y = ±horiz_speed` |
 | `R` / `F` | 上升 / 下降 | `linear.z = ±vert_speed` |
-| `Q` / `E` | 右转 / 左转 | `angular.z = ±yaw_rate` |
+| `Q` / `E` | 左转 / 右转 | `angular.z = ±yaw_rate` |
 | 组合键（如 `W`+`A`、`W`+`Q`） | 斜向 / 边走边转 | 各轴分量叠加 |
 | `1` / `2` / `3` | 技能宏：升到 1.5 m / 原地转 360° / 前进 3 m | 基于 `/uav/odom` 闭环，结束回悬停 |
 | 松开 | 悬停 | 按 `accel_*` 斜坡回零 |
 | `ESC` / `Ctrl-C` | 退出 | 先补发一条零速 |
 
-`Q`/`E` 的方向遵循 AirSim 机体系 `yaw_rate` 约定（`Q=+yaw_rate` 机头右转）。
+`Q`/`E` 的方向遵循 ROS REP-103 约定（`Q=+angular.z` 机头逆时针左转，`E=-angular.z` 顺时针右转）。
 
 三点补充：
 
@@ -45,20 +49,31 @@
   残字节也不会被当成运动键（4.6）。
 * **技能宏**：`1`/`2`/`3` 触发一次闭环动作，细节与参数见第 8 节；宏运行中按任意方向键
   立即取消并接管（手动优先）。
-
 ## 3. 编译与运行
 
+> 注意：`uav_keyboard_control` 是 ROS 2 节点，`carlair_ros_bridge` 仍是 ROS 1 catkin 包，两边默认互不可见，必须通过 `ros1_bridge` 桥接。
+
 ```shell
-# 终端 1：桥接（连仿真 + 执行 + 自动起飞悬停）
+# 终端 1：ROS 1 桥接（连仿真 + 执行 + 自动起飞悬停）
+source /opt/ros/noetic/setup.bash
 source ~/bridge_ws/devel/setup.bash
 roslaunch carlair_ros_bridge main.launch
 
-# 终端 2：键盘控制
+# 终端 2：ROS 2 键盘控制节点
+source /opt/ros/humble/setup.bash
+source ~/ros2_ws/install/setup.bash
+ros2 launch uav_keyboard_control keyboard.launch.py
+
+# 终端 3：ros1_bridge 桥接 ROS 1 <-> ROS 2
+source /opt/ros/noetic/setup.bash
+source /opt/ros/humble/setup.bash
 source ~/bridge_ws/devel/setup.bash
-roslaunch uav_keyboard_control main.launch
+source ~/ros2_ws/install/setup.bash
+ros2 run ros1_bridge dynamic_bridge
+```
 ```
 
-把焦点放在键盘控制终端，按 `W/A/S/D/R/F/Q/E` 操控（可同时按住多个键斜飞），松开后平滑减速到悬停，`ESC` 退出。
+把焦点放在键盘控制终端，按 `W/A/S/D/R/F/Q/E` 操控（单键锁存，后按的键覆盖前一个），松开按键保持 0.3 秒后自动悬停，`Ctrl-C` 退出。
 
 ## 4. 实现要点
 
@@ -199,6 +214,8 @@ CarlaAir 视口**内置**键盘操控（任务①的「仿真」部分），本�
 
 ### 7.2 运行步骤
 
+> 本节为 v0.1（ROS 1）历史实现步骤。v0.2（ROS 2）的正确流程请见第 3 节「三终端启动与桥接验证」。
+
 前置：按 [环境搭建与连接](../air/setup_and_connect.md) 配好虚拟机 ROS 环境；
 按 [桥接模块](../air/carlair_ros_bridge.md) 的 **2.1 节**在宿主机启动 CarlaAir 仿真器，
 等终端输出 `CarlaAir is ready.`（此时 `41451` 端口就绪）。
@@ -227,8 +244,8 @@ rostopic echo -n 1 /uav/odom/pose/pose/position     # 确认 z ≈ 15
 export ROS_MASTER_URI=http://localhost:11311
 source /opt/ros/noetic/setup.bash
 source ~/uav_ws/devel/setup.bash
-roslaunch uav_keyboard_control main.launch
-# 在弹出的 xterm 窗口里按 W/A/S/D/R/F/Q/E 操控，松开悬停，ESC 退出
+ros2 launch uav_keyboard_control keyboard.launch.py
+# 在弹出的 xterm 窗口里按 W/A/S/D/R/F/Q/E 操控，松开保持 0.3s 后自动悬停，Ctrl-C 退出
 ```
 
 > **关于 `auto_takeoff`**：它的语义是「**起飞并悬停**」——桥接层源码里就是
@@ -256,7 +273,7 @@ roslaunch uav_keyboard_control main.launch
 
 ```text
 [test] 节点已在伪终端中启动 (pid=22254)
-[test] 按键 前进 W 3.0s / 左移 A 2.5s / 后退 S 2.5s / 右移 D 2.5s / ESC 退出
+[test] 按键 前进 W 3.0s / 左移 A 2.5s / 后退 S 2.5s / 右移 D 2.5s / Ctrl-C 退出
 
 按键前  (x, y, z) = ( 3.6e-07,  2.2e-07, 15.145)    ← 已按 7.2 第 ② 步送到 15 m
 按键后  (x, y, z) = ( 0.389,   -0.403,   15.071)    ← 水平移动约 0.56 m，高度保持
@@ -291,7 +308,7 @@ roslaunch uav_keyboard_control main.launch
 ### 7.5 实测截图
 
 键盘控制窗口。`main.launch` 通过 `launch-prefix="xterm -e"` 拉起，
-窗口标题为 `main.py`，黑底白字即是键位帮助：
+窗口标题为 `keyboard`，黑底白字即是键位帮助：
 
 ![键盘控制窗口](../img/air/uav_keyboard_control/xterm_keyboard_window.png)
 
@@ -403,7 +420,7 @@ import select
 import sys
 import time
 
-CMD = ["rosrun", "uav_keyboard_control", "main.py"]
+CMD = ["ros2", "run", "uav_keyboard_control", "keyboard"]
 
 
 def main():
