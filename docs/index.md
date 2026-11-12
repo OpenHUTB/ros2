@@ -221,6 +221,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [MuJoCo 地面差速小车单侧驱动失效检测与差速补偿](./ground/mujoco_car_drive_fault.md)
 * [MuJoCo 四轮独立悬架越野小车仿真](./ground/mujoco_offroad_suspension.md)
 * [2D 小车目标追踪仿真](./ground/car_2d_target_tracker.md)
+* [电机热场景对比评价](./ground/motor_thermal_scenario_evaluator.md)
 * [基于神经网络的无人小车自适应跟车（ACC）](./ground/carla_nn_car_following.md)
 * [Gazebo 差速小车键盘控制](./ground/gazebo_diff_drive_teleop.md)
 * [恶劣雨雾天气下多传感器感知性能对比实验](./ground/weather_perception_benchmark.md)
