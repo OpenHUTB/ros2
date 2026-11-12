@@ -136,6 +136,8 @@ nav:
     - 肌肉驱动的夹爪抓取: './musculoskeletal/msk_gripper.md'
     - 肌肉驱动的下肢关节与步态: './musculoskeletal/muscle_leg_gait.md'
     - 膝关节肌肉骨骼仿真与轨迹跟踪: './musculoskeletal/knee_tracking.md'
+- 机械臂操作:
+    - MuJoCo 单臂抓取与 π0 推理接口复现（CPU 演示）: './manipulation/pi0_mujoco_grasp.md'
 - 地面载具:
     - 离线测试接入 GitHub Actions: './ground/offline_checks.md'
     - 编码器量化误差与速度估计滤波对比: './ground/encoder_quantization_velocity.md'
