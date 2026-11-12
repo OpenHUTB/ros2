@@ -70,7 +70,9 @@
       <!-- 前视相机：相机坐标系的 -z 指向车头 +x -->
       <camera name="front_camera" pos="0.31 0 0.06" xyaxes="0 -1 0 0 0 1"/>
       <!-- 俯视相机，便于 GUI/录屏观察全场 -->
-      <camera name="overview_camera" pos="0 0 8" xyaxes="1 0 0 0 1 0"/>
+      <camera name="overview_camera" pos="0 0 12" xyaxes="1 0 0 0 1 0" fovy="75"/>
+      <!-- 跟随车的俯视相机，GIF 录制用 -->
+      <camera name="follow_camera" pos="0 0 6" xyaxes="1 0 0 0 1 0" fovy="60"/>
 
       <body name="left_front_wheel" pos="0.20 0.24 -0.08">
         <joint name="left_front_joint" type="hinge" axis="0 1 0"/>
