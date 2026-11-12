@@ -35,6 +35,8 @@ class SimResult:
     profile: SpeedProfile
     atp_profile: SpeedProfile
     stop_x: float
+    spec: TrainSpec
+    dt: float
     segments: list = field(default_factory=list)
     metrics: dict = field(default_factory=dict)
     note: str = ''
@@ -112,8 +114,9 @@ def run(scenario: Scenario, spec: TrainSpec | None = None,
         tau = max(0.05, spec.brake_build_up)
         applied += (cmd - applied) * min(1.0, dt / tau)
 
-        if applied > 0.0:
-            energy += energy_kwh(spec, v, dt)
+        # energy_kwh already returns 0 when the required force is non-positive.
+        energy += energy_kwh(spec, v, dt, accel=applied,
+                             grade=grade_at(scenario.segments, x))
 
         v_next = v + applied * dt
         x_next = x + v * dt + 0.5 * applied * dt * dt
@@ -145,5 +148,6 @@ def run(scenario: Scenario, spec: TrainSpec | None = None,
     }
     return SimResult(name=scenario.name, title=scenario.title, title_en=scenario.title_en,
                      frames=frames, profile=profile, atp_profile=atp_profile,
-                     stop_x=scenario.stop_x, segments=list(scenario.segments),
+                     stop_x=scenario.stop_x, spec=spec, dt=dt,
+                     segments=list(scenario.segments),
                      metrics=metrics, note=scenario.note)

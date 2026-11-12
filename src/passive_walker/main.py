@@ -12,10 +12,28 @@
 """
 
 import argparse
+import math
 import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+
+def finite_float(value):
+    try:
+        number = float(value)
+    except ValueError:
+        raise argparse.ArgumentTypeError("must be a finite number")
+    if not math.isfinite(number):
+        raise argparse.ArgumentTypeError("must be a finite number")
+    return number
+
+
+def positive_float(value):
+    number = finite_float(value)
+    if number <= 0.0:
+        raise argparse.ArgumentTypeError("must be greater than zero")
+    return number
 
 
 def cmd_run(args, ros_args=None):
@@ -43,7 +61,7 @@ def cmd_node(args, ros_args=None):
     except Exception as exc:
         print("[FAIL] 需要 ROS 2 环境（rclpy）：%s" % exc)
         return 1
-    return sim_node.main(args=ros_args or [], seconds=args.seconds, push=args.push)
+    return sim_node.main(args=ros_args or [], seconds=args.seconds, push=args.push, period=args.period)
 
 
 def cmd_doctor(args, ros_args=None):
@@ -71,22 +89,24 @@ def build_parser():
     sub = parser.add_subparsers(dest="command")
 
     p_run = sub.add_parser("run", help="无头运行并打印结果（默认子命令）")
-    p_run.add_argument("--seconds", type=float, default=20.0)
-    p_run.add_argument("--push", type=float, default=0.3)
+    p_run.add_argument("--seconds", type=positive_float, default=20.0)
+    p_run.add_argument("--push", type=finite_float, default=0.3)
     p_run.add_argument("--xml", default=None)
     p_run.set_defaults(func=cmd_run)
 
     p_node = sub.add_parser("node", help="以 ROS 2 节点运行，发布累计步数")
-    p_node.add_argument("--seconds", type=float, default=20.0)
-    p_node.add_argument("--push", type=float, default=0.3)
+    p_node.add_argument("--seconds", type=positive_float, default=20.0)
+    p_node.add_argument("--push", type=finite_float, default=0.3)
+    p_node.add_argument("--period", type=positive_float, default=0.1)
     p_node.set_defaults(func=cmd_node)
 
     p_doc = sub.add_parser("doctor", help="检查 mujoco / 模型文件 / rclpy")
     p_doc.set_defaults(func=cmd_doctor)
 
     # 也允许不带子命令：main.py --seconds 20 / main.py --node
-    parser.add_argument("--seconds", type=float, default=20.0)
-    parser.add_argument("--push", type=float, default=0.3)
+    parser.add_argument("--seconds", type=positive_float, default=20.0)
+    parser.add_argument("--push", type=finite_float, default=0.3)
+    parser.add_argument("--period", type=positive_float, default=0.1)
     parser.add_argument("--xml", default=None)
     parser.add_argument("--node", action="store_true", help="以 ROS 2 节点运行")
     return parser

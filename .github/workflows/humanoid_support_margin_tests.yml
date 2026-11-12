@@ -1,0 +1,81 @@
+name: humanoid support margin tests
+
+on:
+  push:
+    paths:
+      - 'src/humanoid/humanoid_support_margin/**'
+      - '.github/workflows/humanoid_support_margin_tests.yml'
+  pull_request:
+    paths:
+      - 'src/humanoid/humanoid_support_margin/**'
+      - '.github/workflows/humanoid_support_margin_tests.yml'
+
+jobs:
+  test:
+    name: humanoid support margin tests (no ROS / simulator)
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: src/humanoid/humanoid_support_margin
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.8'
+
+      - name: Install test dependency
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install -r requirements-dev.txt
+
+      - name: Run unit tests
+        run: python3 -m pytest test -v
+
+      - name: Run tests without pytest
+        run: python3 test/test_humanoid_support_margin.py
+
+      - name: Run main.py smoke test
+        run: |
+          python3 main.py --output "${RUNNER_TEMP}/humanoid_support_margin_out"
+          test -s "${RUNNER_TEMP}/humanoid_support_margin_out/report.json"
+
+      # 模拟 Windows 中文控制台：单位全为 ASCII，不得崩溃
+      - name: Run main.py with GBK stdout
+        env:
+          PYTHONIOENCODING: gbk
+        run: python3 main.py --output "${RUNNER_TEMP}/humanoid_support_margin_gbk"
+
+      - name: Byte-compile the module
+        run: python3 -m py_compile main.py humanoid_support_margin/*.py launch/main.launch.py test/test_humanoid_support_margin.py
+
+  windows:
+    name: Windows smoke test (GBK stdio)
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: src/humanoid/humanoid_support_margin
+        shell: pwsh
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.8'
+
+      - name: Install test dependency
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt
+
+      - name: Run tests
+        run: python -m pytest test -v
+
+      - name: Run main.py with GBK stdout
+        env:
+          PYTHONIOENCODING: gbk
+        run: python main.py --output "$env:TEMP/humanoid_support_margin_out"

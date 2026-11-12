@@ -1,0 +1,12 @@
+# CSL 决策参数（与 carla_curve_speed_limit/curve_speed_core.py 的 CSLParams 一一对应）
+csl:
+  ros__parameters:
+    cruise_speed: 8.0   # 巡航速度（m/s）
+    a_lat_max: 2.5      # 横向加速度上限（m/s²）
+    look_ahead: 30.0    # 预瞄距离（m）
+    v_min: 1.5          # 弯道最低速度（m/s）
+    decel_max: 2.0      # 减速度限幅（m/s²）
+    accel_max: 1.5      # 加速度限幅（m/s²）
+    slow_enter: 0.5     # 目标低于巡航该差值 → slowdown
+    slow_exit: 0.2      # 差值收窄到该值 → 恢复 cruise（滞回）
+    valid_max: 30.0     # 直道哨兵速度（m/s）

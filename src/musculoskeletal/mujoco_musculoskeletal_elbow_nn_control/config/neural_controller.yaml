@@ -1,0 +1,5 @@
+mujoco_elbow_neural_controller:
+  ros__parameters:
+    model_file: models/elbow_mlp.json
+    inference_rate_hz: 100.0
+    input_timeout_s: 0.25

@@ -1,0 +1,25 @@
+name: ROS 2 - carla_nn_roundabout_entry
+
+on:
+  push:
+    paths:
+      - 'src/ground/carla_nn_roundabout_entry/**'
+      - '.github/workflows/ros2_carla_nn_roundabout_entry.yml'
+  pull_request:
+    paths:
+      - 'src/ground/carla_nn_roundabout_entry/**'
+      - '.github/workflows/ros2_carla_nn_roundabout_entry.yml'
+  workflow_dispatch:
+
+jobs:
+  humble-build-test-launch:
+    runs-on: ubuntu-22.04
+    container: ros:humble-ros-base
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build, test and launch in ROS 2 Humble
+        run: bash src/ground/carla_nn_roundabout_entry/test/humble_acceptance.sh

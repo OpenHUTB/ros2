@@ -39,14 +39,17 @@ ros2 launch rov_mujoco main.launch.py
 
 | 按键 | 功能 |
 |------|------|
+| ↑ / ↓ | 前进 / 后退 |
+| ← / → | 原地左转 / 右转 |
 | W/S | 前进/后退 |
 | A/D | 左移/右移 |
 | Q/E | 上浮/下潜 |
 | J/L | 左偏航/右偏航 |
 | I/K | 前俯仰/后俯仰 |
 | U/O | 左翻滚/右翻滚 |
-| 空格 | 急停 |
-| +/- | 调节速度比例 |
+| 数字键 1-9 | 与方向键/字母键等价（九宫格布局） |
+| 空格 / 0 / 5 | 急停 |
+| +/- | 调节推力比例 |
 
 ## ROS2 话题
 
@@ -56,3 +59,15 @@ ros2 launch rov_mujoco main.launch.py
 | `/rov/odom` | `nav_msgs/Odometry` | 里程计（发布） |
 | `/rov/depth` | `std_msgs/Float64` | 深度（发布） |
 | `/joint_states` | `sensor_msgs/JointState` | 关节状态（发布） |
+
+## 离线回归评测（无需 ROS / MuJoCo）
+
+轨迹跟踪子系统可以脱离 ROS 单独跑：`TrajectoryGenerator` 的 ROS 消息改为按需导入，NN / LOS 控制器与一阶速度响应代理组合成闭环，只依赖 `numpy` 和 `matplotlib`。
+
+```bash
+python3 eval_offline.py --duration 60
+python3 eval_offline.py --controllers los --trajectories lawnmower --duration 40
+python3 -m unittest discover -s test -p "test_offline_eval.py" -v
+```
+
+结果写入 `results/offline_eval.json` 与 `results/offline_tracking.png`。代理模型不是 MuJoCo 水动力，指标只用于回归和相对比较，详见 `docs/water/rov_trajectory_tracking.md` 第 7.3 节。

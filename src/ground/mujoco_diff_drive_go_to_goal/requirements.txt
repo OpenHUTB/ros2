@@ -1,0 +1,10 @@
+# pip 依赖（MuJoCo 不在 apt 仓库里，独立运行与 ROS 运行共用这一份）
+# 安装：pip install -r requirements.txt
+# 实测环境：Ubuntu（无头）Python 3.12.11，mujoco 3.17.0（属 >=3.2,<4.0 区间），numpy 1.26.4。
+# mujoco 用版本区间 >=3.2,<4.0 而非钉死单一版本：3.2 起提供 cp39 wheel，
+# 可兼容 ROS Noetic 系统 Python 3.9；<4.0 避开未回归的大版本。本作业只用到基础
+# mj_step 与四元数解算，区间内向后兼容较宽。
+# Pillow 仅 test/record_demo_gif.py 离屏录帧导出 GIF 时需要，独立运行 main.py 不依赖。
+mujoco>=3.2,<4.0
+numpy>=1.21,<3.0
+pillow>=10.4.0,<14.0

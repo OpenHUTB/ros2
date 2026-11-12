@@ -1,0 +1,76 @@
+{
+  "mae": 0.008736195024886125,
+  "per_rotor_mae": [
+    0.011597795840406556,
+    0.0050449869788186386,
+    0.012665828441976031,
+    0.005636168838343274
+  ],
+  "confusion": {
+    "tp": 253,
+    "fp": 0,
+    "tn": 761,
+    "fn": 25,
+    "recall": 0.9100719424460432,
+    "precision": 1.0,
+    "false_alarm_rate": 0.0,
+    "accuracy": 0.9759384023099134
+  },
+  "n_samples": 1039,
+  "per_group": {
+    "degradation": {
+      "n_samples": 169,
+      "mae": 0.009934645454735446,
+      "latency": 0.0,
+      "recall": 0.98,
+      "false_alarm_rate": 0.0
+    },
+    "dual_loss": {
+      "n_samples": 138,
+      "mae": 0.01872396961751266,
+      "latency": 0.3,
+      "recall": 0.9736842105263158,
+      "false_alarm_rate": 0.0
+    },
+    "healthy": {
+      "n_samples": 142,
+      "mae": 0.004391011113012341,
+      "latency": null,
+      "recall": 0.0,
+      "false_alarm_rate": 0.0
+    },
+    "imu_bias": {
+      "n_samples": 213,
+      "mae": 0.003083656931147329,
+      "latency": null,
+      "recall": 0.0,
+      "false_alarm_rate": 0.0
+    },
+    "loss": {
+      "n_samples": 152,
+      "mae": 0.00927582528598386,
+      "latency": 0.1,
+      "recall": 0.9285714285714286,
+      "false_alarm_rate": 0.0
+    },
+    "progressive": {
+      "n_samples": 121,
+      "mae": 0.007920652427826046,
+      "latency": 0.8,
+      "recall": 0.8059701492537313,
+      "false_alarm_rate": 0.0
+    },
+    "stuck": {
+      "n_samples": 104,
+      "mae": 0.011205546636259757,
+      "latency": 0.2,
+      "recall": 0.8064516129032258,
+      "false_alarm_rate": 0.0
+    }
+  },
+  "split": "test",
+  "checkpoint": "results/detector.pt",
+  "dataset": "results/detector_dataset.npz",
+  "window": 100,
+  "n_parameters": 38452
+}

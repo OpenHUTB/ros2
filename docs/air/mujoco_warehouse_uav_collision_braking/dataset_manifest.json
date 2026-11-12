@@ -1,0 +1,370 @@
+{
+  "seed": 42,
+  "episodes": [
+    {
+      "id": 0,
+      "split": "train",
+      "scenario": "static",
+      "cruise_mps": 1.993120887400734,
+      "obstacle_x_m": 4.974952978884236,
+      "crossing_speed_mps": 1.0868783359291059,
+      "collision": true
+    },
+    {
+      "id": 1,
+      "split": "train",
+      "scenario": "crossing",
+      "cruise_mps": 2.0283048373061177,
+      "obstacle_x_m": 4.106813958036323,
+      "crossing_speed_mps": 0.7235410671532232,
+      "collision": false
+    },
+    {
+      "id": 2,
+      "split": "train",
+      "scenario": "narrow",
+      "cruise_mps": 1.1211161238606555,
+      "obstacle_x_m": 7.283985211268074,
+      "crossing_speed_mps": 0.4744355057090438,
+      "collision": true
+    },
+    {
+      "id": 3,
+      "split": "train",
+      "scenario": "static",
+      "cruise_mps": 0.9944094130287111,
+      "obstacle_x_m": 5.505478766503813,
+      "crossing_speed_mps": 1.0877677378327366,
+      "collision": false
+    },
+    {
+      "id": 4,
+      "split": "train",
+      "scenario": "crossing",
+      "cruise_mps": 1.9466645994968204,
+      "obstacle_x_m": 4.1786801563840035,
+      "crossing_speed_mps": 1.1895094580564955,
+      "collision": true
+    },
+    {
+      "id": 5,
+      "split": "train",
+      "scenario": "narrow",
+      "cruise_mps": 0.914435564090921,
+      "obstacle_x_m": 7.403747310323295,
+      "crossing_speed_mps": 0.4456033273985336,
+      "collision": false
+    },
+    {
+      "id": 6,
+      "split": "train",
+      "scenario": "static",
+      "cruise_mps": 1.300129432981083,
+      "obstacle_x_m": 4.12330152749332,
+      "crossing_speed_mps": 0.9900812448378578,
+      "collision": true
+    },
+    {
+      "id": 7,
+      "split": "train",
+      "scenario": "crossing",
+      "cruise_mps": 1.5353352620884613,
+      "obstacle_x_m": 3.939117770175942,
+      "crossing_speed_mps": 0.808311631419669,
+      "collision": true
+    },
+    {
+      "id": 8,
+      "split": "train",
+      "scenario": "narrow",
+      "cruise_mps": 2.2287832161263,
+      "obstacle_x_m": 6.717452600311886,
+      "crossing_speed_mps": 0.7630989074370627,
+      "collision": true
+    },
+    {
+      "id": 9,
+      "split": "validation",
+      "scenario": "static",
+      "cruise_mps": 1.534752625237476,
+      "obstacle_x_m": 6.364821964412396,
+      "crossing_speed_mps": 0.935509461846762,
+      "collision": false
+    },
+    {
+      "id": 10,
+      "split": "validation",
+      "scenario": "crossing",
+      "cruise_mps": 1.2513424202151824,
+      "obstacle_x_m": 7.256722828835166,
+      "crossing_speed_mps": 1.1564735197179665,
+      "collision": false
+    },
+    {
+      "id": 11,
+      "split": "validation",
+      "scenario": "narrow",
+      "cruise_mps": 0.6327461714017235,
+      "obstacle_x_m": 5.172627220546389,
+      "crossing_speed_mps": 0.7268536203160736,
+      "collision": false
+    },
+    {
+      "id": 12,
+      "split": "test",
+      "scenario": "static",
+      "cruise_mps": 1.0890610122081914,
+      "obstacle_x_m": 5.238981792954179,
+      "crossing_speed_mps": 0.771290264941082,
+      "collision": true
+    },
+    {
+      "id": 13,
+      "split": "test",
+      "scenario": "crossing",
+      "cruise_mps": 0.6424153117993566,
+      "obstacle_x_m": 5.354771904653454,
+      "crossing_speed_mps": 0.42474937757276915,
+      "collision": false
+    },
+    {
+      "id": 14,
+      "split": "test",
+      "scenario": "narrow",
+      "cruise_mps": 1.4569020995823445,
+      "obstacle_x_m": 5.5429660752555305,
+      "crossing_speed_mps": 1.1163939642909764,
+      "collision": true
+    },
+    {
+      "id": 15,
+      "split": "train",
+      "scenario": "static",
+      "cruise_mps": 1.0729783864576676,
+      "obstacle_x_m": 4.105926789978515,
+      "crossing_speed_mps": 0.44650798396437363,
+      "collision": false
+    },
+    {
+      "id": 16,
+      "split": "train",
+      "scenario": "crossing",
+      "cruise_mps": 0.6677849791721991,
+      "obstacle_x_m": 6.270998182614939,
+      "crossing_speed_mps": 0.41943375062902954,
+      "collision": false
+    },
+    {
+      "id": 17,
+      "split": "train",
+      "scenario": "narrow",
+      "cruise_mps": 0.9771864441103775,
+      "obstacle_x_m": 5.881257225640773,
+      "crossing_speed_mps": 0.9662034446439841,
+      "collision": false
+    },
+    {
+      "id": 18,
+      "split": "train",
+      "scenario": "static",
+      "cruise_mps": 0.7649145165117536,
+      "obstacle_x_m": 6.22710220941895,
+      "crossing_speed_mps": 0.9681651591326826,
+      "collision": true
+    },
+    {
+      "id": 19,
+      "split": "train",
+      "scenario": "crossing",
+      "cruise_mps": 1.4499126578241095,
+      "obstacle_x_m": 7.398142092034383,
+      "crossing_speed_mps": 1.0132559272846642,
+      "collision": false
+    },
+    {
+      "id": 20,
+      "split": "train",
+      "scenario": "narrow",
+      "cruise_mps": 1.7478839115701787,
+      "obstacle_x_m": 4.8062923950358964,
+      "crossing_speed_mps": 1.0812176901218828,
+      "collision": true
+    },
+    {
+      "id": 21,
+      "split": "train",
+      "scenario": "static",
+      "cruise_mps": 0.7171919647163845,
+      "obstacle_x_m": 4.015634775972826,
+      "crossing_speed_mps": 0.8504621385923359,
+      "collision": false
+    },
+    {
+      "id": 22,
+      "split": "train",
+      "scenario": "crossing",
+      "cruise_mps": 1.000799290561338,
+      "obstacle_x_m": 6.731184618347076,
+      "crossing_speed_mps": 0.9584584904556822,
+      "collision": false
+    },
+    {
+      "id": 23,
+      "split": "train",
+      "scenario": "narrow",
+      "cruise_mps": 1.517113171466543,
+      "obstacle_x_m": 4.397504473578012,
+      "crossing_speed_mps": 0.45183021046305866,
+      "collision": false
+    },
+    {
+      "id": 24,
+      "split": "validation",
+      "scenario": "static",
+      "cruise_mps": 2.196573355695375,
+      "obstacle_x_m": 5.934075758299439,
+      "crossing_speed_mps": 1.1717912327859556,
+      "collision": true
+    },
+    {
+      "id": 25,
+      "split": "validation",
+      "scenario": "crossing",
+      "cruise_mps": 2.3268647890292433,
+      "obstacle_x_m": 6.4926301070111085,
+      "crossing_speed_mps": 0.42772766104859655,
+      "collision": false
+    },
+    {
+      "id": 26,
+      "split": "validation",
+      "scenario": "narrow",
+      "cruise_mps": 1.682761160732992,
+      "obstacle_x_m": 3.2684588435068753,
+      "crossing_speed_mps": 0.9136163615290428,
+      "collision": true
+    },
+    {
+      "id": 27,
+      "split": "test",
+      "scenario": "static",
+      "cruise_mps": 0.7169138204072986,
+      "obstacle_x_m": 5.695395557273727,
+      "crossing_speed_mps": 0.6354089619062578,
+      "collision": false
+    },
+    {
+      "id": 28,
+      "split": "test",
+      "scenario": "crossing",
+      "cruise_mps": 0.6187666218665548,
+      "obstacle_x_m": 7.06880644930886,
+      "crossing_speed_mps": 0.7091156793519704,
+      "collision": false
+    },
+    {
+      "id": 29,
+      "split": "test",
+      "scenario": "narrow",
+      "cruise_mps": 1.829372231270498,
+      "obstacle_x_m": 6.155575995962796,
+      "crossing_speed_mps": 0.935772895960577,
+      "collision": false
+    }
+  ],
+  "features": [
+    "range_0_m",
+    "range_1_m",
+    "range_2_m",
+    "range_3_m",
+    "range_4_m",
+    "range_5_m",
+    "range_6_m",
+    "range_7_m",
+    "range_8_m",
+    "closing_0_mps",
+    "closing_1_mps",
+    "closing_2_mps",
+    "closing_3_mps",
+    "closing_4_mps",
+    "closing_5_mps",
+    "closing_6_mps",
+    "closing_7_mps",
+    "closing_8_mps",
+    "speed_mps",
+    "cruise_mps"
+  ],
+  "dt_s": 0.02,
+  "range_limit_m": 8.0,
+  "risk_classes": {
+    "0": "clear",
+    "1": "caution",
+    "2": "brake"
+  },
+  "label_source": "stopping_distance_reference",
+  "splits": {
+    "train": {
+      "samples": 5465,
+      "episode_ids": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23
+      ],
+      "risk_counts": [
+        2437,
+        1195,
+        1833
+      ],
+      "array_sha256": "1d8b828bd9e57faf0df52e1f08c89d762f820bbd8d745f083858d5bbf0ee61e6"
+    },
+    "validation": {
+      "samples": 1816,
+      "episode_ids": [
+        9,
+        10,
+        11,
+        24,
+        25,
+        26
+      ],
+      "risk_counts": [
+        854,
+        309,
+        653
+      ],
+      "array_sha256": "22ac92cff4185d585a68442da04072170bc78acf2ab05b74534119a5e7ad5868"
+    },
+    "test": {
+      "samples": 2008,
+      "episode_ids": [
+        12,
+        13,
+        14,
+        27,
+        28,
+        29
+      ],
+      "risk_counts": [
+        990,
+        468,
+        550
+      ],
+      "array_sha256": "9fe6c745c5d0954c09114bc3e06905934d44e106e7447a3cf1b58a2b446d1a01"
+    }
+  }
+}

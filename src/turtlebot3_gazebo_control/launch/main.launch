@@ -1,0 +1,10 @@
+<launch>
+    <!-- 1. 启动 Gazebo 环境 -->
+    <include file="$(find turtlebot3_gazebo_control)/launch/gazebo_simulation.launch" />
+
+    <!-- 2. 启动键盘控制节点，并分配 xterm 交互终端，满足统一入口启动要求 -->
+    <!-- 注意：需先在终端执行 sudo apt install xterm 安装交互终端 -->
+    <node pkg="turtlebot3_gazebo_control" type="main.py" name="keyboard_control" 
+          output="screen" launch-prefix="xterm -e">
+    </node>
+</launch>
