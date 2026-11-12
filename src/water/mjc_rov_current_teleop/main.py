@@ -18,6 +18,7 @@ main.py —— 统一入口。
 import argparse
 import os
 import sys
+from pathlib import Path
 
 # 兼容两种启动方式：
 #   python3 main.py collect          （源码目录直接跑）
@@ -26,7 +27,7 @@ _PKG_DIR = os.path.dirname(os.path.abspath(__file__))
 if _PKG_DIR not in sys.path:
     sys.path.insert(0, _PKG_DIR)
 
-from mjc_rov_current_teleop import cruise_net  # noqa: E402
+from mjc_rov_current_teleop import common, cruise_net  # noqa: E402
 
 
 DEFAULT_PARAMS = dict(
@@ -43,15 +44,31 @@ def cmd_collect(args):
 
 
 def cmd_train(args):
-    cruise_net.train(DEFAULT_PARAMS, epochs=args.epochs)
+    cruise_net.train(DEFAULT_PARAMS, epochs=args.epochs, seed=args.seed)
 
 
-def cmd_test(_args=None):
+def cmd_test(args=None):
     r_net = cruise_net.evaluate(DEFAULT_PARAMS, use_net=True)
     print("---- 对比：纯脚本专家(无NN) ----")
     r_expert = cruise_net.evaluate(DEFAULT_PARAMS, use_net=False)
     print(f"[指标] MLP:  MAE={r_net['mae_position_m']}m 成功率={r_net['all_waypoints_hit']}")
     print(f"[指标] 专家: MAE={r_expert['mae_position_m']}m 成功率={r_expert['all_waypoints_hit']}")
+
+    # 24 s 窗口（12000 步）不够跑完一圈，圈时用更长的窗口单独测；
+    # 文档 §实测结果 的第二张表就是这条命令的输出。
+    if args is not None and getattr(args, "lap", False):
+        secs = float(args.lap_seconds)
+        print(f"---- 圈时（窗口 {secs:.0f} s，跑完 4 个航点计一圈）----")
+        for name, use_net in (("专家", False), ("MLP", True), ("DAgger", True)):
+            weights = ""
+            if name == "DAgger":
+                weights = str(common.get_package_root() / "weights" / "cruise_mlp_dagger.pt")
+                if not Path(weights).exists():
+                    print(f"[圈时] DAgger: 未找到 {weights}，先跑 python3 main.py dagger")
+                    continue
+            params = dict(DEFAULT_PARAMS, weights_path=weights) if weights else DEFAULT_PARAMS
+            r = cruise_net.evaluate(params, use_net=use_net, max_seconds=secs)
+            print(f"[圈时] {name}: {r['lap_time_s']} s  完成={r['all_waypoints_hit']}")
 
 
 def cmd_dagger(args):
@@ -87,9 +104,14 @@ def build_parser():
 
     t = sub.add_parser("train", help="训练 MLP")
     t.add_argument("--epochs", type=int, default=200)
+    t.add_argument("--seed", type=int, default=0, help="固定网络初始化，保证闭环指标可复现")
     t.set_defaults(func=cmd_train)
 
     e = sub.add_parser("test", help="闭环评估")
+    e.add_argument("--lap", action="store_true",
+                   help="额外测「跑完一圈的耗时」（用更长窗口，默认 60 s）")
+    e.add_argument("--lap-seconds", type=float, default=60.0,
+                   help="测圈时用的仿真窗口长度，秒")
     e.set_defaults(func=cmd_test)
 
     d = sub.add_parser("dagger", help="DAgger 数据聚合训练")
