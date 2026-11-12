@@ -517,6 +517,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [禁飞区检测模块](no_fly_zone_check/index.md)
 
 * [MuJoCo无人机幕墙定距扫描](air/mujoco_facade_capture/index.md)
+* [AirSim 多旋翼航点飞行与到达误差评估](air/airsim_multirotor_waypoint_nav.md) —— 起飞 → 4 航点（相对起飞点偏移）→ 降落；悬停中位误差最大 0.41 m，含机载视角动图
 
 * [基于神经网络的无人机感知—规划—控制避障](./air/neural_ca_drone_submission/docs/index.md) —— 深度图 CNN 感知、神经启发式 A* 规划与模仿学习控制的分层避障，附端到端对照
   * [任务与方案](./air/neural_ca_drone_submission/docs/overview.md)
