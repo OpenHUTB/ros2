@@ -59,11 +59,11 @@ ANGLE_HI = 0.5          # 转入转向段的角度阈值 rad
 ANGLE_LO = 0.3          # 转回直行的角度阈值 rad（滞回下限）
 WP_ARRIVE_DIST = 0.18    # 中间航点到达半径 m
 END_ARRIVE_DIST = 0.10  # 末航点（回起点）到达半径 m，收紧避免提前判停
-D_DES = 0.28            # 目标贴墙侧距 m
+D_DES = 0.28            # 目标侧距 m：射线原点到墙；车体中心到墙约 0.43 m（+RAY_OFFSET_X）
 KP_SIDE = 2.8           # 侧距比例增益
 SAFE_FRONT = 0.30       # 前向防撞限速阈值 m
 RAY_MAX_RANGE = 5.0     # 射线最大量程 m
-RAY_OFFSET_X = 0.15     # 射线发射点相对车体质心的前向偏移 m
+RAY_OFFSET_X = 0.15     # 射线原点沿射线方向外移 m：前向射线在质心前 0.15，右侧射线在质心右侧 0.15
 FILTER_ALPHA = 0.5      # 侧距一阶低通滤波系数
 MAX_STEPS = 20000       # 步数上限兜底（dt=0.005 → 100 s），避免死循环
 
@@ -170,7 +170,12 @@ def _body_id(model, name):
 
 
 def _ray_distance(model, data, yaw, rel_angle, bid):
-    """相对车身方位 rel_angle 发水平射线；未命中返回 RAY_MAX_RANGE。"""
+    """相对车身方位 rel_angle 发水平射线；未命中返回 RAY_MAX_RANGE。
+
+    射线原点 = 质心沿该射线方向外移 RAY_OFFSET_X，不是统一的向前偏移：
+    前向射线（0 度）在质心前 0.15 m；右侧射线（-90 度）在质心右侧 0.15 m。
+    因此侧向读数 d 表示射线原点到墙，车体中心到墙约为 d + RAY_OFFSET_X。
+    """
     pnt = np.array(data.xpos[bid], dtype=np.float64)
     a = yaw + rel_angle
     pnt[0] += RAY_OFFSET_X * math.cos(a)
