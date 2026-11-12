@@ -53,7 +53,6 @@ ROS 相关资料（[网盘下载地址](https://pan.baidu.com/s/1viua4SZ7tP2DtU2
 ROS每章节运行代码:
 
 * [第 1 章](./chapter/chap1/chap1.md) - 认识 ROS
-    * [小海龟多航点巡航与暂停恢复](./chapter/chap1/turtle_waypoint_patrol/index.md)
 * [第 2 章](./chapter/chap2.md) - ROS 基础
     * [ROS 2 话题发布订阅基础实验（talker/listener）](./chap2/ros2_pubsub_py.md)
     * [ROS Noetic 多传感器话题时间同步](./chap2/ros1_message_time_sync/index.md)
@@ -144,6 +143,8 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [给定黑箱关节轨迹，反推肌肉参数](./musculoskeletal/msk_muscle_ident.md)
 
 ## 4. 地面载具  <span id='ground_vehicle'></span>
+
+* [小海龟多航点巡航与暂停恢复](./chapter/chap1/turtle_waypoint_patrol/index.md)
 * [离线测试接入 GitHub Actions](./ground/offline_checks.md) —— 6 个零依赖离线测试接入 CI，分别通过 208 / 270 / 242 / 41 / 271 / 204 项
 * [编码器量化误差与速度估计滤波对比](./ground/encoder_quantization_velocity.md) —— 1 kHz 差分把量化误差放大千倍；1024/4096/16384 CPR 下原始差分 1.371→0.404→0.133 rad/s，α-β 与卡尔曼把误差压到 0.198/0.047
 * [车辆 CAN 报文信号解码与一致性校验](./ground/can_signal_decode.md) —— 位域 + CRC8 + 计数器三重校验，不校验时车速会被污染成 403 km/h
@@ -189,6 +190,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [速度曲线规划](./ground/speed_profile_check.md)
 * [转弯扫掠校验](./ground/turning_sweep_check.md)
 * [爬坡能力与牵引力余量核算](./ground/vehicle_gradeability_check.md) —— 按整车质量、坡度、车速与附着系数核算所需/可用牵引力和余量，区分可爬坡、动力不足与打滑风险
+* [涉水深度与浮力裕度核算](./ground/vehicle_wading_check.md) —— 按进气口、排气口与车门下沿取限深，核算浮力占比、湿态牵引力与允许涉水车速，区分 SAFE/CAUTION/FLOODED/FLOATING
 * [车辆几何通过性核算](./ground/passability_check.md) —— 接近角/离去角/纵向通过角 + 沿剖面逐位姿判断车头/车底/车尾会不会蹭、蹭多深
 * [RQT 插件](./ground/rqt_plugin.md)
 * [激光雷达点云语义分割](./ground/carla_lidar_pointcloud_segmentation.md)
@@ -245,6 +247,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [神经网络强化学习算法与网络结构对比（MuJoCo CartPole）](./ground/rl_algorithm_compare.md)
 * [车辆稳态操稳特性对比（不足 / 中性 / 过度转向）](./ground/steady_state_handling_eval.md) —— 质心位置对转向梯度、横摆增益与侧偏角的影响
 * [基于Mujoco的键盘遥控小车](./ground/mujoco_car_project.md)
+* [MuJoCo 叉车相机引导的托盘接近与低速插入](./ground/mujoco_forklift_pallet_docking.md)
 * [地面载具横向控制算法对比（纯跟踪 / Stanley / LQR）](./ground/lateral_control_benchmark.md) —— 同一车辆模型与指标下定量比较三种横向控制器
 * [MPPI 采样 MPC 与蒸馏神经网络的 8 字赛道跟踪对比](./ground/mujoco_mppi_neural_tracker.md) —— 同一赛道上比较 MPPI、蒸馏网络与纯追踪的精度/算力/抗噪
 * [ROS2 差速机器人 A* 全局规划与 DWA 局部避障](./ground/ros2_dwa_avoidance.md)
@@ -407,6 +410,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [空域模拟器的 ROS 封装器](./air/ros_pkgs.md)
 * [无人机与 ROS 的桥接模块](./air/carlair_ros_bridge.md)
 * [无人机 SLAM 建图与导航](./air/uav_slam_nav.md) —— Humble 侧 slam_toolbox + nav2，跨 ros1_bridge 接 Noetic bridge
+* [无人机深度相机建图与自主导航（深度反投影 + A* + 纯追踪）](./air/uav_depth_mapping_nav.md) —— 深度相机反投影建图、A* 规划与纯追踪控制的完整闭环（原 uav_slam_nav 更名，避免与已合并模块重名）
 * [AirSim ROS 2 Humble 最小桥接](./air/airsim_ros2_bringup.md)
 * [无人机 LiDAR 地面/障碍分割](./air/uav_lidar_ground_filter.md)
 * [无人机屋顶降落](./air/rooftop_landing.md) —— 用机载 LiDAR 检测屋顶平面，取轮廓的最大内切圆圆心作为降落点，自主飞抵其上方后垂直降落
@@ -571,6 +575,8 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [水下机器人物理仿真与 6-DOF 键盘运动控制](./water/rov_physical_simulation.md)
 
 * [水下 ROV 六自由度手操与抗流能力评测仿真](./water/rov_handling_eval.md) —— 用漂移率、各向异性比与操控权限利用率 η 量化手操品质，附三组对照实验
+
+* [ROV 浮力-压载配平与初稳性核算](./water/rov_ballast_trim.md) —— 全潜状态按 GM = z_B - z_G（不含水面船 BM = I/V 项）算中性浮力、重心/浮心偏心与横摇周期；默认样机缺 38.5 kg 压载，配平后 GM 42 mm、2° 倾角只对应 1.5 mm 横向偏心
 * [ROV 深度保持 PID 控制与扰动恢复仿真](./water/rov_depth_hold.md) —— 负载上浮扰动与波浪扰动下的定深精度、扰动恢复时间，附实现动图
 * [ROV 推进器配置矩阵与饱和感知推力分配](./water/rov_thruster_allocation.md) —— 8 推进器 6×8 配置矩阵（秩 6、条件数 10.9），箱约束 QP 分配；超包络时力旋量残差比先伪逆再限幅低 36%（20.00 vs 31.41）
 
