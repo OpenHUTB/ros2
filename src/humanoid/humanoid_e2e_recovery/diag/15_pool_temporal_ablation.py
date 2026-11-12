@@ -11,11 +11,12 @@
     python3 diag/15_pool_temporal_ablation.py --reuse      # 复用已采数据集
 
 实测(云主机, 8 回合 4 272 条):
-    16 格基线         val 2.35 N·m² | 首帧 9.64  | 闭环 2.89 s
-    32 格池化         val 1.48 N·m² | 首帧 11.91 | 闭环 1.72 s（更差）
-    双帧 6 ms         val 1.42 N·m² | 首帧 16.49 | 闭环 2.76 s
-    双帧 100 ms       val 2.16 N·m² | 首帧 93.78 | 闭环 2.81 s
-结论：离线误差都更好看，闭环没有一个超过 3.5 s——瓶颈确实不在分辨率/时序。
+    16 格基线         val 2.35 N·m² | 闭环 2.63 s 跌倒
+    32 格池化         val 1.48 N·m² | 闭环 1.72 s 跌倒（离线更好看，闭环更差）
+    双帧 6 ms         val 1.42 N·m² | 闭环 2.85 s 跌倒
+    双帧 102 ms       val 2.09 N·m² | 闭环站满 10 s（这一档才入库）
+结论：离线 val_mse 更好看不等于闭环能站，唯一起作用的是"时间差足够大"——
+这正是当前入库权重改用双帧 102 ms 的依据。
 
 注意：数据按 32 格采（同样 64×64 渲染，不增加耗时），16 格由 2×2 均值派生，
 两者等价于直接 16 格池化，保证对照口径一致。
@@ -25,6 +26,7 @@ from __future__ import annotations
 import argparse
 import os
 import sys
+import tempfile
 import time
 
 import numpy as np
@@ -41,6 +43,13 @@ from humanoid_e2e_recovery.train import train  # noqa: E402
 POOL = 32
 SIDE = 16                     # 训练都用 16 格（256 维），32 格只用 1024 维那一档
 EP_LEN = 534                  # 每回合样本数（warmup 400 + 恢复段，record_every=3）
+# 中间产物目录。用 tempfile 而不是 /tmp：Windows 下 /tmp 不可写，
+# 本脚本要能在任意平台上复现这四档对照。
+WORK = tempfile.mkdtemp(prefix="diag15_")
+
+
+def work(name):
+    return os.path.join(WORK, name)
 
 
 def collect(model_path, out_path, n_episodes=8, seed=0):
@@ -82,11 +91,12 @@ def collect(model_path, out_path, n_episodes=8, seed=0):
 
 
 def fit(X, Y, out_w, in_dim, seed=0):
-    np.savez("/tmp/_diag15_%d.npz" % in_dim, X=X, Y=Y,
+    ds = work("_diag15_%d.npz" % in_dim)
+    np.savez(ds, X=X, Y=Y,
              X_mean=X.mean(axis=0), X_std=np.maximum(X.std(axis=0), X_STD_FLOOR),
              Y_mean=Y.mean(axis=0),
              Y_scale=np.where(Y.std(axis=0) > 1e-6, Y.std(axis=0), 1.0))
-    train("/tmp/_diag15_%d.npz" % in_dim, out_w, in_dim=in_dim, seed=seed, verbose=False)
+    train(ds, out_w, in_dim=in_dim, seed=seed, verbose=False)
     return np.load(out_w)
 
 
@@ -144,32 +154,33 @@ def main():
 
     res = {}
 
+    print(f"[工作目录] {WORK}（tempfile，跨平台可写）", flush=True)
     print("[A] 16 格基线", flush=True)
-    w = fit(X16, Y, "/tmp/diag15_A.npz", 256)
+    w = fit(X16, Y, work("diag15_A.npz"), 256)
     res["A"] = closed_loop(w, 16)
 
     print("[B] 32 格池化", flush=True)
-    w = fit(X32, Y, "/tmp/diag15_B.npz", 1024)
+    w = fit(X32, Y, work("diag15_B.npz"), 1024)
     res["B"] = closed_loop(w, 32)
 
     keep = np.array([i for i in range(1, len(X16)) if i % EP_LEN != 0])
     print("[C] 双帧 6 ms", flush=True)
     w = fit(np.concatenate([X16[keep - 1], X16[keep]], axis=1), Y[keep],
-               "/tmp/diag15_C.npz", 512)
+            work("diag15_C.npz"), 512)
     res["C"] = closed_loop(w, 16, lag_renders=1, render_every=3)
 
     lag = 17                      # 17 × 6 ms ≈ 102 ms
     keep = np.array([i for i in range(lag, len(X16)) if i % EP_LEN >= lag])
-    print("[D] 双帧 100 ms", flush=True)
+    print("[D] 双帧 102 ms", flush=True)
     w = fit(np.concatenate([X16[keep - lag], X16[keep]], axis=1), Y[keep],
-               "/tmp/diag15_D.npz", 512)
+            work("diag15_D.npz"), 512)
     res["D"] = closed_loop(w, 16, lag_renders=25, render_every=2)
 
     print("\n=== 汇总 ===")
     for k, (first, fell) in res.items():
         t = f"{fell:.2f}s" if fell is not None else "站满"
         print(f"{k}: 首帧 {first:.2f} N·m | 闭环 {t}")
-    print("对照：入库权重闭环 3.53 s（诊断 14），全零权重 1.31 s（诊断 07）")
+    print("对照：入库双帧权重闭环 10 s 站满（诊断 16 可离线复算留出集指标）")
 
 
 if __name__ == "__main__":
