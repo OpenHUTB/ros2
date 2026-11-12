@@ -184,14 +184,14 @@ class GradeabilityChecker:
         slip_risk = required > traction_limit
         power_deficit = required > drive_limit
 
+        # 失败情形只有侧滑（TRACTION_LIMIT）与动力不足（POWER_LIMIT）两种；
+        # 两者都不满足时 margin 必然 >= 0，归为 CLIMBABLE，不再单列冗余分支。
         if slip_risk:
             mode = "TRACTION_LIMIT"
         elif power_deficit:
             mode = "POWER_LIMIT"
-        elif margin >= 0.0:
-            mode = "CLIMBABLE"
         else:
-            mode = "POWER_LIMIT"
+            mode = "CLIMBABLE"
 
         return GradeabilityResult(
             mode=mode,
