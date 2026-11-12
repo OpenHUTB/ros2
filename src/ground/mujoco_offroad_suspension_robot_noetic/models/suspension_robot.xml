@@ -1,0 +1,227 @@
+<mujoco model="offroad_suspension_robot">
+  <!-- 四轮独立悬架越野小车：滑移转向 + 高度场起伏地形 + IMU 姿态反馈 -->
+  <compiler angle="radian" inertiafromgeom="true" autolimits="true"/>
+  <option timestep="0.001" gravity="0 0 -9.81" integrator="implicitfast"
+          cone="elliptic" impratio="8" density="1.0" viscosity="0.0"/>
+
+  <visual>
+    <!-- 离屏渲染尺寸上限由 offwidth/offheight 决定；skybox 在 asset 中定义后自动作为背景 -->
+    <global offwidth="1280" offheight="720" fovy="46"/>
+    <quality shadowsize="2048" offsamples="4"/>
+    <headlight ambient="0.26 0.27 0.30" diffuse="0.52 0.50 0.47" specular="0.10 0.10 0.10"/>
+    <map znear="0.001" zfar="200" haze="0.0"/>
+  </visual>
+
+  <asset>
+    <texture name="soil" type="2d" file="soil.png"/>
+    <material name="soil_mat" texture="soil" texrepeat="34 34" texuniform="true"
+              reflectance="0.01" shininess="0.0"/>
+    <texture name="rock" type="2d" file="rock.png"/>
+    <material name="rock_mat" texture="rock" texrepeat="1 1" texuniform="true"
+              reflectance="0.03" shininess="0.05"/>
+    <texture name="sky" type="skybox" builtin="gradient" width="512" height="3072"
+             rgb1="0.50 0.66 0.86" rgb2="0.88 0.91 0.94"/>
+    <texture name="metal" type="2d" builtin="flat" width="64" height="64" rgb1="0.62 0.64 0.66"/>
+    <material name="metal_mat" texture="metal" reflectance="0.28" shininess="0.4"/>
+    <material name="shock_mat" rgba="0.85 0.55 0.10 1" reflectance="0.25" shininess="0.45"/>
+    <material name="chassis_mat" rgba="0.10 0.48 0.40 1" reflectance="0.20" shininess="0.35"/>
+    <material name="deck_mat" rgba="0.16 0.19 0.22 1" reflectance="0.12" shininess="0.25"/>
+    <material name="tire_mat" rgba="0.075 0.075 0.085 1" reflectance="0.03" shininess="0.08"/>
+    <material name="hub_mat" rgba="0.24 0.25 0.27 1" reflectance="0.18" shininess="0.35"/>
+    <material name="arm_mat" rgba="0.52 0.54 0.57 1" reflectance="0.25" shininess="0.45"/>
+    <material name="lamp_mat" rgba="1.0 0.92 0.55 1" reflectance="0.55" shininess="0.7"/>
+    <hfield name="offroad" nrow="480" ncol="480"
+           size="60.0 40.0 0.6 0.02"/>
+  </asset>
+
+  <worldbody>
+    <light name="sun" pos="12 -16 22" dir="-0.42 0.55 -1" directional="true"
+           diffuse="0.80 0.76 0.68" specular="0.28 0.28 0.26" castshadow="true"/>
+    <light name="fill" pos="-14 12 14" dir="0.5 -0.4 -1" directional="false"
+           diffuse="0.24 0.26 0.30" specular="0.06 0.06 0.06"/>
+
+    <!-- 起伏地形：480×480 高度场，单格 0.25 m，米制起伏 ±0.25 m -->
+    <geom name="terrain" type="hfield" hfield="offroad"
+          pos="0 0 0" rgba="0.88 0.88 0.88 1" material="soil_mat"
+          friction="1.2 0.02 0.15"/>
+
+    <geom name="rock_0" type="ellipsoid" pos="-7.50 5.60 0.552" size="0.55 0.45 0.37" euler="0 0.004 0.000" material="rock_mat" friction="1.5 0.02 0.1" mass="0"/>
+    <geom name="rock_1" type="ellipsoid" pos="-3.00 7.20 0.507" size="0.40 0.33 0.27" euler="0 0.017 0.700" material="rock_mat" friction="1.5 0.02 0.1" mass="0"/>
+    <geom name="rock_2" type="ellipsoid" pos="5.50 6.80 0.661" size="0.62 0.51 0.42" euler="0 -0.005 1.400" material="rock_mat" friction="1.5 0.02 0.1" mass="0"/>
+    <geom name="rock_3" type="ellipsoid" pos="11.00 8.30 0.500" size="0.45 0.37 0.31" euler="0 0.003 2.100" material="rock_mat" friction="1.5 0.02 0.1" mass="0"/>
+    <geom name="rock_4" type="ellipsoid" pos="17.50 5.50 0.640" size="0.58 0.48 0.39" euler="0 0.009 2.800" material="rock_mat" friction="1.5 0.02 0.1" mass="0"/>
+    <geom name="rock_5" type="ellipsoid" pos="9.00 -6.00 0.613" size="0.50 0.41 0.34" euler="0 0.003 3.500" material="rock_mat" friction="1.5 0.02 0.1" mass="0"/>
+    <geom name="rock_6" type="ellipsoid" pos="15.00 -6.80 0.353" size="0.42 0.34 0.29" euler="0 0.006 4.200" material="rock_mat" friction="1.5 0.02 0.1" mass="0"/>
+    <geom name="rock_7" type="ellipsoid" pos="2.00 -7.00 0.499" size="0.60 0.49 0.41" euler="0 0.063 4.900" material="rock_mat" friction="1.5 0.02 0.1" mass="0"/>
+    <geom name="rock_8" type="ellipsoid" pos="-6.00 -5.00 0.383" size="0.38 0.31 0.26" euler="0 -0.029 5.600" material="rock_mat" friction="1.5 0.02 0.1" mass="0"/>
+    <geom name="rock_9" type="ellipsoid" pos="21.00 4.50 0.527" size="0.35 0.29 0.24" euler="0 -0.033 6.300" material="rock_mat" friction="1.5 0.02 0.1" mass="0" contype="0" conaffinity="0"/>
+    <geom name="rock_10" type="ellipsoid" pos="24.00 -4.00 0.443" size="0.45 0.37 0.31" euler="0 -0.001 7.000" material="rock_mat" friction="1.5 0.02 0.1" mass="0" contype="0" conaffinity="0"/>
+    <geom name="rock_11" type="ellipsoid" pos="-11.00 9.00 0.662" size="0.70 0.57 0.48" euler="0 -0.032 7.700" material="rock_mat" friction="1.5 0.02 0.1" mass="0" contype="0" conaffinity="0"/>
+    <geom name="rock_12" type="ellipsoid" pos="-14.00 -8.00 0.628" size="0.50 0.41 0.34" euler="0 0.007 8.400" material="rock_mat" friction="1.5 0.02 0.1" mass="0" contype="0" conaffinity="0"/>
+    <geom name="rock_13" type="ellipsoid" pos="4.00 12.00 0.703" size="0.65 0.53 0.44" euler="0 -0.002 9.100" material="rock_mat" friction="1.5 0.02 0.1" mass="0" contype="0" conaffinity="0"/>
+    <geom name="rock_14" type="ellipsoid" pos="14.00 11.00 0.569" size="0.55 0.45 0.37" euler="0 0.010 9.800" material="rock_mat" friction="1.5 0.02 0.1" mass="0" contype="0" conaffinity="0"/>
+
+    <!-- 目标点：纯视觉标记，碰撞关闭，避免车被旗杆挡住 -->
+    <geom name="goal_pad" type="cylinder" size="0.42 0.012" pos="18.00 2.00 0.177"
+          rgba="0.95 0.72 0.15 0.55" contype="0" conaffinity="0" mass="0"/>
+    <geom name="goal_pole" type="cylinder" size="0.020 0.55" pos="18.00 2.00 0.735"
+          rgba="0.86 0.86 0.88 1" contype="0" conaffinity="0" mass="0"/>
+    <geom name="goal_flag" type="box" size="0.19 0.004 0.11" pos="18.20 2.00 1.175"
+          rgba="0.90 0.18 0.15 1" contype="0" conaffinity="0" mass="0"/>
+
+    <camera name="overview" pos="-8 -16 9" xyaxes="0.86 0.51 0 -0.32 0.54 0.78"/>
+
+    <body name="base_link" pos="0 0 0.42">
+      <freejoint name="base_free"/>
+      <!-- 窄车身 + 宽轮距，让悬架摇臂露出来 -->
+      <geom name="chassis" type="box" size="0.30 0.118 0.070" pos="0 0 0.135"
+            material="chassis_mat" mass="2.30"/>
+      <geom name="deck" type="box" size="0.215 0.105 0.028" pos="0 0 0.226"
+            material="deck_mat" mass="0.22"/>
+      <geom name="bumper_f" type="box" size="0.028 0.116 0.024" pos="0.318 0 0.112"
+            material="metal_mat" mass="0.05"/>
+      <geom name="bumper_r" type="box" size="0.028 0.116 0.024" pos="-0.318 0 0.112"
+            material="metal_mat" mass="0.05"/>
+      <geom name="cage_bar" type="capsule" fromto="0.02 -0.092 0.286 0.02 0.092 0.286"
+            size="0.011" material="metal_mat" mass="0.03"/>
+      <geom name="cage_post_l" type="capsule" fromto="0.02 0.092 0.186 0.02 0.092 0.286"
+            size="0.009" material="metal_mat" mass="0.02"/>
+      <geom name="cage_post_r" type="capsule" fromto="0.02 -0.092 0.186 0.02 -0.092 0.286"
+            size="0.009" material="metal_mat" mass="0.02"/>
+      <geom name="sensor_pod" type="box" size="0.055 0.050 0.038" pos="-0.10 0 0.285"
+            material="deck_mat" mass="0.12"/>
+      <geom name="antenna" type="capsule" fromto="-0.12 -0.092 0.32 -0.12 0.092 0.32"
+            size="0.007" material="metal_mat" mass="0.01"/>
+      <geom name="lamp_l" type="cylinder" size="0.030 0.010" pos="0.305 0.075 0.175"
+            euler="0 1.5708 0" material="lamp_mat" mass="0.008"/>
+      <geom name="lamp_r" type="cylinder" size="0.030 0.010" pos="0.305 -0.075 0.175"
+            euler="0 1.5708 0" material="lamp_mat" mass="0.008"/>
+      <site name="imu_site" pos="0 0 0.14" size="0.02" rgba="1 0.2 0.2 0.25"/>
+
+      <body name="sus_fl" pos="0.225 0.27 0.02">
+        <joint name="sus_j_fl" type="slide" axis="0 0 -1" range="-0.11 0.09"
+               stiffness="380" springref="0" damping="30" armature="0.02"/>
+        <geom name="arm_fl" type="capsule" fromto="0 -0.098 0.055 0 0 0"
+              size="0.020" material="arm_mat" mass="0.05"/>
+        <geom name="shock_fl" type="cylinder"
+              fromto="0 -0.098 0.135 0 -0.098 0.055"
+              size="0.020" material="shock_mat" mass="0.03"/>
+        <body name="wheel_fl" pos="0 0 0">
+          <joint name="drive_fl" type="hinge" axis="0 1 0" damping="0.30" armature="0.01"/>
+          <geom name="tire_fl" type="cylinder" size="0.14 0.062" euler="1.5708 0 0"
+                material="tire_mat" mass="0.34" friction="1.45 0.02 0.18"/>
+          <geom name="lug_fl_0" type="box" size="0.010 0.060 0.013" pos="0.1340 0 0.0000" euler="0 -0.000 0" material="tire_mat" mass="0.010"/>
+          <geom name="lug_fl_1" type="box" size="0.010 0.060 0.013" pos="0.1084 0 0.0788" euler="0 -0.628 0" material="tire_mat" mass="0.010"/>
+          <geom name="lug_fl_2" type="box" size="0.010 0.060 0.013" pos="0.0414 0 0.1274" euler="0 -1.257 0" material="tire_mat" mass="0.010"/>
+          <geom name="lug_fl_3" type="box" size="0.010 0.060 0.013" pos="-0.0414 0 0.1274" euler="0 -1.885 0" material="tire_mat" mass="0.010"/>
+          <geom name="lug_fl_4" type="box" size="0.010 0.060 0.013" pos="-0.1084 0 0.0788" euler="0 -2.513 0" material="tire_mat" mass="0.010"/>
+          <geom name="lug_fl_5" type="box" size="0.010 0.060 0.013" pos="-0.1340 0 0.0000" euler="0 -3.142 0" material="tire_mat" mass="0.010"/>
+          <geom name="lug_fl_6" type="box" size="0.010 0.060 0.013" pos="-0.1084 0 -0.0788" euler="0 -3.770 0" material="tire_mat" mass="0.010"/>
+          <geom name="lug_fl_7" type="box" size="0.010 0.060 0.013" pos="-0.0414 0 -0.1274" euler="0 -4.398 0" material="tire_mat" mass="0.010"/>
+          <geom name="lug_fl_8" type="box" size="0.010 0.060 0.013" pos="0.0414 0 -0.1274" euler="0 -5.027 0" material="tire_mat" mass="0.010"/>
+          <geom name="lug_fl_9" type="box" size="0.010 0.060 0.013" pos="0.1084 0 -0.0788" euler="0 -5.655 0" material="tire_mat" mass="0.010"/>
+          <geom name="hub_fl" type="cylinder" size="0.050 0.066" euler="1.5708 0 0"
+                material="hub_mat" mass="0.05"/>
+        </body>
+      </body>
+      <body name="sus_fr" pos="0.225 -0.27 0.02">
+        <joint name="sus_j_fr" type="slide" axis="0 0 -1" range="-0.11 0.09"
+               stiffness="380" springref="0" damping="30" armature="0.02"/>
+        <geom name="arm_fr" type="capsule" fromto="0 0.098 0.055 0 0 0"
+              size="0.020" material="arm_mat" mass="0.05"/>
+        <geom name="shock_fr" type="cylinder"
+              fromto="0 0.098 0.135 0 0.098 0.055"
+              size="0.020" material="shock_mat" mass="0.03"/>
+        <body name="wheel_fr" pos="0 0 0">
+          <joint name="drive_fr" type="hinge" axis="0 1 0" damping="0.30" armature="0.01"/>
+          <geom name="tire_fr" type="cylinder" size="0.14 0.062" euler="1.5708 0 0"
+                material="tire_mat" mass="0.34" friction="1.45 0.02 0.18"/>
+          <geom name="lug_fr_0" type="box" size="0.010 0.060 0.013" pos="0.1340 0 0.0000" euler="0 -0.000 0" material="tire_mat" mass="0.010"/>
+          <geom name="lug_fr_1" type="box" size="0.010 0.060 0.013" pos="0.1084 0 0.0788" euler="0 -0.628 0" material="tire_mat" mass="0.010"/>
+          <geom name="lug_fr_2" type="box" size="0.010 0.060 0.013" pos="0.0414 0 0.1274" euler="0 -1.257 0" material="tire_mat" mass="0.010"/>
+          <geom name="lug_fr_3" type="box" size="0.010 0.060 0.013" pos="-0.0414 0 0.1274" euler="0 -1.885 0" material="tire_mat" mass="0.010"/>
+          <geom name="lug_fr_4" type="box" size="0.010 0.060 0.013" pos="-0.1084 0 0.0788" euler="0 -2.513 0" material="tire_mat" mass="0.010"/>
+          <geom name="lug_fr_5" type="box" size="0.010 0.060 0.013" pos="-0.1340 0 0.0000" euler="0 -3.142 0" material="tire_mat" mass="0.010"/>
+          <geom name="lug_fr_6" type="box" size="0.010 0.060 0.013" pos="-0.1084 0 -0.0788" euler="0 -3.770 0" material="tire_mat" mass="0.010"/>
+          <geom name="lug_fr_7" type="box" size="0.010 0.060 0.013" pos="-0.0414 0 -0.1274" euler="0 -4.398 0" material="tire_mat" mass="0.010"/>
+          <geom name="lug_fr_8" type="box" size="0.010 0.060 0.013" pos="0.0414 0 -0.1274" euler="0 -5.027 0" material="tire_mat" mass="0.010"/>
+          <geom name="lug_fr_9" type="box" size="0.010 0.060 0.013" pos="0.1084 0 -0.0788" euler="0 -5.655 0" material="tire_mat" mass="0.010"/>
+          <geom name="hub_fr" type="cylinder" size="0.050 0.066" euler="1.5708 0 0"
+                material="hub_mat" mass="0.05"/>
+        </body>
+      </body>
+      <body name="sus_rl" pos="-0.225 0.27 0.02">
+        <joint name="sus_j_rl" type="slide" axis="0 0 -1" range="-0.11 0.09"
+               stiffness="380" springref="0" damping="30" armature="0.02"/>
+        <geom name="arm_rl" type="capsule" fromto="0 -0.098 0.055 0 0 0"
+              size="0.020" material="arm_mat" mass="0.05"/>
+        <geom name="shock_rl" type="cylinder"
+              fromto="0 -0.098 0.135 0 -0.098 0.055"
+              size="0.020" material="shock_mat" mass="0.03"/>
+        <body name="wheel_rl" pos="0 0 0">
+          <joint name="drive_rl" type="hinge" axis="0 1 0" damping="0.30" armature="0.01"/>
+          <geom name="tire_rl" type="cylinder" size="0.14 0.062" euler="1.5708 0 0"
+                material="tire_mat" mass="0.34" friction="1.45 0.02 0.18"/>
+          <geom name="lug_rl_0" type="box" size="0.010 0.060 0.013" pos="0.1340 0 0.0000" euler="0 -0.000 0" material="tire_mat" mass="0.010"/>
+          <geom name="lug_rl_1" type="box" size="0.010 0.060 0.013" pos="0.1084 0 0.0788" euler="0 -0.628 0" material="tire_mat" mass="0.010"/>
+          <geom name="lug_rl_2" type="box" size="0.010 0.060 0.013" pos="0.0414 0 0.1274" euler="0 -1.257 0" material="tire_mat" mass="0.010"/>
+          <geom name="lug_rl_3" type="box" size="0.010 0.060 0.013" pos="-0.0414 0 0.1274" euler="0 -1.885 0" material="tire_mat" mass="0.010"/>
+          <geom name="lug_rl_4" type="box" size="0.010 0.060 0.013" pos="-0.1084 0 0.0788" euler="0 -2.513 0" material="tire_mat" mass="0.010"/>
+          <geom name="lug_rl_5" type="box" size="0.010 0.060 0.013" pos="-0.1340 0 0.0000" euler="0 -3.142 0" material="tire_mat" mass="0.010"/>
+          <geom name="lug_rl_6" type="box" size="0.010 0.060 0.013" pos="-0.1084 0 -0.0788" euler="0 -3.770 0" material="tire_mat" mass="0.010"/>
+          <geom name="lug_rl_7" type="box" size="0.010 0.060 0.013" pos="-0.0414 0 -0.1274" euler="0 -4.398 0" material="tire_mat" mass="0.010"/>
+          <geom name="lug_rl_8" type="box" size="0.010 0.060 0.013" pos="0.0414 0 -0.1274" euler="0 -5.027 0" material="tire_mat" mass="0.010"/>
+          <geom name="lug_rl_9" type="box" size="0.010 0.060 0.013" pos="0.1084 0 -0.0788" euler="0 -5.655 0" material="tire_mat" mass="0.010"/>
+          <geom name="hub_rl" type="cylinder" size="0.050 0.066" euler="1.5708 0 0"
+                material="hub_mat" mass="0.05"/>
+        </body>
+      </body>
+      <body name="sus_rr" pos="-0.225 -0.27 0.02">
+        <joint name="sus_j_rr" type="slide" axis="0 0 -1" range="-0.11 0.09"
+               stiffness="380" springref="0" damping="30" armature="0.02"/>
+        <geom name="arm_rr" type="capsule" fromto="0 0.098 0.055 0 0 0"
+              size="0.020" material="arm_mat" mass="0.05"/>
+        <geom name="shock_rr" type="cylinder"
+              fromto="0 0.098 0.135 0 0.098 0.055"
+              size="0.020" material="shock_mat" mass="0.03"/>
+        <body name="wheel_rr" pos="0 0 0">
+          <joint name="drive_rr" type="hinge" axis="0 1 0" damping="0.30" armature="0.01"/>
+          <geom name="tire_rr" type="cylinder" size="0.14 0.062" euler="1.5708 0 0"
+                material="tire_mat" mass="0.34" friction="1.45 0.02 0.18"/>
+          <geom name="lug_rr_0" type="box" size="0.010 0.060 0.013" pos="0.1340 0 0.0000" euler="0 -0.000 0" material="tire_mat" mass="0.010"/>
+          <geom name="lug_rr_1" type="box" size="0.010 0.060 0.013" pos="0.1084 0 0.0788" euler="0 -0.628 0" material="tire_mat" mass="0.010"/>
+          <geom name="lug_rr_2" type="box" size="0.010 0.060 0.013" pos="0.0414 0 0.1274" euler="0 -1.257 0" material="tire_mat" mass="0.010"/>
+          <geom name="lug_rr_3" type="box" size="0.010 0.060 0.013" pos="-0.0414 0 0.1274" euler="0 -1.885 0" material="tire_mat" mass="0.010"/>
+          <geom name="lug_rr_4" type="box" size="0.010 0.060 0.013" pos="-0.1084 0 0.0788" euler="0 -2.513 0" material="tire_mat" mass="0.010"/>
+          <geom name="lug_rr_5" type="box" size="0.010 0.060 0.013" pos="-0.1340 0 0.0000" euler="0 -3.142 0" material="tire_mat" mass="0.010"/>
+          <geom name="lug_rr_6" type="box" size="0.010 0.060 0.013" pos="-0.1084 0 -0.0788" euler="0 -3.770 0" material="tire_mat" mass="0.010"/>
+          <geom name="lug_rr_7" type="box" size="0.010 0.060 0.013" pos="-0.0414 0 -0.1274" euler="0 -4.398 0" material="tire_mat" mass="0.010"/>
+          <geom name="lug_rr_8" type="box" size="0.010 0.060 0.013" pos="0.0414 0 -0.1274" euler="0 -5.027 0" material="tire_mat" mass="0.010"/>
+          <geom name="lug_rr_9" type="box" size="0.010 0.060 0.013" pos="0.1084 0 -0.0788" euler="0 -5.655 0" material="tire_mat" mass="0.010"/>
+          <geom name="hub_rr" type="cylinder" size="0.050 0.066" euler="1.5708 0 0"
+                material="hub_mat" mass="0.05"/>
+        </body>
+      </body>
+
+    </body>
+  </worldbody>
+
+  <!-- 轮速伺服：ctrl 即目标轮角速度(rad/s) -->
+  <actuator>
+    <velocity name="wheel_fl_vel" joint="drive_fl" kv="7" ctrlrange="-9 9"/>
+    <velocity name="wheel_fr_vel" joint="drive_fr" kv="7" ctrlrange="-9 9"/>
+    <velocity name="wheel_rl_vel" joint="drive_rl" kv="7" ctrlrange="-9 9"/>
+    <velocity name="wheel_rr_vel" joint="drive_rr" kv="7" ctrlrange="-9 9"/>
+  </actuator>
+
+  <sensor>
+    <gyro name="gyro" site="imu_site"/>
+    <accelerometer name="accel" site="imu_site"/>
+    <framepos name="frame_pos" objtype="site" objname="imu_site"/>
+    <framequat name="frame_quat" objtype="site" objname="imu_site"/>
+    <jointpos name="sus_fl_pos" joint="sus_j_fl"/>
+    <jointpos name="sus_fr_pos" joint="sus_j_fr"/>
+    <jointpos name="sus_rl_pos" joint="sus_j_rl"/>
+    <jointpos name="sus_rr_pos" joint="sus_j_rr"/>
+  </sensor>
+</mujoco>

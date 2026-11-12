@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<launch>
+
+  <!-- ============ 工况 ============ -->
+  <arg name="speed_kmh" default="50.0" doc="当前车速，单位 km/h"/>
+  <arg name="available_distance" default="40.0" doc="前方可用距离（到前车或障碍物），单位米"/>
+  <arg name="gap" default="32.0" doc="当前跟车间距，单位米"/>
+
+  <!-- ============ 车辆 ============ -->
+  <arg name="reaction_time" default="1.00" doc="驾驶员反应时间，单位秒"/>
+  <arg name="speed_limit_kmh" default="60.0" doc="该路段限速，单位 km/h"/>
+
+  <!-- ============ 路面 ============ -->
+  <arg name="friction" default="0.70" doc="路面附着系数：干沥青 0.7~0.9、湿 0.4、雪 0.2、冰 0.1"/>
+  <arg name="slope_deg" default="0.0" doc="坡度，单位度；正为上坡，负为下坡"/>
+
+  <!-- ============ 发布 ============ -->
+  <arg name="publish_hz" default="1.0" doc="报告重发频率，单位 Hz"/>
+  <arg name="report_topic" default="/braking/report" doc="报告话题（std_msgs/String）"/>
+  <arg name="bars_topic" default="/braking/bars" doc="距离字符条话题（std_msgs/String）"/>
+
+  <!-- 先载入 config 里的默认值，再用上面 10 个 arg 覆盖 -->
+  <rosparam command="load" file="$(find braking_distance_check)/config/braking_distance_check.yaml"/>
+
+  <param name="scene/speed_kmh" value="$(arg speed_kmh)"/>
+  <param name="scene/available_distance" value="$(arg available_distance)"/>
+  <param name="scene/gap" value="$(arg gap)"/>
+
+  <param name="vehicle/reaction_time" value="$(arg reaction_time)"/>
+  <param name="vehicle/speed_limit_kmh" value="$(arg speed_limit_kmh)"/>
+
+  <param name="road/friction" value="$(arg friction)"/>
+  <param name="road/slope_deg" value="$(arg slope_deg)"/>
+
+  <param name="rate/publish_hz" value="$(arg publish_hz)"/>
+  <param name="topic/report" value="$(arg report_topic)"/>
+  <param name="topic/bars" value="$(arg bars_topic)"/>
+
+  <node pkg="braking_distance_check" type="main.py" name="braking_distance_check" output="screen"/>
+
+</launch>

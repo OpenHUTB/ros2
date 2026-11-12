@@ -1,0 +1,12 @@
+{
+  "samples": 1000,
+  "valid_samples": 1000,
+  "invalid_samples": 0,
+  "valid_rate": 1.0,
+  "sensor_offset_m": 0.01,
+  "mean_bias_m": -3.8036240823657865e-16,
+  "mae_m": 3.8036240823657865e-16,
+  "rmse_m": 5.644040168970804e-16,
+  "max_abs_error_m": 1.7763568394002505e-15,
+  "p95_abs_error_m": 8.881784197001252e-16
+}

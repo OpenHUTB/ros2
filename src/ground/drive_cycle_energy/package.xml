@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>drive_cycle_energy</name>
+  <version>1.0.0</version>
+  <description>工况能耗与续航核算：按纵向动力学把驱动能量分解为滚阻/风阻/制动/动能，
+  并估算百公里电耗与满电续航；纯计算，不依赖 CARLA 与显示器。</description>
+  <maintainer email="ncut@example.com">ncut</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+
+  <export/>
+</package>

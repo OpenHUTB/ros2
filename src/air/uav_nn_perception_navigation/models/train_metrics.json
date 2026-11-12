@@ -1,0 +1,53 @@
+{
+  "in_distribution": {
+    "dim_mae": {
+      "vx": 0.7622398138046265,
+      "vy": 0.3374195098876953,
+      "yaw_rate": 0.07557633519172668
+    },
+    "dim_rmse": {
+      "vx": 1.4293893575668335,
+      "vy": 0.6275299191474915,
+      "yaw_rate": 0.18856914341449738
+    },
+    "action_mae": 0.3917452096939087,
+    "action_rmse": 0.9078373908996582,
+    "norm_error_mean": 0.9160481691360474,
+    "norm_error_p95": 4.314457821846009,
+    "norm_error_max": 5.229416370391846,
+    "speed_mae": 0.446785569190979,
+    "speed_clip_ratio": 0.5,
+    "heading_error_mean_deg": 4.330204486846924
+  },
+  "ood_perturbed": {
+    "dim_mae": {
+      "vx": 0.758849024772644,
+      "vy": 0.3584803342819214,
+      "yaw_rate": 0.0834810882806778
+    },
+    "dim_rmse": {
+      "vx": 1.4104868173599243,
+      "vy": 0.6267854571342468,
+      "yaw_rate": 0.19261854887008667
+    },
+    "action_mae": 0.40027013421058655,
+    "action_rmse": 0.898041307926178,
+    "norm_error_mean": 0.9237730503082275,
+    "norm_error_p95": 4.249566555023194,
+    "norm_error_max": 5.0695624351501465,
+    "speed_mae": 0.4510684013366699,
+    "speed_clip_ratio": 0.38055555555555554,
+    "heading_error_mean_deg": 4.783113956451416
+  },
+  "ood_perturbation": {
+    "sector_noise": 0.1,
+    "bearing_deg": 5.0,
+    "goal_dist_noise": 0.1
+  },
+  "samples": {
+    "total": 360,
+    "train": 0,
+    "val": 360
+  },
+  "model": "controller.pt"
+}

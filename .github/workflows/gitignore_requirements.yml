@@ -1,0 +1,72 @@
+name: Repo ignore rules
+
+on:
+  push:
+    paths:
+      - '.gitignore'
+      - '**/.gitignore'
+      - '**/requirements*.txt'
+      - '.github/workflows/gitignore_requirements.yml'
+  pull_request:
+    paths:
+      - '.gitignore'
+      - '**/.gitignore'
+      - '**/requirements*.txt'
+      - '.github/workflows/gitignore_requirements.yml'
+
+jobs:
+  ignore-rules:
+    name: Real text files are not swallowed by ignore rules
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 仓库根 .gitignore 过去用 *.TXT，在大小写不敏感的文件系统上会把 .txt 一起匹配，
+      # 导致 LICENSE.txt / requirements*.txt 被静默忽略。这里用探针文件断言新规则的行为。
+      - name: Create probe files
+        run: |
+          mkdir -p src/air/ci_probe docs build
+          printf 'MIT\n'       > LICENSE.txt
+          printf 'numpy\n'     > requirements.txt
+          printf 'numpy\n'     > src/air/ci_probe/requirements.txt
+          printf 'pytest\n'    > src/air/ci_probe/requirements-dev.txt
+          printf 'generated\n' > docs/requirements.txt
+          printf 'junk\n'      > Thumbs.db
+          printf 'junk\n'      > desktop.ini
+          printf 'log\n'       > build/ci.log
+
+      - name: Assert real text files are not ignored
+        run: |
+          status=0
+          for path in LICENSE.txt requirements.txt src/air/ci_probe/requirements.txt \
+                      src/air/ci_probe/requirements-dev.txt; do
+            if git check-ignore -q "$path"; then
+              echo "FAIL: $path is ignored by .gitignore"
+              git check-ignore -v "$path"
+              status=1
+            else
+              echo "ok: $path is not ignored"
+            fi
+          done
+          exit $status
+
+      - name: Assert junk and generated files stay ignored
+        run: |
+          status=0
+          for path in Thumbs.db desktop.ini build/ci.log docs/requirements.txt; do
+            if git check-ignore -q "$path"; then
+              echo "ok: $path stays ignored"
+            else
+              echo "FAIL: $path should stay ignored"
+              status=1
+            fi
+          done
+          exit $status
+
+      - name: Show which rule decides each probe
+        run: |
+          for path in LICENSE.txt requirements.txt Thumbs.db desktop.ini build/ci.log docs/requirements.txt; do
+            printf '%-40s ' "$path"
+            git check-ignore -v "$path" || echo "(not ignored)"
+          done
