@@ -1,0 +1,14 @@
+/**:
+  ros__parameters:
+    host: 127.0.0.1
+    port: 41451
+    vehicle_name: ""
+    barometer_name: ""
+    pressure_topic: /uav/barometer/pressure
+    altitude_topic: /uav/barometer/altitude
+    qnh_topic: /uav/barometer/qnh
+    frame_id: base_link
+    publish_rate: 20.0
+    reconnect_period: 2.0
+    rpc_timeout: 1.0
+    pressure_variance: 1.0

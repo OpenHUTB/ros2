@@ -1,0 +1,2 @@
+# 本模块仅使用 Python 标准库（无 numpy / matplotlib 等第三方依赖），
+# 此文件保留以符合仓库 ROS 包结构惯例。

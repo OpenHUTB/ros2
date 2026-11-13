@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<launch>
+  <!--
+    USV 视线（LOS）制导仿真演示。模块本身只用 Python 标准库，不依赖 rospy，
+    这里用 launch 统一入口与输出目录，便于和其他模块一样被 roslaunch 拉起。
+
+    用法：
+      roslaunch usv_los_guidance main.launch
+    这里不写以减号开头的命令行示例：XML 注释内不允许连续两个减号。
+  -->
+
+  <arg name="args" default="" />
+  <arg name="outdir" default="$(find usv_los_guidance)/demo_out" />
+
+  <node
+    pkg="usv_los_guidance"
+    type="main.py"
+    name="usv_los_guidance"
+    output="screen"
+    args="$(arg args) --outdir $(arg outdir)"
+  />
+
+</launch>

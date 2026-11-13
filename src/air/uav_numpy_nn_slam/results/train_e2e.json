@@ -1,0 +1,33 @@
+{
+  "architecture": {
+    "conv1_stride": 4,
+    "conv_channels": [
+      8,
+      16
+    ],
+    "fc": 64,
+    "out_dim": 2
+  },
+  "augmentation": "left-right mirror (flip image, negate yaw target)",
+  "batch": 32,
+  "epochs": 25,
+  "loss_weights": {
+    "vx": 1.0,
+    "yaw": 2.0
+  },
+  "lr": 0.0005,
+  "mean_baseline_vx_mae": 1.5302,
+  "model": "e2e_cnn",
+  "normalised_rmse": 0.40627,
+  "seconds": 287.13,
+  "task": "camera image (48x64x3) -> (forward speed, yaw rate) behaviour cloning",
+  "train_samples": 1244,
+  "val_episodes": [
+    0,
+    1
+  ],
+  "val_samples": 512,
+  "vx_mae": 1.2925,
+  "weight_decay": 0.0005,
+  "yaw_mae": 0.468
+}

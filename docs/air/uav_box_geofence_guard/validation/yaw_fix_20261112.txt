@@ -1,0 +1,45 @@
+PR #777 yaw status correction — 2026-11-12 (Asia/Shanghai)
+Parent revision: 2180c2955a0426afb616f107d61aa0ddab2a353a
+
+Bug: yaw is clamped to [-1,1] but LIMITED previously only reflected linear-speed scaling.
+Fix: report LIMITED if linear velocity is scaled OR yaw differs from its clamped value.
+
+Regression check before fix: 11 tests, 4 subtest failures (yaw +/-2, vx 0 or 1).
+After fix: all 11 tests pass, including the original 8 tests.
+New cases: positive/negative yaw clamp with and without translation; unchanged
+CLEAR status at yaw -1,-0.2,0,0.2,1 when linear velocity is not limited.
+
+Commands and results:
+python3 -m unittest discover -s src/air/uav_box_geofence_guard/tests -v
+test_boundary_stop (test_core.Checks.test_boundary_stop) ... ok
+test_center (test_core.Checks.test_center) ... ok
+test_diagonal_ball (test_core.Checks.test_diagonal_ball) ... ok
+test_horizon (test_core.Checks.test_horizon) ... ok
+test_negative_yaw_clamp_reports_limited (test_core.Checks.test_negative_yaw_clamp_reports_limited) ... ok
+test_nonfinite (test_core.Checks.test_nonfinite) ... ok
+test_outside (test_core.Checks.test_outside) ... ok
+test_positive_yaw_clamp_reports_limited (test_core.Checks.test_positive_yaw_clamp_reports_limited) ... ok
+test_stale (test_core.Checks.test_stale) ... ok
+test_swept_bound (test_core.Checks.test_swept_bound) ... ok
+test_yaw_within_limits_reports_clear (test_core.Checks.test_yaw_within_limits_reports_clear) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 0.004s
+
+OK
+
+py_compile (Python 3.12.14): PASS
+Python 3.8 syntax parsing: PASS
+package.xml and launch/main.launch XML parsing: PASS
+Offline demo: PASS; final_x=4.8499999975157095, boundary=4.85, limited_steps=185.
+
+Current modified source SHA256:
+{
+  "core.py": "677322af842a760730f5f149c4c0adaf7f20d144f5f6fe471d6274426076b689",
+  "tests/test_core.py": "ffb926444e06b7a8fa3d6bbd13488b53ddfc1f0ca8593e8668443f295014b347"
+}
+
+No ROS Noetic runtime, catkin build or roslaunch executed for this revision.
+Archived source_sha256.json and ROS logs remain historical records for the old
+source and have not been rewritten to imply validation of the yaw fix.
+Independent Noetic retest remains pending.

@@ -1,0 +1,56 @@
+PR #777 review fixes — 2026-11-12 (Asia/Shanghai)
+Source under review: a04dc3e57c114f4824077dd0590d16e22997599b
+Changes in this revision: documentation/navigation/validation note only; executable source unchanged.
+
+Commands executed:
+python3 -m unittest discover -s src/air/uav_box_geofence_guard/tests -v
+python3 src/air/uav_box_geofence_guard/main.py --output /tmp/geofence_review_20261112
+python3 -m mkdocs build --clean --site-dir /tmp/geofence_mkdocs_review_site
+
+Python: 3.12.14
+Python py_compile: PASS
+Python 3.8 syntax parsing: PASS
+package.xml and launch/main.launch XML parsing: PASS
+Historical hashes: all 7 executable/test/build/launch files match source_sha256.json;
+README.md intentionally differs because it is the document being corrected.
+Navigation: all base Markdown entries retained, exactly one module entry added;
+one existing entry's indentation repaired to make the restored YAML valid.
+Offline outputs: samples.csv, metrics.json, offline_demo.svg (only these three).
+
+Unit test output:
+test_boundary_stop (test_core.Checks.test_boundary_stop) ... ok
+test_center (test_core.Checks.test_center) ... ok
+test_diagonal_ball (test_core.Checks.test_diagonal_ball) ... ok
+test_horizon (test_core.Checks.test_horizon) ... ok
+test_nonfinite (test_core.Checks.test_nonfinite) ... ok
+test_outside (test_core.Checks.test_outside) ... ok
+test_stale (test_core.Checks.test_stale) ... ok
+test_swept_bound (test_core.Checks.test_swept_bound) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.006s
+
+OK
+
+Offline metrics:
+{
+  "final_x": 4.8499999975157095,
+  "boundary": 4.85,
+  "limited_steps": 185,
+  "validation_scope": "offline mathematical demo; ROS runtime not tested"
+}
+
+MkDocs result: SUCCESS (Documentation built in 44.81 seconds).
+Build uses the actual root mkdocs.yml, hooks, plugins, bibliography, all Markdown
+pages fetched from the pinned PR head, and this module's assets/validation files.
+Other modules' large binary media were not downloaded (about 1 GB in docs tree).
+This is a text-checkout documentation build, not a full media/deployment check.
+Non-strict build; 1485 warnings include missing media and existing site link/navigation issues.
+No WARNING line names uav_box_geofence_guard. Module HTML was generated and checked.
+This does NOT claim a warning-free strict build, full-site media validation,
+module-specific GitHub CI, or a current ROS runtime test.
+
+Historical ROS Noetic evidence is retained as 2026-11-04 evidence only.
+Current host has no ROS Noetic environment. No catkin_make/catkin build/roslaunch
+was executed in this revision. Independent classmate Noetic retest: PENDING.
+Flight, hardware and simulator closed-loop validation: NOT PERFORMED.

@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>usv_los_guidance</name>
+  <version>1.0.0</version>
+
+  <description>
+    水面无人艇（USV）视线（LOS）路径跟踪制导：恒速欠驱动运动学模型下，用前视距离
+    把横漂误差转化为期望航向，使船收敛并贴合给定航点折线。只用 Python 标准库，
+    不依赖 MuJoCo / ROS / matplotlib。
+  </description>
+
+  <maintainer email="325889518+zyfmy@users.noreply.github.com">zyfmy</maintainer>
+
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+</package>

@@ -71,6 +71,27 @@ class ForkliftDockingSimulation:
             "pallet_clearance_m": round(self.distance, 4),
         }
 
+    def manual_step(self, key: str) -> bool:
+        """Apply one keyboard command; return False when the user requests exit."""
+        key = key.lower()
+        if key == "q":
+            return False
+        actions = {"w": (1.0, 0.0), "s": (0.0, 1.0), " ": (0.0, 0.0)}
+        if key not in actions:
+            return True
+        action = actions[key]
+        if key == "s" and self.speed <= 0.0:
+            action = (0.0, 0.0)
+        speed_before = self.speed
+        x_before = self.x
+        self.step(np.asarray(action))
+        if key == "s" and speed_before > 0.0 and self.speed < 0.0:
+            self.data.qpos[0] = x_before + speed_before * self.model.opt.timestep * 0.5
+            self.data.qvel[0] = 0.0
+            self.data.ctrl[0] = 0.0
+            mujoco.mj_forward(self.model, self.data)
+        return True
+
     def close(self) -> None:
         self.renderer.close()
 

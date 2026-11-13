@@ -1,0 +1,16 @@
+{
+  "algorithm": "REINFORCE",
+  "episodes": 250,
+  "final_recent_success": 0.933,
+  "hidden": [
+    64,
+    64
+  ],
+  "mean_collisions": 0.0,
+  "mean_nfz_violations": 0.0,
+  "mean_return": 37.211,
+  "mean_steps": 40.4,
+  "success_rate": 0.933,
+  "train_seconds": 33.41,
+  "train_steps": 10867
+}

@@ -1,0 +1,7 @@
+# 运行产物
+# 说明：results/vertiport_queue_result.json 是基线结果，有意入库，作为容量/等待数字的
+# 证据；重跑 main.py 会覆盖它，提交前请确认 diff。配图由 tools/make_figures.py 直接
+# 生成到 docs/img/air/uav_vertiport_queue_*.png（文档站用的就是这两张），模块内不再存副本。
+__pycache__/
+*.pyc
+.pytest_cache/
