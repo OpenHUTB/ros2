@@ -476,8 +476,9 @@ ROS 2 Action 斐波那契数列计算示例：[chap2/fibonacci_action](./chap2/f
 * [无人机 LiDAR 地面/障碍分割](./air/uav_lidar_ground_filter.md)
 * [无人机屋顶降落](./air/rooftop_landing.md) —— 用机载 LiDAR 检测屋顶平面，取轮廓的最大内切圆圆心作为降落点，自主飞抵其上方后垂直降落
 * [无人机屋顶降落（学习型落点选择）](./air/rooftop_landing_nn.md) —— 用点云高度图 + 小 CNN 直接回归屋顶落点；凹形屋顶（U/L/天井）与稀疏点云下比凸包最大内切圆更稳，附三组消融对比
-* [无人机降落过程监控（指令-运动一致性）](./air/uav_landing_monitor.md) —— 在线校验「速度指令 vs 实际高度变化」，抓“喊了不动 / 掉得没人管 / 超时没落地”这类静默故障，输出告警、状态 JSON 与 CSV 报告
-* [移动平台（车/船）精准降落](./air/uav_moving_platform_landing.md) —— 只吃一路带延迟的平台位置，在线估速度、预测相遇点，落点误差 0.03 m（追实测位置的朴素做法 0.48 m 且落不准），附四种制导策略的定量对照
+* [无人机降落过程监控（指令-运动一致性）](./air/uav_landing_monitor.md) — 在线校验【速度指令 vs 实际高度变化】，抓“喊了不动 / 掉得没人管 / 超时没落地”这类静默故障，输出告警、状态 JSON 与 CSV 报告
+* [移动平台（车/船）精准降落](./air/uav_moving_platform_landing.md) — 只吃一路带延迟的平台位置，在线估速度、预测相遇点，落点误差 0.03 m（追实测位置的朴素做法 0.48 m 且落不准），附四种制导策略的定量对照
+* [基于 AprilTag 的无人机视觉精准降落](./air/uav_apriltag_landing.md) — 下视相机检测地面标签，把像素偏差换算为平移量，先对准再分步抬高
 * [无人机键盘控制](./air/uav_keyboard_control.md)
 * [无人机起飞—悬停—降落状态机](./air/uav_takeoff_hover_land.md) —— 订阅 `/uav/pose`、发布 `/uav/cmd_vel`，用状态机和比例控制完成起飞、到点悬停与降落，附离线仿真与指标
 * [无人机 AirSim 键盘遥控（ROS 2 Humble）](./air/uav_airsim_keyboard.md) —— W/S/A/D/R/F/Q/E 键直控 AirSim 多旋翼，内置 AirSim 桥与看门狗，支持起飞/降落服务
