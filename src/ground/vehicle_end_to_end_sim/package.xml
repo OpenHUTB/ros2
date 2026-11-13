@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>vehicle_end_to_end_sim</name>
+  <version>0.1.0</version>
+  <description>规则式 AEB 自动紧急制动演示系统 —— Pygame 实现的射线测距、固定距离阈值三级规则决策与自行车运动学控制（自动巡航 / 人机共驾 / AEB），非图像端到端学习模型</description>
+  <maintainer email="wqs159@example.com">wqs159</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+  <depend>rclpy</depend>
+  <exec_depend>python3-pygame</exec_depend>
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
