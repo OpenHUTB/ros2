@@ -99,6 +99,10 @@ rostopic pub /carla/ego_vehicle/ackermann_cmd ackermann_msgs/AckermannDrive "{sp
 rostopic pub /carla/ego_vehicle/ackermann_cmd ackermann_msgs/AckermannDrive "{speed: 0.0, steering_angle: 0.0}" -r 10
 ```
 
+发布停止命令后，主车减速直至停住，之后速度保持 0：
+
+![停止命令发布效果](../img/ground/ackermann_publisher_stop.gif)
+
 ## 第五步：创建发布功能包（终端 4）
 
 ```bash
