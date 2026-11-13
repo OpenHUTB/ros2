@@ -366,6 +366,7 @@ ROS 2 Action 斐波那契数列计算示例：[chap2/fibonacci_action](./chap2/f
 
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
+* [深度相机地形可通行性神经网络评估](./air/uav_depth_terrain_passability_nn.md) —— 三扇区采样高度台阶坡度，两层 MLP 评估通行度并选择中央通道，闭环沿走廊前进
 * [无人机航向坐标变换与往返误差验证](./air/uav_yaw_frame_validation/index.md)
 * [无人机测距序列轻量 MLP 去噪](./air/uav_range_denoising_mlp/index.md)
 * [仓储通道巡检无人机测距与分级制动](./air/mujoco_warehouse_uav_collision_braking.md)
