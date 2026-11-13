@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>uav_frontier_exploration_occupancy_nn</name>
+  <version>0.0.1</version>
+  <description>占据栅格前沿探索：射线探测维护未知/自由/占据三态栅格，提取并聚类前沿候选，两层 numpy MLP 按距离、方位、未知邻域与自由密度打分选择目标，控制器朝目标绕行探索。</description>
+  <maintainer email="799628765@qq.com">wqs159</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <depend>rclpy</depend>
+  <depend>nav_msgs</depend>
+  <depend>std_msgs</depend>
+
+  <test_depend>pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

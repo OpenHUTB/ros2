@@ -366,6 +366,7 @@ ROS 2 Action 斐波那契数列计算示例：[chap2/fibonacci_action](./chap2/f
 
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
+* [占据栅格前沿探索神经网络](./air/uav_frontier_exploration_occupancy_nn.md) —— 射线探测维护三态栅格，聚类前沿候选，两层 MLP 按距离方位未知邻域打分选目标，闭环绕行探索
 * [无人机航向坐标变换与往返误差验证](./air/uav_yaw_frame_validation/index.md)
 * [无人机测距序列轻量 MLP 去噪](./air/uav_range_denoising_mlp/index.md)
 * [仓储通道巡检无人机测距与分级制动](./air/mujoco_warehouse_uav_collision_braking.md)
