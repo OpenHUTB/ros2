@@ -32,6 +32,8 @@
 
 - 场景为二维平面上的单条正弦中心线，未包含三维高程、动态障碍与多目标跟踪；下视图为北向俯视渲染，未模拟机体旋转带来的图像畸变。
 - 网络权重按跟随中心线的反馈结构预置，未做在线训练；ROS 节点已在 Ubuntu 22.04 + ROS 2 Humble 下完成 build 与 launch 联调，但真实机载相机图像与三维场景仍未覆盖。
+- 下视渲染存在半像素（0.075 m）光轴偏置：机体正好落在中心线且航向误差为 0 时（x=0.50 m），二值化行质心读数为 0.6667 而非 0，`yaw_cmd` 为 −0.1471 而非 0，闭环因此带一个持续右转的常值偏置。把 `camera.py` 的像素中心改为 `(IMAGE_W-1)/2.0`、`(IMAGE_H-1)/2.0` 后复算：零偏差时行质心 0.0000、`yaw_cmd` 0.0000；闭环最大横向偏差 0.49691 → 0.31434 m、终点横向偏差 −0.16386 → +0.23334 m、到达 x 13.30546 → 13.49221 m（最大前飞速度 0.66097 m/s 与 420 步不变）。本轮未改动该行代码：修正会改变已入库的 5 张截图与正文全部指标，需整套重出，属评审中的非阻塞建议，留待单独一轮连同截图一起提交。
+- 时间轴拼图的阶段文字与轨迹曲线局部重叠，可读性一般；重排面板布局需同时重出该张 PNG，同样留待单独一轮。
 
 ## 测试环境与结果
 
@@ -44,6 +46,7 @@
   - ROS 构建（ROS 环境内，工作区根目录）：`colcon build --packages-select uav_e2e_multiframe_image_policy --symlink-install`
   - ROS 启动：`ros2 launch uav_e2e_multiframe_image_policy uav_e2e_multiframe_image_policy.launch.py`
 - **验证操作与结果**：15 项单元测试全部通过，其中场景 3 项、相机 3 项、专家 2 项、策略 3 项、控制器 2 项、闭环 2 项。闭环 420 步内到达 x 13.31 m，最大前飞速度 0.661 m/s，全程最大横向偏差 0.497 m，终点横向偏差 -0.164 m。
+- **本轮复核（head `2049d8b`，Windows 11 / Python 3.13.16）**：`python -m pytest test -q` 15 passed；`python main.py --shots` 重新生成的 5 张 PNG 与仓库内文件逐字节一致（git blob 哈希相同，非过期素材）；重算指标 x=13.30546 m、max_speed=0.66097 m/s、max_abs_lateral=0.49691 m、final_lateral=-0.16386 m、steps=420，与正文一致；`pip wheel . --no-deps` 打出的 wheel 内已含 `share/<包名>/launch/uav_e2e_multiframe_image_policy.launch.py`、`share/<包名>/{package.xml,README.md,main.py}` 与 `entry_points.txt` 中的 `e2e_node`。
 - **ROS 侧实测**：`colcon build --packages-select uav_e2e_multiframe_image_policy --symlink-install` 1 个包编译通过、无告警；`ros2 launch` 正常拉起 `e2e_node`，`/odom` 的 `orientation` 为单位四元数（z=sin(yaw/2)、w=cos(yaw/2)），`/e2e_policy_cmd` 实测 20 Hz；`sim_rate:=10.0` 覆盖后实测 10 Hz。
 - **尚未验证**：真实机载相机图像、时序抖动与多机协同未实测；ROS 侧仅在 RoboStack conda 打包的 Humble 环境验证，未在 apt 官方发行版上复跑。
 
@@ -94,6 +97,8 @@ S_t = [I_{t-2}, I_{t-1}, I_t] ∈ R^{3×12×16}
 ```
 
 缓存不足三帧时以首帧重复填充，保证输入维度恒定。
+
+像素网格按 `camera.py` 的 `lx = (c - IMAGE_W / 2.0)·cw`、`ly = (IMAGE_H / 2.0 - r)·ch` 采样，行、列间距 `cw = ch = 0.15 m`：16 列覆盖 `x−1.20 ~ x+1.05 m`，网格中心相对机体偏 −0.075 m；12 行覆盖 `y−0.75 ~ y+0.90 m`，网格中心偏 +0.075 m。即采样网格相对光轴存在半像素（0.075 m）偏置，图心并非严格落在机体光轴上；该偏置对闭环的影响见「已知限制」。
 
 ### 卷积线索提取与端到端回归
 
@@ -242,6 +247,7 @@ docs/img/uav_e2e_multiframe_image_policy_*.png
 - [x] 模块提供 `main.py` 和 launch，依赖及安装路径正确，README 步骤已实际运行：`colcon build --packages-select uav_e2e_multiframe_image_policy --symlink-install` 通过，`ros2 launch` 起节点、`/odom` 与 `/e2e_policy_cmd` 正常发布，`sim_rate:=10.0` 实测 10 Hz；离线仿真与 15 项单元测试已跑通。
 - [x] 新模块已添加首页和导航链接；已运行 `mkdocs serve --livereload` 检查相关页面，页面与本模块的 5 张配图均正常渲染。
 - [x] 功能描述与验证证据一致；PNG 小于 3 MB，GIF 小于 5 MB。
+- [x] 本轮只改文档与说明，未改任何 `.py` 源码；下视渲染的半像素光轴偏置与时间轴拼图排版两项非阻塞建议已在「已知限制」中量化记录，留待单独一轮连同截图重出。
 
 ## 大模型使用声明
 
