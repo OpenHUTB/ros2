@@ -261,6 +261,7 @@ ROS 2 Action 斐波那契数列计算示例：[chap2/fibonacci_action](./chap2/f
 * [MuJoCo 差速小车走迷宫](./ground/diff_drive_maze.md)
 * [MuJoCo 地面小车射线感知与分级减速避障](./ground/mujoco_car_avoidance.md)
 * [MuJoCo 地面小车神经网络端到端避障](./ground/mujoco_car_nn_avoidance.md)
+* [MuJoCo 无人车端到端驾驶与栅格 SLAM（BC/DAgger + ROS 1/2）](./ground/mujoco_car_nn/index.md) —— 227 m 闭环赛道、64×64 相机 + 64 束雷达，行为克隆与 DAgger 闭环 0 碰撞，栅格建图单圈 ATE 2.37 m
 * [MuJoCo 两轮自平衡小车](./ground/mujoco_balance_car.md)
 * [MuJoCo 差速小车电机温升模型](./ground/mujoco_motor_thermal_model.md)
 * [MuJoCo 地面差速小车侧倾/翻车风险预测与主动限速](./ground/mujoco_car_rollover_guard.md)

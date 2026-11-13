@@ -357,6 +357,7 @@ nav:
     - ROS2 差速机器人卡死检测与自动脱困: './ground/ros2_stuck_recovery/index.md'
     - 上游心跳看门狗: './ground/heartbeat_watchdog.md'
     - MuJoCo 地面无人车 SLAM 建图导航与神经网络控制: './ground/mujoco_ground_slam_nn_nav/README.md'
+    - MuJoCo 无人车端到端驾驶与栅格 SLAM（BC/DAgger + ROS 1/2）: './ground/mujoco_car_nn/index.md'
     - 地面坡度估计: './ground/ground_slope_estimation.md'
     - 急停闩锁与人工复位: './ground/estop_latch.md'
     - 城市道路地面载具二维动力学、激光 SLAM 与神经网络导航: './ground/road_numpy_nn_slam.md'

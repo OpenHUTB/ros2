@@ -1,0 +1,61 @@
+# 完整安装日志 7112 行，这里只保留末尾 60 行；完整日志见 PR 描述附件
+Setting up ros-humble-ros-core (0.10.0-1jammy.20260908.005124) ...
+Setting up ros-humble-ros-base (0.10.0-1jammy.20260915.225919) ...
+Setting up ros-humble-desktop (0.10.0-1jammy.20260916.003705) ...
+Processing triggers for ca-certificates (20260816ubuntu0.22.04.2) ...
+Updating certificates in /etc/ssl/certs...
+rehash: warning: skipping ca-certificates.crt,it does not contain exactly one certificate or CRL
+17 added, 43 removed; done.
+Running hooks in /etc/ca-certificates/update.d...
+
+Adding debian:D-TRUST_BR_Root_CA_2_2023.pem
+Adding debian:D-TRUST_EV_Root_CA_2_2023.pem
+Adding debian:e-Szigno_TLS_Root_CA_2023.pem
+Adding debian:OISTE_Server_Root_ECC_G1.pem
+Adding debian:OISTE_Server_Root_RSA_G1.pem
+Adding debian:SECOM_TLS_ECC_Root_CA_2024.pem
+Adding debian:SECOM_TLS_RSA_Root_CA_2024.pem
+Adding debian:SecureSign_Root_CA14.pem
+Adding debian:SecureSign_Root_CA15.pem
+Adding debian:SwissSign_RSA_TLS_Root_CA_2022_-_1.pem
+Adding debian:Telekom_Security_TLS_ECC_Root_2020.pem
+Adding debian:Telekom_Security_TLS_RSA_Root_2023.pem
+Adding debian:Telia_EC_TLS_Root_CA_v3.pem
+Adding debian:Telia_RSA_TLS_Root_CA_v3.pem
+Adding debian:TrustAsia_TLS_ECC_Root_CA.pem
+Adding debian:TrustAsia_TLS_RSA_Root_CA.pem
+Adding debian:TWCA_CYBER_Root_CA.pem
+done.
+done.
+Processing triggers for libc-bin (2.35-0ubuntu3.13) ...
+ROS_DESKTOP_EXIT=0
+Reading package lists...
+Building dependency tree...
+Reading state information...
+python3-argcomplete is already the newest version (1.8.1-1.5).
+python3-argcomplete set to manually installed.
+python3-colcon-common-extensions is already the newest version (0.3.0-100).
+python3-colcon-common-extensions set to manually installed.
+python3-rosdep is already the newest version (0.27.0-1).
+python3-rosdep set to manually installed.
+python3-vcstool is already the newest version (0.3.0-1).
+python3-vcstool set to manually installed.
+0 upgraded, 0 newly installed, 0 to remove and 120 not upgraded.
+TOOLS_EXIT=0
+ERROR: cannot download default sources list from:
+https://raw.githubusercontent.com/ros/rosdistro/master/rosdep/sources.list.d/20-default.list
+Website may be down.
+<urlopen error <urlopen error [Errno 111] Connection refused> (https://raw.githubusercontent.com/ros/rosdistro/master/rosdep/sources.list.d/20-default.list)>
+ERROR: no sources directory exists on the system meaning rosdep has not yet been initialized.
+
+Please initialize your rosdep with
+
+	sudo rosdep init
+
+ROSDEP_EXIT=1
+=== versions ===
+ROS_DISTRO=humble
+/opt/ros/humble/bin/ros2
+usage: ros2 [-h] [--use-python-default-buffering]
+            Call `ros2 <command> -h` for more detailed usage. ...
+=== done Wed Nov 11 11:31:34 PM CST 2026 ===
