@@ -1,0 +1,86 @@
+<mujoco model="hopper_slip">
+  <compiler angle="radian" coordinate="local" inertiafromgeom="true"/>
+  <option timestep="0.002" gravity="0 0 -9.81" integrator="implicitfast"/>
+
+  <visual>
+    <global offwidth="640" offheight="360"/>
+    <quality shadowsize="4096"/>
+    <map znear="0.02" zfar="40"/>
+  </visual>
+
+  <asset>
+    <!-- 天空盒用 builtin 渐变，避免侧视角时画面上半部是一整块黑 -->
+    <texture name="sky_tex" type="skybox" builtin="gradient"
+             rgb1="0.42 0.52 0.66" rgb2="0.96 0.97 1.00" width="256" height="256"/>
+    <!-- 地面用 builtin 棋盘当尺度参照：既不像薄片几何那样 z-fighting，
+         也不会在阴影里拉出噪点 -->
+    <texture name="grid_tex" type="2d" builtin="checker"
+             rgb1="0.87 0.87 0.85" rgb2="0.93 0.93 0.91" width="256" height="256"/>
+    <material name="torso_mat" rgba="0.22 0.52 0.82 1"/>
+    <material name="leg_mat"   rgba="0.58 0.60 0.64 1"/>
+    <material name="foot_mat"  rgba="0.90 0.38 0.22 1"/>
+    <material name="floor_mat" texture="grid_tex" texrepeat="8 8" texuniform="true" rgba="1 1 1 1"/>
+    <material name="mark_mat"  rgba="0.55 0.55 0.60 1"/>
+  </asset>
+
+  <default>
+    <joint type="hinge" axis="0 1 0" damping="0.2"/>
+    <geom contype="0" conaffinity="0" group="1"/>
+  </default>
+
+  <worldbody>
+    <light pos="1.6 -1.6 3.2" dir="-0.45 0.45 -1" diffuse="0.65 0.65 0.65" castshadow="true"/>
+    <light pos="-1.8 1.4 2.6" dir="0.5 -0.4 -1" diffuse="0.35 0.35 0.38" castshadow="false"/>
+
+    <geom name="floor" type="plane" size="6 3 0.1" material="floor_mat"
+          contype="1" conaffinity="1" group="0" friction="1.2 0.02 0.002"/>
+
+    <!-- 地面不铺米标尺：薄片几何要么与平面共面 z-fighting，要么浮空后投影拉出噪点，
+         而 MuJoCo 的 geom 没有 per-geom 关投影的属性。机器人本来就基本停在原地，
+         标尺的视觉收益不值这些代价。 -->
+
+    <!-- targetbody：相机位置固定、始终对准躯干，画面不会因为机器人上下跳而跑出视野。
+         仰角约 19°，把竖直弹跳看清楚；上半部由天空盒兜底，不再是黑块。
+         早先手写 xyaxes 把俯仰方向写反了，相机朝上看，画面上半部全是空背景。 -->
+    <camera name="track" pos="1.25 -2.55 1.35" mode="targetbody" target="torso" fovy="42"/>
+    <camera name="side" pos="2.20 -4.00 1.90" mode="targetbody" target="torso" fovy="45"/>
+
+    <!-- 躯干：base pos 置零，绝对高度完全由 root_z 滑块承载 -->
+    <body name="torso" pos="0 0 0">
+      <joint name="root_x" type="slide" axis="1 0 0" damping="0"/>
+      <joint name="root_z" type="slide" axis="0 0 1" damping="0"/>
+      <geom name="torso_geom" type="capsule" fromto="0 0 -0.07 0 0 0.09"
+            size="0.06" mass="4.6" material="torso_mat"/>
+      <geom name="sensor_box" type="box" pos="0.055 0 0.05" size="0.012 0.03 0.015"
+            mass="0" material="mark_mat"/>
+
+      <body name="leg_root" pos="0 0 -0.07">
+        <joint name="hip" type="hinge" axis="0 1 0" range="-1.0 1.0"/>
+        <geom name="thigh_geom" type="capsule" fromto="0 0 0 0 0 -0.15"
+              size="0.028" mass="0.3" material="leg_mat"/>
+
+        <body name="foot" pos="0 0 -0.21">
+          <!-- 伸缩腿：被动弹簧-阻尼 + 电机注能。q>0 = 压缩 -->
+          <joint name="leg" type="slide" axis="0 0 1" range="-0.03 0.20"
+                 stiffness="2200" springref="0" damping="12"/>
+          <geom name="shank_geom" type="capsule" fromto="0 0 0.06 0 0 0"
+                size="0.026" mass="0.2" material="leg_mat"/>
+          <geom name="foot_geom" type="sphere" size="0.045" mass="0.9"
+                material="foot_mat" contype="1" conaffinity="1" group="0"/>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+
+  <actuator>
+    <motor name="leg_motor" joint="leg" ctrlrange="-900 900" gear="1"/>
+    <position name="hip_servo" joint="hip" kp="45" kv="2.5" ctrlrange="-1.0 1.0"/>
+  </actuator>
+
+  <sensor>
+    <jointpos joint="leg" name="leg_q"/>
+    <jointvel joint="leg" name="leg_qdot"/>
+    <framepos objtype="body" objname="torso" name="torso_pos"/>
+    <framelinvel objtype="body" objname="torso" name="torso_vel"/>
+  </sensor>
+</mujoco>

@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- ROS 2 XML launch。两个关键点：
+       1) <node> 用 exec= 指定可执行文件（ROS 1 的 type= 在 ROS 2 里会报 invalid attribute）；
+       2) 节点参数必须用 <param> 子元素，不能写成 <node> 的属性。 -->
+  <arg name="use_lqr" default="true" description="是否启用 LQR（false 为自由倒下对照）"/>
+  <node pkg="cartpole_lqr" exec="ros_node.py" name="cartpole_lqr_demo" output="screen">
+    <param name="use_lqr" value="$(var use_lqr)"/>
+  </node>
+</launch>

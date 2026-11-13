@@ -1,0 +1,102 @@
+{
+  "generated": "2026-11-10T15:47:14",
+  "scene": "city,canyon,airport",
+  "seconds": 25.53,
+  "ate_rmse_m": 0.2983,
+  "ate_max_m": 0.6987,
+  "final_position_error_m": 0.2268,
+  "coverage_mean": 0.3266,
+  "coverage_final": 0.548,
+  "map_cells": [
+    650,
+    650
+  ],
+  "resolution_m": 0.2,
+  "collisions": 0,
+  "slam_source": "SlamFrontend",
+  "controller_source": "MissionController",
+  "scenes": {
+    "city": {
+      "scene": "city",
+      "seconds": 30.0,
+      "ate_rmse_m": 0.2757,
+      "ate_max_m": 0.5362,
+      "final_position_error_m": 0.1099,
+      "coverage_mean": 0.2283,
+      "coverage_final": 0.4172,
+      "map_cells": [
+        650,
+        650
+      ],
+      "resolution_m": 0.2,
+      "collisions": 0,
+      "nfz_violations": 0,
+      "slam_source": "SlamFrontend",
+      "controller_source": "MissionController"
+    },
+    "canyon": {
+      "scene": "canyon",
+      "seconds": 16.6,
+      "ate_rmse_m": 0.2657,
+      "ate_max_m": 0.6113,
+      "final_position_error_m": 0.1559,
+      "coverage_mean": 0.2997,
+      "coverage_final": 0.4347,
+      "map_cells": [
+        700,
+        600
+      ],
+      "resolution_m": 0.2,
+      "collisions": 0,
+      "nfz_violations": 0,
+      "slam_source": "SlamFrontend",
+      "controller_source": "MissionController"
+    },
+    "airport": {
+      "scene": "airport",
+      "seconds": 30.0,
+      "ate_rmse_m": 0.3536,
+      "ate_max_m": 0.6987,
+      "final_position_error_m": 0.4147,
+      "coverage_mean": 0.4519,
+      "coverage_final": 0.792,
+      "map_cells": [
+        600,
+        750
+      ],
+      "resolution_m": 0.2,
+      "collisions": 0,
+      "nfz_violations": 0,
+      "slam_source": "SlamFrontend",
+      "controller_source": "MissionController"
+    }
+  },
+  "odometry_only": {
+    "scene": "city,canyon,airport",
+    "ate_rmse_m": 0.2334,
+    "final_position_error_m": 0.2764,
+    "scenes": {
+      "city": {
+        "scene": "city",
+        "ate_rmse_m": 0.2388,
+        "final_position_error_m": 0.2339,
+        "seconds": 30.0,
+        "controller_source": "MissionController"
+      },
+      "canyon": {
+        "scene": "canyon",
+        "ate_rmse_m": 0.1901,
+        "final_position_error_m": 0.1559,
+        "seconds": 16.6,
+        "controller_source": "MissionController"
+      },
+      "airport": {
+        "scene": "airport",
+        "ate_rmse_m": 0.2713,
+        "final_position_error_m": 0.4393,
+        "seconds": 30.0,
+        "controller_source": "MissionController"
+      }
+    }
+  }
+}

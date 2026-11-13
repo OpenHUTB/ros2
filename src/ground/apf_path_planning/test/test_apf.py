@@ -1,0 +1,377 @@
+# -*- coding: utf-8 -*-
+"""人工势场法（APF）路径规划离线单元测试。
+
+不依赖 pygame，纯算法层验证。
+"""
+
+import math
+import os
+import random
+import sys
+import unittest
+
+# 直接 `python test/test_apf.py` 时也能 import 到上级包
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+from apf_path_planning.apf import (
+    APFParams,
+    EscapeTracker,
+    Obstacle,
+    attractive_potential,
+    attractive_gradient,
+    repulsive_potential,
+    repulsive_gradient,
+    total_force,
+    step,
+    plan,
+    distance,
+    obstacle_distance,
+    potential_at,
+)
+
+
+class TestParams(unittest.TestCase):
+    """参数校验。"""
+
+    def test_valid_params(self):
+        APFParams().validate()
+
+    def test_negative_k_att_raises(self):
+        p = APFParams(k_att=-1.0)
+        with self.assertRaises(ValueError):
+            p.validate()
+
+    def test_zero_step_size_raises(self):
+        p = APFParams(step_size=0.0)
+        with self.assertRaises(ValueError):
+            p.validate()
+
+    def test_plan_validates_params(self):
+        with self.assertRaises(ValueError):
+            plan((0, 0), (1, 1), [], APFParams(k_rep=-1.0))
+
+
+class TestDistance(unittest.TestCase):
+    """距离函数。"""
+
+    def test_zero(self):
+        self.assertAlmostEqual(distance((3, 4), (3, 4)), 0.0)
+
+    def test_pythagorean(self):
+        self.assertAlmostEqual(distance((0, 0), (3, 4)), 5.0)
+
+    def test_negative(self):
+        self.assertAlmostEqual(distance((-1, -1), (2, 3)), 5.0)
+
+
+class TestObstacleDistance(unittest.TestCase):
+    def test_outside(self):
+        self.assertAlmostEqual(obstacle_distance((5, 0), Obstacle(0, 0, 2.0)), 3.0)
+
+    def test_on_boundary(self):
+        self.assertAlmostEqual(obstacle_distance((2, 0), Obstacle(0, 0, 2.0)), 0.0)
+
+    def test_inside_negative(self):
+        self.assertAlmostEqual(obstacle_distance((1, 0), Obstacle(0, 0, 2.0)), -1.0)
+
+
+class TestAttractivePotential(unittest.TestCase):
+    """引力势函数。"""
+
+    def test_zero_at_goal(self):
+        self.assertAlmostEqual(attractive_potential((1, 1), (1, 1), 1.0, 2.0), 0.0)
+
+    def test_near_field_quadratic(self):
+        # d=1 ≤ d_thresh=2: U = 0.5*1*1^2 = 0.5
+        self.assertAlmostEqual(attractive_potential((0, 0), (1, 0), 1.0, 2.0), 0.5)
+
+    def test_far_field_cone(self):
+        # d=3 > d_thresh=2: U = 1*2*3 - 0.5*1*4 = 6 - 2 = 4
+        self.assertAlmostEqual(attractive_potential((0, 0), (3, 0), 1.0, 2.0), 4.0)
+
+    def test_continuity_at_threshold(self):
+        k, d0 = 1.0, 2.0
+        u_near = attractive_potential((0, 0), (1.999, 0), k, d0)
+        u_far = attractive_potential((0, 0), (2.001, 0), k, d0)
+        self.assertAlmostEqual(u_near, u_far, places=1)
+
+
+class TestAttractiveGradient(unittest.TestCase):
+    def test_zero_at_goal(self):
+        g = attractive_gradient((1, 1), (1, 1), 1.0, 2.0)
+        self.assertAlmostEqual(g[0], 0.0)
+        self.assertAlmostEqual(g[1], 0.0)
+
+    def test_points_away_from_goal(self):
+        # pos=(0,0) goal=(1,0): grad 应指向 -x（势能增加方向 = 远离 goal）
+        g = attractive_gradient((0, 0), (1, 0), 1.0, 2.0)
+        self.assertLess(g[0], 0.0)
+
+    def test_far_field_constant_magnitude(self):
+        g = attractive_gradient((0, 0), (5, 0), 1.0, 2.0)
+        self.assertAlmostEqual(math.hypot(*g), 1.0 * 2.0, places=6)
+
+
+class TestRepulsivePotential(unittest.TestCase):
+    def test_outside_threshold(self):
+        obs = [Obstacle(5.0, 0.0, 1.0)]
+        # d=4 > d_thresh=1.5：U=0
+        self.assertAlmostEqual(repulsive_potential((0.0, 0.0), obs, 100.0, 1.5), 0.0)
+
+    def test_inside_threshold_positive(self):
+        obs = [Obstacle(5.0, 0.0, 1.0)]
+        u = repulsive_potential((4.0, 0.0), obs, 100.0, 1.5)
+        self.assertGreater(u, 0.0)
+
+    def test_inside_obstacle_inf(self):
+        obs = [Obstacle(5.0, 0.0, 1.0)]
+        self.assertEqual(repulsive_potential((5.5, 0.0), obs, 100.0, 1.5),
+                         float("inf"))
+
+    def test_no_obstacles_zero(self):
+        self.assertAlmostEqual(repulsive_potential((1, 2), [], 100.0, 1.5), 0.0)
+
+
+class TestRepulsiveGradient(unittest.TestCase):
+    def test_points_toward_obstacle(self):
+        """斥力梯度 ∇U_rep 指向势能增加方向（即障碍物方向），
+        合力取负后才远离障碍物。pos 在障碍物左侧时 gx 应为正。"""
+        obs = [Obstacle(5.0, 0.0, 1.0)]
+        g = repulsive_gradient((3.5, 0.0), obs, 100.0, 1.5)
+        self.assertGreater(g[0], 0.0)
+
+    def test_outside_threshold_zero(self):
+        obs = [Obstacle(5.0, 0.0, 1.0)]
+        g = repulsive_gradient((0.0, 0.0), obs, 100.0, 1.5)
+        self.assertAlmostEqual(g[0], 0.0)
+        self.assertAlmostEqual(g[1], 0.0)
+
+
+class TestTotalForce(unittest.TestCase):
+    def test_no_obstacles_equals_attraction(self):
+        params = APFParams()
+        pos = (1.0, 0.0)
+        goal = (3.0, 0.0)
+        f = total_force(pos, goal, [], params)
+        ag = attractive_gradient(pos, goal, params.k_att, params.d_thresh_att)
+        self.assertAlmostEqual(f[0], -ag[0])
+        self.assertAlmostEqual(f[1], -ag[1])
+
+    def test_force_points_to_goal_without_obstacle(self):
+        params = APFParams()
+        f = total_force((0, 0), (5, 0), [], params)
+        self.assertGreater(f[0], 0.0)
+
+
+class TestStep(unittest.TestCase):
+    def test_moves_toward_goal(self):
+        params = APFParams(step_size=0.1, goal_tol=0.1)
+        pos = (0.0, 0.0)
+        goal = (5.0, 0.0)
+        new_pos, _ = step(pos, goal, [], params)
+        self.assertGreater(new_pos[0], pos[0])
+
+    def test_step_size_bound(self):
+        params = APFParams(step_size=0.1, goal_tol=0.1)
+        new_pos, _ = step((0, 0), (5, 0), [], params)
+        self.assertLessEqual(distance(new_pos, (0, 0)), 0.1 + 1e-9)
+
+
+class TestPlanNoObstacles(unittest.TestCase):
+    """无障碍物场景：直线到达。"""
+
+    def test_reached(self):
+        params = APFParams(step_size=0.1, goal_tol=0.15, max_iter=500)
+        path, status = plan((0.0, 0.0), (5.0, 0.0), [], params)
+        self.assertEqual(status, "reached")
+        self.assertLessEqual(distance(path[-1], (5.0, 0.0)), 0.15 + 1e-6)
+
+    def test_path_starts_at_start(self):
+        params = APFParams(step_size=0.1, goal_tol=0.15, max_iter=500)
+        path, _ = plan((0.0, 0.0), (5.0, 0.0), [], params)
+        self.assertAlmostEqual(path[0][0], 0.0)
+        self.assertAlmostEqual(path[0][1], 0.0)
+
+
+class TestPlanWithObstacles(unittest.TestCase):
+    """侧方障碍场景：应到达且避开障碍。"""
+
+    def setUp(self):
+        self.params = APFParams(k_att=1.0, k_rep=100.0,
+                                d_thresh_att=2.0, d_thresh_rep=1.5,
+                                step_size=0.1, goal_tol=0.2,
+                                max_iter=1000)
+
+    def test_sideways_obstacle_avoided(self):
+        # 障碍在路径侧上方，路径应绕过且不撞
+        obs = [Obstacle(2.5, 0.5, 0.4)]
+        path, status = plan((0.0, 0.0), (5.0, 0.0), obs, self.params)
+        self.assertEqual(status, "reached")
+        min_d = min(obstacle_distance(p, obs[0]) for p in path)
+        self.assertGreater(min_d, 0.0, "路径穿入障碍物")
+
+    def test_path_avoids_all_obstacles(self):
+        obs = [Obstacle(2.0, 0.5, 0.3), Obstacle(3.5, -0.5, 0.3)]
+        path, status = plan((0.0, 0.0), (5.0, 0.0), obs, self.params)
+        self.assertEqual(status, "reached")
+        for p in path:
+            for o in obs:
+                self.assertGreater(obstacle_distance(p, o), 0.0,
+                                   "路径穿入障碍物")
+
+
+class TestLocalMinimaEscape(unittest.TestCase):
+    """局部最小值逃逸：2-周期抖动必须能触发扰动（评审阻塞项）。
+
+    原实现用「这一步没更近」累加 no_progress，但 2-周期里每隔一步就有一步
+    更近，else 分支把计数清零，计数最高到 1，永远到不了 escape_patience。
+    改为「历史最优距离连续 patience 步没有刷新」后，这两种情形都要成立：
+    真卡住必须触发，正常前进不能误触发。
+    """
+
+    def test_single_obstacle_on_path_reaches_goal(self):
+        # 评审给出的最小复现：单障碍正好挡在起点—目标连线上。
+        # 默认参数下机器人会在 (3.5, 0)/(3.6, 0) 之间 2-周期振荡到 timeout。
+        params = APFParams()
+        path, status = plan((0.0, 0.0), (10.0, 0.0),
+                            [Obstacle(5.0, 0.0, 0.5)], params)
+        self.assertEqual(status, "reached", "局部最小值未被逃逸")
+        self.assertLessEqual(distance(path[-1], (10.0, 0.0)),
+                             params.goal_tol + 1e-6)
+        # 逃逸靠随机扰动打破对称性：轨迹必须离开 y=0 这条对称轴
+        self.assertTrue(any(abs(p[1]) > 1e-6 for p in path),
+                        "轨迹始终在对称轴上，说明扰动没生效")
+
+    def test_stalled_progress_triggers_escape(self):
+        params = APFParams()
+        tracker = EscapeTracker((10.0, 0.0), [Obstacle(5.0, 0.0, 0.5)],
+                                params, random.Random(0))
+        pos = (3.5, 0.0)
+        tracker.reset(pos)
+
+        escaped = False
+        for _ in range(params.escape_patience + 10):
+            pos, escaped = tracker.advance(pos)
+            if escaped:
+                break
+        self.assertTrue(escaped, "连续 %d 步不刷新最优距离仍不逃逸"
+                        % params.escape_patience)
+        self.assertEqual(tracker.escapes, 1)
+
+    def test_patience_zero_escapes_on_first_stall(self):
+        # 评审定位问题时用的对照：patience=0 时任何一次停滞都立刻扰动
+        params = APFParams(escape_patience=0)
+        tracker = EscapeTracker((10.0, 0.0), [Obstacle(5.0, 0.0, 0.5)],
+                                params, random.Random(0))
+        pos = (3.5, 0.0)
+        tracker.reset(pos)
+
+        escaped = False
+        for _ in range(4):
+            pos, escaped = tracker.advance(pos)
+            if escaped:
+                break
+        self.assertTrue(escaped)
+        self.assertEqual(tracker.escapes, 1)
+
+    def test_no_false_escape_when_making_progress(self):
+        # 无障碍直线前进时每一步都在刷新最优距离，不应触发扰动
+        params = APFParams()
+        tracker = EscapeTracker((10.0, 0.0), [], params, random.Random(0))
+        pos = (0.0, 0.0)
+        tracker.reset(pos)
+        for _ in range(50):
+            pos, escaped = tracker.advance(pos)
+            self.assertFalse(escaped, "持续接近目标时误触发逃逸")
+        self.assertEqual(tracker.escapes, 0)
+
+    def test_escape_fires_inside_u_trap(self):
+        # U 形深陷阱：随机扰动是有限尝试，不保证能走出去（已知限制），
+        # 但必须真的触发过，而不是像修复前那样计数器永远攒不满。
+        obstacles = [
+            Obstacle(6.5, 0.0, 0.6),
+            Obstacle(6.0, 1.0, 0.6),
+            Obstacle(6.0, -1.0, 0.6),
+            Obstacle(5.5, 1.8, 0.6),
+            Obstacle(5.5, -1.8, 0.6),
+        ]
+        params = APFParams(max_iter=400)
+        tracker = EscapeTracker((10.0, 0.0), obstacles, params, random.Random(0))
+        pos = (0.0, 0.0)
+        tracker.reset(pos)
+        for _ in range(params.max_iter):
+            pos, _ = tracker.advance(pos)
+        self.assertGreater(tracker.escapes, 0, "U 形陷阱里从未尝试逃逸")
+
+
+class TestPotentialAt(unittest.TestCase):
+    """总势能（引力 + 斥力）。"""
+
+    def test_goal_zero_without_obstacles(self):
+        params = APFParams()
+        self.assertAlmostEqual(potential_at((1, 1), (1, 1), [], params), 0.0)
+
+    def test_positive_away_from_goal(self):
+        params = APFParams()
+        self.assertGreater(potential_at((0, 0), (3, 0), [], params), 0.0)
+
+
+class TestPackaging(unittest.TestCase):
+    """打包配置自检：setup.py 引用的文件必须真实存在，share 目录只能注册一次。"""
+
+    def test_data_files_referenced_exist(self):
+        pkg = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+        expected = [
+            "package.xml", "README.md", "requirements.txt",
+            "main.py", "main.sh", "main.bat",
+            os.path.join("resource", "apf_path_planning"),
+            os.path.join("config", "params.yaml"),
+            os.path.join("launch", "main.launch.py"),
+            os.path.join("apf_path_planning", "main.py"),
+        ]
+        for rel in expected:
+            self.assertTrue(os.path.exists(os.path.join(pkg, rel)), rel)
+
+    def test_setup_py_share_dir_listed_once(self):
+        pkg = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+        src = open(os.path.join(pkg, "setup.py"), encoding="utf-8").read()
+        self.assertEqual(src.count('("share/" + package_name,'), 1,
+                         "share/<pkg> 目录应只出现一次")
+
+
+class TestParamsLoading(unittest.TestCase):
+    """config/params.yaml 必须真的被读取（原来配了完全不生效）。"""
+
+    def test_shipped_params_keys_effective(self):
+        from apf_path_planning import config as C
+
+        path = os.path.join(os.path.dirname(__file__), "..", "config", "params.yaml")
+        self.assertTrue(os.path.isfile(path), path)
+
+        names = ["WIDTH", "HEIGHT", "FPS", "START_POSE", "GOAL_POSE", "OBSTACLES",
+                 "APF_K_ATT", "APF_K_REP", "APF_D_THRESH_ATT", "APF_D_THRESH_REP",
+                 "APF_STEP_SIZE", "APF_MAX_ITER", "APF_GOAL_TOL"]
+        old = {n: getattr(C, n) for n in names}
+        try:
+            used = C.load_params(path)
+            self.assertEqual(used, path)
+            self.assertEqual(C.WIDTH, 800)
+            self.assertEqual(C.HEIGHT, 600)
+            self.assertEqual(C.FPS, 30)
+            self.assertEqual(len(C.START_POSE), 2)
+            self.assertEqual(len(C.GOAL_POSE), 2)
+            self.assertEqual(len(C.OBSTACLES), 5)
+            self.assertAlmostEqual(C.APF_K_ATT, 1.0)
+            self.assertAlmostEqual(C.APF_K_REP, 5000.0)
+            self.assertAlmostEqual(C.APF_D_THRESH_ATT, 150.0)
+            self.assertAlmostEqual(C.APF_D_THRESH_REP, 80.0)
+            self.assertAlmostEqual(C.APF_STEP_SIZE, 4.0)
+            self.assertEqual(C.APF_MAX_ITER, 2000)
+            self.assertAlmostEqual(C.APF_GOAL_TOL, 10.0)
+        finally:
+            for n, v in old.items():
+                setattr(C, n, v)
+
+
+if __name__ == "__main__":
+    unittest.main()

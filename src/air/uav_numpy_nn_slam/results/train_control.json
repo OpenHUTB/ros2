@@ -1,0 +1,29 @@
+{
+  "architecture": [
+    46,
+    160,
+    160,
+    3
+  ],
+  "augment_samples": 7500,
+  "batch": 96,
+  "epochs": 80,
+  "expert": "reactive_vector_field",
+  "input": "18 lidar sectors (min+mean) + goal polar + NFZ = 46",
+  "input_dim": 46,
+  "lr": 0.002,
+  "model": "control_mlp",
+  "normalised_rmse": 0.11171,
+  "output": "body-frame (vf/MAX_VX, vl/MAX_VY, yaw/MAX_YAW_RATE)",
+  "seconds": 689.75,
+  "task": "behaviour cloning of the reactive vector-field expert (forward speed, lateral speed, yaw rate)",
+  "train_samples": 12476,
+  "val_episodes": [
+    0,
+    1
+  ],
+  "val_samples": 512,
+  "vx_mae": 0.3724,
+  "vy_mae": 0.3203,
+  "yaw_mae": 0.0926
+}

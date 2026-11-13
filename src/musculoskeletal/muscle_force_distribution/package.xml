@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>muscle_force_distribution</name>
+  <version>1.0.0</version>
+
+  <description>
+    肌肉冗余系统的力分配：给定单自由度关节的期望力矩，在冗余肌群上求最小激活范数
+    （或加权最小二乘）分配，并演示冗余肌群平分负载与拮抗共激活提高关节刚度。
+    只用 Python 标准库，不依赖 MuJoCo / ROS / matplotlib。
+  </description>
+
+  <maintainer email="325889518+zyfmy@users.noreply.github.com">zyfmy</maintainer>
+
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+</package>

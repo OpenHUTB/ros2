@@ -1,0 +1,44 @@
+# 车道线巡线模块参数
+
+simulator:
+  host: "127.0.0.1"
+  port: 2000
+  map: "Town10HD_Opt"
+  timeout: 30.0
+  cache_dir: ""
+
+scene:
+  ego_blueprint: "vehicle.byd.seal"
+  spawn_index: -1            # 起点由程序自动筛选（既要够直，也要能看清左右车道线）
+
+sensor:
+  camera_width: 640
+  camera_height: 360
+  camera_fov: 95
+  sensor_tick: 0.05          # 20 Hz
+
+perception:
+  lane_tag: 24               # 语义分割里 RoadLines 的类别号
+  roi_top: 0.60              # 只看画面下部 40%（近场），避免把远处路口线当成本车道
+  min_col_pixels: 10         # 某一列至少这么多车道线像素才认为是一段车道线
+
+control:
+  target_speed: 8.0          # 目标速度 m/s（约 29 km/h，实测受地图限速/转弯影响达不到）
+  kp: 1.2                    # 横向偏移比例增益
+  ki: 0.02                   # 积分增益（消除稳态偏差）
+  kd: 1.0                    # 航向误差增益（远场偏移 - 近场偏移）
+  max_steer: 0.6
+  max_duration: 20.0         # 设定运行时长（秒）：选定的路段在有标线区间内约 20 s；PASS 要求跑满
+  max_lost_frames: 1200      # 连续丢线保护（20 Hz 下 60 s，实际相当于不提前掐断）
+  lost_throttle: 0.30        # 丢线时的油门上限，避免盲开失控
+
+output:
+  save_dir: "docs"
+  save_annotated: true
+  annotated_interval: 2.0
+
+evaluation:
+  # PASS 判据（写在这里，不再硬编码在代码里）
+  max_mean_offset: 0.25      # 平均归一化横向偏移上限（只统计真实测到的帧）
+  max_lost_ratio: 0.20       # 丢线帧占比上限
+  require_complete: true     # 是否要求跑满 max_duration（提前结束即 FAIL）

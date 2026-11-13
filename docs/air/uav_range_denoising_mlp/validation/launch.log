@@ -1,0 +1,26 @@
+master has started, initiating launch
+... logging to /home/ros/four_assignments_0yekhx11/results/ros_logs/9c779cae-d82a-11f1-a6b2-19f7fb9362cb/roslaunch-ubuntu2004-8786.log
+Checking log directory for disk usage. This may take a while.
+Press Ctrl-C to interrupt
+Done checking log file disk usage. Usage is <1GB.
+]2;/home/ros/four_assignments_0yekhx11/ws_uav_range_denoising_mlp/src/uav_range_denoising_mlp/launch/main.launch
+[1mstarted roslaunch server http://localhost:34881/[0m
+
+SUMMARY
+========
+
+PARAMETERS
+ * /rosdistro: noetic
+ * /rosversion: 1.17.4
+
+NODES
+  /batch_uav_range_denoising_mlp/
+    uav_range_denoising_mlp (uav_range_denoising_mlp/main.py)
+
+[1mROS_MASTER_URI=http://127.0.0.1:48815[0m
+]2;/home/ros/four_assignments_0yekhx11/ws_uav_range_denoising_mlp/src/uav_range_denoising_mlp/launch/main.launch http://127.0.0.1:48815
+[1mprocess[batch_uav_range_denoising_mlp/uav_range_denoising_mlp-1]: started with pid [8803][0m
+[batch_uav_range_denoising_mlp/uav_range_denoising_mlp-1] killing on exit
+shutting down processing monitor...
+... shutting down processing monitor complete
+[1mdone[0m

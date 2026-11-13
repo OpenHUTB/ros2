@@ -1,0 +1,721 @@
+{
+  "beams": 72,
+  "controllers": {
+    "classical": {
+      "scenes": {
+        "airport": {
+          "episodes": 1,
+          "mean_collisions": 0.0,
+          "mean_final_alt_error": 0.006,
+          "mean_final_depth_error": 0.006,
+          "mean_final_error": 2.905,
+          "mean_nfz_violations": 0.0,
+          "mean_path_length": 168.79,
+          "mean_time": 31.45,
+          "nfz_violation_rate": 0.0,
+          "source": "MissionController",
+          "success_rate": 1.0
+        },
+        "canyon": {
+          "episodes": 1,
+          "mean_collisions": 0.0,
+          "mean_final_alt_error": 0.013,
+          "mean_final_depth_error": 0.013,
+          "mean_final_error": 2.998,
+          "mean_nfz_violations": 0.0,
+          "mean_path_length": 77.88,
+          "mean_time": 16.3,
+          "nfz_violation_rate": 0.0,
+          "source": "MissionController",
+          "success_rate": 1.0
+        },
+        "city": {
+          "episodes": 1,
+          "mean_collisions": 0.0,
+          "mean_final_alt_error": 0.005,
+          "mean_final_depth_error": 0.005,
+          "mean_final_error": 2.976,
+          "mean_nfz_violations": 0.0,
+          "mean_path_length": 175.83,
+          "mean_time": 35.05,
+          "nfz_violation_rate": 0.0,
+          "source": "MissionController",
+          "success_rate": 1.0
+        }
+      }
+    },
+    "e2e": {
+      "scenes": {
+        "airport": {
+          "episodes": 1,
+          "mean_collisions": 0.0,
+          "mean_final_alt_error": 0.662,
+          "mean_final_depth_error": 0.662,
+          "mean_final_error": 57.211,
+          "mean_nfz_violations": 0.0,
+          "mean_path_length": 211.73,
+          "mean_time": 45.0,
+          "nfz_violation_rate": 0.0,
+          "safety": "fallback_forward_cone",
+          "source": "e2e_cnn",
+          "success_rate": 0.0
+        },
+        "canyon": {
+          "episodes": 1,
+          "mean_collisions": 0.0,
+          "mean_final_alt_error": 1.947,
+          "mean_final_depth_error": 1.947,
+          "mean_final_error": 67.749,
+          "mean_nfz_violations": 0.0,
+          "mean_path_length": 208.83,
+          "mean_time": 45.0,
+          "nfz_violation_rate": 0.0,
+          "safety": "fallback_forward_cone",
+          "source": "e2e_cnn",
+          "success_rate": 0.0
+        },
+        "city": {
+          "episodes": 1,
+          "mean_collisions": 0.0,
+          "mean_final_alt_error": 1.479,
+          "mean_final_depth_error": 1.479,
+          "mean_final_error": 117.206,
+          "mean_nfz_violations": 0.0,
+          "mean_path_length": 168.29,
+          "mean_time": 45.0,
+          "nfz_violation_rate": 0.0,
+          "safety": "fallback_forward_cone",
+          "source": "e2e_cnn",
+          "success_rate": 0.0
+        }
+      }
+    },
+    "neural": {
+      "scenes": {
+        "airport": {
+          "episodes": 1,
+          "mean_collisions": 0.0,
+          "mean_final_alt_error": 0.071,
+          "mean_final_depth_error": 0.071,
+          "mean_final_error": 2.76,
+          "mean_nfz_violations": 0.0,
+          "mean_path_length": 170.68,
+          "mean_time": 32.3,
+          "nfz_violation_rate": 0.0,
+          "safety": "fallback_forward_cone",
+          "source": "control_mlp",
+          "success_rate": 1.0
+        },
+        "canyon": {
+          "episodes": 1,
+          "mean_collisions": 0.0,
+          "mean_final_alt_error": 0.175,
+          "mean_final_depth_error": 0.175,
+          "mean_final_error": 2.974,
+          "mean_nfz_violations": 0.0,
+          "mean_path_length": 80.74,
+          "mean_time": 17.6,
+          "nfz_violation_rate": 0.0,
+          "safety": "fallback_forward_cone",
+          "source": "control_mlp",
+          "success_rate": 1.0
+        },
+        "city": {
+          "episodes": 1,
+          "mean_collisions": 4.0,
+          "mean_final_alt_error": 1.248,
+          "mean_final_depth_error": 1.248,
+          "mean_final_error": 104.425,
+          "mean_nfz_violations": 0.0,
+          "mean_path_length": 83.5,
+          "mean_time": 45.0,
+          "nfz_violation_rate": 0.0,
+          "safety": "fallback_forward_cone",
+          "source": "control_mlp",
+          "success_rate": 0.0
+        }
+      }
+    },
+    "neural_two_level": {
+      "scenes": {
+        "airport": {
+          "episodes": 1,
+          "mean_collisions": 0.0,
+          "mean_final_alt_error": 1.391,
+          "mean_final_depth_error": 1.391,
+          "mean_final_error": 124.374,
+          "mean_nfz_violations": 0.0,
+          "mean_path_length": 123.78,
+          "mean_time": 45.0,
+          "nfz_violation_rate": 0.0,
+          "safety": "fallback_forward_cone",
+          "source": "planner_mlp+control_mlp",
+          "success_rate": 0.0
+        },
+        "canyon": {
+          "episodes": 1,
+          "mean_collisions": 0.0,
+          "mean_final_alt_error": 0.138,
+          "mean_final_depth_error": 0.138,
+          "mean_final_error": 2.813,
+          "mean_nfz_violations": 0.0,
+          "mean_path_length": 120.33,
+          "mean_time": 34.1,
+          "nfz_violation_rate": 0.0,
+          "safety": "fallback_forward_cone",
+          "source": "planner_mlp+control_mlp",
+          "success_rate": 1.0
+        },
+        "city": {
+          "episodes": 1,
+          "mean_collisions": 0.0,
+          "mean_final_alt_error": 1.239,
+          "mean_final_depth_error": 1.239,
+          "mean_final_error": 103.417,
+          "mean_nfz_violations": 0.0,
+          "mean_path_length": 75.38,
+          "mean_time": 45.0,
+          "nfz_violation_rate": 0.0,
+          "safety": "fallback_forward_cone",
+          "source": "planner_mlp+control_mlp",
+          "success_rate": 0.0
+        }
+      }
+    }
+  },
+  "episodes_per_scene": 1,
+  "generated": "2026-11-10T15:51:54",
+  "max_seconds": 45.0,
+  "model_metrics": {
+    "control_mlp": {
+      "architecture": [
+        46,
+        160,
+        160,
+        3
+      ],
+      "augment_samples": 7500,
+      "batch": 96,
+      "epochs": 80,
+      "expert": "reactive_vector_field",
+      "input": "18 lidar sectors (min+mean) + goal polar + NFZ = 46",
+      "input_dim": 46,
+      "lr": 0.002,
+      "model": "control_mlp",
+      "normalised_rmse": 0.11171,
+      "output": "body-frame (vf/MAX_VX, vl/MAX_VY, yaw/MAX_YAW_RATE)",
+      "seconds": 689.75,
+      "task": "behaviour cloning of the reactive vector-field expert (forward speed, lateral speed, yaw rate)",
+      "train_samples": 12476,
+      "val_episodes": [
+        0,
+        1
+      ],
+      "val_samples": 512,
+      "vx_mae": 0.3724,
+      "vy_mae": 0.3203,
+      "yaw_mae": 0.0926
+    },
+    "e2e_cnn": {
+      "architecture": {
+        "conv1_stride": 4,
+        "conv_channels": [
+          8,
+          16
+        ],
+        "fc": 64,
+        "out_dim": 2
+      },
+      "augmentation": "left-right mirror (flip image, negate yaw target)",
+      "batch": 32,
+      "epochs": 25,
+      "loss_weights": {
+        "vx": 1.0,
+        "yaw": 2.0
+      },
+      "lr": 0.0005,
+      "mean_baseline_vx_mae": 1.5302,
+      "model": "e2e_cnn",
+      "normalised_rmse": 0.40627,
+      "seconds": 287.13,
+      "task": "camera image (48x64x3) -> (forward speed, yaw rate) behaviour cloning",
+      "train_samples": 1244,
+      "val_episodes": [
+        0,
+        1
+      ],
+      "val_samples": 512,
+      "vx_mae": 1.2925,
+      "weight_decay": 0.0005,
+      "yaw_mae": 0.468
+    },
+    "perception_mlp": {
+      "architecture": [
+        72,
+        160,
+        160,
+        72
+      ],
+      "augment_pairs": 9000,
+      "batch": 128,
+      "beams": 72,
+      "epochs": 55,
+      "hidden": 160,
+      "history": [
+        {
+          "epoch": 1,
+          "noisy_rmse_norm": 0.11978,
+          "train_mse": 0.052548,
+          "val_rmse_norm": 0.12015
+        },
+        {
+          "epoch": 5,
+          "noisy_rmse_norm": 0.11978,
+          "train_mse": 0.018128,
+          "val_rmse_norm": 0.11999
+        },
+        {
+          "epoch": 10,
+          "noisy_rmse_norm": 0.11978,
+          "train_mse": 0.016963,
+          "val_rmse_norm": 0.1154
+        },
+        {
+          "epoch": 15,
+          "noisy_rmse_norm": 0.11978,
+          "train_mse": 0.015823,
+          "val_rmse_norm": 0.11168
+        },
+        {
+          "epoch": 20,
+          "noisy_rmse_norm": 0.11978,
+          "train_mse": 0.014595,
+          "val_rmse_norm": 0.10688
+        },
+        {
+          "epoch": 25,
+          "noisy_rmse_norm": 0.11978,
+          "train_mse": 0.013835,
+          "val_rmse_norm": 0.10394
+        },
+        {
+          "epoch": 30,
+          "noisy_rmse_norm": 0.11978,
+          "train_mse": 0.013261,
+          "val_rmse_norm": 0.10183
+        },
+        {
+          "epoch": 35,
+          "noisy_rmse_norm": 0.11978,
+          "train_mse": 0.012394,
+          "val_rmse_norm": 0.09889
+        },
+        {
+          "epoch": 40,
+          "noisy_rmse_norm": 0.11978,
+          "train_mse": 0.012142,
+          "val_rmse_norm": 0.09879
+        },
+        {
+          "epoch": 45,
+          "noisy_rmse_norm": 0.11978,
+          "train_mse": 0.011714,
+          "val_rmse_norm": 0.09693
+        },
+        {
+          "epoch": 50,
+          "noisy_rmse_norm": 0.11978,
+          "train_mse": 0.011295,
+          "val_rmse_norm": 0.09565
+        },
+        {
+          "epoch": 55,
+          "noisy_rmse_norm": 0.11978,
+          "train_mse": 0.010977,
+          "val_rmse_norm": 0.09471
+        }
+      ],
+      "lr": 0.0015,
+      "mae_m": 2.5627,
+      "mae_norm": 0.04307,
+      "model": "perception_mlp",
+      "rmse_denoised": 5.6354,
+      "rmse_denoised_norm": 0.09471,
+      "rmse_denoised_valid": 5.7354,
+      "rmse_improvement_pct": 20.93,
+      "rmse_improvement_valid_pct": 13.17,
+      "rmse_noisy": 7.127,
+      "rmse_noisy_norm": 0.11978,
+      "rmse_noisy_valid": 6.6056,
+      "seconds": 497.4,
+      "target": "residual (clean - noisy), output = noisy + residual clipped",
+      "task": "lidar denoising (72 beams), predicts residual clean-noisy",
+      "train_samples": 10244,
+      "val_episodes": [
+        0,
+        1
+      ],
+      "val_samples": 512
+    },
+    "planner_mlp": {
+      "accuracy": 0.7793,
+      "architecture": [
+        46,
+        128,
+        128,
+        8
+      ],
+      "augment_samples": 3600,
+      "batch": 64,
+      "confusion": [
+        [
+          271,
+          22,
+          0,
+          0,
+          0,
+          0,
+          0,
+          40
+        ],
+        [
+          26,
+          68,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          29,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          22,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          31
+        ]
+      ],
+      "directions": [
+        "ahead",
+        "ahead_left",
+        "left",
+        "back_left",
+        "back",
+        "back_right",
+        "right",
+        "ahead_right"
+      ],
+      "epochs": 50,
+      "input": "18 lidar sectors (min+mean) + goal polar + NFZ = 46",
+      "input_dim": 46,
+      "lr": 0.0012,
+      "model": "planner_mlp",
+      "per_class_accuracy": {
+        "ahead": 0.814,
+        "ahead_left": 0.708,
+        "ahead_right": 0.585,
+        "back": null,
+        "back_left": null,
+        "back_right": null,
+        "left": 0.967,
+        "right": null
+      },
+      "seconds": 133.91,
+      "target_accuracy": 0.65,
+      "task": "discrete local action (8 directions) classification",
+      "train_samples": 4844,
+      "val_episodes": [
+        0,
+        1
+      ],
+      "val_samples": 512
+    },
+    "rl_dqn": {
+      "algorithm": "DQN",
+      "best_epoch": 50,
+      "episodes": 250,
+      "final_recent_success": 1.0,
+      "hidden": [
+        64,
+        64
+      ],
+      "mean_collisions": 0.0,
+      "mean_nfz_violations": 0.0,
+      "mean_return": 38.592,
+      "mean_steps": 20.5,
+      "success_rate": 1.0,
+      "train_seconds": 41.99,
+      "train_steps": 7781
+    },
+    "rl_dqn_3x64": {
+      "algorithm": "DQN",
+      "best_epoch": 50,
+      "episodes": 250,
+      "final_recent_success": 1.0,
+      "hidden": [
+        64,
+        64,
+        64
+      ],
+      "mean_collisions": 0.0,
+      "mean_nfz_violations": 0.0,
+      "mean_return": 38.559,
+      "mean_steps": 20.5,
+      "success_rate": 1.0,
+      "train_seconds": 126.85,
+      "train_steps": 7721
+    },
+    "rl_pg": {
+      "algorithm": "REINFORCE",
+      "episodes": 250,
+      "final_recent_success": 0.933,
+      "hidden": [
+        64,
+        64
+      ],
+      "mean_collisions": 0.0,
+      "mean_nfz_violations": 0.0,
+      "mean_return": 37.211,
+      "mean_steps": 40.4,
+      "success_rate": 0.933,
+      "train_seconds": 33.41,
+      "train_steps": 10867
+    }
+  },
+  "runs": [
+    {
+      "collisions": 0,
+      "controller": "classical",
+      "episode": 0,
+      "final_alt_error": 0.005,
+      "final_error": 2.976,
+      "min_nfz_clearance": 6.43,
+      "nfz_violations": 0,
+      "path_length": 175.83,
+      "scene": "city",
+      "seed": 20261110,
+      "success": true,
+      "time": 35.05
+    },
+    {
+      "collisions": 4,
+      "controller": "neural",
+      "episode": 0,
+      "final_alt_error": 1.248,
+      "final_error": 104.425,
+      "min_nfz_clearance": 4.81,
+      "nfz_violations": 0,
+      "path_length": 83.5,
+      "scene": "city",
+      "seed": 20261211,
+      "success": false,
+      "time": 45.0
+    },
+    {
+      "collisions": 0,
+      "controller": "neural_two_level",
+      "episode": 0,
+      "final_alt_error": 1.239,
+      "final_error": 103.417,
+      "min_nfz_clearance": 8.51,
+      "nfz_violations": 0,
+      "path_length": 75.38,
+      "scene": "city",
+      "seed": 20261312,
+      "success": false,
+      "time": 45.0
+    },
+    {
+      "collisions": 0,
+      "controller": "e2e",
+      "episode": 0,
+      "final_alt_error": 1.479,
+      "final_error": 117.206,
+      "min_nfz_clearance": 21.09,
+      "nfz_violations": 0,
+      "path_length": 168.29,
+      "scene": "city",
+      "seed": 20261413,
+      "success": false,
+      "time": 45.0
+    },
+    {
+      "collisions": 0,
+      "controller": "classical",
+      "episode": 0,
+      "final_alt_error": 0.013,
+      "final_error": 2.998,
+      "min_nfz_clearance": 6.02,
+      "nfz_violations": 0,
+      "path_length": 77.88,
+      "scene": "canyon",
+      "seed": 20262110,
+      "success": true,
+      "time": 16.3
+    },
+    {
+      "collisions": 0,
+      "controller": "neural",
+      "episode": 0,
+      "final_alt_error": 0.175,
+      "final_error": 2.974,
+      "min_nfz_clearance": 1.06,
+      "nfz_violations": 0,
+      "path_length": 80.74,
+      "scene": "canyon",
+      "seed": 20262211,
+      "success": true,
+      "time": 17.6
+    },
+    {
+      "collisions": 0,
+      "controller": "neural_two_level",
+      "episode": 0,
+      "final_alt_error": 0.138,
+      "final_error": 2.813,
+      "min_nfz_clearance": 1.41,
+      "nfz_violations": 0,
+      "path_length": 120.33,
+      "scene": "canyon",
+      "seed": 20262312,
+      "success": true,
+      "time": 34.1
+    },
+    {
+      "collisions": 0,
+      "controller": "e2e",
+      "episode": 0,
+      "final_alt_error": 1.947,
+      "final_error": 67.749,
+      "min_nfz_clearance": 1.12,
+      "nfz_violations": 0,
+      "path_length": 208.83,
+      "scene": "canyon",
+      "seed": 20262413,
+      "success": false,
+      "time": 45.0
+    },
+    {
+      "collisions": 0,
+      "controller": "classical",
+      "episode": 0,
+      "final_alt_error": 0.006,
+      "final_error": 2.905,
+      "min_nfz_clearance": 5.91,
+      "nfz_violations": 0,
+      "path_length": 168.79,
+      "scene": "airport",
+      "seed": 20263110,
+      "success": true,
+      "time": 31.45
+    },
+    {
+      "collisions": 0,
+      "controller": "neural",
+      "episode": 0,
+      "final_alt_error": 0.071,
+      "final_error": 2.76,
+      "min_nfz_clearance": 2.6,
+      "nfz_violations": 0,
+      "path_length": 170.68,
+      "scene": "airport",
+      "seed": 20263211,
+      "success": true,
+      "time": 32.3
+    },
+    {
+      "collisions": 0,
+      "controller": "neural_two_level",
+      "episode": 0,
+      "final_alt_error": 1.391,
+      "final_error": 124.374,
+      "min_nfz_clearance": 0.56,
+      "nfz_violations": 0,
+      "path_length": 123.78,
+      "scene": "airport",
+      "seed": 20263312,
+      "success": false,
+      "time": 45.0
+    },
+    {
+      "collisions": 0,
+      "controller": "e2e",
+      "episode": 0,
+      "final_alt_error": 0.662,
+      "final_error": 57.211,
+      "min_nfz_clearance": 1.52,
+      "nfz_violations": 0,
+      "path_length": 211.73,
+      "scene": "airport",
+      "seed": 20263413,
+      "success": false,
+      "time": 45.0
+    }
+  ],
+  "sample_hz": 10.0,
+  "scenes": [
+    "city",
+    "canyon",
+    "airport"
+  ],
+  "seconds": 380.18,
+  "seed": 20261110,
+  "success_criteria": {
+    "altitude_m": 2.0,
+    "horizontal_m": 3.0
+  }
+}
