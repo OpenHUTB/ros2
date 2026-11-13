@@ -1,0 +1,5 @@
+# AirSim PythonClient is installed from the official source; see README.md.
+numpy>=1.17
+msgpack-rpc-python>=0.4.1
+opencv-python>=4.5
+torch>=2.0

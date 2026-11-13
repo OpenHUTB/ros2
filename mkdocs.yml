@@ -360,6 +360,7 @@ nav:
     - 城市道路地面载具二维动力学、激光 SLAM 与神经网络导航: './ground/road_numpy_nn_slam.md'
     - 智能驾驶员模型（IDM）跟车与车队减速波仿真: './ground/idm_car_following.md'
 - 空域载具:
+    - AirSim 无人机激光雷达感知与扫描校正: './air/uav_nn_perception_navigation/perception.md'
     - 无人机航向坐标变换与往返误差验证: './air/uav_yaw_frame_validation/index.md'
     - 无人机测距序列轻量 MLP 去噪: './air/uav_range_denoising_mlp/index.md'
     - 无人机空间围栏与速度门控: './air/uav_box_geofence_guard/index.md'
