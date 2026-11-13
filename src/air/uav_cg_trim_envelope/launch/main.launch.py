@@ -3,7 +3,14 @@
 """启动核算的离线入口（ExecuteProcess, 无需 rclpy）.
 
     ros2 launch uav_cg_trim_envelope main.launch.py
+
+入口用 `python -m uav_cg_trim_envelope`：ament_python 把 console script 装到
+`install/<pkg>/lib/<pkg>/`，`source install/setup.bash` 不会把该目录加进 PATH，
+直接用裸脚本名会 FileNotFoundError；而 `python -m` 只依赖 PYTHONPATH，
+setup.bash 一定把它指向本工作区（也避免 PATH 上同名旧脚本被误用）。
 """
+import sys
+
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, ExecuteProcess, OpaqueFunction
 from launch.substitutions import LaunchConfiguration
@@ -24,14 +31,14 @@ ARGUMENTS = (
 
 def _launch_setup(context):
     """按实际参数拼出命令行."""
-    cmd = ['uav_cg_trim_envelope',
-           '--mass', LaunchConfiguration('mass').perform(context),
-           '--arm-x', LaunchConfiguration('arm-x').perform(context),
-           '--arm-y', LaunchConfiguration('arm-y').perform(context),
-           '--dx', LaunchConfiguration('dx').perform(context),
-           '--dy', LaunchConfiguration('dy').perform(context),
-           '--cog-depth', LaunchConfiguration('cog-depth').perform(context),
-           '--thrust-max', LaunchConfiguration('thrust-max').perform(context),
+    cmd = [sys.executable, '-m', PACKAGE,
+        '--mass', LaunchConfiguration('mass').perform(context),
+        '--arm-x', LaunchConfiguration('arm-x').perform(context),
+        '--arm-y', LaunchConfiguration('arm-y').perform(context),
+        '--dx', LaunchConfiguration('dx').perform(context),
+        '--dy', LaunchConfiguration('dy').perform(context),
+        '--cog-depth', LaunchConfiguration('cog-depth').perform(context),
+        '--thrust-max', LaunchConfiguration('thrust-max').perform(context),
            '--output', LaunchConfiguration('output').perform(context)]
     return [ExecuteProcess(cmd=cmd, output='screen')]
 
