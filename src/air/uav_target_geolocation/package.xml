@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>uav_target_geolocation</name>
+  <version>0.1.0</version>
+  <description>目标地理定位与多站交会：单站视线 vs 双站交会精度评估，MuJoCo 闭环复核</description>
+  <maintainer email="327592576+KKK555-MAX@users.noreply.github.com">蒋宇鑫</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>ament_index_python</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <!-- mujoco 是 Python 包（非 rosdep key），运行时由 uav_mujoco_sim 统一
+       提供安装；本包只依赖 uav_mujoco_sim 暴露的仿真/话题接口 -->
+  <exec_depend>uav_mujoco_sim</exec_depend>
+
+  <test_depend>ament_pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

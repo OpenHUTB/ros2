@@ -495,6 +495,7 @@ ROS 2 Action 斐波那契数列计算示例：[chap2/fibonacci_action](./chap2/f
 * [基于 PPO 的无人机固定路线巡航](./air/uav_route_cruise.md) —— 沿给定闭合航线巡航，遇压在航线上的障碍时临时偏离绕行
 
 * [无人机导航强化学习对比实验（PPO/SAC/TD3）](./air/uav_rl_benchmark.md)
+* [目标地理定位与多站交会](./air/uav_target_geolocation.md) —— 单站视线误差 = 敏感度×角误差（80 m 高 1° 偏 2.18 m）；双站正交交会实测 0.31 m，12° 浅交会反而 1.49 m，"拿指令姿态当真实姿态"偏 14.5 m
 
 * [神经残差动力学与学习式轨迹跟踪](./air/uav_neural_residual_control.md)
 * [低空地形跟随：恒定离地高度保持与 DEM 前馈](./air/uav_terrain_follow_agl.md) —— 要求全程保持固定离地高度（AGL 15 m），对比定高、纯雷达反馈与 DEM 前馈三种策略，MuJoCo 闭环验证

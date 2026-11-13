@@ -1,0 +1,65 @@
+name: uav_target_geolocation tests
+
+on:
+  push:
+    paths:
+      - 'src/air/uav_target_geolocation/**'
+      - '.github/workflows/ci_uav_target_geolocation.yml'
+  pull_request:
+    paths:
+      - 'src/air/uav_target_geolocation/**'
+      - '.github/workflows/ci_uav_target_geolocation.yml'
+
+jobs:
+  test:
+    name: Local tests (no ROS / MuJoCo)
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install test dependencies
+        run: python3 -m pip install --upgrade pip numpy matplotlib pyyaml pytest
+
+      - name: Run module tests
+        working-directory: src/air/uav_target_geolocation
+        run: PYTHONPATH=${{ github.workspace }}/src/air python3 -m pytest test/ -q
+
+  ros2:
+    name: ROS 2 Humble launch smoke
+    runs-on: ubuntu-22.04
+    container:
+      image: osrf/ros:humble-desktop
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install python deps
+        run: |
+          apt-get update
+          apt-get install -y python3-pip
+          python3 -m pip install --no-cache-dir numpy mujoco
+
+      - name: Build workspace
+        shell: bash
+        run: |
+          source /opt/ros/humble/setup.bash
+          colcon build --paths src/air/uav_mujoco_sim src/air/uav_target_geolocation
+
+      - name: Launch and smoke test topics
+        shell: bash
+        run: |
+          source /opt/ros/humble/setup.bash
+          source install/setup.bash
+          ros2 launch uav_target_geolocation main.launch.py &
+          LAUNCH_PID=$!
+          sleep 6
+          python3 src/air/uav_target_geolocation/tools/ros2_smoke_test.py
+          status=$?
+          kill $LAUNCH_PID 2>/dev/null || true
+          exit $status
