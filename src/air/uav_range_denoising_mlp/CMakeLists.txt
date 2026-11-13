@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 3.0.2)
+project(uav_range_denoising_mlp)
+find_package(catkin REQUIRED COMPONENTS rospy std_msgs sensor_msgs)
+catkin_package()
+catkin_install_python(PROGRAMS main.py DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+install(FILES core.py ros_node.py model.json DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+install(DIRECTORY launch DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})

@@ -1,0 +1,56 @@
+name: 反应式导航与覆盖模块测试
+
+# 三个模块（APF 势场 / Bug2 / 牛耕式覆盖）共用一个 workflow：
+# 算法与出图层只用 Python 标准库，无需安装任何第三方依赖；
+# ROS 节点以 rclpy 接口桩在 tests/ 里验证（本机无 ROS 也能跑）。
+
+on:
+  push:
+    paths:
+      - 'src/reactive_navigation/**'
+      - 'docs/reactive_navigation/**'
+      - '.github/workflows/reactive_navigation_tests.yml'
+  pull_request:
+    paths:
+      - 'src/reactive_navigation/**'
+      - 'docs/reactive_navigation/**'
+      - '.github/workflows/reactive_navigation_tests.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: 单元测试 + 离线出图冒烟
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+
+    strategy:
+      fail-fast: false
+      matrix:
+        pkg: [potential_field_avoidance, bug2_navigation, boustrophedon_coverage]
+
+    defaults:
+      run:
+        working-directory: src/reactive_navigation/${{ matrix.pkg }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run unit tests
+        run: python -m unittest discover -s tests -t . -v
+
+      - name: Byte-compile package
+        run: python -m compileall -q scripts launch
+
+      - name: Offline figures smoke (bash main.sh)
+        run: |
+          bash main.sh --outdir "${RUNNER_TEMP}/img_${{ matrix.pkg }}"
+          test -n "$(ls "${RUNNER_TEMP}/img_${{ matrix.pkg }}")"
