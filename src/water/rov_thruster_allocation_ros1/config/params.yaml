@@ -1,0 +1,6 @@
+# 推力分配参数（launch 中作为节点私有参数加载）
+max_thrust: 40.0             # 单个推进器最大推力（N）
+saturation_mode: scale       # 饱和策略：scale 按比例缩小 / clamp 直接限幅
+failed_thruster: -1          # 故障推进器下标（0~5），-1 表示全部正常
+control_rate: 20.0           # 分配频率（Hz）
+wrench_timeout: 0.5          # 期望 wrench 超时（s），超时后推进器归零
