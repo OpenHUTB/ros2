@@ -8,8 +8,15 @@
 | --- | --- | --- | --- |
 | 1 | 键盘遥控 | `main.py --mode teleop` | 终端按键控制无人机六个自由度 |
 | 2 | 激光雷达感知 + 神经网络控制 | `main.py --mode perception` | 点云障碍检测，神经网络输出速度指令 |
-| 3 | SLAM 建图 + 导航 | `main.py --mode slam` / `--mode nav` | 边飞边建图，基于地图规划路径 |
-| 4 | 端到端视觉控制 | `main.py --mode end2end` | 图像直接输入网络，输出控制指令 |
+| 3 | SLAM 建图 + 控制 | `roslaunch uav_nn_perception_navigation slam.launch` | gmapping 建图与目标控制同步运行 |
+
+本分支不包含独立的 `nav_node.py` 或端到端节点，不能使用 `--mode nav`、`--mode end2end`。`python3 scripts/main.py --mode slam` 使用默认参数启动相同的 `slam.launch`；如需指定 AirSim IP 或目标，请直接使用下方的 `roslaunch` 命令。
+
+```bash
+roslaunch uav_nn_perception_navigation slam.launch airsim_ip:=<主机IP> goal_x:=0 goal_y:=20
+```
+
+随包雷达设置水平视场为前向 180°；扫描中没有返回点的角度以最大量程填充，这并不能证明这些方向没有障碍。点云按每次查询时的估计位置和偏航变换到当前坐标系，未对单帧内部各点做逐点去畸变，且估计位姿与点云时间不完全同步；高速转动或平移时仍可能错位。`maps/uav_map.pgm` 已替换为 2026-11-11 使用本分支重新采集的地图，采集配置、话题样本、文件校验值和限制见 `maps/evidence_20261111/README.md`。gmapping 地图可在建图时动态扩展，最终像素数不能单凭初始边界直接断定其来源。
 
 ## 运行环境
 
