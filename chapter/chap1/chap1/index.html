@@ -81,9 +81,13 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#9">9. 小海龟绘制任意文字</a>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="#10-ros">10. 小海龟键盘遥控与 ROS 基础实验</a>
+</li>
 </ul>
 </li>
 </ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../turtlesim_teleop/">小海龟键盘遥控与 ROS 基础实验</a>
 </li>
 <li class="toctree-l1"><a class="reference internal">2. ROS 基础 - ROS 基础</a>
 <ul>
@@ -1278,12 +1282,17 @@
 <p>在键盘上输入任意英文单词或短句，程序根据内容长度自动计算字号并按单词折行，
 结合 <code>/turtle1/pose</code> 的位姿反馈、<code>/turtle1/cmd_vel</code> 的速度控制和 <code>/turtle1/set_pen</code> 的画笔服务，
 控制小海龟把输入的文字逐笔绘制在画布上。</p>
-<p><a href="../turtle_text/">进入小海龟绘制任意文字实验</a></p></div>
+<p><a href="../turtle_text/">进入小海龟绘制任意文字实验</a></p>
+<h3 id="10-ros">10. 小海龟键盘遥控与 ROS 基础实验</h3>
+<p>读取方向键或 WASD，向 <code>/turtle1/cmd_vel</code> 发布 <code>geometry_msgs/Twist</code> 控制小海龟移动，
+练习 <code>rosnode</code>、<code>rostopic</code>、<code>rosmsg</code>、<code>rosservice</code> 等常用命令，
+并阅读 CARLA-ROS 桥接源码，理解外部仿真器与 ROS 之间的双向桥接原理。</p>
+<p><a href="../turtlesim_teleop/">进入小海龟键盘遥控与 ROS 基础实验</a></p></div>
 </div>
 </div><footer>
 <div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
 <a class="btn btn-neutral float-left" href="../../../chap2/fibonacci_action/" title="ROS 2 Action 斐波那契数列计算示例"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
-<a class="btn btn-neutral float-right" href="../../chap2/" title="章节首页">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+<a class="btn btn-neutral float-right" href="../turtlesim_teleop/" title="小海龟键盘遥控与 ROS 基础实验">后一页 <span class="icon icon-circle-arrow-right"></span></a>
 </div>
 <hr/>
 <div role="contentinfo">
@@ -1301,7 +1310,7 @@
 <a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
 </span>
 <span><a href="../../../chap2/fibonacci_action/" style="color: #fcfcfc">« 前一页</a></span>
-<span><a href="../../chap2/" style="color: #fcfcfc">后一页 »</a></span>
+<span><a href="../turtlesim_teleop/" style="color: #fcfcfc">后一页 »</a></span>
 </span>
 </div>
 <script src="../../../js/jquery-3.6.0.min.js"></script>
