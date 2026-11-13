@@ -1344,6 +1344,8 @@ roslaunch<span class="w"> </span>carla_ros_bridge<span class="w"> </span>carla_r
 <p><strong>停止</strong>：目标速度 0：</p>
 <div class="highlight"><pre><span></span><code>rostopic<span class="w"> </span>pub<span class="w"> </span>/carla/ego_vehicle/ackermann_cmd<span class="w"> </span>ackermann_msgs/AckermannDrive<span class="w"> </span><span class="s2">"{speed: 0.0, steering_angle: 0.0}"</span><span class="w"> </span>-r<span class="w"> </span><span class="m">10</span>
 </code></pre></div>
+<p>发布停止命令后，主车减速直至停住，之后速度保持 0：</p>
+<p><img alt="停止命令发布效果" src="../../img/ground/ackermann_publisher_stop.gif"/></p>
 <h2 id="4">第五步：创建发布功能包（终端 4）</h2>
 <div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/carla-ros-bridge/catkin_ws/src
 
