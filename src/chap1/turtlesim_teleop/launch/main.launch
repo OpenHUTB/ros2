@@ -1,0 +1,16 @@
+<launch>
+  <!-- 小海龟键盘遥控一键启动入口：roslaunch turtlesim_teleop main.launch -->
+
+  <!-- roslaunch 启动的节点读不到终端键盘输入，用 xterm 单独弹一个窗口承载 main.py；
+       若没安装 xterm，可传 use_xterm:=false，再另开终端 rosrun turtlesim_teleop main.py -->
+  <arg name="use_xterm" default="true"/>
+
+  <!-- 启动小海龟仿真器 -->
+  <node pkg="turtlesim" type="turtlesim_node" name="turtlesim" output="screen"/>
+
+  <!-- 启动键盘遥控节点（本模块入口脚本 main.py） -->
+  <node if="$(arg use_xterm)" pkg="turtlesim_teleop" type="main.py"
+        name="turtlesim_teleop" output="screen" launch-prefix="xterm -e"/>
+  <node unless="$(arg use_xterm)" pkg="turtlesim_teleop" type="main.py"
+        name="turtlesim_teleop" output="screen"/>
+</launch>

@@ -66,3 +66,11 @@
 控制小海龟把输入的文字逐笔绘制在画布上。
 
 [进入小海龟绘制任意文字实验](turtle_text.md)
+
+### 10. 小海龟键盘遥控与 ROS 基础实验
+
+读取方向键或 WASD，向 `/turtle1/cmd_vel` 发布 `geometry_msgs/Twist` 控制小海龟移动，
+练习 `rosnode`、`rostopic`、`rosmsg`、`rosservice` 等常用命令，
+并阅读 CARLA-ROS 桥接源码，理解外部仿真器与 ROS 之间的双向桥接原理。
+
+[进入小海龟键盘遥控与 ROS 基础实验](turtlesim_teleop.md)

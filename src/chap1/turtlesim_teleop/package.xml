@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>turtlesim_teleop</name>
+  <version>1.0.0</version>
+  <description>
+    小海龟键盘遥控模块（第一章实验）：读取方向键或 WASD，向 /turtle1/cmd_vel
+    发布 geometry_msgs/Twist 速度指令，控制 turtlesim 小海龟前后移动和左右转向。
+    配套文档见 docs/chapter/chap1/turtlesim_teleop.md。
+  </description>
+  <maintainer email="2809825433@qq.com">xinyangtang91</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>rospy</depend>
+  <depend>geometry_msgs</depend>
+  <depend>turtlesim</depend>
+</package>
