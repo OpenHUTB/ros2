@@ -1,0 +1,108 @@
+{
+  "architecture": [
+    72,
+    160,
+    160,
+    72
+  ],
+  "augment_pairs": 7500,
+  "batch": 96,
+  "beams": 72,
+  "epochs": 55,
+  "hidden": 160,
+  "history": [
+    {
+      "epoch": 1,
+      "noisy_rmse_norm": 0.11978,
+      "train_mse": 0.048901,
+      "val_rmse_norm": 0.12012
+    },
+    {
+      "epoch": 5,
+      "noisy_rmse_norm": 0.11978,
+      "train_mse": 0.018263,
+      "val_rmse_norm": 0.12011
+    },
+    {
+      "epoch": 10,
+      "noisy_rmse_norm": 0.11978,
+      "train_mse": 0.017122,
+      "val_rmse_norm": 0.11616
+    },
+    {
+      "epoch": 15,
+      "noisy_rmse_norm": 0.11978,
+      "train_mse": 0.015601,
+      "val_rmse_norm": 0.11054
+    },
+    {
+      "epoch": 20,
+      "noisy_rmse_norm": 0.11978,
+      "train_mse": 0.014126,
+      "val_rmse_norm": 0.10604
+    },
+    {
+      "epoch": 25,
+      "noisy_rmse_norm": 0.11978,
+      "train_mse": 0.013048,
+      "val_rmse_norm": 0.10219
+    },
+    {
+      "epoch": 30,
+      "noisy_rmse_norm": 0.11978,
+      "train_mse": 0.012313,
+      "val_rmse_norm": 0.0992
+    },
+    {
+      "epoch": 35,
+      "noisy_rmse_norm": 0.11978,
+      "train_mse": 0.011675,
+      "val_rmse_norm": 0.09752
+    },
+    {
+      "epoch": 40,
+      "noisy_rmse_norm": 0.11978,
+      "train_mse": 0.011452,
+      "val_rmse_norm": 0.09607
+    },
+    {
+      "epoch": 45,
+      "noisy_rmse_norm": 0.11978,
+      "train_mse": 0.01119,
+      "val_rmse_norm": 0.09577
+    },
+    {
+      "epoch": 50,
+      "noisy_rmse_norm": 0.11978,
+      "train_mse": 0.010775,
+      "val_rmse_norm": 0.09449
+    },
+    {
+      "epoch": 55,
+      "noisy_rmse_norm": 0.11978,
+      "train_mse": 0.010509,
+      "val_rmse_norm": 0.09325
+    }
+  ],
+  "lr": 0.0015,
+  "mae_m": 2.5044,
+  "mae_norm": 0.04209,
+  "model": "perception_mlp",
+  "rmse_denoised": 5.5485,
+  "rmse_denoised_norm": 0.09325,
+  "rmse_denoised_valid": 5.6159,
+  "rmse_improvement_pct": 22.15,
+  "rmse_improvement_valid_pct": 14.98,
+  "rmse_noisy": 7.127,
+  "rmse_noisy_norm": 0.11978,
+  "rmse_noisy_valid": 6.6056,
+  "seconds": 890.12,
+  "target": "residual (clean - noisy), output = noisy + residual clipped",
+  "task": "lidar denoising (72 beams), predicts residual clean-noisy",
+  "train_samples": 8744,
+  "val_episodes": [
+    0,
+    1
+  ],
+  "val_samples": 512
+}

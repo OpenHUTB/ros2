@@ -1,0 +1,75 @@
+name: RRT 路径规划模块测试
+
+# 算法层（map.py / rrt.py）只用标准库，不依赖 pygame 窗口与 ROS；
+# 本工作流在 PR 级跑单元测试与语法检查，并校验打包清单。
+
+on:
+  push:
+    paths:
+      - 'src/ground/rrt_path_planning/**'
+      - 'docs/ground/rrt_path_planning.md'
+      - '.github/workflows/rrt_path_planning_tests.yml'
+  pull_request:
+    paths:
+      - 'src/ground/rrt_path_planning/**'
+      - 'docs/ground/rrt_path_planning.md'
+      - '.github/workflows/rrt_path_planning_tests.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: 单元测试 + 打包自检
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: src/ground/rrt_path_planning
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install pytest
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pytest
+
+      - name: Run unit tests (pytest)
+        run: python -m pytest test -v
+
+      - name: Run unit tests without pytest
+        run: python test/test_rrt.py
+
+      - name: Byte-compile module
+        run: python -m compileall -q rrt_path_planning launch main.py
+
+      - name: Check packaging manifest
+        run: |
+          python - <<'PY'
+          import os
+
+          expected = [
+              "package.xml", "README.md", "requirements.txt",
+              "main.py", "main.sh", "main.bat",
+              os.path.join("resource", "rrt_path_planning"),
+              os.path.join("config", "params.yaml"),
+              os.path.join("launch", "main.launch.py"),
+              os.path.join("rrt_path_planning", "main.py"),
+          ]
+          missing = [p for p in expected if not os.path.exists(p)]
+          assert not missing, "setup.py 引用的文件缺失: %s" % missing
+
+          pkg = open("package.xml", encoding="utf-8").read()
+          assert "<build_type>ament_python</build_type>" in pkg
+          assert "<buildtool_depend>ament_python</buildtool_depend>" in pkg, \
+              "buildtool_depend 必须是 ament_python，与 build_type 一致"
+          print("packaging ok")
+          PY

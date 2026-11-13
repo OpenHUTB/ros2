@@ -1,0 +1,14 @@
+# Dubins 曲线可视化参数
+canvas:
+  width: 900
+  height: 600
+  fps: 60
+
+dubins:
+  start: [150.0, 480.0, 0.0]      # (x, y, yaw in rad)
+  end:   [750.0, 150.0, 3.14159]  # (x, y, yaw in rad)
+  radius: 80.0                    # 最小转弯半径（像素）
+
+sampling:
+  curve_samples: 200
+  anim_steps: 120

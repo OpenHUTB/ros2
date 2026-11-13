@@ -1,0 +1,29 @@
+# APF 路径规划参数
+# 说明：本模块是 pygame 2D 可视化，没有 rclpy 节点，因此这里是模块配置
+# （由 config.load_params() 读取），不是 ROS 2 的 ros__parameters 参数文件。
+# 查找顺序：环境变量 APF_PARAMS -> 安装空间 share/apf_path_planning/config
+#          -> 源码树 config/params.yaml
+
+canvas:
+  width: 800
+  height: 600
+  fps: 30
+
+scene:
+  start: [60.0, 60.0]
+  goal: [720.0, 540.0]
+  obstacles:
+    - [250.0, 200.0, 45.0]
+    - [400.0, 350.0, 55.0]
+    - [550.0, 200.0, 40.0]
+    - [300.0, 450.0, 50.0]
+    - [600.0, 420.0, 45.0]
+
+apf:
+  k_att: 1.0
+  k_rep: 5000.0
+  d_thresh_att: 150.0
+  d_thresh_rep: 80.0
+  step_size: 4.0
+  max_iter: 2000
+  goal_tol: 10.0

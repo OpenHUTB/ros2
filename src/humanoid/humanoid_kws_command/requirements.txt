@@ -1,0 +1,4 @@
+# 只依赖 numpy + matplotlib：没有 torch、没有 ASR 引擎、没有预训练权重。
+# 语料可选：Windows 上用 System.Speech 生成（见 README）；仓库已附带提取好的特征。
+numpy>=1.23
+matplotlib>=3.6

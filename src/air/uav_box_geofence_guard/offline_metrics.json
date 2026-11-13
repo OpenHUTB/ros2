@@ -1,0 +1,6 @@
+{
+  "final_x": 4.8499999975157095,
+  "boundary": 4.85,
+  "limited_steps": 185,
+  "validation_scope": "offline mathematical demo; ROS runtime not tested"
+}

@@ -1,0 +1,5 @@
+mujoco>=3.3.0
+numpy>=1.23
+scipy>=1.9          # 仅用于求解离散 Riccati 方程（生成 ZMP 预瞄增益）
+matplotlib>=3.6
+pillow>=9.0
