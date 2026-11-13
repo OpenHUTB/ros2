@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematype="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>bug2_wall_following</name>
+  <version>0.0.1</version>
+  <description>Bug2 反应式避障 2D 仿真（非 ROS 节点包）：直线朝目标、沿墙跟随、穿越连线切回。</description>
+  <maintainer email="wqs159@users.noreply.github.com">wqs159</maintainer>
+  <license>MIT</license>
+  <buildtool_depend>ament_python</buildtool_depend>
+  <exec_depend>python3</exec_depend>
+  <test_depend>python3-pytest</test_depend>
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
