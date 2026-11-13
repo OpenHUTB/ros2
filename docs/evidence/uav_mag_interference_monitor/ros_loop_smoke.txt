@@ -1,0 +1,61 @@
+test_field_norm_anomaly_degrades (test_ros_loop_smoke.RosLoopSmokeTest.test_field_norm_anomaly_degrades)
+沿航向干扰：模值抬高 → field_norm_out_of_range → UNRELIABLE。 ... ok
+test_lateral_interference_switches_to_gnss_course (test_ros_loop_smoke.RosLoopSmokeTest.test_lateral_interference_switches_to_gnss_course)
+横向干扰：磁航向被推偏 → DEGRADED → UNRELIABLE 并改用航迹向。 ... ok
+test_mag_stream_timeout_watchdog (test_ros_loop_smoke.RosLoopSmokeTest.test_mag_stream_timeout_watchdog)
+磁场断流（GNSS 正常）：看门狗逐拍降级，输出 stream_timeout。 ... ok
+test_non_finite_mag_input_degrades (test_ros_loop_smoke.RosLoopSmokeTest.test_non_finite_mag_input_degrades)
+NaN 磁力计输入：non_finite 降级，有航迹向时输出仍可用。 ... ok
+test_normal_input_trusted_with_correct_units (test_ros_loop_smoke.RosLoopSmokeTest.test_normal_input_trusted_with_correct_units)
+正常段：TRUSTED、来源 mag、航向≈45°、模值≈100%（证明 T→µT 正确）。 ... ok
+test_recovery_after_interference (test_ros_loop_smoke.RosLoopSmokeTest.test_recovery_after_interference)
+横向干扰退去后 5 帧内恢复 TRUSTED，来源回到 mag。 ... ok
+test_timeout_without_course_freezes_heading (test_ros_loop_smoke.RosLoopSmokeTest.test_timeout_without_course_freezes_heading)
+悬停断流：无航迹向 → 冻结最后可信航向并置 valid=False。 ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.103s
+
+OK
+test_counts_samples (test_mag_interference_monitor.TestCircleFit.test_counts_samples) ... ok
+test_ignores_non_finite_samples (test_mag_interference_monitor.TestCircleFit.test_ignores_non_finite_samples) ... ok
+test_radius_matches_horizontal_field (test_mag_interference_monitor.TestCircleFit.test_radius_matches_horizontal_field) ... ok
+test_recovers_horizontal_bias (test_mag_interference_monitor.TestCircleFit.test_recovers_horizontal_bias) ... ok
+test_rejects_too_few_samples (test_mag_interference_monitor.TestCircleFit.test_rejects_too_few_samples) ... ok
+test_residual_is_small_on_clean_data (test_mag_interference_monitor.TestCircleFit.test_residual_is_small_on_clean_data) ... ok
+test_vertical_mean_tracks_earth_field (test_mag_interference_monitor.TestCircleFit.test_vertical_mean_tracks_earth_field) ... ok
+test_rejects_inverted_limits (test_mag_interference_monitor.TestConfig.test_rejects_inverted_limits) ... ok
+test_rejects_non_positive_thresholds (test_mag_interference_monitor.TestConfig.test_rejects_non_positive_thresholds) ... ok
+test_rejects_small_preflight_window (test_mag_interference_monitor.TestConfig.test_rejects_small_preflight_window) ... ok
+test_rejects_warn_above_fail (test_mag_interference_monitor.TestConfig.test_rejects_warn_above_fail) ... ok
+test_wrap_angle_identity (test_mag_interference_monitor.TestHeadingMath.test_wrap_angle_identity) ... ok
+test_wrap_angle_range (test_mag_interference_monitor.TestHeadingMath.test_wrap_angle_range) ... ok
+test_degraded_after_degraded_limit (test_mag_interference_monitor.TestHeadingMonitor.test_degraded_after_degraded_limit) ... ok
+test_first_clean_frame_is_trusted (test_mag_interference_monitor.TestHeadingMonitor.test_first_clean_frame_is_trusted) ... ok
+test_heading_error_reported (test_mag_interference_monitor.TestHeadingMonitor.test_heading_error_reported) ... ok
+test_low_speed_does_not_compare_course (test_mag_interference_monitor.TestHeadingMonitor.test_low_speed_does_not_compare_course) ... ok
+test_no_course_no_error (test_mag_interference_monitor.TestHeadingMonitor.test_no_course_no_error) ... ok
+test_non_finite_input_is_rejected (test_mag_interference_monitor.TestHeadingMonitor.test_non_finite_input_is_rejected) ... ok
+test_norm_deviation_detected (test_mag_interference_monitor.TestHeadingMonitor.test_norm_deviation_detected) ... ok
+test_recovery_after_streak (test_mag_interference_monitor.TestHeadingMonitor.test_recovery_after_streak) ... ok
+test_stale_gap_flagged (test_mag_interference_monitor.TestHeadingMonitor.test_stale_gap_flagged) ... ok
+test_timeout_escalates_to_unreliable (test_mag_interference_monitor.TestHeadingMonitor.test_timeout_escalates_to_unreliable) ... ok
+test_timeout_without_data_returns_none (test_mag_interference_monitor.TestHeadingMonitor.test_timeout_without_data_returns_none) ... ok
+test_unreliable_after_unreliable_limit (test_mag_interference_monitor.TestHeadingMonitor.test_unreliable_after_unreliable_limit) ... ok
+test_unreliable_without_course_holds_last_trusted (test_mag_interference_monitor.TestHeadingMonitor.test_unreliable_without_course_holds_last_trusted) ... ok
+test_fail_on_large_motor_offset (test_mag_interference_monitor.TestPreflight.test_fail_on_large_motor_offset) ... ok
+test_pass_when_motor_off (test_mag_interference_monitor.TestPreflight.test_pass_when_motor_off) ... ok
+test_rejects_insufficient_idle_samples (test_mag_interference_monitor.TestPreflight.test_rejects_insufficient_idle_samples) ... ok
+test_rejects_insufficient_spin_samples (test_mag_interference_monitor.TestPreflight.test_rejects_insufficient_spin_samples) ... ok
+test_reports_shift_in_microtesla (test_mag_interference_monitor.TestPreflight.test_reports_shift_in_microtesla) ... ok
+test_vertical_offset_alone_can_fail (test_mag_interference_monitor.TestPreflight.test_vertical_offset_alone_can_fail) ... ok
+test_warn_in_middle_band (test_mag_interference_monitor.TestPreflight.test_warn_in_middle_band) ... ok
+test_load_mag_csv_reports_bad_columns (test_mag_interference_monitor.TestReplayEntryPoint.test_load_mag_csv_reports_bad_columns) ... ok
+test_plot_outputs_are_written (test_mag_interference_monitor.TestReplayEntryPoint.test_plot_outputs_are_written) ... ok
+test_preflight_csv_roundtrip (test_mag_interference_monitor.TestReplayEntryPoint.test_preflight_csv_roundtrip) ... ok
+test_replay_runs_end_to_end (test_mag_interference_monitor.TestReplayEntryPoint.test_replay_runs_end_to_end) ... ok
+
+----------------------------------------------------------------------
+Ran 37 tests in 0.108s
+
+OK

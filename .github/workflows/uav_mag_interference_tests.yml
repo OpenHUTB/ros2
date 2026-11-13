@@ -1,0 +1,57 @@
+name: UAV magnetometer interference tests
+
+# 给 src/air/uav_mag_interference_monitor 补 PR 级回归保护。
+# 判据层纯标准库；ROS 话题闭环冒烟测试用进程内 rclpy 兼容层，不需要装 ROS。
+on:
+  push:
+    paths:
+      - 'src/air/uav_mag_interference_monitor/**'
+      - '.github/workflows/uav_mag_interference_tests.yml'
+  pull_request:
+    paths:
+      - 'src/air/uav_mag_interference_monitor/**'
+      - '.github/workflows/uav_mag_interference_tests.yml'
+
+jobs:
+  test:
+    name: pytest (Python ${{ matrix.python }})
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python:
+          - '3.8'
+          - '3.10'
+          - '3.12'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install numpy pytest
+
+      - name: Unit tests
+        working-directory: src/air/uav_mag_interference_monitor
+        env:
+          PYTEST_DISABLE_PLUGIN_AUTOLOAD: '1'
+        run: python3 -m pytest test_mag_interference_monitor.py -v
+
+      - name: ROS topic loop smoke
+        working-directory: src/air/uav_mag_interference_monitor
+        env:
+          PYTEST_DISABLE_PLUGIN_AUTOLOAD: '1'
+        run: python3 -m pytest test_ros_loop_smoke.py -v
+
+      - name: MuJoCo physical verification
+        # 物理仿真验证作为证据跑一遍；runner 缺 GL/EGL 时只跳过、不判红
+        continue-on-error: true
+        working-directory: src/air/uav_mag_interference_monitor
+        run: |
+          python3 -m pip install mujoco matplotlib
+          python3 mujoco_mag_verification.py
