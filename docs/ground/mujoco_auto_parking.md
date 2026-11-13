@@ -36,7 +36,7 @@ src/ground/mujoco_auto_parking/
 │   ├── parking_perception.py     # 任务② 感知网络（雷达/图像两套）
 │   ├── perception_node.py        # 任务② 感知节点
 │   ├── trajectory_control.py     # 任务② 控制网络 + 专家律
-│   ├── trajectory_control_node.py# 任务② 控制节点
+│   ├── trajectory_control_node.py # 任务② 控制节点
 │   ├── occupancy_map.py          # 任务③ 占据栅格
 │   ├── neural_path_planner.py    # 任务③ A* / Neural A*
 │   ├── navigation.py             # 任务③ 编排层
@@ -215,6 +215,10 @@ ros2 topic pub --once /cmd_vel geometry_msgs/msg/Twist \
 
 这一层的意义是提供**人工可验证的基线**：如果键盘都开不动，问题在仿真层而不在算法层。
 
+![任务① 键盘遥控：车在停车场中前进](../img/ground/mujoco_auto_parking/screenshots/task1_teleop.png)
+
+> 动图见 [task1_teleop.gif](../img/ground/mujoco_auto_parking/task1_teleop.gif)（3.6 MB）。
+
 ## 6. 任务②：感知 + 轨迹跟踪
 
 链路上有两条独立网络，串起来构成「看图/看雷达 → 输出速度」。
@@ -283,6 +287,10 @@ v = v_ref * max(0.15, 1.0 - 0.6 * min(|eψ|, 1.0))     # 偏差越大越减速
 
 启动：`./main.sh --task2`；训练 `./main.sh --train`；测试 `--test-sensors`、`--test-nn`、`--eval-trajectory`。
 
+![任务② 神经网络沿 S 曲线行驶](../img/ground/mujoco_auto_parking/screenshots/task2_s_curve.png)
+
+> 动图见 [task2_s_curve.gif](../img/ground/mujoco_auto_parking/task2_s_curve.gif)（1.8 MB）。
+
 ## 7. 任务③：建图 + Neural A*
 
 ### 7.1 占据栅格
@@ -350,6 +358,10 @@ v = v_ref * max(0.15, 1.0 - 0.6 * min(|eψ|, 1.0))     # 偏差越大越减速
 
 启动：`./main.sh --task3`，或 `ros2 launch mujoco_auto_parking task3.launch.py goal:=0.25,-1.2` 指定上/下排车位入口；训练引导网络 `--train-planning`；测试 `--test3`。
 
+![任务③ 建图并规划到目标车位](../img/ground/mujoco_auto_parking/screenshots/task3_navigation.png)
+
+> 动图见 [task3_navigation.gif](../img/ground/mujoco_auto_parking/task3_navigation.gif)（2.3 MB）。
+
 ## 8. 任务④：图像端到端 CNN
 
 ### 8.1 网络
@@ -389,6 +401,10 @@ v  = clip(0.45 * (out0 + 1) / 2, 0, 0.45)
 2. `bgr8` 必须 `[..., ::-1]` 翻转，否则红蓝通道互换，模型看到的颜色和训练时不一致。
 
 闭环评估 `closed_loop(max_time=20.0)`：CNN RMSE 0.355 m、最大 0.549 m、单帧推理 1.9 ms；零权值 0.684 m / 1.001 m。
+
+![任务④ CNN 只靠图像沿 S 曲线行驶](../img/ground/mujoco_auto_parking/screenshots/task4_end_to_end.png)
+
+> 动图见 [task4_end_to_end.gif](../img/ground/mujoco_auto_parking/task4_end_to_end.gif)（1.8 MB）。
 
 ## 9. 节点与话题总表
 
@@ -460,8 +476,18 @@ tools/verify_all.sh          # 一键回归
 
 ## 15. 文档与证据
 
-- 实测证据：`docs/evidence/mujoco_auto_parking/`（训练 CSV 与 README 说明）
-- 分任务页面：`docs/ground/mujoco_auto_parking/`（`overview.md` 为模块总览，`01`~`04` 对应四个任务）
-- 一键回归：`bash tools/verify_all.sh`
+单文件页只讲实现；四个任务的操作步骤与更多截图在分页里：
+
+- [模块总览（课程作业视角）](./mujoco_auto_parking/overview.md)
+- [任务①：物理仿真与键盘控制](./mujoco_auto_parking/01_physical_simulation_keyboard.md)
+- [任务②：感知与给定轨迹控制](./mujoco_auto_parking/02_perception_trajectory_control.md)
+- [任务③：建图与导航](./mujoco_auto_parking/03_slam_navigation.md)
+- [任务④：图像端到端控制](./mujoco_auto_parking/04_end_to_end.md)
+
+证据与工具：
+
+- 实测证据：[证据目录与回归日志](../evidence/mujoco_auto_parking/README.md)（4 个训练 CSV 与报告同目录）
+- Word 报告：[mujoco_auto_parking_report.docx](../evidence/mujoco_auto_parking/mujoco_auto_parking_report.docx)
+- 一键回归：`bash tools/verify_all.sh`（六个入口的退出码写入 `docs/evidence/mujoco_auto_parking/verification/summary.txt`，该目录由脚本运行时创建、未入库）
 - GIF 录制：`python3 tools/make_gifs.py`
 - Word 导出：`pip install -r tools/requirements-docs.txt` 后运行 `python3 src/ground/mujoco_auto_parking/tools/export_word.py`（脚本会重新打开 docx 并断言五个一级标题都在）
