@@ -695,6 +695,7 @@ ___
 ## 7. 经典控制 <span id='classical_control'></span>
 
 * [倒立摆平衡小车 (cart-pole, LQR 最优控制)](./classical_control/cartpole_balance.md) —— 用 LQR 让倒立摆从倾斜被拉回竖直保持不倒,演示 ROS 发布/订阅闭环与最优控制
+* [倒立摆能量摆起与 LQR 平衡](./classical_control/cartpole_swingup.md) —— 摆杆从下垂位置出发，能量控制泵能摆起、接近竖直后切换 LQR 保持平衡，并对比“只用 LQR 无法摆起”
 * [滑模控制（SMC）：二阶系统的鲁棒轨迹跟踪](./classical_control/sliding_mode_control.md) —— 边界层切换律，到达条件 K > D_max；常值扰动下 SMC 平均误差 0.012，PD 0.255
 
 
