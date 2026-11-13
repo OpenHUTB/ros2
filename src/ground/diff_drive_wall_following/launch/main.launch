@@ -1,0 +1,13 @@
+<launch>
+  <!-- 差速小车沿墙行驶入口：roslaunch diff_drive_wall_following main.launch -->
+
+  <arg name="scan_topic" default="/scan" doc="激光雷达话题（LaserScan）"/>
+  <arg name="cmd_topic" default="/cmd_vel" doc="速度指令话题（Twist）"/>
+
+  <node pkg="diff_drive_wall_following" type="main.py"
+        name="diff_drive_wall_following" output="screen">
+    <rosparam command="load" file="$(find diff_drive_wall_following)/config/params.yaml"/>
+    <param name="scan_topic" value="$(arg scan_topic)"/>
+    <param name="cmd_topic" value="$(arg cmd_topic)"/>
+  </node>
+</launch>

@@ -225,6 +225,7 @@ ROS 2 Action 斐波那契数列计算示例：[chap2/fibonacci_action](./chap2/f
 * [激光雷达点云语义分割](./ground/carla_lidar_pointcloud_segmentation.md)
 * [点云地图创建](./ground/pcl_recorder.md)
 * [定点停车](./ground/fixed_point_stop.md)
+* [差速小车沿墙行驶](./ground/diff_drive_wall_following.md) —— 从 LaserScan 取五路距离，用距离误差和车身夹角误差控制 /cmd_vel，墙角自动原地左转，附离线仿真与跟墙误差指标
 * [ROS与Conda环境排错指南](./ground/ros_conda_env_guide.md)
 * [打靶](./ground/mujoco_shooting.md)
 * [Carla 交通标志识别（Windows 脚本）](./ground/carla_traffic_sign_recognition.md) - 基于 YOLOv8 的实时感知与键盘控制
