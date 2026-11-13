@@ -502,6 +502,8 @@ ROS 2 Action 斐波那契数列计算示例：[chap2/fibonacci_action](./chap2/f
 * [城市动态交通下的无人机避障（PPO + DAgger）](./air/uav_traffic_nav.md) —— 用 CARLA 车流做动态障碍；规则专家示范 + 行为克隆 + DAgger，跨路成功率 48%±3.6%，高于贪心（39%）与速度障碍法（19%）
 * [无人机ppo模块研究](./air/uav_experiments.md) —— 把键盘控制、PPO 导航、算法对比、航线巡航、动态交通五个实验合并到一页；各实验独立页面仍然保留
 
+* [末端物流多站点配送与换电调度](./air/uav_delivery_route.md) —— 载重与电量耦合下的架次划分与换电时机，首架次经 MuJoCo 真飞复核到站误差
+
 * [无人机终端键盘遥控器](./air/drone_teleop.md)
 * [应急物资投送点选择与投放时机决策](./air/uav_emergency_drop.md) —— 平抛弹道解析解定提前量，加权贪心选点分架次，MuJoCo 真飞落点偏差 0.1 m
 

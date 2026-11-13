@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>uav_delivery_route</name>
+  <version>0.1.0</version>
+  <description>
+    Last-mile multi-station delivery routing with battery-swap scheduling:
+    一个配送中心 + 10~14 个收发站的末端物流场景。按方位角扇区分簇、簇内
+    最近邻串接 + 2-opt 改进构造航线；线性能耗模型（功率随载重线性增长）
+    做电量检查，剩余电量低于返航所需 1.25 倍即插入返航换电（90 s）架次
+    划分；checker 校验续航/载重/覆盖；第一个架次用课程既有的
+    uav_mujoco_sim（MuJoCo 刚体模型 + 几何控制器）闭环真飞，统计实际
+    单段航程、到点误差与全程耗时并与计划对比；ROS 节点在线发布下一目标
+    站与建议换电时机。
+  </description>
+  <maintainer email="327592576+KKK555-MAX@users.noreply.github.com">蒋宇鑫</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>uav_mujoco_sim</exec_depend>
+
+  <test_depend>ament_pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
