@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>rov_thruster_allocation_ros1</name>
+  <version>0.1.0</version>
+  <description>
+    ROV 六推进器推力分配模块：订阅期望力/力矩 /rov/wrench，用分配矩阵
+    的伪逆把六维 wrench 分配到 4 个水平推进器和 2 个垂直推进器，
+    发布 /rov/thruster_cmd 与 /rov/wrench_achieved；支持饱和处理和
+    单推进器故障重构。配套文档见 docs/water/rov_thruster_allocation_ros1.md。
+  </description>
+  <maintainer email="2809825433@qq.com">xinyangtang91</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>rospy</depend>
+  <depend>geometry_msgs</depend>
+  <depend>std_msgs</depend>
+  <exec_depend>python3-numpy</exec_depend>
+</package>

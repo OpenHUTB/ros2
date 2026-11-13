@@ -1,0 +1,17 @@
+<launch>
+  <!-- ROV 推力分配入口：roslaunch rov_thruster_allocation_ros1 main.launch -->
+
+  <arg name="wrench_topic" default="/rov/wrench" doc="期望力/力矩话题（Wrench，机体坐标系）"/>
+  <arg name="cmd_topic" default="/rov/thruster_cmd" doc="推进器推力指令话题（Float64MultiArray）"/>
+  <arg name="failed_thruster" default="-1" doc="故障推进器下标，-1 表示全部正常"/>
+  <arg name="saturation_mode" default="scale" doc="饱和策略：scale 或 clamp"/>
+
+  <node pkg="rov_thruster_allocation_ros1" type="main.py"
+        name="rov_thruster_allocation_ros1" output="screen">
+    <rosparam command="load" file="$(find rov_thruster_allocation_ros1)/config/params.yaml"/>
+    <param name="wrench_topic" value="$(arg wrench_topic)"/>
+    <param name="cmd_topic" value="$(arg cmd_topic)"/>
+    <param name="failed_thruster" value="$(arg failed_thruster)"/>
+    <param name="saturation_mode" value="$(arg saturation_mode)"/>
+  </node>
+</launch>
