@@ -1,0 +1,2 @@
+# ROS 2 Humble packages are installed with rosdep.
+airsim>=1.8.1

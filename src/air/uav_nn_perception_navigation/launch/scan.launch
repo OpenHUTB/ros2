@@ -1,0 +1,19 @@
+<launch>
+  <arg name="airsim_ip" default="127.0.0.1"/>
+  <arg name="vehicle_name" default="Drone_1"/>
+  <node name="airsim_bridge" pkg="uav_nn_perception_navigation" type="airsim_bridge.py" output="screen">
+    <param name="airsim_ip" value="$(arg airsim_ip)"/>
+    <param name="vehicle_name" value="$(arg vehicle_name)"/>
+    <param name="publish_tf" value="true"/>
+    <param name="auto_takeoff" value="false"/>
+  </node>
+  <node name="lidar_perception" pkg="uav_nn_perception_navigation" type="lidar_perception.py" output="screen">
+    <param name="airsim_ip" value="$(arg airsim_ip)"/>
+    <param name="vehicle_name" value="$(arg vehicle_name)"/>
+    <param name="scan_fov" value="180.0"/>
+    <param name="sensor_offset_z" value="-0.5"/>
+  </node>
+  <!-- AirSim NED sensor Z=-0.5 is +0.5 m in ROS ENU base_link. -->
+  <node pkg="tf2_ros" type="static_transform_publisher" name="base_to_laser"
+        args="0 0 0.5 0 0 0 base_link laser"/>
+</launch>

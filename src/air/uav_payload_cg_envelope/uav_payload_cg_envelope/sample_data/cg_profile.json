@@ -1,0 +1,1 @@
+{"limits":{"cg_x_min_m":0.24,"cg_x_max_m":0.28,"lateral_max_m":0.03},"empty":{"mass_kg":3.2,"cg_m":[0.25,0.0,0.0]},"payloads":[{"name":"battery","mass_kg":1.0,"cg_m":[0.24,-0.05,0.02]},{"name":"camera","mass_kg":0.5,"cg_m":[0.38,0.0,0.03]}]}

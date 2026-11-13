@@ -1,0 +1,9 @@
+{
+  "raw_rmse_m": 0.15241890668596864,
+  "mean_rmse_m": 0.06562865320720264,
+  "mlp_rmse_m": 0.06564836860394337,
+  "train_seed": 101,
+  "test_seed": 909,
+  "test_samples": 770,
+  "scope": "synthetic independent sequences; no ROS or real flight validation"
+}

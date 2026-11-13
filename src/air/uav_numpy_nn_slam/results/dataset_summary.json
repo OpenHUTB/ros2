@@ -1,0 +1,157 @@
+{
+  "beams": 72,
+  "scenes": {
+    "airport": {
+      "action_counts": {
+        "0": 439,
+        "1": 142,
+        "2": 44,
+        "3": 0,
+        "4": 0,
+        "5": 0,
+        "6": 0,
+        "7": 66
+      },
+      "beams": 72,
+      "clean_scan_shape": [
+        691,
+        72
+      ],
+      "cmd_shape": [
+        691,
+        4
+      ],
+      "collisions": 0,
+      "episode_success_rate": 1.0,
+      "episodes": 3,
+      "feature_shape": [
+        691,
+        46
+      ],
+      "image_shape": [
+        691,
+        48,
+        64,
+        3
+      ],
+      "label_mean": [
+        0.6838,
+        0.0994,
+        0.1337
+      ],
+      "nfz_violations": 0,
+      "random_start": true,
+      "sample_hz": 10.0,
+      "samples": 691,
+      "scan_shape": [
+        691,
+        72
+      ],
+      "scene": "airport",
+      "seconds_wall": 31.09,
+      "seed": 20261110
+    },
+    "canyon": {
+      "action_counts": {
+        "0": 156,
+        "1": 18,
+        "2": 14,
+        "3": 0,
+        "4": 0,
+        "5": 0,
+        "6": 15,
+        "7": 125
+      },
+      "beams": 72,
+      "clean_scan_shape": [
+        328,
+        72
+      ],
+      "cmd_shape": [
+        328,
+        4
+      ],
+      "collisions": 0,
+      "episode_success_rate": 1.0,
+      "episodes": 3,
+      "feature_shape": [
+        328,
+        46
+      ],
+      "image_shape": [
+        328,
+        48,
+        64,
+        3
+      ],
+      "label_mean": [
+        0.6407,
+        -0.2357,
+        -0.315
+      ],
+      "nfz_violations": 0,
+      "random_start": true,
+      "sample_hz": 10.0,
+      "samples": 328,
+      "scan_shape": [
+        328,
+        72
+      ],
+      "scene": "canyon",
+      "seconds_wall": 14.86,
+      "seed": 20261110
+    },
+    "city": {
+      "action_counts": {
+        "0": 353,
+        "1": 65,
+        "2": 15,
+        "3": 0,
+        "4": 0,
+        "5": 0,
+        "6": 52,
+        "7": 252
+      },
+      "beams": 72,
+      "clean_scan_shape": [
+        737,
+        72
+      ],
+      "cmd_shape": [
+        737,
+        4
+      ],
+      "collisions": 0,
+      "episode_success_rate": 1.0,
+      "episodes": 3,
+      "feature_shape": [
+        737,
+        46
+      ],
+      "image_shape": [
+        737,
+        48,
+        64,
+        3
+      ],
+      "label_mean": [
+        0.6156,
+        -0.2296,
+        -0.2923
+      ],
+      "nfz_violations": 0,
+      "random_start": true,
+      "sample_hz": 10.0,
+      "samples": 737,
+      "scan_shape": [
+        737,
+        72
+      ],
+      "scene": "city",
+      "seconds_wall": 58.43,
+      "seed": 20261110
+    }
+  },
+  "seconds_wall": 104.38,
+  "total_samples": 1756
+}
