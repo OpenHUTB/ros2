@@ -366,6 +366,7 @@ ROS 2 Action 斐波那契数列计算示例：[chap2/fibonacci_action](./chap2/f
 
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
+* [多帧图像端到端策略](./air/uav_e2e_multiframe_image_policy.md) —— 连续三帧下视图堆叠输入，固定卷积提取质心偏差与梯度，两层 MLP 直接回归前飞与偏航，闭环跟随参考中心线
 * [无人机航向坐标变换与往返误差验证](./air/uav_yaw_frame_validation/index.md)
 * [无人机测距序列轻量 MLP 去噪](./air/uav_range_denoising_mlp/index.md)
 * [仓储通道巡检无人机测距与分级制动](./air/mujoco_warehouse_uav_collision_braking.md)
