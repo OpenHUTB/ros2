@@ -56,6 +56,13 @@ src/ground/mujoco_auto_parking/
 
 ## 3. 环境与构建
 
+| 组件 | 版本 |
+| --- | --- |
+| Ubuntu | 22.04（本项目在 WSL2 中实测） |
+| ROS 2 | Humble |
+| Python | 3.10 |
+| MuJoCo | 3.12.0 |
+
 ```bash
 cd <仓库根目录>                       # 仓库根即 colcon 工作空间
 source /opt/ros/humble/setup.bash
@@ -180,7 +187,31 @@ right = (v + 0.5 * track_width * ω) / wheel_radius
 | `angular_speed` | 0.9 rad/s |
 | `publish_rate` | 20 Hz |
 
+| 按键 | 动作 |
+| --- | --- |
+| W / ↑ | 前进 |
+| S / ↓ | 后退 |
+| A / ← | 左转 |
+| D / → | 右转 |
+| 空格 / 0 | 急停 |
+| Q / Esc | 退出 |
+
 按键映射 → 生成 `(v, ω)` → 发布 `/cmd_vel`（Twist，队列 10）。定时器 20 Hz 重发，保证 `command_timeout=0.5` 之内始终有指令；松开按键发零速度。
+
+键盘节点需要真实终端；由 launch 启动时如果没有 TTY，会只发布零速度，这种情况可以在另一个终端单独跑：
+
+```bash
+ros2 run mujoco_auto_parking keyboard_teleop_node
+```
+
+不按键也可以直接发一帧速度验证链路：
+
+```bash
+ros2 topic pub --once /cmd_vel geometry_msgs/msg/Twist \
+  "{linear: {x: 0.35}, angular: {z: 0.0}}"
+```
+
+观察画面用 `rqt_image_view` 订阅 `/camera/image_raw`。
 
 这一层的意义是提供**人工可验证的基线**：如果键盘都开不动，问题在仿真层而不在算法层。
 
@@ -202,7 +233,7 @@ PERCEPTION_SIZES = (120, 64, 64, 4)
 1. **角度用 sin/cos 双分量编码**。直接回归 `dθ` 会在 ±π 处出现数值跳变（-3.14 与 +3.14 相邻但损失巨大），sin/cos 编码让误差连续，`atan2` 解码天然处理绕圈。
 2. **输入重采样**。`perception_features` 用 `np.interp` 把任意长度扫描重采样到固定的 120 束，雷达配置变了不用改网络。
 
-另有一套视觉感知 `ImagePerceptionNetwork`：`32×24×3 = 2304 → 128 → 64 → 4`，同一个解码头。`perception_node` 默认用视觉那套（`models/perception.npz`），发布 `/parking/perception`（Float64MultiArray）。
+另有一套视觉感知 `ImagePerceptionNetwork`：`32×24×3 = 2304 → 128 → 64 → 4`，同一个解码头。`perception_node` 默认用视觉那套（`models/perception.npz`），发布 `/parking/perception`（Float64MultiArray），数据为 `[dx, dy, dθ, 1.0]`——第 4 位是代码里硬编码的 `1.0` 占位，**不是**网络输出的置信度，订阅方不要按置信度解释。
 
 ### 6.2 控制网络：从跟踪误差到速度
 
@@ -237,6 +268,20 @@ v = v_ref * max(0.15, 1.0 - 0.6 * min(|eψ|, 1.0))     # 偏差越大越减速
 ### 6.4 节点
 
 `trajectory_control_node` 参数：`trajectory='s_curve'`、`v_ref=0.45`、`control_rate=20.0`；订阅 `/odom`（用里程计当位姿），发布 `/cmd_vel`。
+
+### 6.5 实测结果
+
+环境：WSL Ubuntu 22.04 + ROS 2 Humble + MuJoCo 3.12（2026-10-18）。
+
+| 项 | 结果 |
+| --- | --- |
+| 视觉感知（80 个测试位姿） | MAE dx 0.34 m、dy 0.20 m、dθ 0.05 rad |
+| 视觉感知零权值消融 | dθ 误差 2.58 rad |
+| 控制网络与几何专家 | 相关系数 v 0.9989、ω 0.9995 |
+| 闭环 S 曲线（训练网络） | RMSE 0.359 m，到达终点 |
+| 闭环 S 曲线（零权值） | RMSE 0.704 m，未到达 |
+
+启动：`./main.sh --task2`；训练 `./main.sh --train`；测试 `--test-sensors`、`--test-nn`、`--eval-trajectory`。
 
 ## 7. 任务③：建图 + Neural A*
 
@@ -292,6 +337,19 @@ v = v_ref * max(0.15, 1.0 - 0.6 * min(|eψ|, 1.0))     # 偏差越大越减速
 
 注意 `goal` 与 `target_slot` 不同：`target_slot` 在 `(0.25, 3.75)`，`goal` 默认是 `(0.25, 1.2)`——导航目标是车位前方的接近点，不是车位本身。
 
+### 7.4 实测结果
+
+环境同上（2026-10-18）。
+
+| 项 | 结果 |
+| --- | --- |
+| 上/下两个车位入口目标 | 均在约 14.3 s 到达，终点误差约 0.34 m |
+| 建图覆盖率 | 约 55% |
+| Neural A* 单次规划 | 约 300 ms，展开节点约 420 |
+| 引导场训练验证 | 相关系数 0.99993 |
+
+启动：`./main.sh --task3`，或 `ros2 launch mujoco_auto_parking task3.launch.py goal:=0.25,-1.2` 指定上/下排车位入口；训练引导网络 `--train-planning`；测试 `--test3`。
+
 ## 8. 任务④：图像端到端 CNN
 
 ### 8.1 网络
@@ -338,7 +396,7 @@ v  = clip(0.45 * (out0 + 1) / 2, 0, 0.45)
 | --- | --- | --- | --- |
 | `simulation_node` | `/cmd_vel` | `/odom`、`/clock`、`/tf`、`/camera/image_raw`、`/camera/depth`、`/scan` | 底座 |
 | `keyboard_teleop_node` | 键盘（非 ROS） | `/cmd_vel` | ① |
-| `perception_node` | `/camera/image_raw` | `/parking/perception`（Float64MultiArray） | ② |
+| `perception_node` | `/camera/image_raw` | `/parking/perception`（Float64MultiArray，`[dx, dy, dθ, 1.0]`） | ② |
 | `trajectory_control_node` | `/odom` | `/cmd_vel` | ② |
 | `navigation_node` | `/odom`、`/scan` | `/cmd_vel`、`/map`、`/global_path` | ③ |
 | `end_to_end_node` | `/camera/image_raw` | `/cmd_vel` | ④ |
@@ -390,3 +448,20 @@ tools/verify_all.sh          # 一键回归
 4. **训练与部署分辨率不一致**：任务④训练用 160×120、部署用 320×240，都缩到 84×84；形状对齐但高频细节不同，属于潜在分布偏移。
 5. **`target_slot` 与 `goal` 不是同一个点**：`(0.25, 3.75)` 是车位标记，`(0.25, 1.2)` 是导航接近点，改混了会导致导航提前停在车位外。
 6. **WSL 渲染静默降级**：初始化失败不报错，只返回全黑图；任务④会退化到恒定输出，且日志里只有一条 WARN 容易漏看。
+
+## 14. 当前范围
+
+| 阶段 | 内容 |
+| --- | --- |
+| PR1 | 任务①物理仿真、停车场场景、键盘控制、基础 ROS 接口 |
+| PR2 | 任务②相机/深度/激光雷达、视觉车位感知网络、给定 S 曲线跟踪、训练与零权值消融 |
+| PR3 | 任务③log-odds 占据栅格建图、Neural A* 规划、神经网络路径跟踪与导航闭环 |
+| PR4 | 任务④前视图像 → `[速度, 转向]` 端到端 CNN、训练/测试/ROS 封装与闭环消融 |
+
+## 15. 文档与证据
+
+- 实测证据：`docs/evidence/mujoco_auto_parking/`（训练 CSV 与 README 说明）
+- 分任务页面：`docs/ground/mujoco_auto_parking/`（`overview.md` 为模块总览，`01`~`04` 对应四个任务）
+- 一键回归：`bash tools/verify_all.sh`
+- GIF 录制：`python3 tools/make_gifs.py`
+- Word 导出：`pip install -r tools/requirements-docs.txt` 后运行 `python3 src/ground/mujoco_auto_parking/tools/export_word.py`（脚本会重新打开 docx 并断言五个一级标题都在）
