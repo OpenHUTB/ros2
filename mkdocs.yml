@@ -173,6 +173,7 @@ nav:
     - Bezier 曲线轨迹生成与可视化: './ground/bezier_trajectory.md'
     - 人工势场法路径规划: './ground/apf_path_planning.md'
     - 小海龟多航点巡航与暂停恢复: 'chapter/chap1/turtle_waypoint_patrol/index.md'
+    - 8 字轨迹可视化（figure8_sim）: './figure8_sim/README.md'
     - 离线测试接入 GitHub Actions: './ground/offline_checks.md'
     - 编码器量化误差与速度估计滤波对比: './ground/encoder_quantization_velocity.md'
     - CAN 报文信号解码与 CRC/计数器校验: './ground/can_signal_decode.md'

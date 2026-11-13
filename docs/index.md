@@ -170,6 +170,7 @@ ROS 2 Action 斐波那契数列计算示例：[chap2/fibonacci_action](./chap2/f
 * [Bezier 曲线轨迹生成与可视化](./ground/bezier_trajectory.md) —— de Casteljau 算法与 Bernstein 多项式生成 Bezier 曲线，附 B 样条对比、曲率分析与弧长计算，纯 pygame 2D 可视化
 * [人工势场法路径规划](./ground/apf_path_planning.md) —— 目标引力 + 障碍物斥力 + 局部最小值逃逸，分段引力势避免远场发散，pygame 势场热图与路径生长动画
 * [小海龟多航点巡航与暂停恢复](./chapter/chap1/turtle_waypoint_patrol/index.md)
+* [8 字轨迹可视化（figure8_sim）](./figure8_sim/README.md)
 * [离线测试接入 GitHub Actions](./ground/offline_checks.md) —— 6 个零依赖离线测试接入 CI，分别通过 208 / 270 / 242 / 41 / 271 / 204 项
 * [编码器量化误差与速度估计滤波对比](./ground/encoder_quantization_velocity.md) —— 1 kHz 差分把量化误差放大千倍；1024/4096/16384 CPR 下原始差分 1.371→0.404→0.133 rad/s，α-β 与卡尔曼把误差压到 0.198/0.047
 * [车辆 CAN 报文信号解码与一致性校验](./ground/can_signal_decode.md) —— 位域 + CRC8 + 计数器三重校验，不校验时车速会被污染成 403 km/h

@@ -35,7 +35,7 @@ figure8_sim/
 │   └── main.py      # ROS 节点：按真实时间取轨迹点，发布 Marker
 ├── launch/figure8_sim.launch
 ├── rviz/rviz_config.rviz
-└── test/            # 12 项单元测试（桩掉 rospy / visualization_msgs）
+└── test/            # 16 项单元测试（桩掉 rospy / visualization_msgs）
 ```
 
 ## 测试
