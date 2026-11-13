@@ -1,10 +1,13 @@
-# vehicle_end_to_end_sim —— 车载端到端感知与物理动力学仿真系统
+# vehicle_end_to_end_sim —— 规则式 AEB 自动紧急制动演示系统
 
 > 机器人操作系统及应用 · 课程作业
 >
-> **端到端模型**：系统通过前向雷达（Raycasting）获取障碍物距离，结合纯物理的
-> 加减速模型，直接由"感知距离"映射为"期望速度变化"，实现自动巡航、人机接管
-> 转向、预警提示与 AEB（自动紧急制动）功能。
+> **规则式（rule-based）AEB 演示**：系统通过前向雷达（Raycasting）测距获取障碍物
+> 距离，由固定距离阈值三级状态机给出期望速度与转向，经自行车运动学模型推进车辆，
+> 实现自动巡航、人机接管转向、预警提示与 AEB（自动紧急制动）功能。
+>
+> 本模块**不是**图像端到端的神经网络模型：无相机图像输入、无神经网络、无训练与测试
+> 脚本；包名 `vehicle_end_to_end_sim` 沿用课程作业的既有命名。
 >
 > 纯 Pygame 实现，仅依赖 `pygame`，无需 CARLA / ROS 节点。
 
@@ -85,8 +88,11 @@ python3 test/test_end_to_end_logic.py     # 16 项全部通过，无需 pygame
 
 ## 5. 与已有示例的关系
 
-本模块与仓库中 [`carla_end_to_end_nn`](./carla_end_to_end_nn/)（相机图像 → CNN → 转向）
-同属"端到端"主题：后者用可训练的卷积网络把像素映射为转向，本模块在纯 Python +
-Pygame 环境下，用**雷达测距 + 物理模型**演示端到端的感知—决策—控制闭环，
-适合在没有 CARLA / ROS 环境的场合快速验证 AEB 与巡航逻辑。
-完整教程见 [模块文档](https://openhutb.github.io/ros2/ground/vehicle_end_to_end_sim/)。
+仓库中 [`carla_end_to_end_nn`](./carla_end_to_end_nn/) 是学习型端到端示例：用可训练的
+卷积网络把相机像素映射为转向。本模块与之主题相邻但方法不同，用**射线测距 + 固定距离
+阈值规则 + 自行车运动学模型**在纯 Python + Pygame 环境下演示 AEB 与巡航逻辑：不含图像
+输入，也不含任何学习/训练环节。
+
+包名中的 `end_to_end` 仅为课程作业沿用命名，指"感知到执行的完整链路"，不表示本模块是
+学习型端到端模型；本模块的可复现行为以 `test/test_end_to_end_logic.py` 的 16 项纯逻辑
+单元测试为准。完整教程见 [模块文档](https://openhutb.github.io/ros2/ground/vehicle_end_to_end_sim/)。

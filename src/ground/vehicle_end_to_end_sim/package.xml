@@ -3,7 +3,7 @@
 <package format="3">
   <name>vehicle_end_to_end_sim</name>
   <version>0.1.0</version>
-  <description>基于端到端感知与物理动力学的车载仿真系统 —— Pygame 实现的环境感知、决策规划与底层物理控制（自动巡航 / 人机共驾 / AEB）</description>
+  <description>规则式 AEB 自动紧急制动演示系统 —— Pygame 实现的射线测距、固定距离阈值三级规则决策与自行车运动学控制（自动巡航 / 人机共驾 / AEB），非图像端到端学习模型</description>
   <maintainer email="wqs159@example.com">wqs159</maintainer>
   <license>MIT</license>
 

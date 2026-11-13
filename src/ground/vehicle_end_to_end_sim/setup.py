@@ -22,7 +22,7 @@ setup(
     zip_safe=True,
     maintainer='wqs159',
     maintainer_email='wqs159@example.com',
-    description='基于端到端感知与物理动力学的车载仿真系统（Pygame）',
+    description='规则式 AEB 自动紧急制动演示系统（Pygame，射线测距 + 三级规则状态机，非图像端到端学习模型）',
     license='MIT',
     tests_require=['pytest'],
     entry_points={
