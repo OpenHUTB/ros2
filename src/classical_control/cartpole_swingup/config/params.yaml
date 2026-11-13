@@ -1,0 +1,9 @@
+# 摆起与平衡参数（launch 中作为节点私有参数加载）
+k_energy: 8.0          # 能量误差 -> 控制力的增益（N/J）
+k_cart_p: 0.8          # 摆起阶段小车位置的 P 项（N/m）
+k_cart_d: 0.6          # 摆起阶段小车速度的 D 项（N·s/m）
+switch_angle: 0.4      # 切入 LQR 的角度阈值（rad）
+switch_rate: 2.0       # 切入 LQR 的角速度阈值（rad/s）
+fall_angle: 0.7        # 超过该角度退回能量摆起（rad）
+control_rate: 50.0     # 控制频率（Hz）
+state_timeout: 0.5     # 状态超时（s），超时后控制力归零

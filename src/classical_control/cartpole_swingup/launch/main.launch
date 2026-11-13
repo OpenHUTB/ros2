@@ -1,0 +1,14 @@
+<launch>
+  <!-- 倒立摆能量摆起 + LQR 平衡入口：roslaunch cartpole_swingup main.launch -->
+
+  <arg name="state_topic" default="/cartpole/state"
+       doc="倒立摆状态 [x, x_dot, theta, theta_dot]（Float64MultiArray）"/>
+  <arg name="force_topic" default="/cartpole/force"
+       doc="小车控制力（Float64，N）"/>
+
+  <node pkg="cartpole_swingup" type="main.py" name="cartpole_swingup" output="screen">
+    <rosparam command="load" file="$(find cartpole_swingup)/config/params.yaml"/>
+    <param name="state_topic" value="$(arg state_topic)"/>
+    <param name="force_topic" value="$(arg force_topic)"/>
+  </node>
+</launch>
