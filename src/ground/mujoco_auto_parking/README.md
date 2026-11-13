@@ -162,7 +162,7 @@ ros2 launch mujoco_auto_parking task3.launch.py goal:=0.25,-1.2
 
 ## 文档 / Documentation
 
-- 模块文档：`docs/ground/mujoco_auto_parking/index.md`（仓库内 MkDocs 页面）；
+- 模块文档：`docs/ground/mujoco_auto_parking.md`（实现文档）、`docs/ground/mujoco_auto_parking/`（分任务页面，`overview.md` 为模块总览）；
 - 本地构建：在仓库根执行 `mkdocs build --clean`；
 - 一键回归：`bash tools/verify_all.sh`；
 - GIF 生成：`python3 tools/make_gifs.py`；
