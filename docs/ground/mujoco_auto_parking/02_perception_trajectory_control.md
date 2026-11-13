@@ -143,6 +143,8 @@ v = v_{ref}\max\left(0.15,\ 1-0.6\min(|e_\psi|,1)\right)
 
 零权值网络输出恒定 \(v=0.225\) m/s、\(\omega=0\)，在 S 弯道上跑偏；训练网络能回到并跟随参考轨迹，说明控制量确实来自网络。
 
+评估窗长说明：本表由 `evaluate_tracking` 产生，其 `max_time` 默认 15 s（`mujoco_auto_parking/trajectory_control.py`）。恒定 0.225 m/s 跑满 15 s 只能走 3.375 m，够不到 S 曲线约 4.0 m 的末端，所以判“未到达”。任务④的同名消融使用 20 s 窗长（4.5 m），因此判“到达”。两表评估时长不同，RMSE（0.704 对 0.684）不可直接横向比较。
+
 ## 4. ROS 2 节点与话题
 
 ```bash

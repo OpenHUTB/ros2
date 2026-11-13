@@ -11,6 +11,8 @@
 | `planner_training.csv` | Neural A* 引导场逐 epoch 损失 |
 | `e2e_training.csv` | 端到端 CNN 逐 epoch 损失 |
 
+数据权威来源：`src/ground/mujoco_auto_parking/models/` 下有同名的四个 CSV，那是训练脚本运行时直接写出的原始文件；本目录下的为归档副本，当前两侧逐字节一致（SHA256 相同）。训练脚本改版后请以 `models/` 下的为准，再复制到本目录，避免只改一处导致两处口径不一致。
+
 ## Word 导出
 
 `mujoco_auto_parking_report.docx`：由 `src/ground/mujoco_auto_parking/tools/export_word.py`（依赖 `markdown`、`htmldocx`、`python-docx`；非仓库目录运行时用 `AUTO_PARKING_DOCS_DIR` 指定 `docs` 路径）将模块首页和四篇文档合并导出，`python-docx` 重新打开校验为 264 段、21 张表。LaTeX 公式以文本保留。

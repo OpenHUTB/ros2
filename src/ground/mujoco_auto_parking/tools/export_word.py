@@ -26,6 +26,13 @@ FILES = [
     '03_slam_navigation.md',
     '04_end_to_end.md',
 ]
+EXPECTED_HEADINGS = [
+    'MuJoCo 四轮差速车自动泊车',
+    '任务①：物理仿真与键盘运动控制',
+    '任务②：传感器感知与给定轨迹控制',
+    '任务③：建图与导航（Neural A*）',
+    '任务④：图像端到端控制',
+]
 
 
 def main() -> None:
@@ -51,8 +58,9 @@ def main() -> None:
     reopened = Document(output)
     print(f'Word 已导出: {output}')
     print(f'段落数: {len(reopened.paragraphs)}，表格数: {len(reopened.tables)}')
-    assert len(reopened.paragraphs) > 100
-    assert len(reopened.tables) > 5
+    texts = {paragraph.text.strip() for paragraph in reopened.paragraphs}
+    missing = [title for title in EXPECTED_HEADINGS if title not in texts]
+    assert not missing, f'Word 缺少章节标题: {missing}'
 
 
 if __name__ == '__main__':

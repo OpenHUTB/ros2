@@ -21,22 +21,26 @@
 | ROS 2 | Humble |
 | Python | 3.10 |
 | MuJoCo | 3.12.0 |
-| 依赖 | numpy、PyYAML、Pillow、opencv-python |
+
+运行依赖见 `src/ground/mujoco_auto_parking/requirements.txt`：`mujoco==3.12.0`、`numpy`、`PyYAML`。
+文档与 GIF 工具另需 `markdown`、`htmldocx`、`python-docx`、`Pillow`、`opencv-python`，见 `src/ground/mujoco_auto_parking/tools/requirements-docs.txt`（运行仿真本身不需要这些）。
 
 ## 快速开始
 
 ```bash
-cd ~/auto_parking_ws
+cd <仓库根目录>          # 仓库根就是 colcon 工作空间
 source /opt/ros/humble/setup.bash
 colcon build --packages-select mujoco_auto_parking --symlink-install
 source install/setup.bash
 
-cd src/mujoco_auto_parking
-./main.sh --launch        # 任务①：仿真 + 键盘
-./main.sh --task2         # 任务②：感知 + S 曲线控制
-./main.sh --task3         # 任务③：建图 + Neural A* + 导航
-./main.sh --task4         # 任务④：图像端到端控制
+cd src/ground/mujoco_auto_parking
+./main.sh --launch         # 任务①：仿真 + 键盘
+./main.sh --task2          # 任务②：感知 + S 曲线控制
+./main.sh --task3          # 任务③：建图 + Neural A* + 导航
+./main.sh --task4          # 任务④：图像端到端控制
 ```
+
+> 仿真全程离屏渲染：WSL2 下 `main.sh` 默认 `MUJOCO_GL=osmesa`，本模块没有 MuJoCo 交互窗口。带桌面或 WSLg 时可以加 `--gui`，让 `main.sh` 切到 `glfw` + 软件光栅化后端（没有 X 显示时不要加，GLFW 离屏上下文可能段错误）。观察运行画面请用 `ros2 run rqt_image_view rqt_image_view` 订阅 `/camera/image_raw`，或运行 `tools/make_gifs.py` 生成 GIF。
 
 测试与训练：
 
@@ -47,7 +51,7 @@ cd src/mujoco_auto_parking
 ./main.sh --test3         # 任务③
 ./main.sh --test4         # 任务④
 ./main.sh --train         # 感知 + 轨迹控制
-./main.sh --train-planning# Neural A*
+./main.sh --train-planning  # Neural A*
 ./main.sh --train-e2e     # 端到端 CNN
 ```
 
@@ -66,7 +70,7 @@ cd src/mujoco_auto_parking
 ## 实测证据
 
 - [证据目录与回归日志](../../evidence/mujoco_auto_parking/README.md)
-- [一键回归摘要](../../evidence/mujoco_auto_parking/verification/summary.txt)
+- 一键回归：在 `src/ground/mujoco_auto_parking` 下执行 `bash tools/verify_all.sh`，脚本跑完后把六个入口的退出码写入 `docs/evidence/mujoco_auto_parking/verification/summary.txt`。该目录由脚本运行时创建，未纳入仓库，所以站点上没有直接链接。
 - [Word 导出报告](../../evidence/mujoco_auto_parking/mujoco_auto_parking_report.docx)
 
 ## 与仓库现有模块的区别
@@ -101,7 +105,7 @@ mujoco_auto_parking/
 ## 文档工具与提交说明
 
 - 本模块按仓库根 `mkdocs.yml` 构建，`mkdocs build --clean` 已在本地通过；GitHub Pages 由仓库的 `OpenHUTB/actions-mkdocs` 工作流构建（该工作流使用 OpenHUTB 的 `hutb-doc` 发行版）。
-- Word 导出使用 `markdown + htmldocx + python-docx`（`pip install markdown htmldocx python-docx`），脚本为 `src/ground/mujoco_auto_parking/tools/export_word.py`（在包目录下即 `tools/export_word.py`）。默认读取仓库 `docs/`，输出到 `docs/evidence/mujoco_auto_parking/mujoco_auto_parking_report.docx`；在 WSL 临时工作空间运行时设置 `AUTO_PARKING_DOCS_DIR=/path/to/ros2/docs`。如果课程提供了 `Markdown2Anything` 专用版本，提交前可以用课程版本再导出一次做格式对照。
+- Word 导出使用 `markdown + htmldocx + python-docx`（依赖清单见 `tools/requirements-docs.txt`，`pip install -r tools/requirements-docs.txt`），脚本为 `src/ground/mujoco_auto_parking/tools/export_word.py`（在包目录下即 `tools/export_word.py`）。默认读取仓库 `docs/`，输出到 `docs/evidence/mujoco_auto_parking/mujoco_auto_parking_report.docx`；在 WSL 临时工作空间运行时设置 `AUTO_PARKING_DOCS_DIR=/path/to/ros2/docs`。脚本会重新打开导出的 docx，断言五个一级标题（模块首页与四个任务页）都在，缺少任一条即报错。如果课程提供了 `Markdown2Anything` 专用版本，提交前可以用课程版本再导出一次做格式对照。
 - GIF 和截图都来自真实 MuJoCo 渲染；`tools/make_gifs.py` 生成 GIF，`screenshots/` 下是从 GIF 提取的静态截图。
 - GitHub 的 commit message 不能直接嵌图；运行效果图放在 PR 正文和 `docs/img/ground/mujoco_auto_parking/`。如果老师要求 commit message 里也带图，推送前用 `git commit --amend` 在提交信息末尾补一行图片路径。
 

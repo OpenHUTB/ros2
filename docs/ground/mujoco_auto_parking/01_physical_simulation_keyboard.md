@@ -88,13 +88,15 @@ flowchart LR
 ## 7. 运行与测试
 
 ```bash
-cd ~/auto_parking_ws
+cd <仓库根目录>          # 仓库根就是 colcon 工作空间
 source /opt/ros/humble/setup.bash
 colcon build --packages-select mujoco_auto_parking --symlink-install
 source install/setup.bash
-cd src/mujoco_auto_parking
+cd src/ground/mujoco_auto_parking
 ./main.sh --launch
 ```
+
+仿真在离屏渲染（WSL2 下 `main.sh` 默认 `MUJOCO_GL=osmesa`），本模块没有 MuJoCo 交互窗口；带 WSLg 或桌面环境时可加 `--gui` 切换为 `glfw` 后端，观察画面用 `rqt_image_view` 订阅 `/camera/image_raw`。
 
 无窗口测试：
 
@@ -106,7 +108,7 @@ cd src/mujoco_auto_parking
 
 | 检查 | 结果 |
 | --- | --- |
-| 模型对象 | 差速车、四轮执行器、前视/俯视/跟随相机、激光雷达安装点、目标车位全部存在 |
+| 模型对象 | 差速车、四轮执行器、前视/俯视/跟随相机、激光雷达安装点、目标车位全部存在（`check_model_objects` 对 `front_camera`、`overview_camera`、`follow_camera` 三路相机逐个断言） |
 | 前进 0.5 s | x 从 -6.000 到 -5.850 m |
 | 后退 0.5 s | x 从 -6.000 到 -6.150 m |
 | 左转 0.5 s | yaw 从 0 到约 +0.109 rad |
@@ -114,6 +116,8 @@ cd src/mujoco_auto_parking
 | 键盘映射 | W/S/A/D/方向键/空格/退出键全部通过 |
 | Watchdog | 0.5 s 超时后速度归零 |
 | pytest | 18 项通过 |
+
+转向一行的口径要说明清楚：`angular.z=0.9` 反解到左右轮约 ±2.7 rad/s，按第 2 节公式 0.5 s 应转过 0.45 rad，实测只有约 0.109 rad，为理论值的 24%。原因是原地转向时轮胎侧滑、轮速从零爬升，0.5 s 内尚未进入稳态，所以表中数值是**瞬态响应**而不是稳态角速度。若要报稳态值，应持续给转向指令 1 s 以上再取 yaw 增量。前进/后退两行与运动学吻合，说明线速度方向上的模型标定没问题。
 
 ## 8. 已知限制
 
