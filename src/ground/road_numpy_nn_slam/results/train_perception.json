@@ -1,0 +1,96 @@
+{
+  "architecture": [
+    72,
+    160,
+    160,
+    72
+  ],
+  "augment_pairs": 7500,
+  "batch": 96,
+  "beams": 72,
+  "epochs": 45,
+  "hidden": 160,
+  "history": [
+    {
+      "epoch": 1,
+      "noisy_rmse_norm": 0.16479,
+      "train_mse": 0.042938,
+      "val_rmse_norm": 0.15883
+    },
+    {
+      "epoch": 5,
+      "noisy_rmse_norm": 0.16479,
+      "train_mse": 0.010188,
+      "val_rmse_norm": 0.09158
+    },
+    {
+      "epoch": 10,
+      "noisy_rmse_norm": 0.16479,
+      "train_mse": 0.004609,
+      "val_rmse_norm": 0.07367
+    },
+    {
+      "epoch": 15,
+      "noisy_rmse_norm": 0.16479,
+      "train_mse": 0.003432,
+      "val_rmse_norm": 0.06515
+    },
+    {
+      "epoch": 20,
+      "noisy_rmse_norm": 0.16479,
+      "train_mse": 0.002861,
+      "val_rmse_norm": 0.06093
+    },
+    {
+      "epoch": 25,
+      "noisy_rmse_norm": 0.16479,
+      "train_mse": 0.002523,
+      "val_rmse_norm": 0.05874
+    },
+    {
+      "epoch": 30,
+      "noisy_rmse_norm": 0.16479,
+      "train_mse": 0.002154,
+      "val_rmse_norm": 0.05452
+    },
+    {
+      "epoch": 35,
+      "noisy_rmse_norm": 0.16479,
+      "train_mse": 0.002078,
+      "val_rmse_norm": 0.05446
+    },
+    {
+      "epoch": 40,
+      "noisy_rmse_norm": 0.16479,
+      "train_mse": 0.001995,
+      "val_rmse_norm": 0.05315
+    },
+    {
+      "epoch": 45,
+      "noisy_rmse_norm": 0.16479,
+      "train_mse": 0.001905,
+      "val_rmse_norm": 0.05213
+    }
+  ],
+  "lr": 0.0015,
+  "mae_m": 1.1349,
+  "mae_norm": 0.02859,
+  "model": "perception_mlp",
+  "rmse_denoised": 2.0695,
+  "rmse_denoised_norm": 0.05213,
+  "rmse_denoised_valid": 1.7828,
+  "rmse_improvement_pct": 68.37,
+  "rmse_improvement_valid_pct": 50.87,
+  "rmse_noisy": 6.5423,
+  "rmse_noisy_norm": 0.16479,
+  "rmse_noisy_valid": 3.6288,
+  "seconds": 183.63,
+  "target": "residual (clean - noisy), output = noisy + residual clipped",
+  "task": "lidar denoising (72 beams), predicts residual clean-noisy",
+  "train_samples": 9715,
+  "val_episodes": [
+    0,
+    1
+  ],
+  "val_samples": 1800
+}

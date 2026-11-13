@@ -79,7 +79,7 @@ ROS 启动检查持续 2 s，节点完成 100 个物理步并正常退出。动�
 | 风险标签 | 1 | 0 畅通、1 警戒、2 制动 |
 
 ```bash
-python3 main.py --collect --episodes 30 --seed 42 --duration 8 --output dataset
+python3 main.py --collect --episodes 30 --seed 42 --duration 8
 python3 -m unittest discover -s tests -v
 ```
 
@@ -93,7 +93,7 @@ python3 -m unittest discover -s tests -v
 
 [数据清单](mujoco_warehouse_uav_collision_braking/dataset_manifest.json) 保存种子、轨迹参数、特征顺序、分区统计和数组SHA-256；[样本片段](mujoco_warehouse_uav_collision_braking/sample_rows.csv) 便于查看数据结构。
 
-13 项单元测试覆盖几何与控制行为、首帧闭合速度复位、固定种子复现、轨迹泄漏拒绝、模型训练和评估输出。三个分区的轨迹集合互不相交，且每个分区均包含三个场景和三类风险标签。
+16 项单元测试（含 CLI 默认路径 3 项）覆盖几何与控制行为、首帧闭合速度复位、固定种子复现、轨迹泄漏拒绝、模型训练和评估输出。三个分区的轨迹集合互不相交，且每个分区均包含三个场景和三类风险标签。
 
 ## 轻量模型
 

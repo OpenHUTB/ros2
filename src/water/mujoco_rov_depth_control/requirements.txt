@@ -1,0 +1,4 @@
+numpy
+matplotlib
+PyYAML
+mujoco           # pip 包（OpenHUTB 自带的是 C++ 引擎；Python 侧需要这个包）

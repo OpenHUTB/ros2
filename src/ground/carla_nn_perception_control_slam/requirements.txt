@@ -1,0 +1,8 @@
+carla==0.9.13
+numpy
+opencv-python
+pillow
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.2.2+cpu
+torchvision==0.17.2+cpu
+ultralytics>=8.0

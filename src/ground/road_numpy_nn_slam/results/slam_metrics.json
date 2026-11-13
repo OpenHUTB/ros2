@@ -1,0 +1,106 @@
+{
+  "generated": "2026-11-10T21:56:41",
+  "scene": "downtown,campus,construction",
+  "seconds": 34.8,
+  "ate_rmse_m": 0.2549,
+  "ate_max_m": 0.5085,
+  "final_position_error_m": 0.2977,
+  "coverage_mean": 0.0746,
+  "coverage_final": 0.1312,
+  "coverage_drivable": 0.5937,
+  "map_cells": [
+    1400,
+    1400
+  ],
+  "resolution_m": 0.1,
+  "collisions": 0,
+  "slam_source": "SlamFrontend",
+  "controller_source": "MissionController",
+  "scenes": {
+    "downtown": {
+      "scene": "downtown",
+      "seconds": 34.7,
+      "coverage_drivable": 0.318,
+      "ate_rmse_m": 0.187,
+      "ate_max_m": 0.369,
+      "final_position_error_m": 0.1519,
+      "coverage_mean": 0.0678,
+      "coverage_final": 0.1232,
+      "map_cells": [
+        1400,
+        1400
+      ],
+      "resolution_m": 0.1,
+      "collisions": 0,
+      "red_light_violations": 0,
+      "slam_source": "SlamFrontend",
+      "controller_source": "MissionController"
+    },
+    "campus": {
+      "scene": "campus",
+      "seconds": 35.0,
+      "coverage_drivable": 0.4932,
+      "ate_rmse_m": 0.2973,
+      "ate_max_m": 0.5058,
+      "final_position_error_m": 0.3823,
+      "coverage_mean": 0.0871,
+      "coverage_final": 0.1431,
+      "map_cells": [
+        1000,
+        1200
+      ],
+      "resolution_m": 0.1,
+      "collisions": 0,
+      "red_light_violations": 0,
+      "slam_source": "SlamFrontend",
+      "controller_source": "MissionController"
+    },
+    "construction": {
+      "scene": "construction",
+      "seconds": 34.7,
+      "coverage_drivable": 0.9698,
+      "ate_rmse_m": 0.2804,
+      "ate_max_m": 0.5085,
+      "final_position_error_m": 0.3589,
+      "coverage_mean": 0.0689,
+      "coverage_final": 0.1273,
+      "map_cells": [
+        1000,
+        1600
+      ],
+      "resolution_m": 0.1,
+      "collisions": 0,
+      "red_light_violations": 0,
+      "slam_source": "SlamFrontend",
+      "controller_source": "MissionController"
+    }
+  },
+  "odometry_only": {
+    "scene": "downtown,campus,construction",
+    "ate_rmse_m": 0.1452,
+    "final_position_error_m": 0.1208,
+    "scenes": {
+      "downtown": {
+        "scene": "downtown",
+        "ate_rmse_m": 0.1263,
+        "final_position_error_m": 0.1108,
+        "seconds": 34.7,
+        "controller_source": "MissionController"
+      },
+      "campus": {
+        "scene": "campus",
+        "ate_rmse_m": 0.1765,
+        "final_position_error_m": 0.1296,
+        "seconds": 35.0,
+        "controller_source": "MissionController"
+      },
+      "construction": {
+        "scene": "construction",
+        "ate_rmse_m": 0.1328,
+        "final_position_error_m": 0.1221,
+        "seconds": 34.7,
+        "controller_source": "MissionController"
+      }
+    }
+  }
+}

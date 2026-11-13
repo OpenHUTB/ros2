@@ -15,7 +15,10 @@ FORK_TIP = 0.72
 
 
 class ForkliftDockingSimulation:
-    def __init__(self, start_x: float = -4.0, speed: float = 2.0, width: int = 64, height: int = 64) -> None:
+    def __init__(self, start_x: float = -4.0, speed: float = 2.0, width: int = 64, height: int = 64, brake_scale: float = 1.0) -> None:
+        if not np.isfinite(brake_scale) or brake_scale <= 0.0:
+            raise ValueError("brake_scale must be finite and positive")
+        self.brake_scale = brake_scale
         self.model = mujoco.MjModel.from_xml_path(str(MODEL_PATH))
         self.data = mujoco.MjData(self.model)
         self.data.qpos[0] = start_x
@@ -55,7 +58,9 @@ class ForkliftDockingSimulation:
             if self.distance < -0.5:
                 over_inserted = True
                 break
-            self.step(policy.predict(self.image())[0])
+            action = policy.predict(self.image())[0].copy()
+            action[1] *= self.brake_scale
+            self.step(action)
             if self.speed <= 0.025:
                 break
         return {
@@ -65,6 +70,27 @@ class ForkliftDockingSimulation:
             "final_speed_mps": round(self.speed, 4),
             "pallet_clearance_m": round(self.distance, 4),
         }
+
+    def manual_step(self, key: str) -> bool:
+        """Apply one keyboard command; return False when the user requests exit."""
+        key = key.lower()
+        if key == "q":
+            return False
+        actions = {"w": (1.0, 0.0), "s": (0.0, 1.0), " ": (0.0, 0.0)}
+        if key not in actions:
+            return True
+        action = actions[key]
+        if key == "s" and self.speed <= 0.0:
+            action = (0.0, 0.0)
+        speed_before = self.speed
+        x_before = self.x
+        self.step(np.asarray(action))
+        if key == "s" and speed_before > 0.0 and self.speed < 0.0:
+            self.data.qpos[0] = x_before + speed_before * self.model.opt.timestep * 0.5
+            self.data.qvel[0] = 0.0
+            self.data.ctrl[0] = 0.0
+            mujoco.mj_forward(self.model, self.data)
+        return True
 
     def close(self) -> None:
         self.renderer.close()

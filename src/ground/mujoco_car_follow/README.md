@@ -52,9 +52,24 @@ ros2 launch mujoco_car_follow main.launch.py
 `scene.xml` 会安装到 `share/mujoco_car_follow/`，脚本优先通过
 `ament_index_python.get_package_share_directory()` 定位它。
 
-## 无显示器环境
+## 无显示器 / CI 环境
 
-`mujoco.viewer.launch_passive` 需要窗口，纯服务器上可以用虚拟显示运行：
+不需要窗口，也不依赖 Xvfb：
+
+```bash
+python3 scripts/main.py --headless --duration 120 --out /tmp/car_follow.csv
+```
+
+`--headless` 直接跑完指定时长，打印距离统计，并把逐次采样写入 CSV；不启动
+`mujoco.viewer`。默认 `--duration 60`，`--out` 不传时只打印统计。
+
+无头数值回归：
+
+```bash
+python3 -m pytest test/test_headless.py -q
+```
+
+如果仍需要图形窗口，也可以用虚拟显示：
 
 ```bash
 sudo apt install xvfb
@@ -74,6 +89,17 @@ xvfb-run -a python3 scripts/main.py
 | `X_LIMIT` | 引导车往返边界 | ±3.0 m |
 | `FF_RATE` | 前馈力每步最大变化量 | 0.02 N |
 | `LOG_INTERVAL` | 日志打印间隔 | 0.5 s |
+
+## 命令行参数
+
+| 参数 | 含义 | 默认值 |
+| --- | --- | --- |
+| `--headless` | 不打开窗口，直接跑完并输出统计 | 关闭 |
+| `--duration` | 无头模式运行时长（秒） | 60 |
+| `--out` | 逐次采样 CSV 输出路径 | 不写 |
+> 注意：`--out` 写出的 CSV 包含完整采样（含前 3 s 过渡段）。  
+> 终端打印的统计已去掉前 6 个采样点（约 3 s）。  
+> 如需与打印统计口径一致，请跳过 CSV 前 6 行。
 
 ## 距离口径
 
@@ -107,9 +133,12 @@ dx = lead_x - follow_x
 横向残差：均值 +0.000 m，最大偏差 0.032 m
 ```
 
-以上为 120 s 无头实测（`t=0.01 s`，含 ±3 m 折返瞬态）；匀速段偏差明显小于折返瞬间。
+以上为 120 s 无头实测（`python3 scripts/main.py --headless --duration 120`，含 ±3 m 折返瞬态）；匀速段偏差明显小于折返瞬间。
+
+![120 s 无头运行：纵向车心距与横向残差](docs/headless_result.png)
 
 ## AI 辅助声明
 
 本模块的代码整理、文档撰写与调试排错在 **豆包（Doubao）** 辅助下完成；
 控制方案设计、仿真模型结构由作者完成，作者对全部内容负责。
+本次 `--headless` 模式与 `test/test_headless.py` 的修改由 **Claude Code** 辅助完成。

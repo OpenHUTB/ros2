@@ -1,0 +1,41 @@
+<launch>
+  <!-- UVNN lidar perception: UAV sim + neural denoiser + viewer -->
+  <arg name="scene"          default="city"/>
+  <arg name="seed"           default="20261110"/>
+  <arg name="noise"          default="true"/>
+  <arg name="display"        default=":0"/>
+  <arg name="viewer"         default="true"/>
+  <arg name="duration"       default="0.0"/>
+  <arg name="mode"           default="PERCEPTION"/>
+  <arg name="model"          default="$(find uav_numpy_nn_slam)/models/perception_mlp.npz"/>
+  <arg name="auto_snapshot"  default=""/>
+  <arg name="render_width"   default="820"/>
+
+  <node pkg="uav_numpy_nn_slam" type="sim_node.py" name="sim_node" output="screen">
+    <env name="UVNN_ROOT" value="$(find uav_numpy_nn_slam)"/>
+    <param name="scene"    value="$(arg scene)"/>
+    <param name="seed"     value="$(arg seed)"/>
+    <param name="noise"    value="$(arg noise)"/>
+    <param name="duration" value="$(arg duration)"/>
+    <param name="mode"     value="$(arg mode)"/>
+    <param name="state_hz" value="20.0"/>
+    <param name="sensor_hz" value="10.0"/>
+  </node>
+
+  <node pkg="uav_numpy_nn_slam" type="perception_node.py" name="perception_node"
+        output="screen">
+    <env name="UVNN_ROOT" value="$(find uav_numpy_nn_slam)"/>
+    <param name="model" value="$(arg model)"/>
+  </node>
+
+  <node if="$(arg viewer)" pkg="uav_numpy_nn_slam" type="viewer_node.py"
+        name="viewer_node" output="screen">
+    <env name="DISPLAY"    value="$(arg display)"/>
+    <env name="UVNN_ROOT"  value="$(find uav_numpy_nn_slam)"/>
+    <param name="scene"         value="$(arg scene)"/>
+    <param name="teleop"        value="false"/>
+    <param name="display"       value="$(arg display)"/>
+    <param name="auto_snapshot" value="$(arg auto_snapshot)"/>
+    <param name="render_width"  value="$(arg render_width)"/>
+  </node>
+</launch>

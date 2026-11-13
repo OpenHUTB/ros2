@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema" ?>
+<package format="3">
+  <name>rrt_path_planning</name>
+  <version>0.0.1</version>
+  <description>RRT 快速随机扩展树路径规划 2D 仿真：矩形障碍、随机采样扩展、目标偏置与路径回溯。</description>
+  <maintainer email="yu071110@users.noreply.github.com">yu071110</maintainer>
+  <license>MIT</license>
+
+  <!-- 本包是 ament_python 包（export 里 build_type=ament_python），
+       原来写成 ament_cmake 与之一致性冲突，colcon 会按错误的构建类型解析依赖 -->
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>python3</exec_depend>
+  <exec_depend>python3-pygame</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

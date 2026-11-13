@@ -38,7 +38,7 @@ class ReplayBuffer:
 class DQN:
     """深度 Q 网络智能体。layers 为隐藏层大小列表。"""
 
-    def __init__(self, obs_dim, act_dim, layers, lr=1e-3, gamma=0.99,
+    def __init__(self, obs_dim, act_dim, layers, lr=1e-3, gamma=0.99, seed=None,
                  eps=1.0, eps_min=0.01, eps_decay=0.995,
                  batch_size=64, target_sync=200):
         self.obs_dim = obs_dim
@@ -53,8 +53,8 @@ class DQN:
         self.n_updates = 0
 
         size = [obs_dim] + list(layers) + [act_dim]
-        self.q = MLP(size, out='linear', lr=lr)
-        self.q_target = MLP(size, out='linear', lr=lr)
+        self.q = MLP(size, out='linear', lr=lr, seed=seed)
+        self.q_target = MLP(size, out='linear', lr=lr, seed=seed)
         self.sync_target()
         self.buffer = ReplayBuffer()
 

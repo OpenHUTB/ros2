@@ -1,0 +1,63 @@
+name: mujoco_rov_depth_control tests
+
+# 纯 Python + MuJoCo，不需要 ROS / CARLA：单元测试 + 42 s 定深仿真 + 证据断言。
+on:
+  push:
+    paths:
+      - "src/water/mujoco_rov_depth_control/**"
+      - ".github/workflows/mujoco_rov_depth_control_tests.yml"
+  pull_request:
+    paths:
+      - "src/water/mujoco_rov_depth_control/**"
+      - ".github/workflows/mujoco_rov_depth_control_tests.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r src/water/mujoco_rov_depth_control/requirements.txt pytest
+
+      - name: Run unit tests
+        working-directory: src/water/mujoco_rov_depth_control
+        run: python -m pytest test -v
+
+      - name: Run 42 s depth-keeping simulation
+        working-directory: src/water/mujoco_rov_depth_control
+        run: python main.py
+
+      - name: Check evidence artifacts
+        working-directory: src/water/mujoco_rov_depth_control
+        run: |
+          test -s docs/result.png
+          test -s docs/summary.md
+          grep -q "结论: PASS" docs/summary.md
+          python - <<'PY'
+          import csv
+          import re
+
+          # 1) 采样点数：20 Hz × 42 s 应约 840 个控制点
+          rows = list(csv.DictReader(open("docs/depth_log.csv", encoding="utf-8")))
+          assert len(rows) >= 800, len(rows)
+
+          # 2) 稳态误差用模块自己的口径（每段最后 settle_time 秒），不要用 CSV 末尾若干行——
+          #    末尾可能正好跨到下一段切换的瞬态（实测会读到 0.10 m 的过渡值）。
+          text = open("docs/summary.md", encoding="utf-8").read()
+          m = re.search(r"最差稳态误差\s*([0-9.]+)\s*m", text)
+          assert m, "summary.md 里没有『最差稳态误差』行"
+          worst = float(m.group(1))
+          assert worst < 0.05, worst
+          print("rows:", len(rows), "worst steady-state:", worst)
+          PY
+
+      - name: Check launch file parses
+        run: |
+          python -c "import ast,sys; ast.parse(open('src/water/mujoco_rov_depth_control/launch/main.launch.py', encoding='utf-8').read()); print('launch py ok')"

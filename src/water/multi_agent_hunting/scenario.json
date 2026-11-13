@@ -1,0 +1,30 @@
+{
+  "scenario_name": "MultiAgentHunting",
+  "world": "OpenWater",
+  "seed": 42,
+  "dt": 0.1,
+  "max_steps": 1000,
+  "auction_interval_steps": 50,
+  "agents": [
+    {"name": "AUV_1", "agent_type": "TorpedoAUV", "energy": 95.0},
+    {"name": "AUV_2", "agent_type": "TorpedoAUV", "energy": 45.0},
+    {"name": "AUV_3", "agent_type": "TorpedoAUV", "energy": 70.0}
+  ],
+  "tasks": [
+    {"name": "Intercept_Left", "position": [-5.0, -5.0, -10.0], "priority": 2},
+    {"name": "Intercept_Right", "position": [5.0, -5.0, -10.0], "priority": 2},
+    {"name": "Block_Back", "position": [0.0, 5.0, -10.0], "priority": 1}
+  ],
+  "target_initial_pos": [0.0, 0.0, -10.0],
+  "target_velocity": [0.1, 0.05, 0.0],
+  "comm_delay_ms": 200,
+  "packet_loss": 0.05,
+  "energy_weight": 5.0,
+  "closing_ratio": 0.35,
+  "closing_time": 20.0,
+  "capture_radius": 2.0,
+  "idle_drain_rate": 0.02,
+  "move_drain_rate": 0.15,
+  "start_radius": 5.0,
+  "world_bounds": 50.0
+}

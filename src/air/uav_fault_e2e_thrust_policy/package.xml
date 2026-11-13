@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>uav_fault_e2e_thrust_policy</name>
+  <version>1.0.0</version>
+  <description>
+    桨故障下的无人机端到端推力策略：前视深度图（32x32）+ 14 维本体量（含四桨健康度）
+    直接回归四个桨的推力指令，用 DAgger 从"几何控制器 + 已知健康度加权分配"的专家策略里学习。
+    对应课程任务④（每种机器人端到端模型：输入图像、输出控制指令）。
+  </description>
+  <maintainer email="2920111320@qq.com">Fortranquility</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>uav_mujoco_sim</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

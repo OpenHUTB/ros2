@@ -12,9 +12,9 @@ AirSim + ROS Noetic。模块最终包含四项能力：
 与监督式回归方案不同，本模块的控制器全部由**强化学习**训练得到：智能体在
 AirSim 场景里自行探索，以“接近目标、朝向对齐、避开障碍”为奖励信号优化策略。
 
-本 PR 在训练流程之上加入 DQN 在线部署与 gmapping 建图：`dqn_nav_node.py`
-加载训练好的权重复现导航，`slam.launch` 把雷达扫描接到 gmapping 上边飞边建图，
-建图时自动降低速度保证扫描重叠。图像端到端控制按依赖顺序在下一个 PR 加入。
+本 PR 补齐第四项能力：前置相机话题与图像端到端 DQN，同时补上模块文档与四项
+演示动图。至此四项任务全部可独立运行，模块文档见
+`docs/air/uav_lidar_dqn_navigation/index.md`。
 
 ## 运行环境
 
@@ -24,11 +24,20 @@ AirSim 场景里自行探索，以“接近目标、朝向对齐、避开障碍�
 | 系统 | Ubuntu 20.04（WSL2 亦可） |
 | ROS | Noetic |
 | Python | 3.8 |
-| 依赖 | numpy、torch>=1.13、msgpack-rpc-python |
+| 依赖 | numpy、torch>=1.13、opencv-python、msgpack-rpc-python |
 
 AirSim 与 ROS 的通信走 msgpack-rpc（默认 41451 端口）。WSL2 下需要把
 `airsim_ip` 设为 Windows 主机在 WSL 网段里的地址（`/proc/net/route` 的网关）。
-AirSim 的 `settings.json` 放在 `Blocks.exe` 同目录，传感器配置见 `config/settings.json`。
+启动 Blocks 时显式指定本模块的 `config/settings.json`，确保仿真器创建
+`Drone_1`（而不是默认的 `PhysXCar`）。在 Windows PowerShell 中，例如：
+
+```powershell
+& "C:\path\to\Blocks.exe" '-settings=C:\path\to\uav_lidar_dqn_navigation\config\settings.json'
+```
+
+将两个路径替换成实际绝对路径。若路径包含空格，可把配置文件复制到无空格路径后再指定。
+AirSim 不会因为项目目录里有 `settings.json` 就自动读取它；启动后可通过
+`airsim.MultirotorClient().listVehicles()` 确认列表中有 `Drone_1`。
 
 ## 编译
 
@@ -59,6 +68,9 @@ roslaunch uav_lidar_dqn_navigation main.launch mode:=dqn
 
 # 任务 3 gmapping 建图 + DQN 导航同步
 roslaunch uav_lidar_dqn_navigation main.launch mode:=slam
+
+# 任务 4 图像端到端 DQN
+roslaunch uav_lidar_dqn_navigation main.launch mode:=e2e
 ```
 
 也可以直接用统一入口 `main.py`：
@@ -112,7 +124,7 @@ hector_slam 不做里程计融合、依赖扫描匹配初值，在本场景的�
 catkin 空间后可用 `rosrun uav_lidar_dqn_navigation eval_policy.py`。模型推理需要
 PyTorch；随包的完整检查点包含优化器状态，本次在 PyTorch 2.15.0+cpu 上验证了安全
 加载，PyTorch 1.13 的安全加载器无法读取它，不会自动退回不安全加载。
-屏蔽函数与 #922 一致；离线评估不模拟部署节点额外的近距离强制悬停。
+屏蔽函数与 #922 一致；离线评估不模拟部署节点的近障转向恢复与到达停止。
 
 任务 2 的 DQN 在 AirSim 里自行探索，状态为 32 维（24 扇区 + 目标 4 + 速度 3 +
 上一步动作 1），动作为 6 个离散速度指令（前进/左前/右前/左转/右转/悬停）。
@@ -156,6 +168,31 @@ near_miss），随仓库一起提交。权重约定：
 逐回合数据见 `models/train_nav_log.csv`。`dqn_nav.pt` 与 `dqn_nav_best.pt`
 的 SHA-256 相同，确认交付的是最佳权重而不是最后一回合覆盖的结果。
 
+任务 4 的端到端网络直接吃 84×84 灰度图（外加 7 维目标与速度辅助量），
+用同样的 Double DQN 流程训练：
+
+```bash
+rosrun uav_lidar_dqn_navigation train_dqn_e2e.py --episodes 200
+rosrun uav_lidar_dqn_navigation main.py --mode e2e_train --episodes 200
+```
+
+权重约定与任务 2 一致：`dqn_e2e.pt` 是近 20 回合成功率最高的最佳权重（部署默认
+加载），`dqn_e2e_best.pt` 显式保留一份最佳，`dqn_e2e_last.pt` 是最后一回合权重；
+逐回合日志写入 `models/train_e2e_log.csv`（含 success / collision / near_miss）。
+最佳与部署权重以半精度存储以控制仓库体积；可用 `--resume` 加载其网络和更新步数，
+但 Adam 状态会重新初始化。`dqn_e2e_last.pt` 保留完整优化器状态供严格续训，
+体积较大，默认不提交到仓库。
+部署节点在水平误差不超过 1.5 m 时记录到达并
+持续悬停。2026-11-12 的实机复测中，目标 (0,12) 的最近误差为 0.85 m，
+110 秒终点误差为 1.91 m，轨迹见模块文档第 6.2 节。此轨迹使用续训前的原始
+权重；随后从该权重在 Blocks 中真实续训 40 回合，结果见
+`models/train_e2e_log.csv`：18/40 回合到达，末 20 回合 10/20，
+最佳连续 20 回合 12/20（第 25 回合），碰撞 2 次、近失 1 次。
+交付的 `dqn_e2e.pt` 与 `dqn_e2e_best.pt` 是第 25 回合的同一份最佳权重。
+换用交付权重重跑 `e2e.launch` 后，ROS 在水平误差 1.33 m 时再次记录到达；
+随后 110 秒观测到图像和动作各 1100 帧，悬停位置约 (0.40,13.91)，
+距目标 (0,12) 约 1.96 m。40 回合的训练成功率不能代表不同场景下的部署到达率。
+
 ## 话题与服务
 
 | 名称 | 类型 | 说明 |
@@ -165,6 +202,8 @@ near_miss），随仓库一起提交。权重约定：
 | `/drone/state` | std_msgs/Float32MultiArray | NED 原始状态 |
 | `/drone/lidar/scan` | sensor_msgs/LaserScan | 180° 累积扫描（建图） |
 | `/drone/lidar/sectors` | std_msgs/Float32MultiArray | 24 维扇区距离（控制） |
+| `/drone/image_raw` | sensor_msgs/Image | 前置相机图像 |
+| `/drone/goal` | geometry_msgs/PointStamped | NED 目标点 |
 | `/drone/takeoff` | std_srvs/Trigger | 起飞到 `takeoff_height` |
 | `/drone/land` | std_srvs/Trigger | 降落 |
 
@@ -179,6 +218,9 @@ scripts/dqn_network.py       Dueling 网络与动作空间
 scripts/dqn_agent.py         经验回放 / 目标网络 / Double DQN
 scripts/train_dqn_nav.py     任务 2 训练
 scripts/dqn_nav_node.py      任务 2 部署（加载权重在线导航）
+scripts/camera_node.py       前置相机话题
+scripts/train_dqn_e2e.py     任务 4 端到端训练
+scripts/dqn_e2e_node.py      任务 4 端到端部署
 scripts/waypoint_goal_node.py 建图航点发布（到点后切换）
 scripts/main.py              统一入口
 test/test_lidar_features.py  特征工程单元测试（不依赖 AirSim）
@@ -187,14 +229,19 @@ launch/scan.launch           雷达感知启动文件
 launch/train.launch          DQN 训练启动文件
 launch/dqn.launch            任务 2 DQN 导航启动文件
 launch/slam.launch           任务 3 建图 + 导航启动文件
-launch/main.launch           统一启动入口（本阶段支持 teleop / scan / dqn / slam）
+launch/e2e.launch            任务 4 图像端到端启动文件
+launch/main.launch           统一启动入口（teleop / scan / dqn / slam / e2e）
 ```
 
-## 后续 PR
+## 模块 PR 划分
 
 | PR | 内容 |
 | --- | --- |
-| #932 | 图像端到端 DQN 与模块文档、演示动图 |
+| #892 | 模块骨架与键盘遥控 |
+| #893 | 雷达扇区特征与扫描话题 |
+| #918 | DQN 训练流程与模型权重 |
+| #922 | DQN 导航部署与 gmapping 建图 |
+| #932 | 图像端到端 DQN 与文档动图 |
 
 ## 实测结果
 
@@ -203,6 +250,7 @@ launch/main.launch           统一启动入口（本阶段支持 teleop / scan 
 | 键盘遥控 | 2 m/s 前进位移 / 高度波动 | 13.4 m / ±0.1 m |
 | 雷达 + DQN | 末 50 / 末 20 回合成功率 | 94% / 100% |
 | DQN 导航部署 | 距目标误差 | 0.83 m（目标 (15, 10)） |
+| 端到端 DQN | 目标 (0,12) 最近 / 终点误差 | 0.85 m / 1.91 m；总体到达率待复测 |
 | 建图（2026-11-12 实机复测） | 地图尺寸 / 占用格 | 2208×2272 / 5472；0.05 m/格，连续墙体可见 |
 | 建图航点（同次运行） | 第二目标 / 运行中位置 | (16,20) / (16.49,19.62)，误差约 0.62 m |
 

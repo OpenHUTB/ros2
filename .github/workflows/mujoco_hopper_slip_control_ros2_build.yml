@@ -1,0 +1,119 @@
+name: MuJoCo hopper SLIP control ROS 2 build
+
+# 单足弹跳模块的 ROS 2 侧验证：在官方 ros:humble 镜像里 colcon 构建 + launch 冒烟测试。
+# 之所以单独建一个 workflow（而不是并进 *_tests.yml）：那两个作业只跑离线 Python 测试，
+# 不需要 ROS；这个作业要拉 1 GB 左右的 ROS 镜像，只有改到本模块时才该跑。
+on:
+  push:
+    paths:
+      - 'src/humanoid/mujoco_hopper_slip_control/**'
+      - '.github/workflows/mujoco_hopper_slip_control_ros2_build.yml'
+  pull_request:
+    paths:
+      - 'src/humanoid/mujoco_hopper_slip_control/**'
+      - '.github/workflows/mujoco_hopper_slip_control_ros2_build.yml'
+
+jobs:
+  build-and-launch:
+    name: colcon build + ros2 launch
+    runs-on: ubuntu-22.04
+    container:
+      image: ros:humble
+    timeout-minutes: 25
+    # ros:humble 容器的默认 shell 是 sh(dash)，`source` 在执行时不存在，
+    # 会让每个 `source /opt/ros/humble/setup.bash` 直接 exit 127。
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装 Python 依赖（MuJoCo 无 apt 包，用 pip）
+        run: |
+          apt-get update
+          # ros:humble 镜像里默认没有 colcon（只在 ros-base 以上才带），
+          # 不装的话下一步 colcon build 会直接 command not found（exit 127）。
+          apt-get install -y --no-install-recommends \
+            python3-pip python3-colcon-common-extensions
+          python3 -m pip install --no-cache-dir "mujoco>=3.3.0" numpy
+
+      - name: 版本自检
+        run: |
+          source /opt/ros/humble/setup.bash
+          echo "ROS_DISTRO=$ROS_DISTRO"
+          python3 -c "import mujoco, numpy; print('mujoco', mujoco.__version__, 'numpy', numpy.__version__)"
+          cd src/humanoid/mujoco_hopper_slip_control
+          python3 main.py --version
+          python3 main.py --test
+
+      - name: colcon 构建
+        run: |
+          source /opt/ros/humble/setup.bash
+          colcon build --packages-select mujoco_hopper_slip_control --symlink-install
+          source install/setup.bash
+          ros2 pkg prefix mujoco_hopper_slip_control
+
+      - name: ros2 launch 冒烟测试
+        run: |
+          set -o pipefail
+          source /opt/ros/humble/setup.bash
+          source install/setup.bash
+
+          # 后台起 launch，日志落盘
+          ros2 launch mujoco_hopper_slip_control main.launch.py \
+            target_height:=0.62 control_hz:=100.0 > /tmp/launch.log 2>&1 &
+          LAUNCH_PID=$!
+
+          # 等节点起来（最多 40 s）
+          for i in $(seq 1 40); do
+            if ros2 node list 2>/dev/null | grep -q hopper_slip_node; then
+              echo "节点已启动（等待 ${i} s）"
+              break
+            fi
+            sleep 1
+          done
+
+          echo "---- node list ----"
+          ros2 node list
+          echo "---- topic list ----"
+          ros2 topic list
+
+          # 硬性检查：节点存在、两个话题存在
+          ros2 node list | grep -q hopper_slip_node
+          ros2 topic list | grep -q '/hopper_slip_node/status'
+          ros2 topic list | grep -q '/hopper_slip_node/state'
+
+          # 参数是否生效（launch 传入 0.62）
+          ros2 param get /hopper_slip_node target_height
+
+          # 状态话题必须有实际数据：读一帧，7 个数。
+          # 必须套 timeout：收不到消息时 ros2 topic echo 会一直阻塞，把作业挂到超时。
+          echo "---- status 一帧 ----"
+          timeout 20 ros2 topic echo /hopper_slip_node/status --once
+
+          # 运行 8 s 后节点还应活着（没有因为 MuJoCo/控制律异常退出）
+          sleep 8
+          ros2 node list | grep -q hopper_slip_node
+          echo "运行 8 s 后节点仍在运行"
+
+          # 发一条目标指令，确认订阅端不报错、节点不挂
+          ros2 topic pub --once /hopper_slip_node/target \
+            std_msgs/Float64MultiArray "{data: [0.60, 0.0]}"
+          sleep 3
+          ros2 node list | grep -q hopper_slip_node
+          echo "收到目标指令后节点仍在运行"
+          timeout 20 ros2 topic echo /hopper_slip_node/status --once
+
+          echo "---- launch 日志尾部 ----"
+          tail -n 40 /tmp/launch.log
+
+          kill $LAUNCH_PID 2>/dev/null || true
+          sleep 2
+          echo "冒烟测试通过"
+
+      - name: 失败时输出日志
+        if: failure()
+        run: |
+          echo "==== launch.log ===="
+          tail -n 200 /tmp/launch.log 2>/dev/null || echo "(没有 launch.log)"

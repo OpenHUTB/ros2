@@ -1,0 +1,17 @@
+{
+  "algorithm": "REINFORCE",
+  "episodes": 250,
+  "final_recent_success": 0.533,
+  "hidden": [
+    64,
+    64
+  ],
+  "mean_collisions": 10.27,
+  "mean_pedestrians_hit": 0.0,
+  "mean_red_light_violations": 0.1,
+  "mean_return": 41.378,
+  "mean_steps": 72.6,
+  "success_rate": 0.433,
+  "train_seconds": 40.97,
+  "train_steps": 17239
+}

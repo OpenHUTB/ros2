@@ -1,0 +1,68 @@
+<mujoco model="passage_width_sweep">
+  <compiler angle="radian" coordinate="local" inertiafromgeom="true"/>
+  <option timestep="0.0100" gravity="0 0 -9.81" integrator="implicitfast"/>
+  <visual>
+    <global offwidth="640" offheight="360"/>
+    <quality shadowsize="2048"/>
+    <map znear="0.02" zfar="40"/>
+  </visual>
+  <asset>
+    <texture name="sky_tex" type="skybox" builtin="gradient"
+             rgb1="0.42 0.52 0.66" rgb2="0.96 0.97 1.00" width="256" height="256"/>
+    <texture name="grid_tex" type="2d" builtin="checker"
+             rgb1="0.87 0.87 0.85" rgb2="0.93 0.93 0.91" width="256" height="256"/>
+    <material name="floor_mat" texture="grid_tex" texrepeat="10 10" texuniform="true" rgba="1 1 1 1"/>
+    <material name="wall_mat"  rgba="0.62 0.66 0.72 1"/>
+    <material name="obs_mat"   rgba="0.85 0.55 0.25 1"/>
+    <material name="torso_mat" rgba="0.22 0.52 0.82 1"/>
+    <material name="leg_mat"   rgba="0.58 0.60 0.64 1"/>
+    <material name="foot_mat"  rgba="0.90 0.38 0.22 1"/>
+    <material name="goal_mat"  rgba="0.25 0.70 0.35 0.55"/>
+  </asset>
+  <default>
+    <geom contype="0" conaffinity="0" group="1"/>
+  </default>
+  <worldbody>
+    <light pos="2 -1.6 3.4" dir="-0.3 0.3 -1" diffuse="0.65 0.65 0.65"/>
+    <light pos="6 1.4 2.8" dir="0.2 -0.4 -1" diffuse="0.35 0.35 0.38" castshadow="false"/>
+    <geom name="floor" type="plane" size="8 4 0.1" material="floor_mat"
+          contype="1" conaffinity="1" group="0" friction="1.2 0.02 0.002"/>
+    <geom name="wall_north" type="box" pos="4.000 0.950 0.600"
+          size="5.000 0.050 0.600"
+          material="wall_mat" contype="1" conaffinity="1" group="0"/>
+    <geom name="wall_south" type="box" pos="4.000 -0.950 0.600"
+          size="5.000 0.050 0.600"
+          material="wall_mat" contype="1" conaffinity="1" group="0"/>
+    <geom name="gate_left" type="box" pos="4.000 -0.675 0.600"
+          size="0.050 0.225 0.600"
+          material="wall_mat" contype="1" conaffinity="1" group="0"/>
+    <geom name="gate_right" type="box" pos="4.000 0.675 0.600"
+          size="0.050 0.225 0.600"
+          material="wall_mat" contype="1" conaffinity="1" group="0"/>
+    <geom name="obs_0" type="cylinder" pos="2.600 0.350 0.40" size="0.220 0.40" material="obs_mat" contype="1" conaffinity="1" group="0"/>
+    <geom name="obs_1" type="cylinder" pos="6.000 -0.350 0.40" size="0.220 0.40" material="obs_mat" contype="1" conaffinity="1" group="0"/>
+    <geom name="goal_mark" type="cylinder" pos="8.000 0.000 0.004"
+          size="0.300 0.004" material="goal_mat"/>
+    <body name="torso" pos="0 0 0">
+      <joint name="root_x" type="slide" axis="1 0 0"/>
+      <joint name="root_y" type="slide" axis="0 1 0"/>
+      <joint name="root_yaw" type="hinge" axis="0 0 1"/>
+      <geom name="footprint" type="cylinder" pos="0 0 0.850"
+            size="0.300 0.850"
+            material="torso_mat" contype="1" conaffinity="1" group="0"/>
+      <geom name="torso_geom" type="capsule" fromto="0 0 0.95 0 0 1.42" size="0.15" material="torso_mat"/>
+      <geom name="head_geom" type="sphere" pos="0 0 1.60" size="0.115" material="leg_mat"/>
+      <geom name="arm_l" type="capsule" fromto="0 0.30 1.32 0 0.34 0.95" size="0.055" material="leg_mat"/>
+      <geom name="arm_r" type="capsule" fromto="0 -0.30 1.32 0 -0.34 0.95" size="0.055" material="leg_mat"/>
+      <geom name="leg_l" type="capsule" fromto="0 0.12 0.95 0 0.12 0.10" size="0.075" material="leg_mat"/>
+      <geom name="leg_r" type="capsule" fromto="0 -0.12 0.95 0 -0.12 0.10" size="0.075" material="leg_mat"/>
+      <geom name="foot_l" type="box" pos="0.05 0.12 0.045" size="0.13 0.06 0.045" material="foot_mat"/>
+      <geom name="foot_r" type="box" pos="0.05 -0.12 0.045" size="0.13 0.06 0.045" material="foot_mat"/>
+    </body>
+    <camera name="overview" pos="4.00 0 11.0" xyaxes="1 0 0 0 1 0" fovy="52"/>
+    <camera name="follow" pos="-2.6 0 1.9" mode="targetbody" target="torso" fovy="45"/>
+  </worldbody>
+  <sensor>
+    <framepos objtype="body" objname="torso" name="torso_pos"/>
+  </sensor>
+</mujoco>

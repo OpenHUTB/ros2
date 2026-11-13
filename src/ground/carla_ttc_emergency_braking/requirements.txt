@@ -1,0 +1,5 @@
+numpy
+matplotlib
+PyYAML
+# 仿真器客户端（不是 pip 包）：Windows 用 OpenHUTB 配套的 hutb wheel，
+# Linux 需用 OpenHUTB 源码自行编译 libcarla；未安装时模块仍可 --help。

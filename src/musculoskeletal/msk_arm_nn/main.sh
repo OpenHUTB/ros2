@@ -50,7 +50,7 @@ case "$MODE" in
       exit 1
     fi
     "$PY" "$ROOT/tools/collect_expert.py" --scenes "$SCENES"
-    "$PY" "$ROOT/tools/train_activation.py"
+    "$PY" "$ROOT/tools/train_control.py"
     "$PY" "$ROOT/tools/train_ik.py"
     "$PY" "$ROOT/tools/train_planner.py"
     "$PY" "$ROOT/tools/train_e2e.py"
