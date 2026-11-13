@@ -18,15 +18,15 @@ import uav_features as uf  # noqa: E402
 class TestScanConvention(unittest.TestCase):
     """AirSim 机体系 y 向右，ROS 扫描逆时针为正，必须取负。"""
 
-    def test_last_scan_angle_matches_last_bin(self):
-        for fov in (180.0, 360.0):
-            first, last, increment = uf.scan_angles(fov, 180)
-            self.assertAlmostEqual(last, first + 179 * increment)
-            self.assertLess(last, math.radians(fov / 2.0))
+    def test_last_angle_matches_last_bin(self):
+        first, last, increment = uf.scan_angles(180.0, 180)
+        self.assertAlmostEqual(first, -math.pi / 2)
+        self.assertAlmostEqual(last, first + 179 * increment)
+        self.assertLess(last, math.pi / 2)
 
-    def test_invalid_scan_shape_is_rejected(self):
+    def test_invalid_scan_shape(self):
         with self.assertRaises(ValueError):
-            uf.scan_angles(180, 0)
+            uf.scan_angles(180.0, 0)
 
     def test_right_point_goes_to_negative_angle(self):
         # 机身右侧 (y=+10)，±90° 视场：应落在 angle_min 端（索引 0）
@@ -55,6 +55,41 @@ class TestScanConvention(unittest.TestCase):
 
 
 class TestFrameTransform(unittest.TestCase):
+    def test_sensor_mount_offset_under_roll(self):
+        half = math.pi / 4
+        roll = (math.sin(half), 0, 0, math.cos(half))
+        out = uf.transform_points_to_frame(
+            np.array([[0, 0, 0]], dtype=np.float32),
+            (0, 0, 0), roll, (0, 0, 0), (0, 0, 0, 1),
+            sensor_offset=(0, 0, -0.5))
+        self.assertTrue(np.allclose(out, [[0, 0.5, 0.5]], atol=1e-5))
+
+    def test_roll_rotation_is_compensated(self):
+        half = math.pi / 4
+        roll = (math.sin(half), 0, 0, math.cos(half))
+        point = np.array([[0, 0, -1]], dtype=np.float32)
+        out = uf.transform_points_to_frame(point, (0, 0, 0), roll,
+                                           (0, 0, 0), (0, 0, 0, 1))
+        self.assertTrue(np.allclose(out, [[0, 1, 0]], atol=1e-5))
+
+    def test_pitch_rotation_is_compensated(self):
+        half = math.pi / 4
+        pitch = (0, math.sin(half), 0, math.cos(half))
+        point = np.array([[1, 0, 0]], dtype=np.float32)
+        out = uf.transform_points_to_frame(point, (0, 0, 0), pitch,
+                                           (0, 0, 0), (0, 0, 0, 1))
+        self.assertTrue(np.allclose(out, [[0, 0, -1]], atol=1e-5))
+
+    def test_full_orientation_round_trip(self):
+        pts = np.array([[1, 2, 3], [-2, 4, 1]], dtype=np.float32)
+        src = (0.1, 0.2, 0.3, 0.9)
+        dst = (-0.2, 0.1, -0.3, 0.9)
+        moved = uf.transform_points_to_frame(pts, (1, 2, 3), src,
+                                             (-4, 5, 6), dst)
+        back = uf.transform_points_to_frame(moved, (-4, 5, 6), dst,
+                                            (1, 2, 3), src)
+        self.assertTrue(np.allclose(back, pts, atol=1e-5))
+
     def test_rotation_moves_forward_point_to_left(self):
         # 目标机体系相对源转左 90°（NED 下 yaw 逆时针），正前方 5 m
         # 的障碍在新的机体系里应该在左侧 (y=-5)

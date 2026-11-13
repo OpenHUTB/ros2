@@ -62,7 +62,16 @@ def extract_sector_features(points, num_sectors=NUM_SECTORS, fov_deg=FOV_DEG,
     return feats
 
 
-def extract_scan(points, bins=180, fov_deg=360.0, max_range=MAX_RANGE):
+def scan_angles(fov_deg, bins):
+    """LaserScan 首末采样角度与间隔。"""
+    if bins <= 0 or not 0 < fov_deg <= 360:
+        raise ValueError('bins must be positive and fov_deg in (0, 360]')
+    first = math.radians(-fov_deg / 2.0)
+    increment = math.radians(fov_deg / bins)
+    return first, first + (bins - 1) * increment, increment
+
+
+def extract_scan(points, bins=180, fov_deg=180.0, max_range=MAX_RANGE):
     """把点云投影成 2D 环形扫描（给 SLAM 用，角度遵循 ROS 约定）。
 
     AirSim 传感器系是 x 前、y 右（NED），`atan2(y, x)` 的正角在右侧；
@@ -95,8 +104,31 @@ def extract_scan(points, bins=180, fov_deg=360.0, max_range=MAX_RANGE):
     return ranges
 
 
-def transform_points_to_frame(points, src_pos, src_yaw, dst_pos, dst_yaw):
-    """把 src 位姿下的机体系点云转到 dst 位姿的机体系（NED，仅绕 z 旋转）。
+def _rotation_matrix(orientation):
+    """机体系到 NED 世界系的旋转矩阵；兼容旧代码的 yaw 标量。"""
+    if np.isscalar(orientation):
+        half = float(orientation) / 2.0
+        x, y, z, w = 0.0, 0.0, math.sin(half), math.cos(half)
+    elif hasattr(orientation, 'x_val'):
+        x, y, z, w = (orientation.x_val, orientation.y_val,
+                      orientation.z_val, orientation.w_val)
+    else:
+        x, y, z, w = orientation
+    q = np.asarray([x, y, z, w], dtype=np.float64)
+    norm = np.linalg.norm(q)
+    if norm == 0:
+        raise ValueError('orientation quaternion must be nonzero')
+    x, y, z, w = q / norm
+    return np.array([
+        [1 - 2 * (y*y + z*z), 2 * (x*y - z*w), 2 * (x*z + y*w)],
+        [2 * (x*y + z*w), 1 - 2 * (x*x + z*z), 2 * (y*z - x*w)],
+        [2 * (x*z - y*w), 2 * (y*z + x*w), 1 - 2 * (x*x + y*y)],
+    ], dtype=np.float64)
+
+
+def transform_points_to_frame(points, src_pos, src_orientation,
+                              dst_pos, dst_orientation, sensor_offset=(0, 0, 0)):
+    """把 src 位姿下的机体系点云转到 dst 位姿的机体系（NED，完整三轴旋转）。
 
     多帧累积建图时必须先做这一步：雷达每帧只吐一小段，拼接时如果直接用
     原始坐标，无人机一旦平移或转向，旧点就会留在错误的方位上，地图会拖影。
@@ -105,20 +137,11 @@ def transform_points_to_frame(points, src_pos, src_yaw, dst_pos, dst_yaw):
     if len(pts) == 0:
         return pts
 
-    cs, ss = math.cos(src_yaw), math.sin(src_yaw)
-    cd, sd = math.cos(dst_yaw), math.sin(dst_yaw)
-
-    # 机体系 -> 世界系（与 airsim_bridge 的机体系->NED 旋转一致）
-    wx = src_pos[0] + pts[:, 0] * cs - pts[:, 1] * ss
-    wy = src_pos[1] + pts[:, 0] * ss + pts[:, 1] * cs
-    wz = src_pos[2] + pts[:, 2]
-
-    # 世界系 -> 目标机体系
-    dx, dy = wx - dst_pos[0], wy - dst_pos[1]
-    bx = dx * cd + dy * sd
-    by = -dx * sd + dy * cd
-    bz = wz - dst_pos[2]
-    return np.stack([bx, by, bz], axis=1).astype(np.float32)
+    src_rot = _rotation_matrix(src_orientation)
+    dst_rot = _rotation_matrix(dst_orientation)
+    offset = np.asarray(sensor_offset, dtype=np.float64)
+    world = (pts + offset) @ src_rot.T + np.asarray(src_pos, dtype=np.float64)
+    return ((world - np.asarray(dst_pos, dtype=np.float64)) @ dst_rot - offset).astype(np.float32)
 
 
 def goal_features(current_pos, goal_pos, yaw_ned):

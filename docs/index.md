@@ -366,6 +366,8 @@ ROS 2 Action 斐波那契数列计算示例：[chap2/fibonacci_action](./chap2/f
 
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
+
+* [AirSim 无人机激光雷达感知与扫描校正](./air/uav_nn_perception_navigation/perception.md) —— 修正 ROS 扫描左右角度、末端采样角与多帧姿态补偿
 * [无人机航向坐标变换与往返误差验证](./air/uav_yaw_frame_validation/index.md)
 * [无人机测距序列轻量 MLP 去噪](./air/uav_range_denoising_mlp/index.md)
 * [仓储通道巡检无人机测距与分级制动](./air/mujoco_warehouse_uav_collision_braking.md)

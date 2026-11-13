@@ -37,7 +37,7 @@ except Exception:
 
 from uav_features import (  # noqa: E402
     FOV_DEG, MAX_RANGE, NUM_SECTORS, extract_scan, extract_sector_features,
-    transform_points_to_frame, yaw_from_quaternion, scan_angles,
+    transform_points_to_frame, scan_angles,
 )
 
 _client_path = os.environ.get('AIRSIM_PYTHON_CLIENT')
@@ -55,6 +55,11 @@ class LidarPerceptionNode(object):
         self.rate_hz = float(rospy.get_param('~rate', 10.0))
         self.scan_bins = int(rospy.get_param('~scan_bins', 180))
         self.scan_fov = float(rospy.get_param('~scan_fov', 180.0))
+        self.sensor_offset = (
+            float(rospy.get_param('~sensor_offset_x', 0.0)),
+            float(rospy.get_param('~sensor_offset_y', 0.0)),
+            float(rospy.get_param('~sensor_offset_z', -0.5)),
+        )
         # 扫描帧必须和 gmapping 的 base_frame 区分开，否则会卡在等 TF 上
         self.scan_frame = rospy.get_param('~scan_frame', 'laser')
         # 建图扫描的来源：lidar（稀疏但全向）或 depth（稠密但只有前向 90 度）
@@ -115,7 +120,7 @@ class LidarPerceptionNode(object):
                 state = self.client.getMultirotorState(vehicle_name=self.vehicle)
                 pos = state.kinematics_estimated.position
                 cur_pos = np.array([pos.x_val, pos.y_val, pos.z_val], dtype=np.float32)
-                cur_yaw = yaw_from_quaternion(state.kinematics_estimated.orientation)
+                cur_orientation = state.kinematics_estimated.orientation
 
                 # 控制用的特征只用最新一帧，保持和训练时一致
                 feats = extract_sector_features(points)
@@ -125,13 +130,16 @@ class LidarPerceptionNode(object):
                 # 否则无人机平移/转向时旧点会留在错误方位，地图拖影。
                 now = rospy.Time.now().to_sec()
                 if len(points):
-                    self.point_buffer.append((now, points, cur_pos, cur_yaw))
+                    q = (cur_orientation.x_val, cur_orientation.y_val,
+                         cur_orientation.z_val, cur_orientation.w_val)
+                    self.point_buffer.append((now, points, cur_pos, q))
                 while self.point_buffer and now - self.point_buffer[0][0] > self.accum_sec:
                     self.point_buffer.popleft()
                 if self.point_buffer:
                     accum = np.vstack([
-                        transform_points_to_frame(p, sp, sy, cur_pos, cur_yaw)
-                        for _, p, sp, sy in self.point_buffer
+                        transform_points_to_frame(
+                            p, sp, sq, cur_pos, cur_orientation, self.sensor_offset)
+                        for _, p, sp, sq in self.point_buffer
                     ])
                 else:
                     accum = points
@@ -152,7 +160,8 @@ class LidarPerceptionNode(object):
                 scan.header.stamp = rospy.Time.now()
                 scan.header.frame_id = self.scan_frame
                 fov = self.depth_fov if self.scan_source == 'depth' else self.scan_fov
-                scan.angle_min, scan.angle_max, scan.angle_increment = scan_angles(fov, self.scan_bins)
+                scan.angle_min, scan.angle_max, scan.angle_increment = scan_angles(
+                    fov, self.scan_bins)
                 scan.range_min = 0.1
                 scan.range_max = MAX_RANGE
                 scan.ranges = ranges.tolist()

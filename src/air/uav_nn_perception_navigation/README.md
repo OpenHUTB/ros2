@@ -64,6 +64,20 @@ python3 -c "import struct; \
 roslaunch uav_nn_perception_navigation teleop.launch airsim_ip:=<主机IP>
 ```
 
+单独启动激光雷达感知（不自动起飞）：
+
+```bash
+roslaunch uav_nn_perception_navigation scan.launch airsim_ip:=<主机IP>
+rostopic hz /uav/lidar/scan
+rostopic echo -n 1 /uav/lidar/scan
+```
+
+`scan_fov` 默认 180°，与随包 `settings.json` 的水平视场 -90°～+90° 一致。
+AirSim 的传感器 Z=-0.5（NED）对应 ROS `base_link → laser` 的 +0.5 m。
+多帧点云按每帧采样时的平移、完整姿态（roll、pitch、yaw）和雷达安装偏移转换到当前机体系；
+尚未实现单帧内逐点去畸变，快速运动时应减速并检查地图质量。
+未命中的角度填最大量程仅表示本次无回波，不能据此认定该方向安全。
+
 | 按键 | 动作 |
 | --- | --- |
 | w / s | 前进 / 后退 |

@@ -1,6 +1,5 @@
-# AirSim 官方 Python 客户端（推荐使用 microsoft/AirSim 仓库的 PythonClient 源码，
-# 通过环境变量 AIRSIM_PYTHON_CLIENT 指向该目录，避免 PyPI 包在新版 Python 下构建失败）
-msgpack-rpc-python>=0.4.1
+# AirSim PythonClient is installed from the official source; see README.md.
 numpy>=1.17
+msgpack-rpc-python>=0.4.1
 opencv-python>=4.5
 torch>=2.0
