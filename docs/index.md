@@ -266,6 +266,7 @@ ROS 2 Action 斐波那契数列计算示例：[chap2/fibonacci_action](./chap2/f
 * [MuJoCo 地面差速小车单侧驱动失效检测与差速补偿](./ground/mujoco_car_drive_fault.md)
 * [MuJoCo 四轮独立悬架越野小车仿真](./ground/mujoco_offroad_suspension.md)
 * [2D 小车目标追踪仿真](./ground/car_2d_target_tracker.md)
+* [多车编队保持仿真（pygame 2D）](./ground/formation_keeping.md) —— 领航者沿圆周运动，两个跟随者按比例控制保持三角队形，统计领航者与跟随者共 3 个成员的队形均方根误差
 * [电机热场景对比评价](./ground/motor_thermal_scenario_evaluator.md)
 * [基于神经网络的无人小车自适应跟车（ACC）](./ground/carla_nn_car_following.md)
 * [Gazebo 差速小车键盘控制](./ground/gazebo_diff_drive_teleop.md)
