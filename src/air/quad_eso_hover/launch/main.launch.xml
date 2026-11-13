@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- ROS 2 XML launch。两个关键点：
+       1) <node> 用 exec= 指定可执行文件（ROS 1 的 type= 在 ROS 2 里会报 invalid attribute）；
+       2) 节点参数必须用 <param> 子元素，不能写成 <node> 的属性。 -->
+  <arg name="w0" default="15.0" description="ESO 观测器带宽 (rad/s)"/>
+  <arg name="ref" default="1.0" description="目标高度 (m)"/>
+  <arg name="rate" default="200.0" description="控制频率 (Hz)"/>
+  <node pkg="quad_eso_hover" exec="ros_node.py" name="quad_eso_hover_demo" output="screen">
+    <param name="w0" value="$(var w0)"/>
+    <param name="ref" value="$(var ref)"/>
+    <param name="rate" value="$(var rate)"/>
+  </node>
+</launch>

@@ -1,0 +1,28 @@
+<launch>
+  <!-- 任务 4：前置相机图像 + 端到端 DQN 控制 -->
+  <arg name="airsim_ip" default="172.25.176.1"/>
+  <arg name="vehicle_name" default="Drone_1"/>
+  <arg name="altitude" default="4.0"/>
+  <arg name="goal_x" default="15.0"/>
+  <arg name="goal_y" default="10.0"/>
+
+  <node name="drone_bridge" pkg="uav_lidar_dqn_navigation" type="drone_bridge.py" output="screen">
+    <param name="airsim_ip" value="$(arg airsim_ip)"/>
+    <param name="vehicle_name" value="$(arg vehicle_name)"/>
+    <param name="auto_takeoff" value="true"/>
+    <param name="takeoff_height" value="$(arg altitude)"/>
+  </node>
+
+  <node name="camera_node" pkg="uav_lidar_dqn_navigation" type="camera_node.py" output="screen">
+    <param name="airsim_ip" value="$(arg airsim_ip)"/>
+    <param name="vehicle_name" value="$(arg vehicle_name)"/>
+    <param name="camera_name" value="front_center"/>
+  </node>
+
+  <node name="dqn_e2e" pkg="uav_lidar_dqn_navigation" type="dqn_e2e_node.py" output="screen">
+    <param name="goal_x" value="$(arg goal_x)"/>
+    <param name="goal_y" value="$(arg goal_y)"/>
+    <param name="goal_z" value="-$(arg altitude)"/>
+    <param name="verbose" value="true"/>
+  </node>
+</launch>

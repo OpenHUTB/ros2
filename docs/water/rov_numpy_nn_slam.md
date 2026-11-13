@@ -4,7 +4,7 @@
 > 运行环境：Ubuntu 20.04.6 + ROS Noetic + MuJoCo 3.12.0 + Python 3.11（项目私有 venv）
 > 关键词：6-DOF ROV、成像声呐、占据栅格 SLAM、A*、DWA、行为克隆、端到端 CNN、DQN、REINFORCE
 
-![键盘遥控演示](images/rov_numpy_nn_slam_teleop.gif)
+![键盘遥控演示](images/rov_numpy_nn_slam_desktop.png)
 
 ## 1. 概述
 
@@ -196,19 +196,19 @@ $$
 
 ### 8.1 键盘遥控（物理仿真）
 
-![键盘遥控](images/rov_numpy_nn_slam_teleop.gif)
+![键盘遥控](images/rov_numpy_nn_slam_desktop.png)
 
 ### 8.2 声呐 SLAM + A* 自主导航（harbor 场景）
 
-![SLAM 导航](images/rov_numpy_nn_slam_slam_nav.gif)
+> SLAM 导航动图体积较大，未随仓库提供；可运行 `bash main.sh slam_nav harbor` 复现。
 
 ### 8.3 端到端 CNN 导航（cave 场景）
 
-![端到端导航](images/rov_numpy_nn_slam_e2e.gif)
+> 端到端 CNN 导航动图体积较大，未随仓库提供；可运行 `bash main.sh e2e pool` 复现。
 
 ### 8.4 Ubuntu 桌面实操录屏
 
-[▶ 下载/播放桌面实操视频（2 分 37 秒，1280×800）](images/rov_numpy_nn_slam_demo.mp4)
+> 桌面实操录屏（2 分 37 秒）体积较大，未随仓库提供；下方为运行截图。
 
 ![桌面实操截图](images/rov_numpy_nn_slam_desktop.png)
 

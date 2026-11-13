@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>uav_takeoff_hover_land</name>
+  <version>0.1.0</version>
+  <description>
+    无人机起飞—悬停—降落状态机模块：订阅 /uav/pose（PoseStamped，ENU），
+    向 /uav/cmd_vel（Twist）发布速度指令，完成垂直起飞、定高悬停和降落。
+    附带离线仿真脚本，可脱离 ROS 复现控制效果。配套文档见
+    docs/air/uav_takeoff_hover_land.md。
+  </description>
+  <maintainer email="2809825433@qq.com">xinyangtang91</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>rospy</depend>
+  <depend>geometry_msgs</depend>
+</package>

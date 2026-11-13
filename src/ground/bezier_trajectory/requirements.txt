@@ -1,0 +1,5 @@
+# -*- coding: utf-8 -*-
+pygame>=2.0
+pillow>=8.0
+# 可选：读取 config/params.yaml；未安装时模块回退到内置默认值
+pyyaml>=5.4

@@ -1,0 +1,39 @@
+name: Humanoid passage width sweep tests
+
+# 窄通道通行模块：纯 Python 单测（场景几何/规划器接口/指标）+ MuJoCo 集成测试。
+# 两者都不依赖 ROS，Ubuntu runner 上 pip 装 mujoco 即可跑。
+on:
+  push:
+    paths:
+      - 'src/humanoid/humanoid_passage_width_sweep/**'
+      - '.github/workflows/humanoid_passage_width_sweep_tests.yml'
+  pull_request:
+    paths:
+      - 'src/humanoid/humanoid_passage_width_sweep/**'
+      - '.github/workflows/humanoid_passage_width_sweep_tests.yml'
+
+jobs:
+  test:
+    name: ${{ matrix.test }}
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        test:
+          - src/humanoid/humanoid_passage_width_sweep/test/test_standalone.py
+          - src/humanoid/humanoid_passage_width_sweep/test/test_integration.py
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install "mujoco>=3.3.0" numpy
+
+      - name: Run offline test
+        run: python3 ${{ matrix.test }}

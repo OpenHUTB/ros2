@@ -20,6 +20,9 @@ catkin_install_python(PROGRAMS
   scripts/lidar_scan_node.py
   scripts/train_dqn_nav.py
   scripts/dqn_nav_node.py
+  scripts/camera_node.py
+  scripts/train_dqn_e2e.py
+  scripts/dqn_e2e_node.py
   scripts/waypoint_goal_node.py
   scripts/eval_policy.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -40,6 +43,7 @@ if(CATKIN_ENABLE_TESTING)
   catkin_add_nosetests(test/test_lidar_features.py)
   catkin_add_nosetests(test/test_safety_shield.py)
   catkin_add_nosetests(test/test_eval_policy.py)
+  catkin_add_nosetests(test/test_e2e_training.py)
 endif()
 
 install(DIRECTORY launch config models maps
