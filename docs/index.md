@@ -208,6 +208,7 @@ ROS 2 Action 斐波那契数列计算示例：[chap2/fibonacci_action](./chap2/f
 * [交通信号灯识别与响应](./ground/carla_traffic_light.md)
 * [RVIZ Carla 插件](./ground/rviz_plugin.md)
 * [扭转控制](./ground/twist_to_control.md)
+* [ROS2 代价地图精确欧氏膨胀](./ground/ros2_costmap_inflation.md)
 * [换道可行性判定](./ground/lane_change_feasibility.md)
 * [倒车雷达分级告警](./ground/ultrasonic_rear_alert.md)
 * [里程计轨迹记录](./ground/odom_trace_recorder.md)
