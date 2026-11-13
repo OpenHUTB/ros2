@@ -1,0 +1,61 @@
+name: Diff drive wall following tests
+
+on:
+  push:
+    paths:
+      - 'src/ground/diff_drive_wall_following/**'
+      - 'docs/ground/diff_drive_wall_following.md'
+      - 'docs/img/ground/diff_drive_wall_following/**'
+      - '.github/workflows/diff_drive_wall_following_tests.yml'
+  pull_request:
+    paths:
+      - 'src/ground/diff_drive_wall_following/**'
+      - 'docs/ground/diff_drive_wall_following.md'
+      - 'docs/img/ground/diff_drive_wall_following/**'
+      - '.github/workflows/diff_drive_wall_following_tests.yml'
+
+jobs:
+  test:
+    name: Module tests (no ROS)
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.8'
+
+      - name: Install test dependencies
+        run: python3 -m pip install --upgrade pip numpy
+
+      - name: Run local tests
+        run: python3 src/ground/diff_drive_wall_following/test/test_diff_drive_wall_following_local.py
+
+      - name: Byte-compile module scripts
+        run: |
+          python3 -m py_compile \
+            src/ground/diff_drive_wall_following/main.py \
+            src/ground/diff_drive_wall_following/wall_follower.py \
+            src/ground/diff_drive_wall_following/offline_sim.py
+
+  docs:
+    name: Docs build
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install docs dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install -r requirements.txt mkdocs
+
+      - name: Build docs
+        run: python3 -m mkdocs build

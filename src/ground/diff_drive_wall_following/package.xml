@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>diff_drive_wall_following</name>
+  <version>0.1.0</version>
+  <description>
+    差速小车沿右侧墙壁行驶模块：订阅 /scan（LaserScan），取正前、正右、
+    右前、右后、正左五路距离，用距离误差与车身夹角误差计算 /cmd_vel
+    （Twist），实现沿墙跟随和墙角转向。配套文档见
+    docs/ground/diff_drive_wall_following.md。
+  </description>
+  <maintainer email="2809825433@qq.com">xinyangtang91</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>rospy</depend>
+  <depend>geometry_msgs</depend>
+  <depend>sensor_msgs</depend>
+</package>
