@@ -1,0 +1,21 @@
+uav_rssi_source_locate_node:
+  ros__parameters:
+    # uav_rssi_source_locate 关键参数
+
+    # 电波模型（对数距离路损，量化步长 0.5 dB）
+    rssi0: -40.0        # dBm，1 m 处参考强度
+    n: 2.2             # 路径损耗指数
+    d0: 1.0            # m，参考距离
+    floor: -76.0       # dBm，接收机底噪（可检测半径约 43 m）
+    quant_db: 0.5      # dB，RSSI 量化步长
+    beacon_z: 0.5      # m，信标天线离地高度（进残差的高度差）
+
+    # 定位调度
+    min_samples: 8     # 至少这么多条样本才解算
+    max_samples: 40    # 滑动窗口上限
+    solve_period_s: 1.0
+
+    # ROS 话题
+    odom_topic: "/uav/odom"
+    rssi_topic: "/rssi"
+    estimate_topic: "/uav_rssi_source_locate/estimate"

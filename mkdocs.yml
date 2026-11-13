@@ -486,6 +486,7 @@ nav:
     - 低空载具的 ROS 示例教程: 'https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/'
     - 手势控制无人机: './air/gesture_control_drone.md'
     - AP-CPP 主动感知覆盖路径规划: './ap_cpp_overfomo.md'
+    - 隐藏信标的搜索与 RSSI 三边定位: './air/uav_rssi_source_locate.md'
     - RflySim 单机起飞（补充实验）: './air/rflysim_sitl_first_flight.md'
     - PX4 SITL + MAVROS2 Offboard 起降与失效保护: './air/px4_mavros2_offboard.md'
     - 无人机航测任务规划（GSD/重叠度/WPML）: './air/survey_mission_planner.md'
