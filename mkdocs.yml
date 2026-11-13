@@ -363,6 +363,7 @@ nav:
     - 无人机航向坐标变换与往返误差验证: './air/uav_yaw_frame_validation/index.md'
     - 无人机测距序列轻量 MLP 去噪: './air/uav_range_denoising_mlp/index.md'
     - 无人机空间围栏与速度门控: './air/uav_box_geofence_guard/index.md'
+    - 下视摄像头神经网络标线循迹: './air/uav_downview_centerline_track_nn.md'
     - MuJoCo 城市屋顶光伏覆盖率测量: './air/mujoco_uav_rooftop_pv_coverage_survey.md'
     - MuJoCo 屋顶光伏覆盖率测量第二天: './air/mujoco_uav_rooftop_pv_coverage_survey_day2.md'
     - winter 场景无人机圆周飞行: './air/winter_circle.md'
