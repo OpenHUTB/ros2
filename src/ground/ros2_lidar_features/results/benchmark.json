@@ -1,0 +1,41 @@
+{
+  "environment": {
+    "python": "3.12",
+    "numpy": "2.x",
+    "os": "Windows 11"
+  },
+  "beams": 720,
+  "scenarios": [
+    {
+      "scenario": "door",
+      "lines": 3,
+      "mean_residual_m": 0.0,
+      "doors": 1,
+      "door_widths_m": [
+        1.081
+      ],
+      "expected_width_m": 1.0,
+      "width_error_m": 0.081
+    },
+    {
+      "scenario": "noisy",
+      "lines": 3,
+      "mean_residual_m": 0.0042,
+      "doors": 1,
+      "door_widths_m": [
+        1.065
+      ],
+      "expected_width_m": 1.0,
+      "width_error_m": 0.065
+    },
+    {
+      "scenario": "closed",
+      "lines": 2,
+      "mean_residual_m": 0.0,
+      "doors": 0,
+      "door_widths_m": [],
+      "expected_width_m": 0.0,
+      "width_error_m": null
+    }
+  ]
+}
