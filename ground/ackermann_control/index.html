@@ -1306,7 +1306,7 @@
 sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>ros-noetic-ackermann-msgs
 
 <span class="c1"># PID依赖（carla_ackermann_control用）</span>
-pip<span class="w"> </span>install<span class="w"> </span>simple-pid
+pip3<span class="w"> </span>install<span class="w"> </span>simple-pid
 </code></pre></div>
 <h2 id="carla-1">第二步：启动 CARLA（终端 1）</h2>
 <div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/CARLA_0.9.13
@@ -1389,9 +1389,9 @@ chmod<span class="w"> </span>+x<span class="w"> </span>ackermann_pub.py
 <h2 id="_6">第七步：编译并运行</h2>
 <div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/carla-ros-bridge/catkin_ws
 catkin_make
+<span class="nb">source</span><span class="w"> </span>/opt/ros/noetic/setup.bash
 <span class="nb">source</span><span class="w"> </span>devel/setup.bash
 
-<span class="nb">source</span><span class="w"> </span>/opt/ros/noetic/setup.bash
 rosrun<span class="w"> </span>ackermann_publisher<span class="w"> </span>ackermann_pub.py
 </code></pre></div>
 <p>节点启动后终端 4 持续打印发送日志，每 0.1 s 一条 <code>speed=2.0</code>、<code>steer=0.2</code>：</p>
