@@ -366,6 +366,7 @@ ROS 2 Action 斐波那契数列计算示例：[chap2/fibonacci_action](./chap2/f
 
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
+* [四旋翼刚体动力学键盘遥控仿真](./air/uav_rigidbody_keyboard_teleop.md) —— 6-DOF 刚体动力学、推力-力矩混合分配与高度/姿态 PD 稳定环，键盘遥控起飞、前飞与保持
 * [无人机航向坐标变换与往返误差验证](./air/uav_yaw_frame_validation/index.md)
 * [无人机测距序列轻量 MLP 去噪](./air/uav_range_denoising_mlp/index.md)
 * [仓储通道巡检无人机测距与分级制动](./air/mujoco_warehouse_uav_collision_braking.md)

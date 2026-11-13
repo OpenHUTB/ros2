@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>uav_rigidbody_keyboard_teleop</name>
+  <version>0.0.1</version>
+  <description>四旋翼 6 自由度刚体动力学键盘遥控仿真：推力-力矩混合分配、重力与气动阻力积分，键盘油门/俯仰/滚转/偏航遥控。</description>
+  <maintainer email="799628765@qq.com">wqs159</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <depend>rclpy</depend>
+  <depend>nav_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>sensor_msgs</depend>
+
+  <test_depend>pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
