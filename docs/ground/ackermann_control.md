@@ -36,7 +36,7 @@
 sudo apt install ros-noetic-ackermann-msgs
 
 # PID依赖（carla_ackermann_control用）
-pip install simple-pid
+pip3 install simple-pid
 ```
 
 ## 第二步：启动 CARLA（终端 1）
@@ -155,9 +155,9 @@ if __name__ == "__main__":
 ```bash
 cd ~/carla-ros-bridge/catkin_ws
 catkin_make
+source /opt/ros/noetic/setup.bash
 source devel/setup.bash
 
-source /opt/ros/noetic/setup.bash
 rosrun ackermann_publisher ackermann_pub.py
 ```
 
