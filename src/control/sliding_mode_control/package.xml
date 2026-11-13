@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>sliding_mode_control</name>
+  <version>1.0.0</version>
+
+  <description>
+    滑模控制（SMC）：二阶系统的鲁棒轨迹跟踪。被控对象 m*x_ddot + c*x_dot + k*x = u + d(t)
+    含未知有界扰动，SMC 用滑模面 s = e_dot + lambda*e 与边界层切换项抑制扰动，
+    并与标称前馈 PD 做对照。只用 Python 标准库，不依赖 MuJoCo / ROS / matplotlib。
+  </description>
+
+  <maintainer email="325889518+zyfmy@users.noreply.github.com">zyfmy</maintainer>
+
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+</package>

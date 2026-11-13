@@ -1,0 +1,7 @@
+# 运行依赖（Python 侧）
+# MuJoCo 3.3 以下的部分接触几何返回值不可靠，这里写死下限
+mujoco>=3.3.0
+numpy>=1.23
+# 出图（--headless / --snapshots 需要；--test 不需要）
+matplotlib>=3.6
+pillow>=9.0

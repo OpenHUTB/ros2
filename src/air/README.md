@@ -6,7 +6,7 @@
 ## 运行
 
 ```powershell
-cd src/air/drone_swarm
+cd src/air
 python main.py
 ```
 
@@ -26,6 +26,7 @@ python main.py
 2. **Followers** 根据期望相对偏移计算目标位置
 3. **Consensus 项**：邻居间达成位置协议
 4. **队形误差项**：反馈领导者位置 + 期望偏移
+> 当前实现没有参考速度前馈，队形稳态误差约 0.49 m 后不再下降。
 
 ## 支持的队形
 

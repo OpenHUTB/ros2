@@ -1,0 +1,13 @@
+<launch>
+  <!-- 起飞—悬停—降落控制节点入口：roslaunch uav_takeoff_hover_land main.launch -->
+
+  <arg name="pose_topic" default="/uav/pose" doc="无人机位姿话题（PoseStamped，ENU）"/>
+  <arg name="cmd_topic" default="/uav/cmd_vel" doc="速度指令话题（Twist），由桥接或仿真器执行"/>
+
+  <!-- 状态机与控制器节点（本模块入口 main.py） -->
+  <node pkg="uav_takeoff_hover_land" type="main.py" name="uav_takeoff_hover_land" output="screen">
+    <rosparam command="load" file="$(find uav_takeoff_hover_land)/config/params.yaml"/>
+    <param name="pose_topic" value="$(arg pose_topic)"/>
+    <param name="cmd_topic" value="$(arg cmd_topic)"/>
+  </node>
+</launch>

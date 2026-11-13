@@ -1,0 +1,8 @@
+# Goal: 指定要计算的斐波那契数列阶数
+int32 order
+---
+# Result: 完整的斐波那契数列
+int32[] sequence
+---
+# Feedback: 已计算的部分数列（用于进度反馈）
+int32[] sequence

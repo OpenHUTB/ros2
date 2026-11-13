@@ -1,0 +1,54 @@
+<launch>
+  <!-- HNN humanoid keyboard teleoperation: sim + top-down viewer + keys -->
+  <arg name="scene"          default="hall"/>
+  <arg name="seed"           default="20261111"/>
+  <arg name="noise"          default="true"/>
+  <arg name="display"        default=":0"/>
+  <arg name="viewer"         default="true"/>
+  <arg name="keyboard"       default="true"/>
+  <arg name="viewer_teleop"  default="false"/>
+  <arg name="duration"       default="0.0"/>
+  <arg name="mode"           default="TELEOP"/>
+  <arg name="auto_snapshot"  default=""/>
+  <arg name="render_width"   default="820"/>
+  <!-- reproducible demo timeline (key:seconds, '+' = combo) used by
+       scripts/demo_desktop.sh: walk straight, stop, small turns while staying
+       in the open start area of the hall (max ~1.4 m clearance from the first
+       pillar at (7,6), validated collision-free / fall-free) -->
+  <arg name="script"         default="w:1.0,space:0.8,a:0.5,w:0.8,d:0.5,w:1.0,space:1.0,w:0.6,space:1.0"/>
+  <arg name="script_loop"    default="false"/>
+  <arg name="snapshot_delay" default="3.0"/>
+
+  <node pkg="humanoid_walk_nn" type="sim_node.py" name="sim_node" output="screen">
+    <env name="HNN_ROOT" value="$(find humanoid_walk_nn)"/>
+    <param name="scene"    value="$(arg scene)"/>
+    <param name="seed"     value="$(arg seed)"/>
+    <param name="noise"    value="$(arg noise)"/>
+    <param name="duration" value="$(arg duration)"/>
+    <param name="mode"     value="$(arg mode)"/>
+    <param name="state_hz" value="20.0"/>
+    <param name="sensor_hz" value="10.0"/>
+    <param name="camera_hz" value="2.0"/>
+  </node>
+
+  <node if="$(arg viewer)" pkg="humanoid_walk_nn" type="viewer_node.py"
+        name="viewer_node" output="screen">
+    <env name="DISPLAY"    value="$(arg display)"/>
+    <env name="HNN_ROOT"   value="$(find humanoid_walk_nn)"/>
+    <param name="scene"         value="$(arg scene)"/>
+    <param name="teleop"        value="$(arg viewer_teleop)"/>
+    <param name="display"       value="$(arg display)"/>
+    <param name="auto_snapshot" value="$(arg auto_snapshot)"/>
+    <param name="render_width"  value="$(arg render_width)"/>
+    <param name="snapshot_delay" value="$(arg snapshot_delay)"/>
+  </node>
+
+  <node if="$(arg keyboard)" pkg="humanoid_walk_nn" type="teleop_keyboard.py"
+        name="teleop_keyboard" output="screen">
+    <env name="HNN_ROOT" value="$(find humanoid_walk_nn)"/>
+    <param name="rate"  value="20.0"/>
+    <param name="decay" value="0.4"/>
+    <param name="script" value="$(arg script)"/>
+    <param name="script_loop" value="$(arg script_loop)"/>
+  </node>
+</launch>

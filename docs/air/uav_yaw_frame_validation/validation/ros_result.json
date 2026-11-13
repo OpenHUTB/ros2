@@ -1,0 +1,19 @@
+{
+  "module": "uav_yaw_frame_validation",
+  "scope": "real ROS Noetic build/roslaunch/topic transport with synthetic inputs; NOT flight or sensor hardware validation",
+  "functional_pass": true,
+  "shutdown_clean": true,
+  "launch_returncode": 0,
+  "node_exit_errors": false,
+  "checks": [
+    "tf2 forward and inverse errors below 1e-6 for >=10 samples",
+    "transformed circle center (2,-1), radius 1, world frame",
+    {
+      "samples": 10,
+      "max_tf_error": 4.97e-16,
+      "max_roundtrip": 2.48e-16
+    },
+    "roslaunch remains running through functional checks"
+  ],
+  "error": null
+}

@@ -1,7 +1,8 @@
 import rclpy
 from rclpy.node import Node
 import matplotlib.pyplot as plt
-import math
+
+from humanoid_zmp_walk_planner.gait import leg_targets
 
 class HumanoidZMPPlanner(Node):
     def __init__(self):
@@ -20,19 +21,10 @@ class HumanoidZMPPlanner(Node):
 
     def update(self):
         self.t += 0.05
-        phase = (self.t % self.step_time) / self.step_time
-        x_body = self.t * self.step_length 
-        
-        if phase < 0.5:
-            # 前半周期：左脚支撑，右脚摆动
-            y_left_foot = 0.0
-            y_right_foot = self.step_height * math.sin(phase * math.pi * 2)
-            state = 'Left Leg Support / Right Leg Swing'  # 改为英文
-        else:
-            # 后半周期：右脚支撑，左脚摆动
-            y_right_foot = 0.0
-            y_left_foot = self.step_height * math.sin((phase - 0.5) * math.pi * 2)
-            state = 'Right Leg Support / Left Leg Swing' # 改为英文
+        x_body, y_left_foot, y_right_foot, _phase, support = leg_targets(
+            self.t, self.step_length, self.step_time, self.step_height)
+        state = ('Left Leg Support / Right Leg Swing' if support == 'left'
+                 else 'Right Leg Support / Left Leg Swing')
 
         self.ax.clear()
         # 动态视野跟随机器人

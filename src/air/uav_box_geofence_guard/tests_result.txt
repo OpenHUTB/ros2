@@ -1,0 +1,16 @@
+test_boundary_stop (test_core.Checks.test_boundary_stop) ... ok
+test_center (test_core.Checks.test_center) ... ok
+test_diagonal_ball (test_core.Checks.test_diagonal_ball) ... ok
+test_horizon (test_core.Checks.test_horizon) ... ok
+test_negative_yaw_clamp_reports_limited (test_core.Checks.test_negative_yaw_clamp_reports_limited) ... ok
+test_nonfinite (test_core.Checks.test_nonfinite) ... ok
+test_outside (test_core.Checks.test_outside) ... ok
+test_positive_yaw_clamp_reports_limited (test_core.Checks.test_positive_yaw_clamp_reports_limited) ... ok
+test_stale (test_core.Checks.test_stale) ... ok
+test_swept_bound (test_core.Checks.test_swept_bound) ... ok
+test_yaw_within_limits_reports_clear (test_core.Checks.test_yaw_within_limits_reports_clear) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 0.004s
+
+OK

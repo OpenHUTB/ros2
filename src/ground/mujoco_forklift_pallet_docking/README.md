@@ -32,6 +32,14 @@ python3 src/ground/mujoco_forklift_pallet_docking/main.py --mode evaluate
 python3 src/ground/mujoco_forklift_pallet_docking/main.py --mode run --start-x -4 --speed 2
 ```
 
+启动键盘手动控制（需要交互式终端）：
+
+```bash
+python3 src/ground/mujoco_forklift_pallet_docking/main.py --mode manual --start-x -4
+```
+
+按 `W` 驱动前进，按 `S` 制动，按空格滑行，按 `Q` 退出。当前仿真模型仅包含纵向驱动轴；终端会实时显示叉车位置和速度。无 TTY 环境可用 `--manual-keys 'wws q'` 执行可重复的按键序列；每个字符对应一个仿真步，空格表示滑行，`q` 退出。
+
 `evaluate` 模式默认载入随 ROS 包安装的网络权重，比较三个起始位置，输出叉齿插入深度、最终速度及是否过度插入，并可用 `--output /tmp/evaluation.json` 保存结果。`train` 模式报告留出集误差；指定 `--model-path` 时同时保存网络权重。
 
 ## Ubuntu 容器运行

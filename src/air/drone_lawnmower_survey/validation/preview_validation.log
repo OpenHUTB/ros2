@@ -1,0 +1,15 @@
+Command (repository root):
+  python src/air/drone_lawnmower_survey/main.py
+
+Environment:
+  Windows, Python 3.13
+  AirSim connection: not requested (safe preview mode)
+
+Result:
+  Survey waypoints: 12
+  Path distance: 400.00 m
+  Estimated path time: 80.0 s
+  Preview only. Add --execute after checking the waypoints.
+
+The complete waypoint list is printed by the command above. The command exits with
+status 0 and does not import or connect to AirSim.
