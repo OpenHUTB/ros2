@@ -97,7 +97,7 @@ YOLOv8 是单阶段目标检测网络，将检测问题转化为回归问题。�
 
 ## 演示
 
-![demo](demo.gif)
+![demo](../../../docs/img/carla_tsr_ros_demo.gif)
 
 ## 注意事项
 

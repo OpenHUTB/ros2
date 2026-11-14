@@ -63,7 +63,7 @@ Ubuntu® Focal 20.04 虚拟机可运行于多种平台（Windows®、Mac 和 Lin
 
 ## 使用虚拟机
 
-请参阅 [ROS Toolbox 示例](/help/ros/examples.html)和 [Robotics System Toolbox 示例](/help/robotics/examples.html)，了解如何使用此虚拟机。
+请参阅 [ROS Toolbox 示例](https://www.mathworks.com/help/ros/examples.html)和 [Robotics System Toolbox 示例](https://www.mathworks.com/help/robotics/examples.html)，了解如何使用此虚拟机。
 
 ## 故障排查
 
