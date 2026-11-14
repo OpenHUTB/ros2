@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>safedrl_drone_nav</name>
+  <version>1.0.0</version>
+
+  <description>
+    Simulator-neutral deep-reinforcement-learning drone navigation with
+    control-barrier-function enforcement.
+
+    A constrained (Lagrangian) PPO policy and a discrete-time CBF safety filter
+    exchange only standard ROS messages (Odometry, LaserScan, Twist), so the
+    same checkpoint runs on the course simulators AirSim (through
+    airsim_ros_pkgs or the AirSim Python API) and MuJoCo (through the bundled
+    MJCF plant).  PyBullet is kept as a lightweight offline environment for
+    unit-level mathematical verification, not as the course simulator.  The
+    package also ships the reproducible training/evaluation pipeline and the
+    run-trace evidence generator.
+  </description>
+
+  <maintainer email="student@example.edu">SafeDRL coursework submission</maintainer>
+  <license>MIT</license>
+
+  <url type="repository">https://github.com/eRGiBi/DRL-DroneNavigation</url>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <!-- runtime: ROS message / topic plumbing used by the nodes -->
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>rostopic</exec_depend>
+  <exec_depend>roslaunch</exec_depend>
+
+  <!-- Optional simulator adapters.  Neither is a hard dependency: the
+       navigator itself only needs the standard messages above.
+         airsim_ros_pkgs : catkin wrapper for the AirSim ROS topics
+         airsim          : pip package for the direct AirSim API backend
+         mujoco          : pip package for the bundled MJCF plant          -->
+
+  <!-- Python 3 side dependencies are pinned in requirements.txt; they are not
+       catkin packages so they are declared as rosdep-free exec_depends only
+       where a distro package exists. -->
+  <exec_depend condition="$ROS_PYTHON_VERSION == 3">python3-numpy</exec_depend>
+  <exec_depend condition="$ROS_PYTHON_VERSION == 3">python3-yaml</exec_depend>
+
+  <export>
+    <build_type>catkin</build_type>
+  </export>
+</package>

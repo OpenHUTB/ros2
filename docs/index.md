@@ -582,6 +582,7 @@ ROS 2 Action 斐波那契数列计算示例：[chap2/fibonacci_action](./chap2/f
 * [无人机深度相机轨迹跟踪（CNN 行为克隆）](./air/uav_depth_track_nn.md) —— 深度相机感知 + 给定圆轨迹跟踪，CNN 输出速度指令
 
 * [RflySim 单机起飞与端口故障排查（补充实验）](./air/rflysim_sitl_first_flight.md)
+* [基于 CBF-PPO 的无人机安全导航](./air/safedrl_drone_nav.md) —— 基于控制屏障函数与拉格朗日 PPO 的无人机安全导航，通过标准 ROS 话题接入 AirSim 或 MuJoCo，并用 CBF 安全滤波器保证飞行安全
 
 * [PX4 SITL + MAVROS2 Offboard 起降与失效保护](./air/px4_mavros2_offboard.md)
 

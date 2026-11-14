@@ -1,0 +1,15 @@
+# Course simulator adapters (optional)
+#
+# Install only the backend you actually use; neither package is needed for
+# the offline PyBullet verification or for the ROS message interface.
+#
+#     pip install -r requirements-sim.txt        # both
+#     pip install mujoco>=3.0                    # MuJoCo only
+#     pip install airsim==1.8.1                  # AirSim Python API only
+#
+# For the AirSim ROS backend, build the `airsim_ros_pkgs` catkin package in
+# the same workspace as safedrl_drone_nav instead of installing the pip
+# client.
+
+airsim==1.8.1
+mujoco>=3.0
