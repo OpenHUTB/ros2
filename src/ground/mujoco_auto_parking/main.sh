@@ -28,7 +28,7 @@ if [ -f /opt/ros/humble/setup.bash ]; then
     # shellcheck disable=SC1091
     source /opt/ros/humble/setup.bash
 fi
-for WS in "$HOME/auto_parking_ws" "$HOME/ros2_ws"; do
+for WS in "$SCRIPT_DIR/../../.." "$HOME/auto_parking_ws" "$HOME/ros2_ws"; do
     if [ -f "$WS/install/setup.bash" ]; then
         # shellcheck disable=SC1090
         source "$WS/install/setup.bash"

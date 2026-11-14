@@ -33,11 +33,11 @@ def check_model_objects() -> None:
         ), f'缺少对象 {name}'
     for name in MujocoSimulation.ACTUATOR_NAMES:
         assert simulation.has_object(mujoco.mjtObj.mjOBJ_ACTUATOR, name)
-    for name in ('front_camera', 'overview_camera'):
+    for name in ('front_camera', 'overview_camera', 'follow_camera'):
         assert simulation.has_object(mujoco.mjtObj.mjOBJ_CAMERA, name)
     for name in ('imu_site', 'lidar_site', 'target_slot'):
         assert simulation.has_object(mujoco.mjtObj.mjOBJ_SITE, name)
-    print('[PASS] 模型对象：差速车、四轮执行器、相机、激光雷达安装点、目标车位')
+    print('[PASS] 模型对象：差速车、四轮执行器、前视/俯视/跟随相机、激光雷达安装点、目标车位')
 
 
 def check_forward_motion() -> None:

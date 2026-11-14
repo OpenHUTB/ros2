@@ -1,0 +1,7 @@
+# 文档与 GIF 工具依赖（运行仿真本身不需要这些）
+# 用法：pip install -r tools/requirements-docs.txt
+markdown>=3.4
+htmldocx>=0.0.6
+python-docx>=1.1
+Pillow>=9.0
+opencv-python>=4.8

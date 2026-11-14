@@ -11,6 +11,9 @@
 | Python | 3.10 |
 | MuJoCo | 3.12.0 |
 
+运行依赖：`requirements.txt`（`mujoco==3.12.0`、`numpy`、`PyYAML`）。
+文档与 GIF 工具依赖：`tools/requirements-docs.txt`（`markdown`、`htmldocx`、`python-docx`、`Pillow`、`opencv-python`），只在导出 Word 和生成 GIF 时需要。
+
 ## 目录 / Layout
 
 ```text
@@ -32,8 +35,8 @@ mujoco_auto_parking/
 ## 构建与运行 / Build and Run
 
 ```bash
-# 把本包放进 ROS 2 工作空间的 src/ 下
-cd ~/auto_parking_ws
+# 仓库根目录本身就是 colcon 工作空间，本包位于 src/ground/mujoco_auto_parking
+cd <仓库根目录>
 source /opt/ros/humble/setup.bash
 colcon build --packages-select mujoco_auto_parking --symlink-install
 source install/setup.bash
@@ -41,6 +44,8 @@ source install/setup.bash
 cd src/ground/mujoco_auto_parking
 ./main.sh --launch
 ```
+
+仿真在离屏渲染（WSL2 下 `main.sh` 默认 `MUJOCO_GL=osmesa`），本模块没有 MuJoCo 交互窗口；带 WSLg 或桌面环境可加 `--gui` 切到 `glfw` 后端，观察画面用 `rqt_image_view` 订阅 `/camera/image_raw`。
 
 发送速度指令：
 
@@ -154,6 +159,15 @@ ros2 launch mujoco_auto_parking task3.launch.py goal:=0.25,-1.2
 - 图像→控制 CNN：RMSE 0.355 m，最大误差 0.549 m，到达终点，推理约 1.9 ms；
 - 零权值消融：RMSE 0.684 m，最大误差 1.001 m；
 - 与专家动作相关系数：v 0.9978、wz 0.9994。
+
+## 文档 / Documentation
+
+- 模块文档：`docs/ground/mujoco_auto_parking.md`（实现文档）、`docs/ground/mujoco_auto_parking/`（分任务页面，`overview.md` 为模块总览）；
+- 本地构建：在仓库根执行 `mkdocs build --clean`；
+- 一键回归：`bash tools/verify_all.sh`；
+- GIF 生成：`python3 tools/make_gifs.py`；
+- Word 导出：先 `pip install -r tools/requirements-docs.txt`，再在仓库根运行 `python3 src/ground/mujoco_auto_parking/tools/export_word.py`；脚本会重新打开导出的 docx 并断言五个一级标题都在；
+- 实测证据：`docs/evidence/mujoco_auto_parking/`。
 
 ## 当前范围 / Scope
 
