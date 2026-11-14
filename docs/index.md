@@ -283,6 +283,7 @@ ROS 2 Action 斐波那契数列计算示例：[chap2/fibonacci_action](./chap2/f
 * [MuJoCo 叉车同步建图与自主导航](./ground/forklift_slam_nav.md)
 * [MuJoCo 叉车相机引导的托盘接近与低速插入](./ground/mujoco_forklift_pallet_docking.md)
 * [地面载具横向控制算法对比（纯跟踪 / Stanley / LQR）](./ground/lateral_control_benchmark.md) —— 同一车辆模型与指标下定量比较三种横向控制器
+* [神经网络跟踪策略的执行延迟鲁棒性](./ground/mujoco_nn_latency_robustness.md) —— 同一份权重下扫描 0～1000 ms 执行延迟，对比无补偿 / 匀速外推 / 扫描变换（Smith 预测）/ oracle 上界
 * [MPPI 采样 MPC 与蒸馏神经网络的 8 字赛道跟踪对比](./ground/mujoco_mppi_neural_tracker.md) —— 同一赛道上比较 MPPI、蒸馏网络与纯追踪的精度/算力/抗噪
 * [ROS2 差速机器人 A* 全局规划与 DWA 局部避障](./ground/ros2_dwa_avoidance.md)
 * [ROS2 DWA 局部规划器随机场景压力测试与舒适性评价](./ground/ros2_dwa_benchmark.md)
