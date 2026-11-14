@@ -294,6 +294,7 @@ ROS 2 Action 斐波那契数列计算示例：[chap2/fibonacci_action](./chap2/f
 * [地面无人车视觉 SLAM 建图与自主导航](./ground/ugv_visual_slam_nav.md) —— 单目 RGB-D 做 EKF-SLAM 与占据栅格，A\* 规划 + 纯追踪执行，并排训练端到端 CNN 做对照
 * [DVS 事件相机背景活动抑制与运动目标跟踪](./ground/dvs_event_motion_tracking.md) —— 直接解析 CARLA 13 字节事件流，用 BAF 学习静态树冠噪声、残差连通域分割运动车辆，实测抑制 79.7% 背景事件、检出率 100%、质心 MAE 2.35 px，事件量仅为等价整帧像素的 3.21%
 * [MuJoCo Locomotion 强化学习对比实验](./ground/rl_mujoco_locomotion.md)
+* [宇树 Go2 四足机器人 MuJoCo 小跑仿真](./ground/go2_mujoco_simulation.md) —— 12 个力矩电机 + 平面逆运动学足端椭圆轨迹，对角小跑步态
 * [图像录制 ROS 2 封装模块](./ground/image_recorder.md)
 * [MuJoCo小车倒车入库仿真](./ground/mujoco_car_parking.md)
 * [MuJoCo 侧方停车仿真](./ground/mujoco_parallel_parking.md)
