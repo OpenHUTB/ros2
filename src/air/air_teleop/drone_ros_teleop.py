@@ -51,6 +51,7 @@ class DroneTeleop:
     HOLD_TIMEOUT = 0.4                            # 无新按键多久后开始减速（秒）
     DECAY_TIME = 0.5                              # 松键后速度线性衰减到 0 的时长（秒）
     READ_POLL = 0.05                              # 按键监听线程轮询间隔（秒）
+    speed_scale = 1.0
 
     # ---- 按键映射表：内部键名 -> 功能说明（状态行显示用）----
     KEYMAP = {
@@ -162,6 +163,18 @@ class DroneTeleop:
         if key in ('esc', 'exit'):                # ESC / Ctrl+C → 请求退出
             self.exit_requested = True
             return
+            if key == '1':
+    self.speed_scale = 0.5
+    print("\n>>> 切换至慢速档 (0.5x)")
+    return
+elif key == '2':
+    self.speed_scale = 1.0
+    print("\n>>> 切换至正常档 (1.0x)")
+    return
+elif key == '3':
+    self.speed_scale = 2.0
+    print("\n>>> 切换至快速档 (2.0x)")
+    return
         name = self.CHAR_TO_NAME.get(key)
         if name is None:                          # 无效按键（Enter、方向键残片等）忽略
             return
@@ -203,6 +216,8 @@ class DroneTeleop:
         机体坐标系：linear.x 前、linear.y 右、linear.z 下（负值上升）；
         angular.z 偏航角速度弧度/秒，正值右偏航（顺时针，从上方看）。
         """
+        self.speed_scale
+    scaled_vel = tuple(v * self.speed_scale for v in vel)
         msg = Twist()
         msg.linear.x, msg.linear.y, msg.linear.z, msg.angular.z = vel
         return msg
