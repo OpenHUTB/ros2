@@ -157,7 +157,7 @@ ROS 2 Action 斐波那契数列计算示例：[chap2/fibonacci_action](./chap2/f
 * [肌肉驱动的夹爪抓取：真实接触抓取](./musculoskeletal/msk_gripper.md)
 * [肌肉驱动的下肢关节与步态](./musculoskeletal/muscle_leg_gait.md)
 * [膝关节肌肉骨骼仿真与轨迹跟踪](./musculoskeletal/knee_tracking.md)
-* [机械臂手眼标定仿真](./humanoid/hand_eye_calibration.md) 
+* [机械臂手眼标定仿真](./humanoid/hand_eye_calibration.md)
 * [人形上下台阶步态仿真：ZMP 预瞄控制与台阶参数扫描](./humanoid/humanoid_stair_zmp_preview.md)
 * [MuJoCo单足弹跳机器人简单仿真：SLIP 模型与 Raibert 弹跳控制](./humanoid/mujoco_hopper_slip_control.md)
 * [人形足迹下的局部避障算法对比：MPPI 与斥力法的窄通道宽度扫描](./humanoid/humanoid_passage_width_sweep.md)
@@ -399,6 +399,7 @@ ROS 2 Action 斐波那契数列计算示例：[chap2/fibonacci_action](./chap2/f
 
 * [AirSim Unity 无人机曲线绕柱避障实验](./air/airsim_obstacle_avoidance.md)
 * [AirSim Unity 无人机高度自适应越障实验](./air/airsim_height_aware_overfly.md) —— 深度图逐列恢复障碍顶边，矮墙原地爬升越过、高障碍退回水平绕行；57 项离线测试 + 2026-11-09 两次越障实飞（越障后保持 5.2 m、到点误差 <0.7 m；相机偏移修正后 committed 约 2.6 m，尚未复飞）
+* [无人机神经网络感知、导航与端到端控制](./air/uav_nn_perception_navigation/index.md) —— 激光雷达 12 扇区特征 + MLP 策略，到达误差 0.76 m；gmapping 建图与导航同步；CNN 端到端视觉控制，自主飞行 10.89 m
 * [AirSim Unity 无人机双柱连续 S 形绕行实验](./air/airsim_double_pillar_avoidance.md) —— 在前视深度反应式绕柱基础上增加绕行侧解锁与冷却状态机，使沿程后续柱子按自身位置重新选边，形成 S 形路径（已实飞到达目标、第二柱反向绕行验证；降落确认待复验）
 * [无人机深度相机神经网络避障飞行（MuJoCo）](./air/uav_mujoco_depth_avoidance.md) —— 64×64 机载深度图 → numpy CNN → 三扇区通行度 → 速度/偏航闭环，3 场景 × 5 实例共 15/15 成功
 * [MuJoCo 无人机栅格激光建图与路径重规划](./air/uav_grid_navigation.md)
@@ -694,7 +695,7 @@ ___
 * [欠驱动无人艇低速定点保持与横漂补偿](./water/ros2_usv_station_keeping/index.md) —— 几何制导 + 在线流估计 + 双环控制，无侧推器也能顶流定点
 * [多 AUV 协同围捕](./water/multi_agent_hunting.md) —— 拍卖算法做任务分配，水声信道带真实延迟与丢包，包抄点向目标收缩并有捕获判定，支持 seed 复现
 * [水面无人艇（USV）视线（LOS）路径跟踪制导](./water/usv_los_guidance.md) —— LOS 制导 + 航向包裹，横漂误差收敛至 0.09 m
-  
+
 ## 7. 经典控制 <span id='classical_control'></span>
 
 * [倒立摆平衡小车 (cart-pole, LQR 最优控制)](./classical_control/cartpole_balance.md) —— 用 LQR 让倒立摆从倾斜被拉回竖直保持不倒,演示 ROS 发布/订阅闭环与最优控制

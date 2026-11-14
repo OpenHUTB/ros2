@@ -445,6 +445,7 @@ nav:
     - 无人机 SLAM 建图与导航: './air/uav_slam_nav.md'
     - 无人机深度相机建图与自主导航（深度反投影 + A* + 纯追踪）: './air/uav_depth_mapping_nav.md'
     - MuJoCo 四旋翼垂直通道 PPO 定高与抗扰控制: './air/uav_vertical_ppo.md'
+    - 无人机神经网络感知、导航与端到端控制: './air/uav_nn_perception_navigation/index.md'
     - 基于 PPO 的无人机导航避障: './air/uav_ppo_nav.md'
     - uav_ppo_nav 本地测试（pytest）: './air/uav_ppo_nav_local_test.md'
     - 无人机定高日志误差与抗扰恢复时间评估: './air/uav_hover_log_eval.md'
