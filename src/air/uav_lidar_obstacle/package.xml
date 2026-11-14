@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>uav_lidar_obstacle</name>
+  <version>0.1.0</version>
+  <description>
+    无人机激光雷达避障：订阅机载激光雷达点云，按最近障碍物距离做阈值判断，
+    低于阈值悬停、否则前飞。除 ROS 2 包装节点外，包根目录还带一份不依赖 ROS
+    的纯 CARLA / OpenHUTB 脚本（drone_control.py）。
+  </description>
+  <maintainer email="2011570342@qq.com">Mjm-peter</maintainer>
+  <license>Apache-2.0</license>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

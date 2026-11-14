@@ -474,6 +474,7 @@ ROS 2 Action 斐波那契数列计算示例：[chap2/fibonacci_action](./chap2/f
 * [AirSim ROS 2 Humble 磁力计桥接](./air/airsim_ros2_magnetometer.md)
 * [AirSim ROS 2 Humble 气压计桥接](./air/airsim_ros2_barometer.md)
 * [无人机 LiDAR 地面/障碍分割](./air/uav_lidar_ground_filter.md)
+* [无人机激光雷达避障](./air/uav_lidar_obstacle/index.md) —— 机载激光雷达点云求最近距离，低于阈值悬停、否则前飞；含纯 CARLA 脚本与 ROS 2 包装节点两条入口
 * [无人机屋顶降落](./air/rooftop_landing.md) —— 用机载 LiDAR 检测屋顶平面，取轮廓的最大内切圆圆心作为降落点，自主飞抵其上方后垂直降落
 * [无人机屋顶降落（学习型落点选择）](./air/rooftop_landing_nn.md) —— 用点云高度图 + 小 CNN 直接回归屋顶落点；凹形屋顶（U/L/天井）与稀疏点云下比凸包最大内切圆更稳，附三组消融对比
 * [无人机降落过程监控（指令-运动一致性）](./air/uav_landing_monitor.md) —— 在线校验「速度指令 vs 实际高度变化」，抓“喊了不动 / 掉得没人管 / 超时没落地”这类静默故障，输出告警、状态 JSON 与 CSV 报告
