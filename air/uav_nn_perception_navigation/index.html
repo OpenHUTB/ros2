@@ -2000,7 +2000,7 @@ d_i = \min\left\{ \frac{\lVert \mathbf{p} \rVert}{R_{\max}} \;:\; \mathbf{p} \in
 </code></pre></div>
 <p>对应启动项：</p>
 <div class="highlight"><pre><span></span><code><span class="nt">&lt;node</span><span class="w"> </span><span class="na">pkg=</span><span class="s">"tf2_ros"</span><span class="w"> </span><span class="na">type=</span><span class="s">"static_transform_publisher"</span><span class="w"> </span><span class="na">name=</span><span class="s">"base_to_laser"</span>
-<span class="w">      </span><span class="na">args=</span><span class="s">"0 0 -0.5 0 0 0 base_link laser"</span><span class="w"> </span><span class="nt">/&gt;</span>
+<span class="w">      </span><span class="na">args=</span><span class="s">"0 0 0.5 0 0 0 base_link laser"</span><span class="w"> </span><span class="nt">/&gt;</span>
 </code></pre></div>
 <h3 id="52">5.2 扫描来源：深度相机反投影</h3>
 <p>AirSim 的激光雷达每帧只返回一小段扫描（约 149 点 / 19°），直接用于建图会大面积缺测。
@@ -2376,7 +2376,7 @@ Flatten(64×5×8) → Linear(128) + ReLU → Linear(3)
 <h3 id="98-slamlaunch">9.8 建图启动 slam.launch</h3>
 <p>这个 launch 同时拉起五个节点，让建图与神经网络导航在同一个仿真里并行跑：桥接节点、雷达感知节点、一个静态 TF 发布器、gmapping、控制节点，外加一个用 <code>rostopic pub</code> 伪装的目标点发布器。</p>
 <p>桥接节点在这里的配置与默认值不同：<code>auto_takeoff</code> 设为 <code>false</code>，起飞交给外部流程；<code>publish_tf</code> 设为 <code>true</code>，因为 gmapping 需要 <code>odom→base_link</code> 的变换。感知节点将 <code>scan_bins</code> 设为 180、<code>scan_fov</code> 设为 180.0，与随包传感器配置一致。</p>
-<p>雷达的安装位置用静态变换补上，参数 <code>0 0 -0.5 0 0 0 base_link laser</code> 表示 <code>laser</code> 帧在 <code>base_link</code> 正下方 0.5 米，与感知节点默认的 <code>scan_frame='laser'</code> 对应。</p>
+<p>雷达的安装位置用静态变换补上，参数 <code>0 0 0.5 0 0 0 base_link laser</code> 表示 <code>laser</code> 帧在 <code>base_link</code> 正上方 0.5 米，与感知节点默认的 <code>scan_frame='laser'</code> 对应。随包 <code>config/settings.json</code> 里雷达的 <code>Z=-0.5</code> 是 AirSim 的 NED 坐标（+Z 向下），换算到 ROS 的 ENU 后就是 <code>+0.5 m</code>，与本节的静态变换和 <code>perception.md</code> 的说明一致。</p>
 <p>gmapping 段最需要注意的是扫描话题的接入方式：</p>
 <div class="highlight"><pre><span></span><code><span class="w">  </span><span class="nt">&lt;node</span><span class="w"> </span><span class="na">pkg=</span><span class="s">"gmapping"</span><span class="w"> </span><span class="na">type=</span><span class="s">"slam_gmapping"</span><span class="w"> </span><span class="na">name=</span><span class="s">"slam_gmapping"</span><span class="w"> </span><span class="na">output=</span><span class="s">"screen"</span><span class="nt">&gt;</span>
 <span class="w">    </span><span class="nt">&lt;param</span><span class="w"> </span><span class="na">name=</span><span class="s">"base_frame"</span><span class="w"> </span><span class="na">value=</span><span class="s">"base_link"</span><span class="nt">/&gt;</span>
