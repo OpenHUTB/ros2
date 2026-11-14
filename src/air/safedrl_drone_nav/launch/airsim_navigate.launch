@@ -1,0 +1,82 @@
+<?xml version="1.0"?>
+<!--
+  SafeDRL navigator on the course AirSim simulator.
+
+  Prerequisites
+  -------------
+  * AirSim (Unreal) is running with a multirotor vehicle, and the vehicle's
+    start point is the origin of the gate/obstacle coordinates below.
+  * For backend:=ros, the `airsim_ros_pkgs` wrapper is already running, e.g.
+        roslaunch airsim_ros_pkgs airsim_node.launch
+  * For backend:=api, the `airsim` Python package is installed
+        pip install airsim==1.8.1
+
+  Start:
+      roslaunch safedrl_drone_nav airsim_navigate.launch backend:=ros
+      roslaunch safedrl_drone_nav airsim_navigate.launch backend:=api
+      roslaunch safedrl_drone_nav airsim_navigate.launch use_cbf:=false
+
+  The bridge performs the NED/FRD <-> ENU/FLU conversion, so the navigator and
+  the trained policy only ever see the standard ROS frames (REP-103).
+-->
+<launch>
+  <arg name="backend"      default="ros"/>
+  <arg name="vehicle_name" default="drone_1"/>
+  <arg name="model_path"   default="$(find safedrl_drone_nav)/checkpoints/best_model.zip"/>
+  <arg name="use_cbf"      default="true"/>
+  <arg name="control_rate" default="30.0"/>
+  <arg name="lidar_topic"  default=""/>
+  <arg name="airsim_ip"    default=""/>
+  <arg name="auto_arm"     default="true"/>
+
+  <!-- ---------------- AirSim adapter ---------------- -->
+  <node name="airsim_bridge" pkg="safedrl_drone_nav"
+        type="airsim_bridge_node.py" output="screen" required="true">
+    <param name="backend"      value="$(arg backend)"/>
+    <param name="vehicle_name" value="$(arg vehicle_name)"/>
+    <param name="control_rate" value="$(arg control_rate)"/>
+    <param name="lidar_topic"  value="$(arg lidar_topic)"/>
+    <param name="airsim_ip"    value="$(arg airsim_ip)"/>
+    <param name="auto_arm"     value="$(arg auto_arm)"/>
+
+    <!-- AirSim ROS wrapper topics (backend:=ros) -->
+    <param name="odom_in_topic"
+           value="/airsim_node/$(arg vehicle_name)/odom_local_ned"/>
+    <param name="cmd_out_topic"
+           value="/airsim_node/$(arg vehicle_name)/vel_cmd_world_frame"/>
+    <param name="odom_out_topic" value="/drone/odom"/>
+    <param name="cmd_in_topic"   value="/drone/cmd_vel"/>
+    <param name="scan_topic"     value="/drone/scan"/>
+    <param name="scan_bins"      value="180"/>
+    <param name="scan_range"     value="20.0"/>
+    <param name="lidar_frd"      value="true"/>
+  </node>
+
+  <!-- ---------------- policy + CBF safety filter ---------------- -->
+  <node name="drl_navigator" pkg="safedrl_drone_nav"
+        type="drl_navigator_node.py" output="screen" required="true">
+    <param name="model_path"    value="$(arg model_path)"/>
+    <param name="use_cbf"       value="$(arg use_cbf)"/>
+    <param name="scan_barriers" value="true"/>
+    <param name="control_rate"  value="$(arg control_rate)"/>
+    <param name="odom_topic"    value="/drone/odom"/>
+    <param name="scan_topic"    value="/drone/scan"/>
+    <param name="cmd_vel_topic" value="/drone/cmd_vel"/>
+    <param name="status_topic"  value="/drone/nav_status"/>
+    <param name="max_velocity"  value="2.6"/>
+    <param name="max_yaw_rate"  value="2.0"/>
+
+    <!-- Gate coordinates are relative to the AirSim vehicle start point. -->
+    <rosparam param="gates">
+      [3.8, 0.0, 1.50,
+       7.4, 1.55, 1.95,
+       11.0, -1.55, 1.15]
+    </rosparam>
+    <rosparam param="obstacles">
+      - {centre: [3.4,  1.1, 1.5], radius: 0.32}
+      - {centre: [5.9, -1.3, 1.4], radius: 0.38}
+      - {centre: [7.6,  1.4, 1.6], radius: 0.28}
+      - {centre: [9.8, -0.6, 1.5], radius: 0.35}
+    </rosparam>
+  </node>
+</launch>

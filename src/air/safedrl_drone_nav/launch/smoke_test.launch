@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<!--
+  One-click communication + inference smoke test.
+
+  This launch file deliberately does NOT need a trained policy.  It starts the
+  dummy plant and the navigator with an EMPTY model_path, so the navigator
+  falls back to its built-in pure-pursuit controller.  The point is to prove,
+  in a few seconds, that
+
+      odom + scan  ->  navigator  ->  CBF filter  ->  cmd_vel  ->  plant
+
+  is wired up correctly inside the VM, independently of any learning result.
+
+      roslaunch safedrl_drone_nav smoke_test.launch
+
+  Expected output (see README for a captured transcript):
+      [dummy_state_publisher] dummy drone up ...
+      [drl_navigator] no policy loaded ... running the geometric controller
+      [drl_navigator] gate 1 passed -> targeting gate 2
+-->
+<launch>
+  <arg name="control_rate" default="30.0"/>
+  <arg name="echo_cmd"     default="true"/>
+  <arg name="use_cbf"      default="true"/>
+
+  <node name="dummy_state_publisher" pkg="safedrl_drone_nav" type="dummy_state_publisher.py"
+        output="screen" required="true">
+    <param name="publish_rate" value="$(arg control_rate)"/>
+    <param name="n_rays"       value="180"/>
+    <param name="scan_range"   value="3.0"/>
+    <param name="start"        value="[0.0, 0.0, 1.5]"/>
+    <rosparam param="obstacles">
+      - {centre: [3.4,  1.1, 1.5], radius: 0.32}
+      - {centre: [5.9, -1.3, 1.4], radius: 0.38}
+      - {centre: [7.6,  1.4, 1.6], radius: 0.28}
+      - {centre: [9.8, -0.6, 1.5], radius: 0.35}
+    </rosparam>
+  </node>
+
+  <node name="drl_navigator" pkg="safedrl_drone_nav" type="drl_navigator_node.py"
+        output="screen" required="true">
+    <!-- empty model_path on purpose: exercises the geometric fallback -->
+    <param name="model_path"    value=""/>
+    <param name="use_cbf"       value="$(arg use_cbf)"/>
+    <param name="control_rate"  value="$(arg control_rate)"/>
+    <param name="dry_run"       value="false"/>
+    <rosparam param="gates">
+      [3.8, 0.0, 1.50,
+       7.4, 1.55, 1.95,
+       11.0, -1.55, 1.15]
+    </rosparam>
+    <rosparam param="obstacles">
+      - {centre: [3.4,  1.1, 1.5], radius: 0.32}
+      - {centre: [5.9, -1.3, 1.4], radius: 0.38}
+      - {centre: [7.6,  1.4, 1.6], radius: 0.28}
+      - {centre: [9.8, -0.6, 1.5], radius: 0.35}
+    </rosparam>
+  </node>
+
+  <node if="$(arg echo_cmd)" name="cmd_echo" pkg="rostopic" type="rostopic"
+        args="echo /drone/cmd_vel" output="screen"/>
+</launch>

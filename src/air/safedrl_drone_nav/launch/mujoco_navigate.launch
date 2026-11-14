@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<!--
+  SafeDRL navigator on the course MuJoCo plant.
+
+  The bridge loads models/quadrotor_scene.xml, runs the rigid-body dynamics at
+  the MJCF timestep, closes a first-order velocity loop around the published
+  `/drone/cmd_vel`, and publishes odometry plus a horizontal LaserScan.  The
+  navigator uses that scan to build the CBF barriers, so the same policy and
+  the same safety filter run here and on AirSim.
+
+      roslaunch safedrl_drone_nav mujoco_navigate.launch
+      roslaunch safedrl_drone_nav mujoco_navigate.launch use_cbf:=false
+-->
+<launch>
+  <arg name="model_path"   default="$(find safedrl_drone_nav)/models/quadrotor_scene.xml"/>
+  <arg name="policy_path"  default="$(find safedrl_drone_nav)/checkpoints/best_model.zip"/>
+  <arg name="use_cbf"      default="true"/>
+  <arg name="control_rate" default="30.0"/>
+  <arg name="publish_scan" default="true"/>
+
+  <!-- ---------------- MuJoCo plant ---------------- -->
+  <node name="mujoco_bridge" pkg="safedrl_drone_nav"
+        type="mujoco_bridge_node.py" output="screen" required="true">
+    <param name="model_path"   value="$(arg model_path)"/>
+    <param name="control_rate" value="$(arg control_rate)"/>
+    <param name="publish_scan" value="$(arg publish_scan)"/>
+    <param name="n_rays"       value="72"/>
+    <param name="scan_range"   value="5.0"/>
+    <param name="tau_lag"      value="0.20"/>
+    <param name="odom_topic"   value="/drone/odom"/>
+    <param name="scan_topic"   value="/drone/scan"/>
+    <param name="cmd_vel_topic" value="/drone/cmd_vel"/>
+    <param name="start"        value="[0.0, 0.0, 1.5]"/>
+  </node>
+
+  <!-- ---------------- policy + CBF safety filter ---------------- -->
+  <node name="drl_navigator" pkg="safedrl_drone_nav"
+        type="drl_navigator_node.py" output="screen" required="true">
+    <param name="model_path"    value="$(arg policy_path)"/>
+    <param name="use_cbf"       value="$(arg use_cbf)"/>
+    <param name="scan_barriers" value="true"/>
+    <param name="control_rate"  value="$(arg control_rate)"/>
+    <param name="odom_topic"    value="/drone/odom"/>
+    <param name="scan_topic"    value="/drone/scan"/>
+    <param name="cmd_vel_topic" value="/drone/cmd_vel"/>
+    <param name="status_topic"  value="/drone/nav_status"/>
+    <param name="max_velocity"  value="2.6"/>
+    <param name="max_yaw_rate"  value="2.0"/>
+
+    <rosparam param="gates">
+      [3.8, 0.0, 1.50,
+       7.4, 1.55, 1.95,
+       11.0, -1.55, 1.15]
+    </rosparam>
+    <rosparam param="obstacles">
+      - {centre: [3.4,  1.1, 1.5], radius: 0.32}
+      - {centre: [5.9, -1.3, 1.4], radius: 0.38}
+      - {centre: [7.6,  1.4, 1.6], radius: 0.28}
+      - {centre: [9.8, -0.6, 1.5], radius: 0.35}
+    </rosparam>
+  </node>
+</launch>
