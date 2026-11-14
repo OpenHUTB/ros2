@@ -1,0 +1,2468 @@
+<!DOCTYPE html>
+
+<html class="writer-html5" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="../../img/favicon.ico" rel="shortcut icon"/>
+<title>无人机神经网络感知、导航与端到端控制 - 模拟器的 ROS 文档</title>
+<link href="../../css/theme.css" rel="stylesheet"/>
+<link href="../../css/theme_extra.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
+<link href="../../extra.css" rel="stylesheet"/>
+<script>
+        // Current page data
+        var mkdocs_page_name = "\u65e0\u4eba\u673a\u795e\u7ecf\u7f51\u7edc\u611f\u77e5\u3001\u5bfc\u822a\u4e0e\u7aef\u5230\u7aef\u63a7\u5236";
+        var mkdocs_page_input_path = "air/uav_nn_perception_navigation/index.md";
+        var mkdocs_page_url = null;
+      </script>
+<!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</head>
+<body class="wy-body-for-nav" role="document">
+<div class="wy-grid-for-nav">
+<nav class="wy-nav-side stickynav" data-toggle="wy-nav-shift">
+<div class="wy-side-scroll">
+<div class="wy-side-nav-search">
+<a class="icon icon-home" href="../.."> 模拟器的 ROS 文档
+        </a><div role="search">
+<form action="../../search.html" class="wy-form" id="rtd-search-form" method="get">
+<input aria-label="Search docs" name="q" placeholder="搜索文档" title="Type search term here" type="text"/>
+</form>
+</div>
+</div>
+<div aria-label="Navigation menu" class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation">
+<p class="caption"><span class="caption-text">入门</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../..">首页</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu_docs_setup/">Ubuntu 文档环境初始化</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu20.04/">安装 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap2/ros2_pubsub_py/">ROS2 话题发布订阅基础实验（talker/listener）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu2004-local-llm-deploy/">自装ubuntu20.04本地大模型部署教程</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap2/mean_filter/">ROS 2 传感器数据均值滤波节点 (mean_filter)</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap2/ros2_service_param_demo/">ROS2 服务与参数基础实验（uav_mode_node）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap2/ros2_qos_compatibility_lab/">ROS 2 QoS 兼容性检查实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap2/fibonacci_action/">ROS 2 Action 斐波那契数列计算示例</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">ROS 教程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap1/chap1/">1. 认识 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap1/turtlesim_teleop/">小海龟键盘遥控与 ROS 基础实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">2. ROS 基础 - ROS 基础</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap2/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chap2/ros1_message_time_sync/">ROS Noetic 多传感器话题时间同步</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chap2/ros1_parameter_sine_wave/">ROS Noetic 运行参数热更新（正弦信号）</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chap2/ros1_env_check/">ROS Noetic 环境自检与常见问题排查</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chap2/ros2_qos_demo/">ROS 2 QoS 服务质量：可靠性、历史深度与持久性</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap3/">3. 机器人系统设计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">4. 机器人仿真</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap4/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/urdf_car_modeling/">URDF 四轮小车建模与 RViz 显示</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal">5. 机器人感知</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap5/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chap5/fire_detect/">fire_detect 构建与 ament 资源索引</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../privacy_mask/">行人隐私脱敏视觉检测节点</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap5/lidar_obstacle_nn/">基于激光雷达扫描的神经网络障碍物分类</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap5/kalman_filter_tracking/">卡尔曼滤波：从带噪测距中估计位置与速度</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal">6. 机器人 SLAM 与自主导航</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap6/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap6/particle_filter_localization/">粒子滤波：一维蒙特卡洛定位（MCL）</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap7/">7. 机械臂控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">8. ROS 机器人综合应用</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap8/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../ant/">机器视觉多机器人蚁群编队</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/two_link_impedance_control/">二连杆机械臂笛卡尔阻抗力控</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/mujoco_two_dof_arm_square/">MuJoCo 双自由度机械臂画正方形</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/mujoco_arm_ik/">MuJoCo 二连杆机械臂 IK 画圆</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal">9. ROS 2</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap9/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap9/gazebo_camera_sim/">Gazebo 仿真相机与图像话题验证</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap9/rov_thruster_allocation_ls/">ROV 六自由度推力分配</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap9/uav_geofence_bypass/">无人机禁飞区膨胀绕行</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap9/uav_los_waypoint_guidance/">无人机 LOS 航点制导</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap9/pure_pursuit_reverse/">倒车纯追踪路径跟踪</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap9/lidar_intensity_traversability/">激光雷达回波强度辅助可通行性</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/turtlebot3_gazebo_control/">10. Turtlebot3 Gazebo键盘控制</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">人形机器人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_kws_command/">人形机器人离线语音指令控制：端到端关键词识别（KWS）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/embodied_humanoid_control/">具身人形物理仿真与平衡行走控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/joint_friction_identification/">关节 Stribeck 摩擦辨识与前馈补偿</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_basics/">人形机器人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_walk_nn/">人形机器人双足步行仿真、激光 SLAM 与神经网络导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_carry_payload_nn/">双臂搬运负载的神经网络平衡控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/bipedal_gait_zmp/">双足步态生成与 ZMP 稳定性</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/biped_cubic_spline_gait_switch/">基于三次样条插值的双足多步态平滑切换</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_keyboard_control/">人形机器人键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/joint_traj_retime/">关节轨迹重定时：约束饱和下的最快时间缩放</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/panda_keyboard_control/">键盘操控仿真机械臂</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/g1_rgb_floor_patrol/">G1 RGB 地面分割巡检</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/hand_eye_calibration/">机械臂手眼标定仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_push_recovery/">人形机器人平衡控制与外力抗扰恢复</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_ppo_locomotion/">人形机器人 PPO 神经网络平衡控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_lidar_nn_perception/">人形机器人 2D 激光雷达 CNN 感知与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/g1_rgb_velocity_patrol/">G1 图像速度巡检</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_local_planner_bench/">人形足迹下的局部避障算法对比</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_h1_walk/">人形机器人 H1/H1_2 神经网络行走控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/mujoco_hopper_demo/">MuJoCo单足弹跳机器人简单仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_joint_tools/">人形机器人关节轨迹录制与回放工具</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_stair_climb/">人形上下台阶步态仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/g1_gmapping_navigation/">G1 gmapping 室内建图导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/ros_topic_demo/">ROS虚拟机器人圆形轨迹rviz可视化示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../waypoint_publisher/">ROS2 Humble 路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/whole_body_ik/">人形机器人全身逆运动学与可操作性</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/g1_costnet_grid_planner/">G1 CostNet 栅格规划对照</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_reachability/">人形机器人双臂末端可达域分析</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_fall_protection/">人形机器人跌倒预判与保护性倒地</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_collision_boundary/">人形机器人 3D 碰撞体边界检测可视化</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/zmp_walk_planner/">简化双足步态动画演示</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_zmp_walking/">人形机器人轻量级 ZMP 步行控制基线</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_depth_pose_control/">人形机器人深度图姿态估计与平衡控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/joint_qos_latency_eval/">关节指令的 QoS 与时延影响评估</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_support_margin/">人形机器人支撑多边形与倾倒裕度核算</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_imu_attitude/">人形机器人 IMU 姿态解算：互补滤波与 Madgwick 对比</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_voice_command/">人形机器人离线语音指令控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_ars_phase_walk/">人形机器人神经网络行走控制：CPG 基线与学习路线可行性分析</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_newton_running/">人形机器人跑步牛顿第二定律理论计算与演示</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_g1_compliance/">人形机器人全身柔顺控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_mujoco_slam_nn_nav/">人形机器人 MuJoCo 建图导航与神经网络控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_stair_zmp_preview/">人形上下台阶步态仿真：ZMP 预瞄控制与台阶参数扫描</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/mujoco_hopper_slip_control/">MuJoCo单足弹跳机器人简单仿真：SLIP 模型与 Raibert 弹跳控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_passage_width_sweep/">人形足迹下的局部避障算法对比：MPPI 与斥力法的窄通道宽度扫描</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/cartpole_lqr/">倒立摆（Cart-Pole）的 LQR 最优平衡控制</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">四足机器人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../quadruped_mujoco_rl/">MuJoCo 四足机器人运动控制与步态评估</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">肌肉骨骼人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/msk_arm_nn/">肌肉骨骼人肌骨手臂仿真、工作空间建图与神经网络肌肉控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/mujoco_musculoskeletal_elbow_nn_control/">肌肉骨骼肘关节神经网络轨迹控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/msk_tendon_basics/">肌肉-肌腱串联弹性实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/muscle_synergy_lab/">肌肉协同降维与恢复质量评估</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/msk_human_walking_teleop/">MuJoCo肌肉骨骼人键盘遥操作行走踢腿蹲起</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/msk_hand_teleop/">MuJoCo肌肉骨骼灵巧手遥操作与NN控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/msk_arm_reach/">MuJoCo双关节肌肉骨骼手臂到达控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/msk_arm_proprioception/">MuJoCo肌肉骨骼手臂本体感觉与串联弹性肌腱</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/muscle_joint_control/">肌肉驱动的关节控制与 Hill 肌肉模型</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/muscle_fatigue/">肌肉疲劳建模：持续收缩下的肌力衰减与恢复</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/msk_gripper/">肌肉驱动的夹爪抓取</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/muscle_leg_gait/">肌肉驱动的下肢关节与步态</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/knee_tracking/">膝关节肌肉骨骼仿真与轨迹跟踪</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/msk_muscle_ident/">给定黑箱关节轨迹，反推肌肉参数</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/muscle_force_distribution/">肌肉冗余系统的力分配：最小范数与加权最小二乘</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">机械臂操作</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../manipulation/pi0_mujoco_grasp/">MuJoCo 单臂抓取与 π0 推理接口复现（CPU 演示）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../two_link_arm_opensim_simulation/">二连杆机械臂 OpenSim 建模与 PD 控制仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../muscle_arm_ros2_bridge/">ROS2 话题桥接（二连杆机械臂肌肉骨骼仿真）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../muscle_arm_mujoco_simulation/">二连杆机械臂肌肉骨骼建模与 MuJoCo 仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../muscle_arm_cocontraction_simulation/">拮抗共激活分析（二连杆机械臂肌肉骨骼仿真）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">地面载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/dubins_path/">Dubins 曲线轨迹生成与可视化</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/rrt_path_planning/">RRT 快速随机扩展树路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/bezier_trajectory/">Bezier 曲线轨迹生成与可视化</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/apf_path_planning/">人工势场法路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap1/turtle_waypoint_patrol/">小海龟多航点巡航与暂停恢复</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/offline_checks/">离线测试接入 GitHub Actions</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/encoder_quantization_velocity/">编码器量化误差与速度估计滤波对比</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/can_signal_decode/">CAN 报文信号解码与 CRC/计数器校验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/radar_ttc_fcw/">毫米波雷达目标跟踪与前碰撞预警</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ros_conda_env_guide/">ROS与Conda环境排错指南</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_nn_scan_matching/">基于 1D CNN 的激光雷达 SLAM</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ros2_pure_pursuit/">ROS2 差速机器人纯追踪路径跟踪与反应式避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">手动控制</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../set_up_and_connect_to_carla/">MathWorks 示例</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../control/carla_manual_control/">Windows + Ubuntu 20.04 实测</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/diff_drive_astar_odom_nav/">基于里程计反馈与 A* 算法的差速底盘静态全局路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/vio_time_offset_estimation/">视觉-惯性时间偏移互相关估计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/dyn_avoid_nn/">动态障碍物避让：激光雷达帧间差分与神经网络时机决策</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mnist_digit_control/">MNIST 手写数字视觉感知与机器人运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_spawn_objects/">生成对象</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/wall_clean_nn/">室内清扫车的沿墙清扫：激光雷达与神经网络贴墙跟随</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_keyboard_control/">地面载具物理仿真与键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_yolo_avoidance/">CARLA+YOLOv8 目标检测感知与减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ackermann_control/">阿克曼控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_lane_keeping/lane_detection/">车道线检测（前视视觉）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_lane_keeping/lane_keeping_control/">车道保持控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_perception_control/">传感器感知与给定轨迹跟踪（神经网络版）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/r2d2_cruise/">R2D2小车 自动巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_lane_following/">语义分割车道线巡游与 PID 横向控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/r2d2_waypoint_cruise/">R2D2小车 航点巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/waypoint/">路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_mapping_navigation/">激光雷达建图与神经网络规划导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_slam_nav_sync/">MuJoCo 差速车建图与导航同步仿真（EKF-SLAM + 神经网络局部规划）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_lidar_obstacle_detection/">激光雷达点云 3D 目标检测与召回率评估</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ad_agent/">自动驾驶代理</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_end_to_end_nn/">端到端神经网络图像驾驶</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_pilotnet_ros/">Carla PilotNet 端到端控制（离线仿真演示）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ad_demo/">自动驾驶示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/rostopic_cruise/">rostopic 手动驱动</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_benchmark_suite/">作业综合整合与性能评价</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ros_scenario_runner/">ROS Scenario Runner</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_traffic_light/">交通信号灯识别与响应</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/rviz_plugin/">RVIZ Carla 插件</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/fixed_point_stop/">定点停车</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/diff_drive_wall_following/">差速小车沿墙行驶</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/web_remote_car/">网页远程遥控小车</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_vehicle_aeb/">基于MuJoCo的AEB自动紧急制动仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_shooting/">打靶</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_traffic_sign_recognition/">交通标志识别（Windows 端脚本）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_parking_lot/">停车场场景生成</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/reverse_parking_planner_pytest/">reverse_parking_planner 离线回归测试（pytest）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/yolov8_target_tracking/">YOLOv8 视觉感知目标跟随</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ros2_ekf_localization/">ROS2 差速机器人 EKF 多传感器融合定位</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ros2_astar_planner/">ROS2 差速机器人栅格 A* 全局路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ros2_dwa_avoidance/">ROS2 差速机器人 A* 全局规划与 DWA 局部避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_tsr_ros/">交通标志识别 ROS 封装</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/vehicle_pygame_teleop/">车辆键盘遥操作与二维模拟</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_ttc_emergency_braking/">基于 TTC 的前向目标跟踪紧急制动</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ugv_cruise_pid/">地面车 PID 巡航速度跟踪仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_motor_sensor_recorder/">差速小车电机温度与电流观测记录</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../robot_tasks/teleop_control/">任务1 - 键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../robot_tasks/sensor_perception/">任务2 - 模拟传感器数据源</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../robot_tasks/navigation_slam/">任务3 - 导航与路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../robot_tasks/policy_learning/">任务4 - 端到端策略网络</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../robot_tasks/system_integration/">任务5 - 系统集成</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/pcl_recorder/">点云地图创建</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_lidar_pointcloud_segmentation/">激光雷达点云语义分割</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/turtlebot3_lidar_avoid/">TurtleBot3 激光雷达自主避障（ROS 2）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ros2_dynamic_obstacle_ttc/">ROS2 动态障碍跟踪与 TTC 预警</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mbot_lidar_avoid/">Mbot 雷达避障（ROS 1 Noetic）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/pix2cmd_end2end_driving/">端到端驾驶（图像到控制指令）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_diff_drive_slip_compensation/">MuJoCo 差速小车轮滑感知与轨迹补偿</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/drivetrain_torsion_state_feedback/">双惯量传动扭振状态反馈极点配置</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_diff_drive_go_to_goal/">MuJoCo 差速小车到达目标点（go-to-goal）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_obstacle_avoidance/">MuJoCo 差速小车射线绕行避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/diff_drive_maze/">MuJoCo 差速小车走迷宫</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_car_avoidance/">MuJoCo 地面小车射线感知与分级减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_car_nn_avoidance/">MuJoCo 地面小车神经网络端到端避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_balance_car/">MuJoCo 两轮自平衡小车</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_motor_thermal_model/">MuJoCo 差速小车电机温升模型</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_car_rollover_guard/">MuJoCo 地面差速小车侧倾/翻车风险预测与主动限速</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_motor_thermal_guard/">ROS 2 电机温度保护节点</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_car_drive_fault/">MuJoCo 地面差速小车单侧驱动失效检测与差速补偿</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_offroad_suspension/">MuJoCo 四轮独立悬架越野小车仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/car_2d_target_tracker/">2D 小车目标追踪仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/formation_keeping/">多车编队保持仿真（pygame 2D）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/motor_thermal_scenario_evaluator/">电机热场景对比评价</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_nn_car_following/">神经网络自适应跟车(ACC)</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/gazebo_diff_drive_teleop/">Gazebo 差速小车键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/rl_mujoco_locomotion/">MuJoCo Locomotion 强化学习对比实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_aeb_braking/">自动紧急制动（AEB）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/brake_load_transfer/">载重偏置下的制动距离与跑偏</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_bsd_blind_spot/">盲区监测（BSD）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_lane_departure_warning/">车道偏离预警（LDW）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_curve_speed_limit/">弯道自适应限速（CSL）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_red_light_warning/">闯红灯预警（RLW）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/weather_adaptive_perception_replay/">雨雾天气下自适应感知降级策略的静态帧复现</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/cruise_drag_energy_eval/">巡航风阻与能耗敏感性分析</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/intersection_conflict_timing_eval/">无信号路口冲突时序蒙特卡洛仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/tire_slip_adhesion_eval/">轮胎滑移率-附着特性与最佳制动滑移率仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/rl_algorithm_compare/">神经网络强化学习算法与网络结构对比（MuJoCo CartPole）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/steady_state_handling_eval/">车辆稳态操稳特性对比（不足/中性/过度转向）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_car_project/">基于Mujoco的键盘遥控小车</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/forklift_slam_nav/">MuJoCo 叉车同步建图与自主导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_forklift_pallet_docking/">MuJoCo 叉车相机引导的托盘接近与低速插入</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/lateral_control_benchmark/">地面载具横向控制算法对比（纯跟踪/Stanley/LQR）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_mppi_neural_tracker/">MPPI 采样 MPC 与蒸馏网络的 8 字赛道跟踪对比</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ros2_dwa_avoidance/">ROS2 差速机器人 A* 全局规划与 DWA 局部避障</a>
+</li>
+<li class="toctree-l1"><a class="" href="../../ground/ros2_dwa_benchmark.md">ROS2 DWA 局部规划器随机场景压力测试与舒适性评价</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ros2_dwa_gazebo/">ROS2 A*+DWA 的 Gazebo 三维验证</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/uwb_baseline_geometry_eval/">UWB 多基站测距定位布站几何精度对比评测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_motor_temperature_predictor/">电机温度时序预测与误差评估</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/turtlebot3_auto_nav/">TurtleBot3 自主导航与避障参数优化</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/turtlebot3_keyboard_teleop/">TurtleBot3 键盘遥控</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ros2_turtlebot3_obstacle/">ROS2 TurtleBot3 激光雷达避障实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ugv_visual_slam_nav/">视觉 SLAM 建图与自主导航（EKF-SLAM + 端到端对照）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/dvs_event_motion_tracking/">DVS 事件相机背景活动抑制与运动目标跟踪</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/diff_drive_odom_calib/">差速机器人里程计标定与神经网络滑移补偿</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/diff_drive_powertrain_sizing/">差速底盘驱动系统选型核算</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/imu_allan_noise_identification/">IMU 噪声 Allan 方差辨识与倾角滤波整定</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/imu_road_anomaly_detection/">基于 IMU 的路面异常检测（坑洼 / 减速带 / 粗糙路面）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/balance_bot/">两轮自平衡机器人（倾角PD + 神经网络策略克隆）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/vehicle_esc_stability/">车辆 ESC 电子稳定控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/hill_start_assist/">差速 AGV 坡道起步辅助（防溜车）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/cliff_brake/">悬崖边缘紧急制动仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mpc_path_tracking/">线性 MPC 路径跟踪与纯追踪对比</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/pid_auto_tuning/">航向 PID 参数自整定与手工试凑对比</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mag_hard_soft_iron_calibration/">磁力计硬磁/软磁标定与倾角补偿航向</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/control_discretization/">连续控制器离散化四种方法对比</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/lidar_autoencoder_repair/">基于 Autoencoder 的雷达数据修复与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_auto_light/">地面载具灯光自动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/traffic_sign_speed_control/">限速标志识别与神经网络限速控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_car_parking/">MuJoCo小车 倒车入库仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_parallel_parking/">MuJoCo侧方停车仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_dynamic_avoidance/">MuJoCo 动态障碍局部避障仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/trajectory_accuracy_eval/">轨迹/里程计精度评估（ATE/RPE）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/rtk_ambiguity_resolution/">RTK 双差整周模糊度固定（LAMBDA）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/lidar_mcl_localization/">基于 2D 激光雷达的蒙特卡洛定位（MCL）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_vehicle_dynamics_test/">地面载具动力性测试</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_multi_goal_nav/">MuJoCo小车多目标导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_traffic_light_stop/">MuJoCo 红绿灯启停小车仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_car_follow/">MuJoCo 小车跟车仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_slope_car/">MuJoCo 小车滑斜坡</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/train_ato_stop/">列车 ATO 自动运行与站台精确停车</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/train_consist_coupler/">多编组列车纵向动力学与车钩力</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ros2_path_smoothing/">ROS2 A* 全局路径平滑（Catmull-Rom）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_platoon/">多车协同编队（CARLA）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ros2_occupancy_mapping/">ROS2 2D 激光占据栅格建图</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/twist_to_control/">扭转控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/passive_walker/">无动力被动行走（轮辐式 Rimless Wheel）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/gap_nav_nn/">狭窄通道通行：激光雷达开口辨识与神经网络选口穿行</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_nn_perception_control_slam/">神经网络感知 / 控制 / SLAM 四任务仿真（CARLA）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_sensor_fusion/">多传感器融合跟踪（LiDAR+Radar+Camera+IMU）2D 合成仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/lidar_camera_calibration/">相机-激光雷达外参标定</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/camera_imu_time_calibration/">相机-IMU 时间同步标定</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_visual_lane_departure_warning/">前视相机车道偏离预警（视觉横向偏移与地图真值对照）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ultrasonic_rear_alert/">倒车雷达分级告警</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/lane_change_feasibility/">换道可行性判定</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/odom_trace_recorder/">里程计轨迹记录</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/steering_actuator_lag/">转向执行器滞后</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/braking_distance_check/">刹车距离核算</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/semi_active_suspension/">半主动悬架车身姿态控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/gear_shift_policy/">换挡策略与闭环控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/trailer_kinematics/">牵引车挂车折刀判定</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/speed_profile_check/">速度曲线规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/turning_sweep_check/">转弯扫掠校验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/vehicle_gradeability_check/">爬坡能力与牵引力余量核算</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/vehicle_wading_check/">涉水深度与浮力裕度核算</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/trailer_jackknife_guard/">半挂车折叠风险与倒车限速保护</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/passability_check/">车辆几何通过性核算（接近角/离去角/纵向通过角）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/turtlebot3_relocalization/">高精度定位与重定位（AMCL 式粒子滤波）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/cmd_vel_guard/">速度指令安全监督</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/diff_drive_corridor_centering/">差速小车双侧墙通道居中 PD 巡航仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/line_follower_car/">巡线小车仿真（色带中线 PD 跟踪）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/narrow_giveway_passing/">窄道会车让行仿真（避让龛规则）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/vru_conflict_risk_map/">VRU 冲突风险图</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/odom_health_monitor/">里程计健康监视</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/wheel_speed_observer/">轮速传感器 + 龙伯格观测器估计传动轴扭角</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/tire_slip_curve/">轮胎滑移率-附着曲线</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/rollover_margin/">横向载荷转移与侧翻裕度</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/drive_cycle_energy/">工况能耗与续航核算</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ride_comfort_transmissibility/">乘坐舒适性传递率</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/lateral_stability_margin/">不足转向梯度与侧向稳定裕度</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/torque_vectoring_yaw_control/">四轮独立驱动扭矩矢量横摆控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ros2_stuck_recovery/">ROS2 差速机器人卡死检测与自动脱困</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/heartbeat_watchdog/">上游心跳看门狗</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_ground_slam_nn_nav/">MuJoCo 地面无人车 SLAM 建图导航与神经网络控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ground_slope_estimation/">地面坡度估计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/estop_latch/">急停闩锁与人工复位</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/road_numpy_nn_slam/">城市道路地面载具二维动力学、激光 SLAM 与神经网络导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/idm_car_following/">智能驾驶员模型（IDM）跟车与车队减速波仿真</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">空域载具</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="perception/">AirSim 无人机激光雷达感知与扫描校正</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_yaw_frame_validation/">无人机航向坐标变换与往返误差验证</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_range_denoising_mlp/">无人机测距序列轻量 MLP 去噪</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_box_geofence_guard/">无人机空间围栏与速度门控</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_uav_rooftop_pv_coverage_survey/">MuJoCo 城市屋顶光伏覆盖率测量</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_uav_rooftop_pv_coverage_survey_day2/">MuJoCo 屋顶光伏覆盖率测量第二天</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../winter_circle/">winter 场景无人机圆周飞行</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../airsim_rl_planner_ros1/">AirSim ROS 1 Noetic PPO 联调</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_drone_distance_stop/">无人机制动旧入口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_uav_range_neural_braking/">无人机测距制动与神经控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_uav_braking_metrics/">无人机测距制动轨迹指标分析</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_uav_range_sensor_quality/">无人机测距几何一致性检查</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../town10_facade_cruise_capture/">Town10立面自主巡航与图像采集</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../drone_lawnmower_survey/">AirSim 无人机弓字形区域勘测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_powerline_inspection/">无人机输电线路双侧巡检航线预览</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../powerline_mission_preflight/">输电线路无人机巡检任务预检</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../town10_facade_defect_detection/">Town10幕墙图像病害识别</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../airsim_obstacle_avoidance/">AirSim Unity 无人机曲线绕柱避障实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../airsim_height_aware_overfly/">AirSim Unity 无人机高度自适应越障实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../airsim_double_pillar_avoidance/">AirSim Unity 无人机双柱连续 S 形绕行实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_facade_capture/">MuJoCo无人机幕墙定距扫描</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">无人机任务管理与安全状态机</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../uav_mission_safety_manager/overview/">模块概览</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../uav_mission_safety_manager/usage/">构建与运行</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../uav_mission_safety_manager/mission_action/">ROS 2 Action 任务接口</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../uav_mission_safety_manager/mission_recording/">任务日志与离线统计</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../uav_mission_safety_manager/airsim_validation/">AirSim 实测记录</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../landing_assessment/">无人机着陆阶段识别与接地载荷预测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../air_ground_detection_benchmark/">高度与倾角检测评估</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../fixed_wing_sitl_preflight/">Fixed-wing SITL preflight</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../payload_mass_estimation/">无人机载荷质量估计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_payload_balance_guard/">无人机载荷重心偏移与配平监测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../airlib_message_regression/">AirLib 传感器消息回归</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_gps_integrity_guard/">无人机 GPS 欺骗与定位完整性监测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_energy_budget/">UAV mission energy budget</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../airsim_multirotor_waypoint_nav/">AirSim 多旋翼航点飞行与到达误差评估</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_battery_health_guard/">无人机电芯健康与不平衡预警</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_motor_thrust_imbalance_monitor/">电机推力不对称监测与紧急降落触发</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../flight_pattern_recognition/">无人机飞行轨迹类型识别与 ROS2 自动任务日志</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_yaw_stabilize/">无人机航向角 PD 稳定控制与阶跃转向仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_depth_gate_racing_e2e/">深度图端到端穿越门竞速</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_neural_perception/">前视 CNN 行为克隆视觉导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_mujoco_depth_avoidance/">无人机深度相机神经网络避障（MuJoCo）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_grid_navigation/">MuJoCo 无人机栅格激光建图与路径重规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../telemetry_diagnostics/">无人机遥测异常检测与 ROS2 在线诊断</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../telemetry_imputation/">无人机遥测缺失重建</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_weather_risk/">低空多源气象扰动影响预测与风险分级</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../fire_detection_drone/">无人机火灾探测与自主巡检</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../airsim_client_setup/">配置 AirSim 客户端环境并连接模拟器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_altitude_command_guard/">无人机目标高度限幅、变化率约束与超时保持</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_gnss_integrity_monitor/">无人机 GNSS 定位完整性监测与位置跳变失效保护</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_yaw_command_guard/">无人机偏航指令最短路径与角速度限幅</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_cg_trim_envelope/">多旋翼重心偏移配平与饱和包线核算</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_lidar_dqn_navigation/">无人机雷达DQN建图与端到端控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_lidar_dqn_navigation/policy_eval/">DQN 策略离线评估</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ros_pkgs/">空域模拟器的 ROS 封装器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carlair_ros_bridge/">无人机与 ROS 的桥接模块</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_payload_cg_envelope/">无人机载荷重心包线检查</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../airsim_ros2_bringup/">AirSim ROS 2 Humble 最小桥接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../airsim_ros2_gnss/">AirSim ROS 2 Humble GNSS 桥接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../airsim_ros2_magnetometer/">AirSim ROS 2 Humble 磁力计桥接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../airsim_ros2_barometer/">AirSim ROS 2 Humble 气压计桥接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_lidar_ground_filter/">无人机 LiDAR 地面/障碍分割</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_lidar_safety_corridor/">无人机激光雷达三维安全走廊与自适应高度避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_minimum_jerk_tracking/">无人机最小加加速度轨迹生成与跟踪</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_wind_estimation/">无人机空速/地速三角估风与可观测性</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_gimbal_stabilization/">无人机相机云台两轴稳定控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_prop_tip_mach/">旋翼桨尖马赫数与桨盘载荷</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_altitude_sensor_fusion/">无人机 IMU 与气压高度融合</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_l1_altitude_stabilization/">无人机 L1 自适应高度控制仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../rooftop_landing/">无人机屋顶降落</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../rooftop_landing_nn/">无人机屋顶降落（学习型落点选择）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_landing_monitor/">无人机降落过程监控（指令-运动一致性）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_moving_platform_landing/">移动平台（车/船）精准降落</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_keyboard_control/">无人机键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_takeoff_hover_land/">无人机起飞—悬停—降落状态机</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_airsim_keyboard/">无人机 AirSim 键盘遥控（ROS 2 Humble）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_bc_bench/">无人机行为克隆模型对比基准（网络结构与数据增强）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_slam_nav/">无人机 SLAM 建图与导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_depth_mapping_nav/">无人机深度相机建图与自主导航（深度反投影 + A* + 纯追踪）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_vertical_ppo/">MuJoCo 四旋翼垂直通道 PPO 定高与抗扰控制</a>
+</li>
+<li class="toctree-l1 current"><a class="reference internal current" href="#">无人机神经网络感知、导航与端到端控制</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="#1">1. 系统架构</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#11">1.1 数据流</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#12">1.2 节点与话题</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#13">1.3 坐标系约定</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#2">2. 环境配置</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#21">2.1 版本要求</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#22">2.2 安装步骤</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#23-airsim">2.3 AirSim 配置</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#24">2.4 跨机通信</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#25">2.5 编译与启动</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#3">3. 任务一：键盘遥控</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#31">3.1 控制链路</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#32">3.2 两个关键实现细节</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#33">3.3 实测数据</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#4">4. 任务二：激光雷达感知与神经网络控制</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#41">4.1 感知：点云到特征向量</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#42-mlp">4.2 控制：三层 MLP</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#43">4.3 训练：模仿学习</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#44">4.4 训练结果</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#45">4.5 在线飞行实测</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#46">4.6 模型有效性验证</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#47">4.7 安全兜底</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#48">4.8 多场景闭环验证</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#49">4.9 网络与专家策略的偏差</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#5-slam">5. 任务三：SLAM 建图与导航同步</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#51">5.1 坐标系链</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#52">5.2 扫描来源：深度相机反投影</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#53">5.3 导航与建图同步</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#54">5.4 建图结果</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#6">6. 任务四：端到端视觉控制</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#61">6.1 网络结构</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#62">6.2 训练数据</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#63">6.3 在线飞行实测</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#7">7. 性能评价</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#71">7.1 四项任务汇总</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#72">7.2 多场景测试</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#8">8. 常见问题</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#81-retry-connection-over-the-limit">8.1 连接失败 Retry connection over the limit</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#82-settingsjson">8.2 修改 settings.json 不生效</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#83">8.3 速度指令无效，无人机不动</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#84-gmapping">8.4 gmapping 丢弃全部扫描</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#85-c-libutilsso-cannot-open-shared-object-file">8.5 C++ 节点报 libutils.so: cannot open shared object file</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#86-gmapping">8.6 gmapping 不订阅指定话题</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#9">9. 源代码解析</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#91-airsim_bridgepy">9.1 桥接节点 airsim_bridge.py</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#92-uav_featurespy">9.2 特征提取 uav_features.py</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#93-trajectory_controlpy">9.3 控制节点 trajectory_control.py</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#94-train_controlpy">9.4 训练脚本 train_control.py</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#95-lidar_perceptionpy">9.5 感知节点 lidar_perception.py</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#96-camera_perceptionpy-end2end_nodepy">9.6 端到端 camera_perception.py 与 end2end_node.py</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#97-mainpy">9.7 统一入口 main.py</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#98-slamlaunch">9.8 建图启动 slam.launch</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#10">10. 目录结构</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_2">声明</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_ppo_nav/">基于 PPO 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_ppo_nav_local_test/">uav_ppo_nav 本地测试（pytest）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_hover_log_eval/">无人机定高日志误差与抗扰恢复时间评估</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_ppo_nav_node_test/">uav_ppo_nav 部署节点本地测试</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_hover_throttle/">四旋翼悬停油门求解（推力曲线/海拔/电压）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../drl_drone_path_planning/">基于深度强化学习的无人机最优路径查找</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_rl_benchmark/">强化学习对比实验（PPO/SAC/TD3）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_neural_residual_control/">神经残差动力学与学习式轨迹跟踪</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_terrain_follow_agl/">低空地形跟随：恒定离地高度保持与 DEM 前馈</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_route_cruise/">基于 PPO 的无人机固定路线巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_dqn_nav/">基于 DQN 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_traffic_nav/">城市动态交通下的无人机避障（PPO + DAgger）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_experiments/">无人机ppo模块研究</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../drone_teleop/">无人机终端键盘遥控器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_emergency_drop/">应急物资投送点选择与投放时机决策</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../airsim_drone_gimbal_teleop/">AirSim无人机键盘遥控与机载云台控制模块</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../flight_path_simulator/">预设航线飞行模拟器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_gimbal_reacquisition/">无人机机载云台目标丢失重捕获与视轴误差评估</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_perception_confidence_guard/">无人机视觉感知置信度退化保护</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_emergency_landing_selector/">无人机应急着陆点安全评估</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_fault_emergency_landing/">无人机桨故障后的自主迫降（建图+神经评分+制导）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../state_prediction/">基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_abandoned_park_uav_visual_steering/">MuJoCo 失落公园无人机端到端视觉转向</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_link_outage_guard/">无人机通信链路退化保护与断联风险预测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_ekf_state_estimation/">无人机 EKF 状态估计（IMU/GPS/气压计融合）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_mujoco_sim/">MuJoCo 四旋翼仿真与 ROS2 桥接底座</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_rotor_failure_env/">多旋翼单桨失效后的悬停可行域</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_actuator_fault_sim/">无人机执行器故障注入与控制退化观测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_slung_load/">四旋翼吊挂负载防摆控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_rotor_fault_detector_nn/">无人机桨故障健康度估计（1D-CNN+GRU）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_fault_e2e_thrust_policy/">桨故障下的端到端推力策略（深度图+健康度）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_neural_fault_tolerant_control/">无人机桨故障下的神经容错控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_wind_aware_delivery/">四旋翼风扰下物资精准空投（MuJoCo）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_formation_flight/">无人机编队飞行</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_moving_target_follow/">移动地面目标的后方等距跟随</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_neural_safety_filter/">神经安全过滤器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_control_authority_guard/">无人机控制权限饱和与积分饱和监测</a>
+</li>
+<li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../gesture_control_drone/">手势控制无人机</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ap_cpp_overfomo/">AP-CPP 主动感知覆盖路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../rflysim_sitl_first_flight/">RflySim 单机起飞（补充实验）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../px4_mavros2_offboard/">PX4 SITL + MAVROS2 Offboard 起降与失效保护</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../survey_mission_planner/">无人机航测任务规划（GSD/重叠度/WPML）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_waypoint_preflight_validator/">无人机航点任务飞行前校验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../waypoint_tracking/">无人机航点轨迹跟踪（PID 控制）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../quad_cascade_pid_hover_wind/">基于串级PID的四旋翼航点定点悬停与抗风扰仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../quad_cascade_pid_hover_wind/">基于串级PID的四旋翼航点定点悬停与抗风扰仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_neural_vio_slam/">神经视觉惯性里程计与三后端 SLAM 对比</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">空域载具八叉树三维寻路</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../octree_uav_3d_pathfinding/overview/">背景与总体方案</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../octree_uav_3d_pathfinding/env_setup/">环境配置与前置准备</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../octree_uav_3d_pathfinding/flight_control/">AirSim 载具与位置控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../octree_uav_3d_pathfinding/occupancy_mapping/">点云转八叉树占用地图</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../octree_uav_3d_pathfinding/astar_planning/">八叉树上的 A* 全局寻路</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../octree_uav_3d_pathfinding/path_smoothing/">安全裕度与路径平滑</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../octree_uav_3d_pathfinding/path_following/">路径跟踪与闭环飞行</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../octree_uav_3d_pathfinding/ros2_nav2/">与 ROS 2 / Nav2 的对应关系</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal">YOLO 感知与无人机控制</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../openhutb_yolo_mlp_control/yolo_trajectory_control/">YOLO 感知与八字轨迹控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../openhutb_yolo_mlp_control/yolo_visual_centering/">YOLO 目标视觉伺服：居中与距离保持</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../openhutb_yolo_mlp_control/traffic_tracking/">Traffic Manager 车辆轨迹与 AirSim 跟随</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_spiral_search/spiral_search/">基于阿基米德螺旋的无人机自主搜索与目标定位</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../no_fly_zone_check/">禁飞区检测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../multi_uav_airspace_monitor/">多无人机空域监测（多边形禁飞区与机间冲突）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_dynamic_geofence_guard/">无人机动态电子围栏预测预警</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../allocnet_teleop/">AllocNet 四旋翼避障规划与键盘遥操作</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_vertiport_queue/">低空起降场进离场排队与容量评估</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_semantic_mapping_nav/">语义分割建图与语义路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../drone_trajectory_logger/">状态识别与轨迹绘制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_camera_tracking/">无人机机载相机视觉目标跟踪</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_warehouse_uav_collision_braking/">仓储通道测距与分级制动</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_vision_nn/">无人机视觉端到端控制（CNN 行为克隆）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../geofence/">基于 ROS 2 的禁飞区（电子围栏）动态检测与安全预警系统</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_depth_track_nn/">无人机深度相机轨迹跟踪（CNN 行为克隆）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../px4_ros2_opencv_tracking/">PX4+ROS2+OpenCV 视觉目标追踪</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">基于神经网络的无人机感知—规划—控制避障</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../neural_ca_drone_submission/docs/">首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../neural_ca_drone_submission/docs/overview/">任务与方案</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../neural_ca_drone_submission/docs/architecture/">系统架构</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../neural_ca_drone_submission/docs/quickstart/">快速开始</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../neural_ca_drone_submission/docs/install/">安装与依赖</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../neural_ca_drone_submission/docs/simulator/">仿真器 CA-Sim</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../neural_ca_drone_submission/docs/scenes/">四个实验场景</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../neural_ca_drone_submission/docs/perception/">模块一 感知（深度图 → 占用栅格）</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../neural_ca_drone_submission/docs/planning/">模块二 规划（神经启发式 A*）</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../neural_ca_drone_submission/docs/control/">模块三 控制（模仿学习）</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../neural_ca_drone_submission/docs/e2e/">模块四 端到端（深度图 → 速度）</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../neural_ca_drone_submission/docs/protocol/">实验协议</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../neural_ca_drone_submission/docs/results/">实验与结果</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../neural_ca_drone_submission/docs/gifs/">演示动图与录制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../neural_ca_drone_submission/docs/ros1/">ROS 1 部署</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../neural_ca_drone_submission/docs/ros2/">ROS 2 部署</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../neural_ca_drone_submission/docs/vm/">真实环境验证（Ubuntu 虚拟机）</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../neural_ca_drone_submission/docs/gazebo/">Gazebo 接入说明</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../neural_ca_drone_submission/docs/reproduce/">复现全部结果</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../neural_ca_drone_submission/docs/repo/">工程组织与提交规范</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../neural_ca_drone_submission/docs/faq/">常见问题</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_airsim_wind_rejection/">AirSim 无人机抗风扰补偿（MLP）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_uav_moving_pad_landing/">MuJoCo 无人机移动平台着陆</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_airsim_depth_obstacle_avoidance/">AirSim 无人机深度避障（CNN 端到端控制）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../drone_charging_nest/">无人机自主充电/机巢仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_airsim_imu_velocity_estimator/">AirSim 无人机 IMU 速度估计（MLP）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_tiltrotor_transition_corridor/">倾转旋翼过渡走廊与倾转角调度</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_airsim_attitude_estimator/">AirSim 无人机 IMU 姿态估计（MLP）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../aerial_mujoco_slam_nn_nav/">四旋翼无人机 MuJoCo 建图导航与神经网络控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../quad_eso_hover/">四旋翼高度 PD + 扩张状态观测器（ESO/ADRC）抗扰控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_numpy_nn_slam/">四旋翼无人机物理仿真、激光 SLAM 与禁飞区规避</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">水域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../water/HoloOcean/">水域载具 ROS2 接口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/usv_docking_nn/">无人艇自主靠泊：激光雷达与神经网络末段对准</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">环境搭建</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../water/HoloOcean-Windows-Setup/">HoloOcean Windows 本机环境搭建</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/docker/">Docker 开发环境</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/docker_runtime/">HoloOcean ROS2 运行时容器</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/holoocean_examples/">水域载具示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/usv_colregs_avoidance/">USV 会遇局面判定与 COLREGs 避让</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_gazebo_sim/">水下ROV仿真键盘控制与摄像头目标追踪</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_physical_simulation/">水下机器人物理仿真与 6-DOF 键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_handling_eval/">水下 ROV 六自由度手操与抗流能力评测仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_ballast_trim/">ROV 浮力-压载配平与初稳性核算</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_depth_hold/">ROV 深度保持 PID 控制与扰动恢复仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_thruster_allocation/">ROV 推进器配置矩阵与饱和感知推力分配</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_thruster_allocation_ros1/">ROV 六推进器推力分配（ROS 1/catkin）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_trajectory_tracking/">水下多传感器感知与 3D 轨迹跟踪控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_sonar_slam_navigation/">水下声呐 SLAM 占据栅格建图与自主避障导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mujoco_rov_depth_control/">MuJoCo 水下 ROV 串级定深控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_end_to_end_nn/">水下机器人端到端深度神经网络视觉控制模型</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mjc_rov_docking_nav/">水下 ROV 对接任务：声呐扫描 + CNN 标记检测 + 逼近导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_apriltag_cruise/">水下 ROV AprilTag 视觉定位与定点巡航仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_wreck_inspection/">水下 ROV 视觉引导的沉船结构巡检采样仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mjc_rov_ppo_tracking/">手写 PPO 强化学习 ROV 轨迹跟踪与 PID 基线对比</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mjc_rov_sonar_cnn/">侧扫声呐图像仿真与 CNN 海底目标分类</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mjc_rov_current_teleop/">动态洋流 ROV 键盘遥操与 MLP 巡航控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_gazebo_sonar_cnn/">水下 ROV 声呐图像 CNN 目标分类（Gazebo 训练链路）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mjc_rov_rl_compare/">同一 ROV 任务 PPO 与 SAC 强化学习算法对比</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/underwater_sonar_mapping/">水下声呐三维测深与 VFH 反应式避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/auv_end2end/">水下 AUV 矩形巡航与视觉双向避障仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_ekf_navigation/">水下多源融合组合导航 (EKF)</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/water_rov_path_planning/">基于热力图的洋流干扰下 ROV 自适应路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/UNav-sim_ue5/">水下机器人 Unreal Engine 5 仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/water_vision_enhancement/">浑浊水体视觉增强与目标追踪（合成视频演示）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_pipeline_follow/">水下 ROV 海底管道往返巡检（视觉感知 + EKF-SLAM + 端到端）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/usv_mujoco_nn/">水面无人艇：激光雷达建图与神经网络局部规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/usv_froude_scaling/">USV 弗劳德缩比换算与拖曳功率估算</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/usv_colreg_avoidance/">水面无人艇 COLREG 会遇避碰</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_sonar_filter/">声呐数据滤波初步验证</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_numpy_nn_slam/">水下机器人 MuJoCo 仿真、声呐 SLAM 与纯 NumPy 神经网络导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_mujoco_slam_nn_nav/">ROV 水下机器人 MuJoCo 建图导航与神经网络控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/dave_underwater_sim/">DAVE 水下机器人仿真环境搭建与 REXROV/Oberon7 机械臂作业演示</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/ros2_usv_station_keeping/">欠驱动无人艇低速定点保持与横漂补偿</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/multi_agent_hunting/">多 AUV 协同围捕</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/usv_los_guidance/">水面无人艇（USV）视线（LOS）路径跟踪制导</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">路径规划与跟踪</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../motion_planning/rrt_path_planning/">RRT 采样式二维路径规划与平滑</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../motion_planning/trapezoidal_profile/">梯形与 S 曲线速度规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../motion_planning/stanley_tracking/">Stanley 前视路径跟踪（含曲率前馈）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">经典控制</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../classical_control/cartpole_balance/">倒立摆平衡小车 (cart-pole, LQR)</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../classical_control/cartpole_swingup/">倒立摆能量摆起与 LQR 平衡</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../classical_control/sliding_mode_control/">滑模控制（SMC）：二阶系统的鲁棒轨迹跟踪</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">反应式导航与覆盖</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../reactive_navigation/potential_field_avoidance/">人工势场（APF）：梯度下降式避障与局部极小逃逸</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../reactive_navigation/bug2_navigation/">Bug2 导航：不建图的完备导航与确定性不可达判据</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../reactive_navigation/boustrophedon_coverage/">牛耕式全覆盖：扫遍整个房间的最简方案</a>
+</li>
+</ul>
+</div>
+</div>
+</nav>
+<section class="wy-nav-content-wrap" data-toggle="wy-nav-shift">
+<nav aria-label="Mobile navigation menu" class="wy-nav-top" role="navigation">
+<i class="fa fa-bars" data-toggle="wy-nav-top"></i>
+<a href="../..">模拟器的 ROS 文档</a>
+</nav>
+<div class="wy-nav-content">
+<div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
+<ul class="wy-breadcrumbs">
+<li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
+<li class="breadcrumb-item">空域载具</li>
+<li class="breadcrumb-item active">无人机神经网络感知、导航与端到端控制</li>
+<li class="wy-breadcrumbs-aside">
+<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/air/uav_nn_perception_navigation/index.md"> 编辑页面</a>
+</li>
+</ul>
+<hr/>
+</div>
+<div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
+<div class="section" itemprop="articleBody">
+<div><h1 id="_1">基于神经网络的无人机感知、导航与端到端控制</h1>
+<p>本文实现了一个运行在 AirSim + ROS Noetic 上的无人机系统，覆盖四项任务：</p>
+<ol>
+<li><strong>键盘遥控</strong>：通过速度指令控制无人机六个自由度</li>
+<li><strong>传感器感知与运动控制</strong>：激光雷达点云经神经网络输出速度指令</li>
+<li><strong>建图与导航同步</strong>：gmapping 边飞边建图，神经网络同时导航</li>
+<li><strong>端到端视觉控制</strong>：摄像头图像直接进卷积网络，输出控制指令</li>
+</ol>
+<p>四项功能共用同一套 AirSim 桥接节点，模块名 <code>uav_nn_perception_navigation</code>。</p>
+<p><img alt="键盘遥控" src="../../img/air/uav_nn_perception_navigation/gif1_teleop.gif"/></p>
+<hr/>
+<h2 id="1">1. 系统架构</h2>
+<h3 id="11">1.1 数据流</h3>
+<div class="highlight"><pre><span></span><code>                    ┌──────────────────────────────┐
+                    │   AirSim 1.8.1 (Blocks 场景)  │
+                    │   Windows 主机 172.25.176.1   │
+                    └──────────────┬───────────────┘
+                                   │ msgpack-rpc :41451
+                    ┌──────────────┴───────────────┐
+                    │      airsim_bridge.py        │
+                    │  订阅 /uav/cmd_vel           │
+                    │  发布 /uav/odom、/tf         │
+                    └──────────────┬───────────────┘
+                                   │ ROS 话题
+        ┌──────────────────────────┼──────────────────────────┐
+        │                          │                          │
+  lidar_perception          trajectory_control          camera_perception
+  （16 维特征）              （MLP 策略）                （图像话题）
+        │                          │                          │
+        └──────────► /uav/cmd_vel ◄┘                          │
+                                   │                          │
+                            end2end_node  ◄───────────────────┘
+                            （CNN 策略）
+</code></pre></div>
+<h3 id="12">1.2 节点与话题</h3>
+<table>
+<thead>
+<tr>
+<th>节点</th>
+<th>订阅</th>
+<th>发布</th>
+<th>对应任务</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>airsim_bridge.py</code></td>
+<td><code>/uav/cmd_vel</code></td>
+<td><code>/uav/odom</code>、<code>/tf</code></td>
+<td>全部</td>
+</tr>
+<tr>
+<td><code>keyboard_teleop.py</code></td>
+<td>标准输入</td>
+<td><code>/uav/cmd_vel</code></td>
+<td>任务 1</td>
+</tr>
+<tr>
+<td><code>lidar_perception.py</code></td>
+<td>—</td>
+<td><code>/uav/lidar/scan</code>、<code>/uav/lidar/features</code></td>
+<td>任务 2、3</td>
+</tr>
+<tr>
+<td><code>trajectory_control.py</code></td>
+<td><code>/uav/odom</code>、<code>/uav/lidar/features</code>、<code>/uav/goal</code></td>
+<td><code>/uav/cmd_vel</code></td>
+<td>任务 2、3</td>
+</tr>
+<tr>
+<td><code>safety_shield.py</code></td>
+<td>—（被控制节点 import）</td>
+<td>—</td>
+<td>任务 2、3、4</td>
+</tr>
+<tr>
+<td><code>eval_multi_target.py</code></td>
+<td>—（离线评估脚本）</td>
+<td>—</td>
+<td>任务 2</td>
+</tr>
+<tr>
+<td><code>camera_perception.py</code></td>
+<td>—</td>
+<td><code>/uav/image_raw</code>、<code>/uav/depth</code></td>
+<td>任务 4</td>
+</tr>
+<tr>
+<td><code>end2end_node.py</code></td>
+<td><code>/uav/image_raw</code>、<code>/uav/odom</code></td>
+<td><code>/uav/cmd_vel</code></td>
+<td>任务 4</td>
+</tr>
+</tbody>
+</table>
+<h3 id="13">1.3 坐标系约定</h3>
+<p>AirSim 使用 NED（北-东-地），ROS 使用 ENU（东-北-天）。两者转换关系为：</p>
+<p>
+<script type="math/tex; mode=display">
+x_{\text{ENU}} = y_{\text{NED}}, \quad y_{\text{ENU}} = x_{\text{NED}}, \quad z_{\text{ENU}} = -z_{\text{NED}}
+</script>
+</p>
+<p>偏航角转换：</p>
+<p>
+<script type="math/tex; mode=display">
+\psi_{\text{ENU}} = \frac{\pi}{2} - \psi_{\text{NED}}
+</script>
+</p>
+<p>桥接节点在 <code>publish_odom()</code> 中完成这一步，对外统一发布 ENU 坐标。</p>
+<hr/>
+<h2 id="2">2. 环境配置</h2>
+<h3 id="21">2.1 版本要求</h3>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>版本</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>仿真器</td>
+<td>AirSim 1.8.1（Blocks 预编译环境）</td>
+</tr>
+<tr>
+<td>操作系统</td>
+<td>Ubuntu 20.04（WSL2 亦可）</td>
+</tr>
+<tr>
+<td>ROS</td>
+<td>Noetic</td>
+</tr>
+<tr>
+<td>Python</td>
+<td>3.8</td>
+</tr>
+<tr>
+<td>PyTorch</td>
+<td>1.13（CPU 版即可）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="22">2.2 安装步骤</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 1. ROS 依赖</span>
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>ros-noetic-gmapping<span class="w"> </span>ros-noetic-nav-msgs<span class="w"> </span><span class="se">\</span>
+<span class="w">                 </span>ros-noetic-tf2-ros<span class="w"> </span>ros-noetic-map-server
+
+<span class="c1"># 2. Python 依赖</span>
+pip3<span class="w"> </span>install<span class="w"> </span>torch<span class="w"> </span>msgpack-rpc-python<span class="w"> </span>numpy
+
+<span class="c1"># 3. AirSim 客户端（PyPI 上的 airsim 包在部分 Python 版本下构建失败，</span>
+<span class="c1">#    直接使用官方仓库的 PythonClient 源码更可靠）</span>
+git<span class="w"> </span>clone<span class="w"> </span>--depth<span class="w"> </span><span class="m">1</span><span class="w"> </span>https://github.com/microsoft/AirSim.git
+<span class="nb">export</span><span class="w"> </span><span class="nv">AIRSIM_PYTHON_CLIENT</span><span class="o">=</span><span class="nv">$PWD</span>/AirSim/PythonClient
+</code></pre></div>
+<h3 id="23-airsim">2.3 AirSim 配置</h3>
+<p>把 <code>config/settings.json</code> 放到 <strong><code>Blocks.exe</code> 同目录</strong>。</p>
+<blockquote>
+<p>⚠️ 如果系统用户名包含中文，AirSim 无法正确解析
+<code>C:\Users\用户名\Documents\AirSim\</code>，会把配置覆盖回默认值。
+必须使用可执行文件同目录的方案。</p>
+</blockquote>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"SimMode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Multirotor"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"Vehicles"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"Drone_1"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"VehicleType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"SimpleFlight"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"X"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nt">"Y"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nt">"Z"</span><span class="p">:</span><span class="w"> </span><span class="mi">-3</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"Sensors"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">"lidar_1"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="nt">"SensorType"</span><span class="p">:</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="nt">"Enabled"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">"Range"</span><span class="p">:</span><span class="w"> </span><span class="mi">40</span><span class="p">,</span><span class="w"> </span><span class="nt">"NumberOfChannels"</span><span class="p">:</span><span class="w"> </span><span class="mi">16</span><span class="p">,</span><span class="w"> </span><span class="nt">"PointsPerSecond"</span><span class="p">:</span><span class="w"> </span><span class="mi">60000</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">"RotationsPerSecond"</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">"HorizontalFOVStart"</span><span class="p">:</span><span class="w"> </span><span class="mi">-90</span><span class="p">,</span><span class="w"> </span><span class="nt">"HorizontalFOVEnd"</span><span class="p">:</span><span class="w"> </span><span class="mi">90</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">"DataFrame"</span><span class="p">:</span><span class="w"> </span><span class="s2">"SensorLocalFrame"</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<h3 id="24">2.4 跨机通信</h3>
+<p>若 ROS 运行在 WSL2 而 AirSim 运行在 Windows 上，需要取 Windows 主机地址：</p>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>-c<span class="w"> </span><span class="s2">"import struct; \</span>
+<span class="s2">[print('.'.join(str(b) for b in bytes.fromhex(l.split()[2])[::-1])) \</span>
+<span class="s2"> for l in open('/proc/net/route').readlines()[1:] if l.split()[1]=='00000000']"</span>
+</code></pre></div>
+<p>该地址作为 <code>~airsim_ip</code> 参数传给各节点。</p>
+<h3 id="25">2.5 编译与启动</h3>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/catkin_ws<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>catkin_make<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">source</span><span class="w"> </span>devel/setup.bash
+roslaunch<span class="w"> </span>uav_nn_perception_navigation<span class="w"> </span>teleop.launch<span class="w"> </span>airsim_ip:<span class="o">=</span><span class="m">172</span>.25.176.1
+</code></pre></div>
+<hr/>
+<h2 id="3">3. 任务一：键盘遥控</h2>
+<h3 id="31">3.1 控制链路</h3>
+<div class="highlight"><pre><span></span><code>终端按键 → keyboard_teleop.py → /uav/cmd_vel (Twist)
+        → airsim_bridge.py → moveByVelocityZAsync(vx, vy, z, yaw_rate)
+</code></pre></div>
+<p>按键映射：</p>
+<table>
+<thead>
+<tr>
+<th>按键</th>
+<th>动作</th>
+<th>对应 Twist 分量</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>W / S</td>
+<td>前进 / 后退</td>
+<td><code>linear.x</code></td>
+</tr>
+<tr>
+<td>A / D</td>
+<td>左移 / 右移</td>
+<td><code>linear.y</code></td>
+</tr>
+<tr>
+<td>R / F</td>
+<td>上升 / 下降</td>
+<td><code>linear.z</code></td>
+</tr>
+<tr>
+<td>Q / E</td>
+<td>左转 / 右转</td>
+<td><code>angular.z</code></td>
+</tr>
+<tr>
+<td>空格</td>
+<td>急停</td>
+<td>全部清零</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="键盘遥控" src="../../img/air/uav_nn_perception_navigation/gif1_teleop.gif"/></p>
+<h3 id="32">3.2 两个关键实现细节</h3>
+<p><strong>（1）机体系速度转世界系</strong></p>
+<p>ROS 中 <code>Twist</code> 表达的是机体坐标系下的速度，而 AirSim 的 <code>moveByVelocityAsync</code>
+接收的是世界坐标系（NED）速度。若直接透传，无人机朝向不是正北时运动方向会歪。</p>
+<p>桥接节点按当前偏航角做旋转：</p>
+<p>
+<script type="math/tex; mode=display">
+\begin{bmatrix} v_x^{w} \\ v_y^{w} \end{bmatrix}=
+\begin{bmatrix} \cos\psi & -\sin\psi \\ \sin\psi & \cos\psi \end{bmatrix}
+\begin{bmatrix} v_x^{b} \\ v_y^{b} \end{bmatrix}
+</script>
+</p>
+<p><strong>（2）高度保持</strong></p>
+<p>若只用 <code>moveByVelocityAsync</code> 且垂直速度恒为 0，SimpleFlight 会缓慢下沉。
+改用 <code>moveByVelocityZAsync</code> 锁定目标高度，升降按键改为增减目标高度：</p>
+<p>
+<script type="math/tex; mode=display">
+z_{\text{target}} \leftarrow z_{\text{target}} - v_z^{\text{up}} \cdot \Delta t
+</script>
+</p>
+<h3 id="33">3.3 实测数据</h3>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>数值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>起飞高度</td>
+<td>2.82 m</td>
+</tr>
+<tr>
+<td>前进速度</td>
+<td>2.0 m/s</td>
+</tr>
+<tr>
+<td>6.5 秒位移</td>
+<td>12.93 m</td>
+</tr>
+<tr>
+<td>高度波动</td>
+<td>±0.1 m</td>
+</tr>
+</tbody>
+</table>
+<hr/>
+<h2 id="4">4. 任务二：激光雷达感知与神经网络控制</h2>
+<h3 id="41">4.1 感知：点云到特征向量</h3>
+<p>激光雷达视场 ±45°（可配），每个扫描周期返回数千个点。为了让网络输入维度固定，
+把视场均分为 12 个扇区，每扇区取最近点距离并归一化：</p>
+<p>
+<script type="math/tex; mode=display">
+d_i = \min\left\{ \frac{\lVert \mathbf{p} \rVert}{R_{\max}} \;:\; \mathbf{p} \in \mathcal{S}_i \right\}, \quad i = 1,\dots,12
+</script>
+</p>
+<p>其中 $\mathcal{S}<em _max="\max">i$ 为第 $i$ 个扇区内的点集，$R</em>=40$ m。</p>
+<p>再加上目标相对量——距离、方位角的正余弦、高度差：</p>
+<p>
+<script type="math/tex; mode=display">
+\mathbf{f} = [d_1,\dots,d_{12},\ \min(1,\tfrac{D}{20}),\ \sin\beta,\ \cos\beta,\ \mathrm{clip}(\tfrac{\Delta z}{10},-1,1)]
+</script>
+</p>
+<p>共 16 维。</p>
+<h3 id="42-mlp">4.2 控制：三层 MLP</h3>
+<div class="highlight"><pre><span></span><code>输入 16 维 → Linear(64) → ReLU → Linear(64) → ReLU → Linear(3) → 输出 (vx, vy, ω)
+</code></pre></div>
+<p>输出直接乘以动作量程 <code>[3.0, 2.0, 1.0]</code>，得到物理速度指令 (vx, vy, ω)。</p>
+<h3 id="43">4.3 训练：模仿学习</h3>
+<p>训练数据由<strong>势场法专家</strong>在仿真中飞行采集。专家的速度指令为：</p>
+<p>
+<script type="math/tex; mode=display">
+\mathbf{v} = k_g \cdot D \cdot \hat{\mathbf{e}}_{\text{goal}}
++ \sum_{i \in \text{near}} k_r \left(1 - \frac{d_i}{d_{\text{safe}}}\right) \hat{\mathbf{e}}_i
+</script>
+</p>
+<p>其中第一项为目标吸引，第二项为障碍斥力，最后按最大速度 $v_{\max}=3$ m/s 截断。</p>
+<p>损失函数为均方误差：</p>
+<p>
+<script type="math/tex; mode=display">
+\mathcal{L} = \frac{1}{N}\sum_{k=1}^{N} \lVert \hat{\mathbf{a}}_k - \mathbf{a}_k \rVert^2
+</script>
+</p>
+<h3 id="44">4.4 训练结果</h3>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>数值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>采集回合</td>
+<td>24 回合 × 120 步</td>
+</tr>
+<tr>
+<td>样本数</td>
+<td>2880</td>
+</tr>
+<tr>
+<td>训练/验证划分</td>
+<td>85% / 15%</td>
+</tr>
+<tr>
+<td>最佳验证损失</td>
+<td><strong>0.0026</strong></td>
+</tr>
+<tr>
+<td>模型大小</td>
+<td>24 KB</td>
+</tr>
+</tbody>
+</table>
+<h3 id="45">4.5 在线飞行实测</h3>
+<p><img alt="神经网络控制" src="../../img/air/uav_nn_perception_navigation/gif2_nn.gif"/></p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>数值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>起点</td>
+<td>(-0.35, 2.73, 15.17)</td>
+</tr>
+<tr>
+<td>目标</td>
+<td>(0.00, 20.00, 15.00)</td>
+</tr>
+<tr>
+<td>终点</td>
+<td>(-0.08, 20.76, 14.99)</td>
+</tr>
+<tr>
+<td><strong>到达误差</strong></td>
+<td><strong>0.76 m</strong></td>
+</tr>
+<tr>
+<td>耗时</td>
+<td>8.5 s</td>
+</tr>
+<tr>
+<td>平均速度</td>
+<td>2.3 m/s</td>
+</tr>
+</tbody>
+</table>
+<h3 id="46">4.6 模型有效性验证</h3>
+<p>把标准状态送入网络，与专家策略对比：</p>
+<table>
+<thead>
+<tr>
+<th>距离</th>
+<th>方位角</th>
+<th>专家 (vx, vy, ω)</th>
+<th>网络 (vx, vy, ω)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>25 m</td>
+<td>0°</td>
+<td>(3.00, 0.00, 0.00)</td>
+<td>(2.98, 0.00, -0.00)</td>
+</tr>
+<tr>
+<td>25 m</td>
+<td>20°</td>
+<td>(2.82, 1.03, 0.42)</td>
+<td>(2.88, 1.05, 0.42)</td>
+</tr>
+<tr>
+<td>25 m</td>
+<td>-20°</td>
+<td>(2.82, -1.03, -0.42)</td>
+<td>(2.80, -1.01, -0.44)</td>
+</tr>
+</tbody>
+</table>
+<p>网络输出与专家几乎一致，说明学到的是策略而非过拟合噪声。第 4.9 节给出完整的
+偏差分布——"几乎一致"只在训练分布内部成立，近距障碍与大方位角状态下偏差会明显变大。</p>
+<h3 id="47">4.7 安全兜底</h3>
+<p>网络仍然给出主要控制量，但输出会先经过 <code>safety_shield.py</code> 再下发：</p>
+<table>
+<thead>
+<tr>
+<th>情况</th>
+<th>判定</th>
+<th>处理</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>动作非法</td>
+<td>出现 NaN / Inf</td>
+<td>水平速度与偏航归零，保持定高</td>
+</tr>
+<tr>
+<td>输入过期</td>
+<td>雷达或里程计超过 0.5 s 未更新</td>
+<td>悬停等待</td>
+</tr>
+<tr>
+<td>输出越界</td>
+<td>水平速度 &gt; 3 m/s、偏航 &gt; 1 rad/s</td>
+<td>按训练量程限幅</td>
+</tr>
+<tr>
+<td>正前方障碍</td>
+<td>最近距离 &lt; 1.2 m</td>
+<td>禁止继续前进</td>
+</tr>
+<tr>
+<td>正前方极近</td>
+<td>最近距离 &lt; 0.5 m</td>
+<td>直接悬停</td>
+</tr>
+<tr>
+<td>单侧障碍</td>
+<td>该侧最近距离 &lt; 0.9 m</td>
+<td>禁止朝该侧平移</td>
+</tr>
+<tr>
+<td>偏航抖动</td>
+<td>最近 8 帧符号翻转 ≥ 5 次</td>
+<td>偏航指令减半</td>
+</tr>
+</tbody>
+</table>
+<p>安全层只依赖 12 维扇区距离，不引入任何路径规划；关闭后即为"裸网络"，
+用参数 <code>safety_enabled:=false</code> 切换。19 项单元测试覆盖全部分支：</p>
+<div class="highlight"><pre><span></span><code>catkin_make<span class="w"> </span>run_tests_uav_nn_perception_navigation
+</code></pre></div>
+<h3 id="48">4.8 多场景闭环验证</h3>
+<p>单次飞行的 0.76 m 只能说明一个目标点可达。固定 10 组起终点（方位覆盖四个象限，
+直线距离 25.6~48.2 m，部分航线穿过障碍区），每组从指定起点飞向目标，
+平面误差 &lt; 1.0 m 记为成功：</p>
+<table>
+<thead>
+<tr>
+<th>组</th>
+<th>距离</th>
+<th>到达误差</th>
+<th>耗时</th>
+<th>安全层介入</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>25.6 m</td>
+<td>0.99 m</td>
+<td>18.2 s</td>
+<td>21 步</td>
+</tr>
+<tr>
+<td>2</td>
+<td>34.0 m</td>
+<td>0.98 m</td>
+<td>14.3 s</td>
+<td>45 步</td>
+</tr>
+<tr>
+<td>3</td>
+<td>42.2 m</td>
+<td>0.86 m</td>
+<td>15.4 s</td>
+<td>94 步</td>
+</tr>
+<tr>
+<td>4</td>
+<td>48.2 m</td>
+<td>0.99 m</td>
+<td>39.0 s</td>
+<td>31 步</td>
+</tr>
+<tr>
+<td>5</td>
+<td>39.5 m</td>
+<td>0.83 m</td>
+<td>16.9 s</td>
+<td>18 步</td>
+</tr>
+<tr>
+<td>6</td>
+<td>41.6 m</td>
+<td>0.93 m</td>
+<td>18.4 s</td>
+<td>13 步</td>
+</tr>
+<tr>
+<td>7</td>
+<td>40.1 m</td>
+<td>0.99 m</td>
+<td>40.6 s</td>
+<td>24 步</td>
+</tr>
+<tr>
+<td>8</td>
+<td>38.8 m</td>
+<td>0.80 m</td>
+<td>15.8 s</td>
+<td>35 步</td>
+</tr>
+<tr>
+<td>9</td>
+<td>29.7 m</td>
+<td>0.92 m</td>
+<td>15.3 s</td>
+<td>39 步</td>
+</tr>
+<tr>
+<td>10</td>
+<td>38.8 m</td>
+<td>0.97 m</td>
+<td>18.7 s</td>
+<td>2 步</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>配置</th>
+<th>成功</th>
+<th>误差（均值 ± 标准差）</th>
+<th>耗时均值</th>
+<th>碰撞</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>安全层开启</td>
+<td>10/10</td>
+<td>0.93 ± 0.07 m</td>
+<td>21.3 s</td>
+<td>0</td>
+</tr>
+<tr>
+<td>安全层关闭</td>
+<td>10/10</td>
+<td>0.95 ± 0.06 m</td>
+<td>20.9 s</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p>在开阔场景里网络本身已经能稳定到达，安全层实际只做限幅（322 步，约占控制步的 16%）。
+障碍屏蔽和异常接管用故障注入验证：第 40 步把网络输出换成 NaN，安全层立即以
+<code>non_finite</code> 接管，仍正常到达（0.98 m / 18.2 s）；关闭安全层时 NaN 直接下发，
+本次 AirSim 恰好忽略该帧，但耗时从 18.2 s 增加到 39.6 s。</p>
+<h3 id="49">4.9 网络与专家策略的偏差</h3>
+<p>验证损失 0.0026 只说明回归误差小，不能说明闭环稳定，因此单独统计偏差。开环用新采集
+的 360 个状态（3 回合 × 120 步），再叠加扰动构造分布外状态；闭环用 4.8 节 10 组飞行
+的逐步偏差。</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>同分布</th>
+<th>扰动（扇区 ±10%、方位 ±5°、距离 ±10%）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>动作 MAE（三轴平均）</td>
+<td>0.392</td>
+<td>0.400</td>
+</tr>
+<tr>
+<td>vx / vy / ω 的 MAE</td>
+<td>0.76 / 0.34 / 0.08</td>
+<td>0.76 / 0.36 / 0.08</td>
+</tr>
+<tr>
+<td>动作范数误差 均值 / P95</td>
+<td>0.92 / 4.31</td>
+<td>0.92 / 4.25</td>
+</tr>
+<tr>
+<td>速度偏差</td>
+<td>0.45 m/s</td>
+<td>0.45 m/s</td>
+</tr>
+<tr>
+<td>航向偏差</td>
+<td>4.3°</td>
+<td>4.8°</td>
+</tr>
+<tr>
+<td>网络速度超过 3 m/s 的比例</td>
+<td>50%</td>
+<td>38%</td>
+</tr>
+</tbody>
+</table>
+<p>两点结论：</p>
+<ol>
+<li>小幅输入扰动几乎不放大偏差（MAE 0.392 → 0.400），网络对传感器噪声不敏感；</li>
+<li>偏差集中在 vx 和少数近障、大方位角状态（P95 4.3、最大 5.2），即专家大斥力时
+   网络复现不好的部分——这类状态正是安全层的职责边界。</li>
+</ol>
+<p>闭环过程中每步的平均偏差为 0.78（安全层开启）/ 0.74（关闭），逐组最大 1.34~4.13，
+比开环均值小：实际轨迹很少进入训练分布边缘。</p>
+<hr/>
+<h2 id="5-slam">5. 任务三：SLAM 建图与导航同步</h2>
+<h3 id="51">5.1 坐标系链</h3>
+<p>gmapping 要求完整的 TF 链，缺任何一环都会丢弃全部扫描：</p>
+<div class="highlight"><pre><span></span><code>map ──(gmapping 发布)──► odom ──(桥接节点发布)──► base_link ──(静态)──► laser
+</code></pre></div>
+<p>对应启动项：</p>
+<div class="highlight"><pre><span></span><code><span class="nt">&lt;node</span><span class="w"> </span><span class="na">pkg=</span><span class="s">"tf2_ros"</span><span class="w"> </span><span class="na">type=</span><span class="s">"static_transform_publisher"</span><span class="w"> </span><span class="na">name=</span><span class="s">"base_to_laser"</span>
+<span class="w">      </span><span class="na">args=</span><span class="s">"0 0 -0.5 0 0 0 base_link laser"</span><span class="w"> </span><span class="nt">/&gt;</span>
+</code></pre></div>
+<h3 id="52">5.2 扫描来源：深度相机反投影</h3>
+<p>AirSim 的激光雷达每帧只返回一小段扫描（约 149 点 / 19°），直接用于建图会大面积缺测。
+改用深度相机反投影，每帧可得到 3 万多个点：</p>
+<p>
+<script type="math/tex; mode=display">
+X = \frac{(u - c_x)\,Z}{f_x}, \quad Y = \frac{(v - c_y)\,Z}{f_y}, \quad Z = d(u,v)
+</script>
+</p>
+<p>其中 $f_x = \frac{w/2}{\tan(\text{FOV}/2)}$。反投影后按高度带 $|Z_{\text{sensor}}| &lt; 2$ m
+过滤，再投影成 90 格环形扫描。</p>
+<blockquote>
+<p>实测对比：激光雷达建图障碍格 699 个，深度相机建图 1688~3579 个。</p>
+</blockquote>
+<h3 id="53">5.3 导航与建图同步</h3>
+<p>导航与建图<strong>同时运行</strong>：<code>trajectory_control</code> 持续输出速度指令，
+<code>gmapping</code> 同时用扫描更新占据栅格地图，两者互不阻塞。</p>
+<p><img alt="SLAM 建图" src="../../img/air/uav_nn_perception_navigation/gif3_slam.gif"/></p>
+<h3 id="54">5.4 建图结果</h3>
+<p><img alt="建图结果" src="map.png"/></p>
+<p>以下为历史示例地图指标，原始采集配置和运行日志未能与当前 launch 一一对应，不能作为当前设置可复现的证明。gmapping 运行中可扩展初始地图边界；应在相同场景重新采集并保存配置、日志及地图。</p>
+<p>仓库内 <code>maps/uav_map.pgm</code> 是 2026-11-11 重新采集的另一张地图，1184×1184 格，分辨率 0.1 m；采集配置、文件校验及话题样本见源码目录 <code>maps/evidence_20261111/README.md</code>。该次运行曾发生扫描匹配失败并回退里程计，未保存完整逐帧评分，不能据此宣称整个回合匹配稳定。下图和表格仍为历史演示，并非新样例的统计。</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>数值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>地图尺寸</td>
+<td>1440 × 1536 格</td>
+</tr>
+<tr>
+<td>分辨率</td>
+<td>0.1 m/格</td>
+</tr>
+<tr>
+<td>覆盖范围</td>
+<td>144 m × 154 m</td>
+</tr>
+<tr>
+<td>障碍格</td>
+<td>3579</td>
+</tr>
+<tr>
+<td>平均扫描匹配分数</td>
+<td>1.71</td>
+</tr>
+</tbody>
+</table>
+<hr/>
+<h2 id="6">6. 任务四：端到端视觉控制</h2>
+<h3 id="61">6.1 网络结构</h3>
+<div class="highlight"><pre><span></span><code>输入 3×36×64（RGB 图像下采样 4 倍）
+   │
+Conv2d(3→16, 5×5, stride 2) + ReLU
+Conv2d(16→32, 5×5, stride 2) + ReLU
+Conv2d(32→64, 3×3, stride 2) + ReLU
+   │
+Flatten(64×5×8) → Linear(128) + ReLU → Linear(3)
+   │
+输出 (vx, vy, ω)
+</code></pre></div>
+<p>图像预处理采用块平均下采样：</p>
+<p>
+<script type="math/tex; mode=display">
+\text{img}_{\text{small}}(i,j) = \frac{1}{16}\sum_{u=0}^{3}\sum_{v=0}^{3} \text{img}(4i+u,\ 4j+v)
+</script>
+</p>
+<h3 id="62">6.2 训练数据</h3>
+<p>专家策略的目标点固定在机头正前方 10 米处，因此网络只需要"看画面决定怎么飞"：</p>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>数值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>采集回合</td>
+<td>20 回合 × 120 步</td>
+</tr>
+<tr>
+<td>有效样本</td>
+<td>1917（丢弃碰撞样本 483）</td>
+</tr>
+<tr>
+<td>图像尺寸</td>
+<td>3×36×64</td>
+</tr>
+<tr>
+<td>最佳验证损失</td>
+<td>0.052</td>
+</tr>
+</tbody>
+</table>
+<h3 id="63">6.3 在线飞行实测</h3>
+<p><img alt="端到端控制" src="../../img/air/uav_nn_perception_navigation/gif4_e2e.gif"/></p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>数值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>起点</td>
+<td>(-0.14, 10.92, 4.11)</td>
+</tr>
+<tr>
+<td>终点</td>
+<td>(6.56, 17.83, 4.17)</td>
+</tr>
+<tr>
+<td>飞行距离</td>
+<td><strong>10.89 m</strong></td>
+</tr>
+<tr>
+<td>用时</td>
+<td>24.9 s</td>
+</tr>
+<tr>
+<td>高度保持</td>
+<td>3.96 ~ 4.27 m</td>
+</tr>
+<tr>
+<td>障碍碰撞</td>
+<td>无</td>
+</tr>
+</tbody>
+</table>
+<p>全程输入只有摄像头画面，控制指令由卷积网络直接回归，不含任何人工规则。</p>
+<hr/>
+<h2 id="7">7. 性能评价</h2>
+<h3 id="71">7.1 四项任务汇总</h3>
+<table>
+<thead>
+<tr>
+<th>任务</th>
+<th>核心指标</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>键盘遥控</td>
+<td>位移 / 高度保持</td>
+<td>12.93 m / ±0.1 m</td>
+</tr>
+<tr>
+<td>感知 + 控制</td>
+<td>到达误差</td>
+<td>0.76 m</td>
+</tr>
+<tr>
+<td>SLAM + 导航</td>
+<td>地图障碍格 / 匹配分数</td>
+<td>3579 / 1.71</td>
+</tr>
+<tr>
+<td>端到端</td>
+<td>自主飞行距离</td>
+<td>10.89 m</td>
+</tr>
+</tbody>
+</table>
+<h3 id="72">7.2 多场景测试</h3>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>高度</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Blocks 开阔区</td>
+<td>15 m</td>
+<td>到达误差 0.76 m，无障碍</td>
+</tr>
+<tr>
+<td>Blocks 低空区</td>
+<td>4 m</td>
+<td>建图障碍格 3579</td>
+</tr>
+<tr>
+<td>Blocks 方块区</td>
+<td>8 m</td>
+<td>端到端飞行 10.89 m</td>
+</tr>
+</tbody>
+</table>
+<hr/>
+<h2 id="8">8. 常见问题</h2>
+<h3 id="81-retry-connection-over-the-limit">8.1 连接失败 <code>Retry connection over the limit</code></h3>
+<p>仿真器未启动，或 IP 地址不对。先确认 Blocks 窗口已加载完成，再确认 <code>airsim_ip</code>。</p>
+<h3 id="82-settingsjson">8.2 修改 settings.json 不生效</h3>
+<p>Windows 用户名含中文时，AirSim 无法解析 <code>Documents\AirSim\</code> 路径。
+把配置放到 <code>Blocks.exe</code> 同目录。</p>
+<h3 id="83">8.3 速度指令无效，无人机不动</h3>
+<p>三个原因，按顺序排查：</p>
+<ol>
+<li><strong>msgpackrpc 线程竞争</strong>：桥接节点主线程读状态、定时器线程发指令共用同一会话，
+   会报 <code>Existing exports of data: object cannot be re-sized</code>。
+   解决：所有客户端调用加锁串行化。</li>
+<li><strong>无人机卡在几何体上</strong>：<code>simSetVehiclePose</code> 之后飞机会自由落体，
+   必须紧跟 <code>takeoffAsync</code>；碰撞状态下速度指令完全不生效。</li>
+<li><strong>仿真器状态退化</strong>：连续多轮测试后会出现"收指令不执行"，
+   重启 Blocks 即恢复。</li>
+</ol>
+<h3 id="84-gmapping">8.4 gmapping 丢弃全部扫描</h3>
+<p><code>MessageFilter [target=odom]: Dropped 100.00% of messages</code>，通常缺 TF。
+检查 <code>odom → base_link → laser</code> 三环是否齐全。</p>
+<h3 id="85-c-libutilsso-cannot-open-shared-object-file">8.5 C++ 节点报 <code>libutils.so: cannot open shared object file</code></h3>
+<p><code>LD_LIBRARY_PATH</code> 为空导致。显式设置：</p>
+<div class="highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">LD_LIBRARY_PATH</span><span class="o">=</span>/opt/ros/noetic/lib:<span class="nv">$LD_LIBRARY_PATH</span>
+</code></pre></div>
+<h3 id="86-gmapping">8.6 gmapping 不订阅指定话题</h3>
+<p>gmapping 不认 <code>scan_topic</code> 参数，必须用话题重映射：</p>
+<div class="highlight"><pre><span></span><code>rosrun<span class="w"> </span>gmapping<span class="w"> </span>slam_gmapping<span class="w"> </span>scan:<span class="o">=</span>/uav/lidar/scan
+</code></pre></div>
+<hr/>
+<h2 id="9">9. 源代码解析</h2>
+<h3 id="91-airsim_bridgepy">9.1 桥接节点 airsim_bridge.py</h3>
+<p>桥接节点把 AirSim 的 <code>MultirotorClient</code> 封装成 ROS 接口：订阅 <code>/uav/cmd_vel</code>（<code>geometry_msgs/Twist</code>），发布 <code>/uav/odom</code>（<code>nav_msgs/Odometry</code>），并提供 <code>/uav/takeoff</code>、<code>/uav/land</code> 两个 <code>std_srvs/Trigger</code> 服务。整个模块只有这一个节点直接持有 AirSim 会话，其余节点一律通过话题与之交互。</p>
+<p><code>/uav/cmd_vel</code> 的线速度是机体系（x 前、y 右、z 上），而 AirSim 的 <code>moveByVelocityAsync</code> 接收世界系速度，因此控制循环先用上一帧状态里的偏航角把速度旋到 NED 世界系：</p>
+<div class="highlight"><pre><span></span><code>        <span class="n">vx_body</span> <span class="o">=</span> <span class="n">cmd</span><span class="o">.</span><span class="n">linear</span><span class="o">.</span><span class="n">x</span>          <span class="c1"># 前（机体系）</span>
+        <span class="n">vy_body</span> <span class="o">=</span> <span class="n">cmd</span><span class="o">.</span><span class="n">linear</span><span class="o">.</span><span class="n">y</span>          <span class="c1"># 右（机体系）</span>
+        <span class="n">vz_up</span> <span class="o">=</span> <span class="n">cmd</span><span class="o">.</span><span class="n">linear</span><span class="o">.</span><span class="n">z</span>            <span class="c1"># 向上为正</span>
+        <span class="n">yaw_rate</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">cmd</span><span class="o">.</span><span class="n">angular</span><span class="o">.</span><span class="n">z</span><span class="p">)</span>
+
+        <span class="c1"># AirSim 的 moveByVelocity 接收的是世界系速度，</span>
+        <span class="c1"># 按当前偏航角把机体速度旋到 NED 世界系</span>
+        <span class="n">psi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_yaw</span>
+        <span class="n">vx</span> <span class="o">=</span> <span class="n">vx_body</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">psi</span><span class="p">)</span> <span class="o">-</span> <span class="n">vy_body</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">psi</span><span class="p">)</span>
+        <span class="n">vy</span> <span class="o">=</span> <span class="n">vx_body</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">psi</span><span class="p">)</span> <span class="o">+</span> <span class="n">vy_body</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">psi</span><span class="p">)</span>
+</code></pre></div>
+<p>方位角同时按两种约定维护：内部换算用 NED 偏航角，输出里程计时换成 ENU。</p>
+<p>
+<script type="math/tex; mode=display">x_{ENU}=y_{NED},\quad y_{ENU}=x_{NED},\quad z_{ENU}=-z_{NED},\quad \psi_{ENU}=\frac{\pi}{2}-\psi_{NED}</script>
+</p>
+<p>里程计的四元数只填 <code>z</code> 与 <code>w</code> 两个分量，即假定横滚与俯仰为零，只表达偏航。</p>
+<p>高度方向没有直接透传垂直速度。<code>altitude_hold</code> 默认为真时，节点维护一个 <code>target_z</code>，每周期按 <code>target_z -= vz_up / rate_hz</code> 积分，再调用 <code>moveByVelocityZAsync</code> 把飞机拉到目标高度；读取状态时若发现实际高度与 <code>target_z</code> 相差超过 3.0 米（首次上电或被外部挪走），就把 <code>target_z</code> 重新对齐到当前高度。注释说明这么做的原因是避免在没有任何升降指令时飞机缓慢下沉。</p>
+<p>线程安全上有两把锁：<code>self.lock</code> 保护控制指令，<code>self.client_lock</code> 串行化所有 AirSim 调用。后者是必须的——源码注释写明 msgpackrpc 的会话不是线程安全的，主线程读状态、定时器线程发指令并发访问会报 <code>Existing exports of data: object cannot be re-sized</code>。</p>
+<p>一个容易踩的坑在 <code>shutdown</code>：必须先 <code>landAsync</code> 落地再 <code>armDisarm(False)</code> 和 <code>enableApiControl(False)</code>。注释直言直接释放控制权会让无人机自由落体摔到地面。另一处是 <code>received_cmd</code> 标志，收到第一条速度指令前控制循环直接返回，否则桥接节点会在外部起飞流程尚未结束时抢走控制权。</p>
+<h3 id="92-uav_featurespy">9.2 特征提取 uav_features.py</h3>
+<p>这个模块不含任何 ROS 依赖，训练脚本、感知节点、控制节点三处共用同一套特征定义，保证离线训练与在线推理的输入分布一致。核心常量是 <code>NUM_SECTORS = 12</code>、<code>FOV_DEG = 60.0</code>、<code>MAX_RANGE = 40.0</code>、<code>MAX_GOAL_DIST = 20.0</code>、<code>MAX_DZ = 10.0</code>，拼起来 <code>FEATURE_DIM = 16</code>。</p>
+<p>点云先按水平距离和方位角作一次过滤，只保留 0.05 米到 40 米之间、方位角落在 ±30° 内的点，再按方位角分桶，每桶取最近距离：</p>
+<div class="highlight"><pre><span></span><code>    <span class="n">r</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="n">valid</span><span class="p">]</span>
+    <span class="n">ang</span> <span class="o">=</span> <span class="n">ang</span><span class="p">[</span><span class="n">valid</span><span class="p">]</span>
+    <span class="n">half</span> <span class="o">=</span> <span class="n">fov_deg</span> <span class="o">/</span> <span class="mf">2.0</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(((</span><span class="n">ang</span> <span class="o">+</span> <span class="n">half</span><span class="p">)</span> <span class="o">/</span> <span class="n">fov_deg</span> <span class="o">*</span> <span class="n">num_sectors</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+                  <span class="mi">0</span><span class="p">,</span> <span class="n">num_sectors</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">sector</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_sectors</span><span class="p">):</span>
+        <span class="n">sel</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="n">idx</span> <span class="o">==</span> <span class="n">sector</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">sel</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+            <span class="n">feats</span><span class="p">[</span><span class="n">sector</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">sel</span><span class="o">.</span><span class="n">min</span><span class="p">())</span> <span class="o">/</span> <span class="n">max_range</span><span class="p">)</span>
+</code></pre></div>
+<p>扇区索引由下式给出，<code>clip</code> 把恰好落在 ±30° 边界上的点归入首尾桶：</p>
+<p>
+<script type="math/tex; mode=display">k=\mathrm{clip}\left(\left\lfloor\frac{\alpha+30^{\circ}}{60^{\circ}}\times 12\right\rfloor,\ 0,\ 11\right),\qquad f_k=\min\left(1,\frac{d_k}{40}\right)</script>
+</p>
+<p>每个扇区宽 5°，扇区 $i$ 的中心角是 $-30^{\circ}+(i+0.5)\times 5^{\circ}$，这个式子后面在专家策略里被原样复用。数组初始化为全 1，因此归一化值 1 同时表示"该方向没有回波"和"障碍超出量程"，两者不区分。</p>
+<p>后 4 维是目标相对量。水平距离除以 <code>MAX_GOAL_DIST</code> 截断到 1，方位角用 <code>atan2(dy, dx)</code> 减去偏航角转到机体系，再用 <code>atan2(sin, cos)</code> 规约到 $(-\pi,\pi]$，取正余弦两个分量而不是角度本身，避免 ±π 附近的跳变；高度差除以 <code>MAX_DZ</code> 后截断到 $[-1,1]$。</p>
+<p>文件里还有两个给别处用的工具：<code>extract_scan</code> 把点云投成距离数组，当前 launch 使用 <code>bins=180</code>、前向 <code>fov_deg=180</code>，没有命中的角度填满量程，但不代表这些方向已确认安全；<code>yaw_from_quaternion</code> 与桥接节点里的 <code>quat_to_yaw_ned</code> 是同一套公式的两份拷贝。</p>
+<h3 id="93-trajectory_controlpy">9.3 控制节点 trajectory_control.py</h3>
+<p>控制节点订阅 <code>/uav/lidar/features</code>、<code>/uav/odom</code>、<code>/uav/goal</code>，把 16 维特征送进训练好的 MLP，输出速度指令发给 <code>/uav/cmd_vel</code>。网络结构由本文件内的 <code>MLPPolicy</code> 重新定义了一份（16→64→64→3，ReLU），必须与训练脚本的 <code>LidarPolicy</code> 逐层一致，否则 <code>load_state_dict</code> 会直接失败。</p>
+<p>三个输入源的坐标系并不相同：里程计与目标点都是 ENU，而特征函数要求 NED。转换在推理时完成，<code>yaw_enu</code> 由四元数直接取出半角的反正切：</p>
+<div class="highlight"><pre><span></span><code>        <span class="n">cur_ned</span> <span class="o">=</span> <span class="p">(</span><span class="n">pos</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">pos</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="n">pos</span><span class="o">.</span><span class="n">z</span><span class="p">)</span>
+        <span class="n">yaw_enu</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">atan2</span><span class="p">(</span><span class="n">q</span><span class="o">.</span><span class="n">z</span><span class="p">,</span> <span class="n">q</span><span class="o">.</span><span class="n">w</span><span class="p">)</span>
+        <span class="n">yaw_ned</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">2.0</span> <span class="o">-</span> <span class="n">yaw_enu</span>
+
+        <span class="n">goal_ned</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">goal_enu</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">goal_enu</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">goal_enu</span><span class="o">.</span><span class="n">z</span><span class="p">)</span>
+
+        <span class="n">feat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lidar_feats</span><span class="p">,</span>
+            <span class="n">goal_features</span><span class="p">(</span><span class="n">cur_ned</span><span class="p">,</span> <span class="n">goal_ned</span><span class="p">,</span> <span class="n">yaw_ned</span><span class="p">),</span>
+        <span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+</code></pre></div>
+<p>归一化参数不是硬编码，而是随模型一起从 checkpoint 读出：<code>feat_mean</code>、<code>feat_std</code> 在此处对拼接后的 16 维向量做一次标准化，<code>action_scale</code>（默认 <code>[3.0, 2.0, 1.0]</code>）把网络输出的 [-1,1] 量纲还原成 m/s 与 rad/s。这两步中任何一步漏掉，网络输出都会完全失真。</p>
+<p>高度通道不由网络给出，而是固定的比例控制，<code>kp_altitude</code> 默认 0.8，目标高度来自 <code>~altitude</code> 参数（默认 5.0），输出被限制在 ±1.5 之内。<code>cmd.angular.z</code> 直接使用网络输出的偏航角速率，没有额外限幅。</p>
+<p>模型路径用 <code>resolve_model_path</code> 兜底：<code>rosrun</code> 执行的是 devel 空间里的脚本副本，<code>__file__</code> 相对 <code>../models</code> 找不到权重，所以优先用 <code>rospkg.RosPack().get_path()</code> 定位源码包目录下的 <code>models/</code>。</p>
+<p>踩坑点在 <code>run</code> 循环的入口条件——里程计、雷达特征、目标点三者缺一就不发布任何指令，源码注释说明这是为了不让桥接节点误以为控制已经开始，从而干扰外部起飞。</p>
+<h3 id="94-train_controlpy">9.4 训练脚本 train_control.py</h3>
+<p>训练用模仿学习：先让一个人工势场法专家在仿真里飞，记录"特征→动作"样本对，再回归出一个 MLP。专家的常量是 <code>SAFE_DIST = 6.0</code>、<code>KP_GOAL = 0.45</code>、<code>KP_REPULSE = 4.0</code>、<code>MAX_SPEED = 3.0</code>，网络动作的物理量程 <code>ACTION_SCALE = [3.0, 2.0, 1.0]</code> 对应 vx、vy、偏航角速率。</p>
+<p>吸引力按目标距离线性给出，$v_x = 0.45\,d_g\cos\beta$、$v_y = 0.45\,d_g\sin\beta$，其中 $d_g$ 由归一化距离乘回 20 米得到。斥力逐扇区累加，只有距离小于 6 米的扇区才参与：</p>
+<div class="highlight"><pre><span></span><code>    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">d_norm</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sectors</span><span class="p">):</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">d_norm</span><span class="p">)</span> <span class="o">*</span> <span class="n">MAX_RANGE</span>
+        <span class="k">if</span> <span class="n">d</span> <span class="o">&gt;=</span> <span class="n">SAFE_DIST</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">angle</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="o">-</span><span class="mf">30.0</span> <span class="o">+</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="mf">5.0</span><span class="p">)</span>
+        <span class="n">strength</span> <span class="o">=</span> <span class="n">KP_REPULSE</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">d</span> <span class="o">/</span> <span class="n">SAFE_DIST</span><span class="p">)</span>
+        <span class="n">vx</span> <span class="o">-=</span> <span class="n">strength</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
+        <span class="n">vy</span> <span class="o">-=</span> <span class="n">strength</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
+
+    <span class="c1"># 限速</span>
+    <span class="n">speed</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">hypot</span><span class="p">(</span><span class="n">vx</span><span class="p">,</span> <span class="n">vy</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">speed</span> <span class="o">&gt;</span> <span class="n">MAX_SPEED</span><span class="p">:</span>
+        <span class="n">vx</span><span class="p">,</span> <span class="n">vy</span> <span class="o">=</span> <span class="n">vx</span> <span class="o">/</span> <span class="n">speed</span> <span class="o">*</span> <span class="n">MAX_SPEED</span><span class="p">,</span> <span class="n">vy</span> <span class="o">/</span> <span class="n">speed</span> <span class="o">*</span> <span class="n">MAX_SPEED</span>
+</code></pre></div>
+<p>
+<script type="math/tex; mode=display">v_{rep}=K_{rep}\left(1-\frac{d}{6.0}\right),\qquad K_{rep}=4.0</script>
+</p>
+<p>偏航角速率取 <code>1.2 * bearing</code> 并截断到 ±1.0，即机头始终转向目标方向。</p>
+<p>数据采集默认 24 回合 × 120 步，飞行高度 -5.0 米（NED 下正）。<code>place_free</code> 用随机位姿放置飞机，连续 25 次尝试中只要 <code>simGetCollisionInfo().has_collided</code> 为假就接受，避免采到卡在几何体里的样本。采集过程中凡是发生碰撞的样本一律丢弃并计数，注释给的理由是这种状态下指令与实际运动对不上。</p>
+<p>训练部分拿 85% 做训练集、15% 做验证集，先用训练集统计量做特征标准化（<code>feat_std</code> 小于 1e-6 的维度置 1，防止除零），优化器 Adam、学习率 1e-3、批大小 256、损失 MSE，只保存验证损失创新低的那一版。存盘内容包括 <code>state_dict</code>、<code>in_dim</code>、<code>action_scale</code>、<code>feat_mean</code>、<code>feat_std</code> 五项，后三项正是推理端做还原所必需的。</p>
+<p>这里有一个隐性契约：标签写的是 <code>action / ACTION_SCALE</code>，即网络学的是归一化动作，推理端必须乘回 <code>action_scale</code>。两侧的常量靠 checkpoint 传递而非各自硬编码，避免改一处忘一处。</p>
+<h3 id="95-lidar_perceptionpy">9.5 感知节点 lidar_perception.py</h3>
+<p>感知节点从 AirSim 读 <code>lidar_1</code> 的点云，同时产出两路输出：<code>/uav/lidar/scan</code>（<code>sensor_msgs/LaserScan</code>，供 RViz 与 gmapping）和 <code>/uav/lidar/features</code>（<code>Float32MultiArray</code>，12 维扇区距离，供控制节点）。</p>
+<p>仿真的旋转式雷达每帧只吐出一小段扫描，单帧拼不出完整一圈，因此建图用的点云放在一个按时间窗清理的 <code>deque</code> 里累积，窗口长度由 <code>~accumulate_sec</code> 控制，默认 1.0 秒：</p>
+<div class="highlight"><pre><span></span><code>                <span class="n">now</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Time</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">to_sec</span><span class="p">()</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">point_buffer</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">now</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">cur_pos</span><span class="p">,</span> <span class="n">cur_yaw</span><span class="p">))</span>
+                <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">point_buffer</span> <span class="ow">and</span> <span class="n">now</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">point_buffer</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">accum_sec</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">point_buffer</span><span class="o">.</span><span class="n">popleft</span><span class="p">()</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">point_buffer</span><span class="p">:</span>
+                    <span class="n">accum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span>
+                        <span class="n">transform_points_to_frame</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">sp</span><span class="p">,</span> <span class="n">sy</span><span class="p">,</span> <span class="n">cur_pos</span><span class="p">,</span> <span class="n">cur_yaw</span><span class="p">)</span>
+                        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">sp</span><span class="p">,</span> <span class="n">sy</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">point_buffer</span>
+                    <span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">accum</span> <span class="o">=</span> <span class="n">points</span>
+</code></pre></div>
+<p>控制特征只吃最新一帧，建图扫描吃累积点云。每帧按查询时的估计位置和偏航转换到当前机体系；由于位姿和点云采集时间并非严格同步，也未对单帧内各点去畸变，快速转动或移动时仍可能错位。随包设置只覆盖前向 180°，不能声称观测了后方。</p>
+<p><code>LaserScan</code> 的元数据由参数推导：<code>angle_min = -fov/2</code>、<code>angle_increment = fov / bins</code>、<code>angle_max = angle_min + (bins - 1) * angle_increment</code>，<code>range_min = 0.1</code>、<code>range_max = 40.0</code>；默认 <code>scan_bins = 180</code>、<code>scan_fov = 180.0</code>。</p>
+<p><code>~scan_source</code> 可切到 <code>depth</code>，改用深度图反投影出的稠密点云。反投影按水平视场角求焦距 $f_x = \frac{w/2}{\tan(\theta/2)}$，把像素坐标换成相机系下的 $[z, x, y]$，再过滤掉 0.2 到 40 米之外的点，以及传感器系竖直方向偏移超过 2 米的点，只保留大致同高度的一层做二维建图。</p>
+<p>踩坑点在 <code>~scan_frame</code>，默认值是 <code>'laser'</code> 而不是 <code>'base_link'</code>。注释说明扫描帧必须和 gmapping 的 <code>base_frame</code> 区分开，否则会卡在等 TF 上——两者同名时 <code>odom→base_link</code> 与 <code>base_link→laser</code> 构成自环，tf 变换退化。</p>
+<h3 id="96-camera_perceptionpy-end2end_nodepy">9.6 端到端 camera_perception.py 与 end2end_node.py</h3>
+<p><code>camera_perception.py</code> 负责取图。它一次 <code>simGetImages</code> 同时请求两张：<code>ImageType.Scene</code>（uint8 RGB）和 <code>ImageType.DepthPlanar</code>（32 位浮点、单位为米），省掉两次往返。发布时不用 <code>cv_bridge</code>，而是自己构造 <code>sensor_msgs/Image</code>，源码注释给出的理由是减少环境依赖。<code>step</code> 按行长乘通道字节数现场算：三维数组是 <code>width * 3 * itemsize</code>，二维数组是 <code>width * itemsize</code>。深度图只在 <code>~publish_depth</code> 为真时请求与发布，编码为 <code>32FC1</code>，RGB 为 <code>rgb8</code>，两者的 <code>frame_id</code> 都是 <code>base_link</code>。</p>
+<p><code>end2end_node.py</code> 把图像直接映射成速度指令，中间没有任何人工规则。网络定义与下采样函数都从 <code>train_end2end</code> 导入，保证结构不会漂移：输入先降到 <code>IMG_H, IMG_W = 36, 64</code>，三次卷积每次空间尺寸减半，最后接两层全连接：</p>
+<div class="highlight"><pre><span></span><code>        <span class="bp">self</span><span class="o">.</span><span class="n">features</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span> <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(),</span>   <span class="c1"># 18x32</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span> <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(),</span>  <span class="c1"># 9x16</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(),</span>  <span class="c1"># 5x8</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">head</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Flatten</span><span class="p">(),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">64</span> <span class="o">*</span> <span class="mi">5</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">128</span><span class="p">),</span> <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+        <span class="p">)</span>
+</code></pre></div>
+<p>下采样是块平均而不是抽样，原图 144×256 缩 4 倍到 36×64，$f_h = H/36$、$f_w = W/64$：</p>
+<p>
+<script type="math/tex; mode=display">I_{out}(i,j,c)=\frac{1}{f_hf_w}\sum_{u=0}^{f_h-1}\sum_{v=0}^{f_w-1}I(i f_h+u,\ j f_w+v,\ c)</script>
+</p>
+<p>图像先裁到 $f_h$、$f_w$ 的整数倍再 reshape 求均值，尺寸不整除的边角直接丢弃。归一化除以 255，转成 float32 后存住。</p>
+<p>发布的指令做三重限幅：线速度 <code>np.clip</code> 到 ±<code>max_speed</code>（默认 3.0），偏航角速率截断到 ±1.0，高度通道仍是 0.8 倍比例控制并限在 ±1.5。这与 9.3 的限幅方式一致，因为两者共用同一个桥接节点。</p>
+<p>两处坑。其一是 <code>image_cb</code> 只接受 <code>encoding == 'rgb8'</code> 的消息，其它编码静默丢弃，若改用了别的图像源会表现为"节点一直不动作"。其二是 <code>downsample</code> 在图像小于目标尺寸时返回 <code>None</code>，回调里只在非空时才覆盖 <code>self.image</code>，否则保留上一帧；<code>run</code> 循环里图像或里程计任一为空就不发布，注释说明是为了不干扰起飞。</p>
+<h3 id="97-mainpy">9.7 统一入口 main.py</h3>
+<p><code>main.py</code> 把八个模式收进一个 <code>MODES</code> 元组和一张 <code>DISPATCH</code> 字典，<code>--mode</code> 决定走哪条分支。各模式的实现在函数内部才 <code>import</code>，所以缺某个依赖时只有对应模式报错，不会拖垮整个包。</p>
+<div class="highlight"><pre><span></span><code>    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">mode</span> <span class="o">!=</span> <span class="s1">'train'</span><span class="p">:</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">init_node</span><span class="p">(</span><span class="s1">'uav_'</span> <span class="o">+</span> <span class="n">args</span><span class="o">.</span><span class="n">mode</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">init_node</span><span class="p">(</span><span class="s1">'uav_train'</span><span class="p">,</span> <span class="n">disable_signals</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">DISPATCH</span><span class="p">[</span><span class="n">args</span><span class="o">.</span><span class="n">mode</span><span class="p">]()</span>
+    <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">logerr</span><span class="p">(</span><span class="s1">'模式 </span><span class="si">%s</span><span class="s1"> 尚未实现或依赖缺失: </span><span class="si">%s</span><span class="s1">'</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">mode</span><span class="p">,</span> <span class="n">exc</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="mi">0</span>
+</code></pre></div>
+<p>节点名由 <code>'uav_' + mode</code> 拼出，因此同一套脚本以不同模式启动时不会重名冲突。<code>train</code> 模式例外，用了 <code>disable_signals=True</code>——训练长跑需要自行控制退出时机，不能被 rospy 的信号处理中途打断。</p>
+<p>参数解析用 <code>parse_known_args</code> 而非 <code>parse_args</code>，把多余的位置参数丢掉。这一点在 launch 文件里很关键：<code>roslaunch</code> 会给节点附加 <code>__name:=</code>、<code>__log:=</code> 之类的重映射参数，严格解析会直接报错退出。</p>
+<p>只有 <code>teleop</code> 模式是多线程的：桥接节点放进 daemon 线程跑，键盘节点占前台，因为 <code>keyboard_teleop</code> 要读标准输入并且用 <code>termios</code> 把终端切到原始模式。桥接节点设为 daemon，主线程退出时不会挂着不结束。</p>
+<p><code>ImportError</code> 被捕获后只打一条日志并返回 1，所以某个模式尚未实现时进程会正常退出而不是抛栈。</p>
+<h3 id="98-slamlaunch">9.8 建图启动 slam.launch</h3>
+<p>这个 launch 同时拉起五个节点，让建图与神经网络导航在同一个仿真里并行跑：桥接节点、雷达感知节点、一个静态 TF 发布器、gmapping、控制节点，外加一个用 <code>rostopic pub</code> 伪装的目标点发布器。</p>
+<p>桥接节点在这里的配置与默认值不同：<code>auto_takeoff</code> 设为 <code>false</code>，起飞交给外部流程；<code>publish_tf</code> 设为 <code>true</code>，因为 gmapping 需要 <code>odom→base_link</code> 的变换。感知节点将 <code>scan_bins</code> 设为 180、<code>scan_fov</code> 设为 180.0，与随包传感器配置一致。</p>
+<p>雷达的安装位置用静态变换补上，参数 <code>0 0 -0.5 0 0 0 base_link laser</code> 表示 <code>laser</code> 帧在 <code>base_link</code> 正下方 0.5 米，与感知节点默认的 <code>scan_frame='laser'</code> 对应。</p>
+<p>gmapping 段最需要注意的是扫描话题的接入方式：</p>
+<div class="highlight"><pre><span></span><code><span class="w">  </span><span class="nt">&lt;node</span><span class="w"> </span><span class="na">pkg=</span><span class="s">"gmapping"</span><span class="w"> </span><span class="na">type=</span><span class="s">"slam_gmapping"</span><span class="w"> </span><span class="na">name=</span><span class="s">"slam_gmapping"</span><span class="w"> </span><span class="na">output=</span><span class="s">"screen"</span><span class="nt">&gt;</span>
+<span class="w">    </span><span class="nt">&lt;param</span><span class="w"> </span><span class="na">name=</span><span class="s">"base_frame"</span><span class="w"> </span><span class="na">value=</span><span class="s">"base_link"</span><span class="nt">/&gt;</span>
+<span class="w">    </span><span class="nt">&lt;param</span><span class="w"> </span><span class="na">name=</span><span class="s">"odom_frame"</span><span class="w"> </span><span class="na">value=</span><span class="s">"odom"</span><span class="nt">/&gt;</span>
+<span class="w">    </span><span class="nt">&lt;param</span><span class="w"> </span><span class="na">name=</span><span class="s">"map_frame"</span><span class="w"> </span><span class="na">value=</span><span class="s">"map"</span><span class="nt">/&gt;</span>
+<span class="w">    </span><span class="cm">&lt;!-- gmapping 不认 scan_topic 参数，必须用话题重映射 --&gt;</span>
+<span class="w">    </span><span class="nt">&lt;remap</span><span class="w"> </span><span class="na">from=</span><span class="s">"scan"</span><span class="w"> </span><span class="na">to=</span><span class="s">"/uav/lidar/scan"</span><span class="nt">/&gt;</span>
+</code></pre></div>
+<p>注释点明 gmapping 没有 <code>scan_topic</code> 参数，只能用 <code>&lt;remap&gt;</code> 把默认的 <code>scan</code> 重映射过去，写成 <code>&lt;param name="scan_topic" ...&gt;</code> 不会报错但也不生效。其余参数：<code>maxUrange</code> 取 30.0 而 <code>maxRange</code> 取 40.0，即 30 米外的回波只用于标记空闲而不参与匹配；栅格分辨率 <code>delta</code> 为 0.1 米；地图范围 ±60 米；<code>linearUpdate</code> 0.3 米、<code>angularUpdate</code> 0.2 弧度、<code>temporalUpdate</code> 1.0 秒；粒子数压到 30；<code>minimumScore</code> 50。</p>
+<p>控制节点通过 <code>altitude</code> 参数拿到 15.0 米的目标高度。目标发布器以 1 Hz 频率往 <code>/uav/goal</code> 发 <code>PoseStamped</code>，坐标取 <code>goal_x</code>、<code>goal_y</code> 与同一个 <code>altitude</code>，<code>frame_id</code> 标为 <code>map</code>。控制节点按 ENU 数值直接使用这三个坐标，因此 <code>goal_x</code>、<code>goal_y</code>、<code>altitude</code> 与建图结果处在同一套 ENU 约定下。</p>
+<hr/>
+<h2 id="10">10. 目录结构</h2>
+<div class="highlight"><pre><span></span><code>uav_nn_perception_navigation/
+├── CMakeLists.txt
+├── package.xml
+├── README.md
+├── requirements.txt
+├── config/
+│   └── settings.json          # AirSim 传感器配置
+├── launch/
+│   ├── teleop.launch          # 任务 1
+│   ├── perception.launch      # 任务 2
+│   ├── slam.launch            # 任务 3
+│   └── end2end.launch         # 任务 4
+├── scripts/
+│   ├── main.py                # 统一入口
+│   ├── airsim_bridge.py       # AirSim 桥接
+│   ├── keyboard_teleop.py     # 键盘遥控
+│   ├── lidar_perception.py    # 雷达/深度感知
+│   ├── trajectory_control.py  # MLP 策略节点
+│   ├── camera_perception.py   # 相机节点
+│   ├── end2end_node.py        # CNN 策略节点
+│   ├── uav_features.py        # 特征提取（训练与部署共用）
+│   ├── train_control.py       # MLP 训练脚本
+│   └── train_end2end.py       # CNN 训练脚本
+├── models/
+│   ├── controller.pt          # MLP 权重（24 KB）
+│   └── end2end.pt             # CNN 权重（1.4 MB）
+└── maps/
+    └── uav_map.pgm            # SLAM 建图结果
+</code></pre></div>
+<hr/>
+<h2 id="_2">声明</h2>
+<p>本模块的代码与文档在编写过程中使用了大语言模型辅助，包括代码结构建议、公式整理与文字润色。</p>
+<p>所有功能均已在 AirSim 1.8.1 + ROS Noetic 环境中实际运行验证，文中全部数值来自实测记录，没有估算或占位数据。作者已逐项核对提交内容，并对其负全部责任。</p></div>
+</div>
+</div><footer>
+<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
+<a class="btn btn-neutral float-left" href="../uav_vertical_ppo/" title="MuJoCo 四旋翼垂直通道 PPO 定高与抗扰控制"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../uav_ppo_nav/" title="基于 PPO 的无人机导航避障">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+</div>
+<hr>
+<div role="contentinfo">
+<!-- Copyright etc -->
+<p>OpenHUTB 版权所有 © 2026</p>
+</div>
+</hr></footer>
+</div>
+</div>
+</section>
+</div>
+<div aria-label="Versions" class="rst-versions" role="note">
+<span class="rst-current-version" data-toggle="rst-current-version">
+<span>
+<a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
+</span>
+<span><a href="../uav_vertical_ppo/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../uav_ppo_nav/" style="color: #fcfcfc">后一页 »</a></span>
+</span>
+</div>
+<script src="../../js/jquery-3.6.0.min.js"></script>
+<script>var base_url = "../..";</script>
+<script src="../../js/theme_extra.js"></script>
+<script src="../../js/theme.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+<script src="../../js/umlconvert.js"></script>
+<script src="../../search/main.js"></script>
+<script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+</body>
+</html>
