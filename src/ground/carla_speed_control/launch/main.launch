@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- 纵向速度控制节点 -->
+
+  <!-- 巡航速度（m/s） -->
+  <arg name="target_speed" default="12.0" />
+  <!-- 曲率话题。指向 carla_lane_keeping 的 /carla/ego_vehicle/lane/curvature
+       即可实现"车道线检测 -> 曲率 -> 自动限速"的完整链路 -->
+  <arg name="curvature_topic" default="speed/curvature" />
+  <!-- 载具能力约束 -->
+  <arg name="max_lateral_accel" default="3.0" />
+  <arg name="max_accel" default="3.0" />
+  <arg name="max_decel" default="6.0" />
+  <arg name="max_jerk" default="4.0" />
+  <!-- 参数文件 -->
+  <arg name="params" default="$(find carla_speed_control)/config/speed_params.yaml" />
+
+  <!-- 参数文件里的值会覆盖同名参数，因此先加载文件再用 arg 覆盖关键项 -->
+  <rosparam command="load" file="$(arg params)" />
+
+  <node pkg="carla_speed_control" type="speed_controller.py" name="speed_controller"
+        output="screen">
+    <param name="target_speed" value="$(arg target_speed)" />
+    <param name="curvature_topic" value="$(arg curvature_topic)" />
+    <param name="max_lateral_accel" value="$(arg max_lateral_accel)" />
+    <param name="max_accel" value="$(arg max_accel)" />
+    <param name="max_decel" value="$(arg max_decel)" />
+    <param name="max_jerk" value="$(arg max_jerk)" />
+  </node>
+</launch>
