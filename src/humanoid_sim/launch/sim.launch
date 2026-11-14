@@ -1,0 +1,6 @@
+<launch>
+  <node pkg="humanoid_sim" type="main.py" name="humanoid_sim" output="screen">
+    <param name="rate" value="50.0"/>
+  </node>
+  <node pkg="humanoid_sim" type="plot_viewer.py" name="viewer" output="screen"/>
+</launch>
