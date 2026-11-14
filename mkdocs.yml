@@ -252,6 +252,13 @@ nav:
     - MuJoCo 地面差速小车侧倾/翻车风险预测与主动限速: './ground/mujoco_car_rollover_guard.md'
     - ROS 2 电机温度保护节点: './ground/mujoco_motor_thermal_guard.md'
     - MuJoCo 地面差速小车单侧驱动失效检测与差速补偿: './ground/mujoco_car_drive_fault.md'
+    - MuJoCo 四轮差速车自动泊车:
+        - 实现文档（全模块代码）: './ground/mujoco_auto_parking.md'
+        - 模块总览: './ground/mujoco_auto_parking/overview.md'
+        - 任务①物理仿真与键盘控制: './ground/mujoco_auto_parking/01_physical_simulation_keyboard.md'
+        - 任务②感知与给定轨迹控制: './ground/mujoco_auto_parking/02_perception_trajectory_control.md'
+        - 任务③建图与导航: './ground/mujoco_auto_parking/03_slam_navigation.md'
+        - 任务④图像端到端控制: './ground/mujoco_auto_parking/04_end_to_end.md'
     - MuJoCo 四轮独立悬架越野小车仿真: './ground/mujoco_offroad_suspension.md'
     - 2D 小车目标追踪仿真: './ground/car_2d_target_tracker.md'
     - 多车编队保持仿真（pygame 2D）: './ground/formation_keeping.md'

@@ -165,6 +165,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument('--train-e2e', action='store_true', help='训练端到端 CNN')
     parser.add_argument('--pytest', action='store_true', help='运行全部 pytest')
     parser.add_argument('--check-model', action='store_true', help='检查 MuJoCo 模型')
+    parser.add_argument(
+        '--gui',
+        action='store_true',
+        help='切换 glfw 渲染后端（桌面或 WSLg 环境）；本模块没有 MuJoCo 交互窗口',
+    )
     return parser
 
 
