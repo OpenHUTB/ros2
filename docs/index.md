@@ -582,6 +582,8 @@ ROS 2 Action 斐波那契数列计算示例：[chap2/fibonacci_action](./chap2/f
 * [无人机深度相机轨迹跟踪（CNN 行为克隆）](./air/uav_depth_track_nn.md) —— 深度相机感知 + 给定圆轨迹跟踪，CNN 输出速度指令
 
 * [RflySim 单机起飞与端口故障排查（补充实验）](./air/rflysim_sitl_first_flight.md)
+* [低空多机 4D 航迹冲突检测与解脱](./air/uav_deconflict.md) —— 把任务描述成「起飞时刻 + 航路 + 巡航高度」的 4D 航迹，解析求解两两最近接近（CPA），用地面等待 / 高度层调整 / 侧向绕行按代价择优解脱
+
 
 * [PX4 SITL + MAVROS2 Offboard 起降与失效保护](./air/px4_mavros2_offboard.md)
 

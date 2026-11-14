@@ -1,0 +1,10 @@
+# 在线间隔监视节点参数
+uav_ids: ["UAV-1", "UAV-2", "UAV-3", "UAV-4"]
+odom_prefix: "/uav"
+
+# 圆柱间隔模型（与离线算法层保持同一套标准）
+sep_horizontal: 50.0     # m
+sep_vertical: 20.0       # m
+
+# 超过该时长没收到某架里程计就不再参与间隔统计
+stale_timeout: 1.0       # s
