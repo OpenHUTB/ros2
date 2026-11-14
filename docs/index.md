@@ -202,6 +202,7 @@ ROS 2 Action 斐波那契数列计算示例：[chap2/fibonacci_action](./chap2/f
 * [端到端神经网络图像驾驶](./ground/carla_end_to_end_nn.md)
 * [Carla PilotNet 端到端控制（离线仿真演示）](./ground/carla_pilotnet_ros.md)
 * [自动驾驶示例](./ground/ad_demo.md)
+* [纵向速度控制（按曲率自动限速）](./ground/carla_speed_control/speed_control.md)
 * [rostopic 手动驱动](./ground/rostopic_cruise.md)
 * [作业综合整合与性能评价](./ground/carla_benchmark_suite.md)
 * [ROS Scenario Runner](./ground/ros_scenario_runner.md)
