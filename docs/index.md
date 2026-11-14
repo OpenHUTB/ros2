@@ -586,7 +586,9 @@ ROS 2 Action 斐波那契数列计算示例：[chap2/fibonacci_action](./chap2/f
 * [PX4 SITL + MAVROS2 Offboard 起降与失效保护](./air/px4_mavros2_offboard.md)
 
 
-* [禁飞区检测模块](no_fly_zone_check/index.md)
+* [AirSim 实时禁飞区检测](./air/no_fly_zone_check/index.md)
+
+* [离线航线穿越禁飞区检测](./no_fly_zone_check/index.md)
 
 * [MuJoCo无人机幕墙定距扫描](air/mujoco_facade_capture/index.md)
 * [AirSim 多旋翼航点飞行与到达误差评估](air/airsim_multirotor_waypoint_nav.md) —— 起飞 → 4 航点（相对起飞点偏移）→ 降落；悬停中位误差最大 0.41 m，含机载视角动图

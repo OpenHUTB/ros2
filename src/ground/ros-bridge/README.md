@@ -7,8 +7,6 @@
 
  This ROS package is a bridge that enables two-way communication between ROS and CARLA. The information from the CARLA server is translated to ROS topics. In the same way, the messages sent between nodes in ROS get translated to commands to be applied in CARLA.
 
-![rviz setup](./docs/images/ad_demo.png "AD Demo")
-
 **This version requires CARLA 0.9.13**
 
 ## Features

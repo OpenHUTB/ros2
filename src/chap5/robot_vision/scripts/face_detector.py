@@ -37,8 +37,8 @@ class faceDetector:
         try:
             cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")     
             frame = np.array(cv_image, dtype=np.uint8)
-        except CvBridgeError, e:
-            print e
+        except CvBridgeError as e:
+            print(e)
 
         # 创建灰度图像
         grey_image = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -78,7 +78,7 @@ class faceDetector:
         return faces
 
     def cleanup(self):
-        print "Shutting down vision node."
+        print("Shutting down vision node.")
         cv2.destroyAllWindows()
 
 if __name__ == '__main__':
@@ -90,5 +90,5 @@ if __name__ == '__main__':
         rospy.loginfo("Please subscribe the ROS image.")
         rospy.spin()
     except KeyboardInterrupt:
-        print "Shutting down face detector node."
+        print("Shutting down face detector node.")
         cv2.destroyAllWindows()
