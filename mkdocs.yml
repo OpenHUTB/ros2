@@ -482,6 +482,7 @@ nav:
     - 无人机编队飞行: './air/uav_formation_flight.md'
     - 移动地面目标的后方等距跟随: './air/uav_moving_target_follow.md'
     - 神经安全过滤器: './air/uav_neural_safety_filter.md'
+    - 动态障碍下的时序安全层: './air/uav_dynamic_safety_guard.md'
     - 无人机控制权限饱和与积分饱和监测: './air/uav_control_authority_guard.md'
     - 低空载具的 ROS 示例教程: 'https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/'
     - 手势控制无人机: './air/gesture_control_drone.md'
