@@ -1,0 +1,13 @@
+<launch>
+  <!-- 阿克曼仿真节点 -->
+  <node pkg="ackermann_sim" type="sim_node.py" name="ackermann_sim_node" output="screen">
+    <param name="rate" value="50.0"/>
+    <param name="wheelbase" value="2.5"/>
+    <param name="max_steer" value="0.5"/>
+    <param name="max_speed" value="5.0"/>
+    <param name="max_accel" value="2.0"/>
+  </node>
+
+  <!-- matplotlib 可视化 (可选, 注释掉就只用 rviz) -->
+  <node pkg="ackermann_sim" type="plot_viewer.py" name="plot_viewer" output="screen"/>
+</launch>
