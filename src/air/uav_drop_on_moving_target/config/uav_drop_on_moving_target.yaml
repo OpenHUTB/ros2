@@ -1,0 +1,12 @@
+uav_drop_on_moving_target_node:
+  ros__parameters:
+    # 投放条件
+    alt_m: 30.0            # 投放高度（离地）m
+    accept_radius_m: 6.0   # 落点允许偏差 m
+    wind_x: 0.0            # 风速 x 分量 m/s
+    wind_y: 0.0            # 风速 y 分量 m/s
+
+    # 话题
+    odom_topic: "/uav/odom"
+    convoy_topic: "/convoy/odom"
+    release_topic: "/uav_drop_on_moving_target/release"
