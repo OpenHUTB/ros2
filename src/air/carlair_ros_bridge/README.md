@@ -206,6 +206,16 @@ python3 tests/test_depth_avoidance_local.py  # 深度避障逻辑
 - 两个节点 `step_once()` 的发布行为与参数一致性；
 - `_raise_msgpack_limits` 补丁：新版 msgpack 注入长度上限、老版跳过、幂等。
 
+## 数据采集 demo_recorder
+
+`demo_recorder.py` 同步保存 RGB、深度和里程计，便于离线分析：
+
+```bash
+rosrun carlair_ros_bridge demo_recorder.py --output-dir /tmp/demo_data --max-frames 20
+```
+
+输出 `rgb/000001.png`、`depth/000001.npy`、`meta.csv`；数据文件不要提交到仓库。
+
 ## 诊断工具 bridge_doctor
 
 `bridge_doctor.py` 检查 `/uav/odom`、`/camera/image_raw`、`/camera/depth`、`/lidar/points`
