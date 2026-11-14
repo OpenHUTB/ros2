@@ -377,7 +377,7 @@ map ──(gmapping 发布)──► odom ──(桥接节点发布)──► ba
 
 ```xml
 <node pkg="tf2_ros" type="static_transform_publisher" name="base_to_laser"
-      args="0 0 -0.5 0 0 0 base_link laser" />
+      args="0 0 0.5 0 0 0 base_link laser" />
 ```
 
 ### 5.2 扫描来源：深度相机反投影
@@ -747,7 +747,7 @@ $$I_{out}(i,j,c)=\frac{1}{f_hf_w}\sum_{u=0}^{f_h-1}\sum_{v=0}^{f_w-1}I(i f_h+u,\
 
 桥接节点在这里的配置与默认值不同：`auto_takeoff` 设为 `false`，起飞交给外部流程；`publish_tf` 设为 `true`，因为 gmapping 需要 `odom→base_link` 的变换。感知节点将 `scan_bins` 设为 180、`scan_fov` 设为 180.0，与随包传感器配置一致。
 
-雷达的安装位置用静态变换补上，参数 `0 0 -0.5 0 0 0 base_link laser` 表示 `laser` 帧在 `base_link` 正下方 0.5 米，与感知节点默认的 `scan_frame='laser'` 对应。
+雷达的安装位置用静态变换补上，参数 `0 0 0.5 0 0 0 base_link laser` 表示 `laser` 帧在 `base_link` 正上方 0.5 米，与感知节点默认的 `scan_frame='laser'` 对应。随包 `config/settings.json` 里雷达的 `Z=-0.5` 是 AirSim 的 NED 坐标（+Z 向下），换算到 ROS 的 ENU 后就是 `+0.5 m`，与本节的静态变换和 `perception.md` 的说明一致。
 
 gmapping 段最需要注意的是扫描话题的接入方式：
 

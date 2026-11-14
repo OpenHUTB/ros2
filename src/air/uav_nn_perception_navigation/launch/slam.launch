@@ -22,9 +22,9 @@
     <param name="scan_fov" value="180.0"/>
   </node>
 
-  <!-- 雷达装在机体中心正下方 0.5 米，需要一个静态变换 -->
+  <!-- AirSim NED 中雷达 z=-0.5，对应 ROS ENU 中 base_link 到 laser 的 z=+0.5。 -->
   <node pkg="tf2_ros" type="static_transform_publisher" name="base_to_laser"
-        args="0 0 -0.5 0 0 0 base_link laser" />
+        args="0 0 0.5 0 0 0 base_link laser" />
 
   <!-- gmapping：用激光扫描建 2D 占据栅格地图 -->
   <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" output="screen">
