@@ -1,0 +1,11 @@
+<launch>
+  <!-- 任务1：键盘遥控 AirSim 无人机
+       用法：roslaunch airsim_controller task1_keyboard.launch
+       前置：已启动 AirSim 仿真器（Blocks / WindMill 等）并开启 API 控制。 -->
+
+  <arg name="speed" default="1.0"/>
+  <arg name="yaw_rate" default="30.0"/>
+
+  <node pkg="airsim_controller" type="task1_keyboard_main.py" name="task1_keyboard"
+        output="screen" args="--speed $(arg speed) --yaw-rate $(arg yaw_rate)"/>
+</launch>
