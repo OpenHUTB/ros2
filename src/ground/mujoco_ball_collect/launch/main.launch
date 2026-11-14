@@ -1,0 +1,3 @@
+<launch>
+  <node pkg="mujoco_ball_collect" type="main.py" name="mujoco_ball_collect" output="screen"/>
+</launch>

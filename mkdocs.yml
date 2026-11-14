@@ -212,6 +212,8 @@ nav:
     - ROS Scenario Runner: './ground/ros_scenario_runner.md'
     - 交通信号灯识别与响应: './ground/carla_traffic_light.md'
     - RVIZ Carla 插件: './ground/rviz_plugin.md'
+    - 搜集小球: './ground/mujoco_ball_collect.md'
+    - 基于MuJoCo的AEB自动紧急制动仿真: './ground/mujoco_vehicle_aeb/mujoco_vehicle_aeb.md'
     - 定点停车: './ground/fixed_point_stop.md'
     - 差速小车沿墙行驶: './ground/diff_drive_wall_following.md'
     - 网页远程遥控小车: './ground/web_remote_car.md'
