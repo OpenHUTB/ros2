@@ -6,23 +6,20 @@ if not defined ROS2_REPO_URL set "ROS2_REPO_URL=https://github.com/OpenHUTB/ros2
 if exist "ros2" goto :update
 
 git clone "%ROS2_REPO_URL%" ros2
-if errorlevel 1 goto :clone_failed
-cd ros2
-git lfs pull
-goto :ready
+if errorlevel 1 exit /b 1
+cd /d ros2
+if errorlevel 1 exit /b 1
+goto :pull_lfs
 
 :update
-cd ros2
-git reset --hard HEAD
-git clean -fdx
-git pull
+cd /d ros2
+if errorlevel 1 exit /b 1
+git pull --ff-only
+if errorlevel 1 exit /b 1
+
+:pull_lfs
 git lfs pull
-goto :ready
-
-:clone_failed
-exit /b 1
-
-:ready
+if errorlevel 1 exit /b 1
 
 
 rem Usage: vmware [OPTION ...] [--] [configuration file(s)]
