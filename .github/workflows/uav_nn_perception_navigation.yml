@@ -1,0 +1,52 @@
+name: UAV neural perception navigation
+
+on:
+  push:
+    paths:
+      - 'src/air/uav_nn_perception_navigation/**'
+      - 'docs/air/uav_nn_perception_navigation/**'
+      - '.github/workflows/uav_nn_perception_navigation.yml'
+  pull_request:
+    paths:
+      - 'src/air/uav_nn_perception_navigation/**'
+      - 'docs/air/uav_nn_perception_navigation/**'
+      - '.github/workflows/uav_nn_perception_navigation.yml'
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-22.04
+    container: ros:noetic-ros-base
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ROS and test dependencies
+        run: |
+          apt-get update -qq
+          apt-get install -y -qq --no-install-recommends \
+            python3-numpy python3-pytest ros-noetic-tf ros-noetic-tf2-ros
+      - name: Build package with catkin
+        shell: bash
+        run: |
+          source /opt/ros/noetic/setup.bash
+          mkdir -p /tmp/uav_catkin_ws/src
+          ln -s "$GITHUB_WORKSPACE/src/air/uav_nn_perception_navigation" \
+            /tmp/uav_catkin_ws/src/uav_nn_perception_navigation
+          cd /tmp/uav_catkin_ws
+          catkin_make
+      - name: Run module tests
+        shell: bash
+        run: |
+          source /opt/ros/noetic/setup.bash
+          python3 -m pytest src/air/uav_nn_perception_navigation/test -q
+
+  docs:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install MkDocs dependencies
+        run: python -m pip install -r requirements-docs.txt
+      - name: Build documentation
+        run: python -m mkdocs build --clean --site-dir /tmp/uav_docs_site

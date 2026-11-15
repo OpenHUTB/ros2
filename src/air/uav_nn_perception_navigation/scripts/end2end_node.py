@@ -21,6 +21,14 @@ from sensor_msgs.msg import Image
 _SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 if _SCRIPT_DIR not in sys.path:
     sys.path.insert(0, _SCRIPT_DIR)
+try:
+    import rospkg
+    _source_scripts = os.path.join(
+        rospkg.RosPack().get_path('uav_nn_perception_navigation'), 'scripts')
+    if _source_scripts not in sys.path:
+        sys.path.insert(0, _source_scripts)
+except Exception:
+    pass
 
 from train_end2end import IMG_H, IMG_W, End2EndNet, downsample  # noqa: E402
 
@@ -65,10 +73,12 @@ class End2EndNode(object):
         self.pub = rospy.Publisher('/uav/cmd_vel', Twist, queue_size=1)
 
     def image_cb(self, msg):
-        if msg.encoding != 'rgb8':
+        if msg.encoding not in ('bgr8', 'rgb8'):
             return
         arr = np.frombuffer(msg.data, dtype=np.uint8)
         arr = arr.reshape(msg.height, msg.width, 3)
+        if msg.encoding == 'rgb8':
+            arr = arr[:, :, ::-1]  # old model expects BGR
         small = downsample(arr, IMG_H, IMG_W)
         if small is not None:
             self.image = small.astype(np.float32) / 255.0

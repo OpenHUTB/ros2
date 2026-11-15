@@ -36,12 +36,14 @@ install(FILES
   scripts/safety_shield.py
   scripts/train_control.py
   scripts/train_end2end.py
+  scripts/scene_image.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
 if(CATKIN_ENABLE_TESTING)
   catkin_add_nosetests(test/test_uav_features.py)
   catkin_add_nosetests(test/test_safety_shield.py)
+  catkin_add_nosetests(test/test_scene_image.py)
 endif()
 
 install(DIRECTORY launch config models

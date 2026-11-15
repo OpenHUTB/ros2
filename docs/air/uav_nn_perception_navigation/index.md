@@ -688,7 +688,7 @@ $$v_{rep}=K_{rep}\left(1-\frac{d}{6.0}\right),\qquad K_{rep}=4.0$$
 
 ### 9.6 端到端 camera_perception.py 与 end2end_node.py
 
-`camera_perception.py` 负责取图。它一次 `simGetImages` 同时请求两张：`ImageType.Scene`（uint8 RGB）和 `ImageType.DepthPlanar`（32 位浮点、单位为米），省掉两次往返。发布时不用 `cv_bridge`，而是自己构造 `sensor_msgs/Image`，源码注释给出的理由是减少环境依赖。`step` 按行长乘通道字节数现场算：三维数组是 `width * 3 * itemsize`，二维数组是 `width * itemsize`。深度图只在 `~publish_depth` 为真时请求与发布，编码为 `32FC1`，RGB 为 `rgb8`，两者的 `frame_id` 都是 `base_link`。
+`camera_perception.py` 负责取图。它一次 `simGetImages` 同时请求两张：`ImageType.Scene`（uint8 BGR 或 BGRA）和 `ImageType.DepthPlanar`（32 位浮点、单位为米），省掉两次往返。场景图若为四通道则丢弃 alpha，保留训练权重使用的 BGR 顺序；发布的 `sensor_msgs/Image` 编码为 `bgr8`，深度图为 `32FC1`。发布时不用 `cv_bridge`，`step` 按每行实际字节数计算，两者的 `frame_id` 都是 `base_link`。
 
 `end2end_node.py` 把图像直接映射成速度指令，中间没有任何人工规则。网络定义与下采样函数都从 `train_end2end` 导入，保证结构不会漂移：输入先降到 `IMG_H, IMG_W = 36, 64`，三次卷积每次空间尺寸减半，最后接两层全连接：
 
@@ -713,7 +713,7 @@ $$I_{out}(i,j,c)=\frac{1}{f_hf_w}\sum_{u=0}^{f_h-1}\sum_{v=0}^{f_w-1}I(i f_h+u,\
 
 发布的指令做三重限幅：线速度 `np.clip` 到 ±`max_speed`（默认 3.0），偏航角速率截断到 ±1.0，高度通道仍是 0.8 倍比例控制并限在 ±1.5。这与 9.3 的限幅方式一致，因为两者共用同一个桥接节点。
 
-两处坑。其一是 `image_cb` 只接受 `encoding == 'rgb8'` 的消息，其它编码静默丢弃，若改用了别的图像源会表现为"节点一直不动作"。其二是 `downsample` 在图像小于目标尺寸时返回 `None`，回调里只在非空时才覆盖 `self.image`，否则保留上一帧；`run` 循环里图像或里程计任一为空就不发布，注释说明是为了不干扰起飞。
+两处坑。其一是 `image_cb` 接受 `bgr8`，也兼容 `rgb8` 并转换为模型训练时的 BGR 顺序；其它编码会被丢弃。其二是 `downsample` 在图像小于目标尺寸时返回 `None`，回调里只在非空时才覆盖 `self.image`，否则保留上一帧；`run` 循环里图像或里程计任一为空就不发布，注释说明是为了不干扰起飞。
 
 ### 9.7 统一入口 main.py
 

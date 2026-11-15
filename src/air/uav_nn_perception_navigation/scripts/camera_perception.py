@@ -4,7 +4,7 @@
 相机感知节点（任务 4 的感知部分）
 
 从 AirSim 读取机载相机图像，发布标准 ROS 图像话题：
-    /uav/image_raw   sensor_msgs/Image   rgb8
+    /uav/image_raw   sensor_msgs/Image   bgr8
     /uav/depth       sensor_msgs/Image  32FC1（米）
 
 不依赖 cv_bridge，直接构造消息，减少环境依赖。
@@ -17,11 +17,24 @@ import numpy as np
 import rospy
 from sensor_msgs.msg import Image
 
+_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+if _SCRIPT_DIR not in sys.path:
+    sys.path.insert(0, _SCRIPT_DIR)
+try:
+    import rospkg
+    _source_scripts = os.path.join(
+        rospkg.RosPack().get_path('uav_nn_perception_navigation'), 'scripts')
+    if _source_scripts not in sys.path:
+        sys.path.insert(0, _source_scripts)
+except Exception:
+    pass
+
 _client_path = os.environ.get('AIRSIM_PYTHON_CLIENT')
 if _client_path and _client_path not in sys.path:
     sys.path.insert(0, _client_path)
 
 import airsim  # noqa: E402
+from scene_image import decode_scene_bgr  # noqa: E402
 
 
 def to_image_msg(arr, encoding, stamp):
@@ -67,9 +80,8 @@ class CameraPerceptionNode(object):
                 responses = self.client.simGetImages(reqs, vehicle_name=self.vehicle)
 
                 rgb = responses[0]
-                img = np.frombuffer(rgb.image_data_uint8, dtype=np.uint8)
-                img = img.reshape(rgb.height, rgb.width, 3)
-                self.rgb_pub.publish(to_image_msg(img, 'rgb8', stamp))
+                img = decode_scene_bgr(rgb.image_data_uint8, rgb.height, rgb.width)
+                self.rgb_pub.publish(to_image_msg(img, 'bgr8', stamp))
 
                 if self.publish_depth and len(responses) > 1:
                     depth = responses[1]

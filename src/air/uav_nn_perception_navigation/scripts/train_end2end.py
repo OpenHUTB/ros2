@@ -29,6 +29,7 @@ if _SCRIPT_DIR not in sys.path:
 
 from train_control import ACTION_SCALE, expert_action, place_free  # noqa: E402
 from uav_features import build_feature_vector, yaw_from_quaternion  # noqa: E402
+from scene_image import decode_scene_bgr  # noqa: E402
 
 _client_path = os.environ.get('AIRSIM_PYTHON_CLIENT')
 if _client_path and _client_path not in sys.path:
@@ -96,8 +97,7 @@ def collect(client, episodes, steps, rng, altitude=-4.0):
             resp = client.simGetImages(
                 [airsim.ImageRequest('front_center', airsim.ImageType.Scene,
                                      False, False)])[0]
-            raw = np.frombuffer(resp.image_data_uint8, dtype=np.uint8)
-            img = raw.reshape(resp.height, resp.width, 3)
+            img = decode_scene_bgr(resp.image_data_uint8, resp.height, resp.width)
             small = downsample(img)
             if small is None:
                 continue
