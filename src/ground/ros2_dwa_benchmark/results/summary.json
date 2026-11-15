@@ -1,0 +1,148 @@
+{
+  "environment": {
+    "python": "3.8.10",
+    "numpy": "1.24.4",
+    "os": "Ubuntu 20.04.6 + ROS 2 Foxy"
+  },
+  "config": {
+    "densities": [
+      4,
+      7,
+      10,
+      13
+    ],
+    "worlds_per_density": 10,
+    "controllers": [
+      "astar_dwa",
+      "dwa"
+    ],
+    "params": {
+      "max_v": 0.8,
+      "min_v": -0.15,
+      "max_w": 1.8,
+      "max_acc_v": 1.2,
+      "max_acc_w": 3.0,
+      "v_res": 0.1,
+      "w_res": 0.1,
+      "dt": 0.1,
+      "predict_time": 1.5,
+      "robot_radius": 0.22,
+      "safety_margin": 0.08,
+      "heading_weight": 0.6,
+      "goal_weight": 0.5,
+      "clearance_weight": 0.6,
+      "velocity_weight": 1.5,
+      "goal_tolerance": 0.25,
+      "max_scan_points": 120,
+      "clearance_norm": 0.7,
+      "allow_reverse": true
+    },
+    "skipped_infeasible": 0
+  },
+  "summary": [
+    {
+      "density": 4,
+      "controller": "astar_dwa",
+      "runs": 10,
+      "success_rate": 100.0,
+      "mean_time_s": 19.09,
+      "mean_time_all_s": 19.09,
+      "mean_path_m": 11.88,
+      "mean_clearance_m": 0.347,
+      "mean_acc_rms": 0.5381,
+      "mean_jerk_rms": 7.29,
+      "edge_ratio": 10.0
+    },
+    {
+      "density": 4,
+      "controller": "dwa",
+      "runs": 10,
+      "success_rate": 100.0,
+      "mean_time_s": 16.85,
+      "mean_time_all_s": 16.85,
+      "mean_path_m": 12.02,
+      "mean_clearance_m": 0.418,
+      "mean_acc_rms": 0.2716,
+      "mean_jerk_rms": 2.0363,
+      "edge_ratio": 20.0
+    },
+    {
+      "density": 7,
+      "controller": "astar_dwa",
+      "runs": 10,
+      "success_rate": 100.0,
+      "mean_time_s": 21.53,
+      "mean_time_all_s": 21.53,
+      "mean_path_m": 12.12,
+      "mean_clearance_m": 0.315,
+      "mean_acc_rms": 0.6018,
+      "mean_jerk_rms": 7.9438,
+      "edge_ratio": 30.0
+    },
+    {
+      "density": 7,
+      "controller": "dwa",
+      "runs": 10,
+      "success_rate": 100.0,
+      "mean_time_s": 17.8,
+      "mean_time_all_s": 17.8,
+      "mean_path_m": 12.16,
+      "mean_clearance_m": 0.312,
+      "mean_acc_rms": 0.2954,
+      "mean_jerk_rms": 2.564,
+      "edge_ratio": 60.0
+    },
+    {
+      "density": 10,
+      "controller": "astar_dwa",
+      "runs": 10,
+      "success_rate": 90.0,
+      "mean_time_s": 23.63,
+      "mean_time_all_s": 27.27,
+      "mean_path_m": 13.21,
+      "mean_clearance_m": 0.314,
+      "mean_acc_rms": 0.5719,
+      "mean_jerk_rms": 7.5313,
+      "edge_ratio": 44.4
+    },
+    {
+      "density": 10,
+      "controller": "dwa",
+      "runs": 10,
+      "success_rate": 90.0,
+      "mean_time_s": 18.19,
+      "mean_time_all_s": 22.37,
+      "mean_path_m": 12.37,
+      "mean_clearance_m": 0.306,
+      "mean_acc_rms": 0.2874,
+      "mean_jerk_rms": 2.5419,
+      "edge_ratio": 77.8
+    },
+    {
+      "density": 13,
+      "controller": "astar_dwa",
+      "runs": 10,
+      "success_rate": 70.0,
+      "mean_time_s": 23.23,
+      "mean_time_all_s": 34.26,
+      "mean_path_m": 12.5,
+      "mean_clearance_m": 0.31,
+      "mean_acc_rms": 0.5486,
+      "mean_jerk_rms": 7.1755,
+      "edge_ratio": 57.1
+    },
+    {
+      "density": 13,
+      "controller": "dwa",
+      "runs": 10,
+      "success_rate": 60.0,
+      "mean_time_s": 25.63,
+      "mean_time_all_s": 39.38,
+      "mean_path_m": 14.9,
+      "mean_clearance_m": 0.301,
+      "mean_acc_rms": 0.3372,
+      "mean_jerk_rms": 3.7311,
+      "edge_ratio": 100.0
+    }
+  ]
+}
