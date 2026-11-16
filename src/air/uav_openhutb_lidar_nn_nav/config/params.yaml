@@ -1,0 +1,26 @@
+# uav_openhutb_lidar_nn_nav 参数
+# 注意：这里不要写 $(env ...) / $(find ...) 之类的 roslaunch 替换语法，
+# rosparam 直接加载 YAML 时不会展开它们。路径统一用 ~ 或相对路径，由节点内 expanduser 处理。
+
+uav_lidar_perception:
+  v_norm: 1.5          # 直行速度 (m/s)
+  v_slow: 0.6          # 避障时的降速
+  w_max: 0.9           # 最大偏航角速度 (rad/s)
+  warn_dist: 2.5       # 进入避障的距离 (m)
+  stop_dist: 1.2       # 停车转向的距离 (m)
+  front_fov: 0.6       # 正前方扇区半角 (rad)
+
+uav_grid_nav:
+  resolution: 0.25     # 栅格边长 (m)
+  grid_size: 80        # 栅格边长格子数（80 × 0.25 = 20 m）
+  map_seconds: 15.0    # 先建图多少秒再规划
+  v: 1.2               # 巡航速度 (m/s)
+  goal_tolerance: 0.6  # 到达判定 (m)
+  csv_dir: ~/openhutb_nav_out
+
+uav_nn_policy:
+  weights: ""          # 留空则使用 <包>/models/scan_policy.npz
+  range_max: 40.0
+
+uav_dataset_recorder:
+  every: 3             # 每 N 帧记录一条
