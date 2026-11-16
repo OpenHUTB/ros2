@@ -1,0 +1,68 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""任务4 数据采集：记录 (激光扫描, 速度指令) 对，用于行为克隆。
+
+同时运行 lidar_perception.py 作为专家策略，本节点只旁听
+/uav/lidar/scan 与 /uav/cmd_vel，不发出任何控制指令。
+"""
+
+import csv
+import os
+
+import numpy as np
+import rospy
+from geometry_msgs.msg import Twist
+from sensor_msgs.msg import LaserScan
+
+N = 90          # 采样维度
+RMAX = 40.0     # 与 LaserScan.range_max 一致
+
+
+class DatasetRecorder(object):
+    def __init__(self):
+        out = rospy.get_param("~out_dir", os.path.expanduser("~/openhutb_nn_data"))
+        self.every = int(rospy.get_param("~every", 3))
+        if not os.path.isdir(out):
+            os.makedirs(out)
+        self.path = os.path.join(out, "scan_dataset.csv")
+        self.f = open(self.path, "w", newline="")
+        self.w = csv.writer(self.f)
+        self.w.writerow(["r%d" % i for i in range(N)] + ["v", "w"])
+
+        self.scan = None
+        self.cmd = None
+        self.count = 0
+        rospy.Subscriber("/uav/lidar/scan", LaserScan, self.on_scan, queue_size=1)
+        rospy.Subscriber("/uav/cmd_vel", Twist, self.on_cmd, queue_size=1)
+        rospy.Timer(rospy.Duration(0.1), self.tick)
+        rospy.loginfo("数据采集写入 %s", self.path)
+
+    def on_scan(self, msg):
+        self.scan = msg
+
+    def on_cmd(self, msg):
+        self.cmd = msg
+
+    def tick(self, _evt):
+        if self.scan is None or self.cmd is None:
+            return
+        r = np.array(self.scan.ranges, dtype=np.float32)
+        r[~np.isfinite(r)] = RMAX
+        r = np.clip(r, 0.0, RMAX)
+        idx = np.linspace(0, len(r) - 1, N).astype(int)
+        self.w.writerow(list(np.round(r[idx], 3)) +
+                        [round(self.cmd.linear.x, 3), round(self.cmd.angular.z, 3)])
+        self.f.flush()
+        self.count += 1
+        if self.count % 100 == 0:
+            rospy.loginfo("已记录 %d 条", self.count)
+
+
+def main():
+    rospy.init_node("uav_dataset_recorder")
+    DatasetRecorder()
+    rospy.spin()
+
+
+if __name__ == "__main__":
+    main()
