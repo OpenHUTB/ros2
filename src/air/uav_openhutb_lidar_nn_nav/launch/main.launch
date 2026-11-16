@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<!--
+  OpenHUTB 无人机模块统一启动文件
+
+  mode=keyboard    任务1 键盘遥控
+  mode=perception  任务2 激光感知 + 反应式避障
+  mode=nav         任务3 栅格建图 + A* 导航
+  mode=nn          任务4 神经网络策略飞行
+
+  backend=openhutb 连接学校模拟器（需先启动 OpenHUTB 并进入 AIR 场景）
+  backend=mock     本地几何仿真，不需要安装 OpenHUTB，用于验证链路
+
+  airsim_ip 指向运行 OpenHUTB 的主机：VirtualBox NAT 一般为 10.0.2.2，
+  桥接网卡用宿主机实际 IP，同一台机器为 127.0.0.1
+-->
+<launch>
+  <arg name="mode" default="keyboard"/>
+  <arg name="backend" default="openhutb"/>
+  <arg name="airsim_ip" default="$(optenv AIRSIM_IP 127.0.0.1)"/>
+  <arg name="use_lidar" default="true"/>
+  <arg name="use_camera" default="true"/>
+  <arg name="rviz" default="false"/>
+  <arg name="goal_x" default="8.0"/>
+  <arg name="goal_y" default="0.0"/>
+
+  <rosparam file="$(find uav_openhutb_lidar_nn_nav)/config/params.yaml" command="load"/>
+
+  <group if="$(eval arg('backend') == 'openhutb')">
+    <node name="airsim_bridge" pkg="uav_openhutb_lidar_nn_nav" type="airsim_bridge.py"
+          output="screen" required="true">
+      <param name="airsim_ip" value="$(arg airsim_ip)"/>
+      <param name="use_lidar" value="$(arg use_lidar)"/>
+      <param name="use_camera" value="$(arg use_camera)"/>
+    </node>
+  </group>
+
+  <group if="$(eval arg('backend') == 'mock')">
+    <node name="uav_mock_sim" pkg="uav_openhutb_lidar_nn_nav" type="mock_sim.py"
+          output="screen" required="true"/>
+  </group>
+
+  <group if="$(eval arg('mode') == 'keyboard')">
+    <node name="uav_keyboard_control" pkg="uav_openhutb_lidar_nn_nav"
+          type="keyboard_control.py" output="screen" launch-prefix="xterm -e">
+      <param name="speed" value="2.0"/>
+      <param name="yaw_rate" value="0.6"/>
+    </node>
+  </group>
+
+  <group if="$(eval arg('mode') == 'perception')">
+    <node name="uav_lidar_perception" pkg="uav_openhutb_lidar_nn_nav"
+          type="lidar_perception.py" output="screen">
+      <param name="control" value="true"/>
+    </node>
+  </group>
+
+  <group if="$(eval arg('mode') == 'nav')">
+    <node name="uav_grid_nav" pkg="uav_openhutb_lidar_nn_nav"
+          type="grid_nav.py" output="screen">
+      <param name="goal_x" value="$(arg goal_x)"/>
+      <param name="goal_y" value="$(arg goal_y)"/>
+    </node>
+  </group>
+
+  <group if="$(eval arg('mode') == 'nn')">
+    <node name="uav_nn_policy" pkg="uav_openhutb_lidar_nn_nav"
+          type="nn_policy.py" output="screen"/>
+  </group>
+
+  <node if="$(arg rviz)" name="rviz" pkg="rviz" type="rviz" output="screen"/>
+</launch>
