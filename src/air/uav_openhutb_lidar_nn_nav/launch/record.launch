@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<!-- 任务4 数据采集：本地/OpenHUTB 后端 + 采集节点 -->
+<launch>
+  <arg name="backend" default="openhutb"/>
+  <arg name="airsim_ip" default="$(optenv AIRSIM_IP 127.0.0.1)"/>
+  <arg name="out_dir" default="$(optenv HOME /tmp)/openhutb_nn_data"/>
+
+  <rosparam file="$(find uav_openhutb_lidar_nn_nav)/config/params.yaml" command="load"/>
+
+  <group if="$(eval arg('backend') == 'openhutb')">
+    <node name="airsim_bridge" pkg="uav_openhutb_lidar_nn_nav" type="airsim_bridge.py"
+          output="screen" required="true">
+      <param name="airsim_ip" value="$(arg airsim_ip)"/>
+      <param name="use_camera" value="false"/>
+    </node>
+  </group>
+
+  <group if="$(eval arg('backend') == 'mock')">
+    <node name="uav_mock_sim" pkg="uav_openhutb_lidar_nn_nav" type="mock_sim.py"
+          output="screen" required="true"/>
+  </group>
+
+  <node name="uav_lidar_perception" pkg="uav_openhutb_lidar_nn_nav"
+        type="lidar_perception.py" output="screen">
+    <param name="control" value="true"/>
+  </node>
+
+  <node name="uav_dataset_recorder" pkg="uav_openhutb_lidar_nn_nav"
+        type="dataset_recorder.py" output="screen">
+    <param name="out_dir" value="$(arg out_dir)"/>
+  </node>
+</launch>

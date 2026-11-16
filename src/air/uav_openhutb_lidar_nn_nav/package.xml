@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>uav_openhutb_lidar_nn_nav</name>
+  <version>0.1.0</version>
+  <description>
+    基于 OpenHUTB 模拟器的无人机感知、建图导航与神经网络控制模块。
+    仅 airsim_bridge 直接调用 OpenHUTB 的 Python 客户端，其余节点通过 ROS 话题解耦。
+  </description>
+
+  <maintainer email="tangjianbin@example.com">唐健斌</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>rospy</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_srvs</depend>
+  <depend>tf2_ros</depend>
+
+  <exec_depend>python3-numpy</exec_depend>
+
+  <export/>
+</package>
