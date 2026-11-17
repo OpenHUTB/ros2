@@ -1,0 +1,9 @@
+<launch>
+  <!-- 任务2-B：神经网络轨迹跟踪 -->
+  <arg name="seconds" default="40"/>
+  <arg name="traj" default="circle"/>
+  <arg name="v_max" default="2.0"/>
+  <node pkg="airsim_controller" type="task2_perception_main.py" name="task2_track"
+        output="screen"
+        args="--mode track --seconds $(arg seconds) --traj $(arg traj) --v-max $(arg v_max)"/>
+</launch>

@@ -1,0 +1,63 @@
+site_name: AirSim 无人机智能控制（神经网络感知·规划·控制）
+site_description: OpenHUTB 课程——基于 AirSim/OpenHUTB 的键盘控制、神经网络避障与轨迹跟踪、SLAM 同步建图导航、端到端图像到控制
+site_author: thechaos16
+repo_url: https://github.com/thechaos16/airsim_controller
+edit_uri: ""
+
+theme:
+  name: material
+  language: zh
+  palette:
+    - scheme: default
+      primary: indigo
+      toggle:
+        icon: material/brightness-7
+        name: 切换为深色
+    - scheme: slate
+      primary: indigo
+      toggle:
+        icon: material/brightness-4
+        name: 切换为浅色
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.top
+    - navigation.sections
+    - content.code.copy
+    - content.code.annotate
+
+plugins:
+  - search:
+      lang: zh
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.arithmatex:
+      generic: true
+  - toc:
+      permalink: true
+  - attr_list
+
+extra_javascript:
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+nav:
+  - 首页: index.md
+  - 环境与安装:
+      - 总览: getting-started/install.md
+      - Ubuntu 20.04 + ROS Noetic: getting-started/ubuntu_ros.md
+      - ROS2 Humble 与 AirSim ROS2: getting-started/ros2_humble.md
+      - AirSim 仿真器安装: getting-started/airsim.md
+      - Docker / 虚拟机 / Windows 原生: getting-started/docker_windows.md
+  - 任务（示例）:
+      - 任务1 键盘控制: tasks/task1_keyboard.md
+      - 任务2 感知与轨迹控制: tasks/task2_perception.md
+      - 任务3 SLAM 与导航: tasks/task3_slam_nav.md
+      - 任务4 端到端模型: tasks/task4_e2e.md
+  - 性能评价: performance.md
