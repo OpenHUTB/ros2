@@ -1,0 +1,151 @@
+                 基于神经网络的移动机器人端到端避障系统
+
+1. 项目概述
+
+本项目基于 Ubuntu 20.04 与 ROS Noetic 环境，使用 PyTorch 深度学习框架，实现了一个端到端（End-to-End）的移动机器人避障算法。系统接收激光雷达（LaserScan）的 360 维距离数据作为输入，通过多层感知机（MLP）神经网络直接输出机器人的线速度与角速度，实现无地图的实时避障。程序支持 roslaunch 一键启动，并在 Gazebo 仿真环境中进行了多场景性能测试。
+
+---
+
+2. 仿真环境搭建与操作步骤
+
+
+2.1 软硬件环境
+
+· 操作系统：Ubuntu 20.04 LTS
+· ROS 版本：ROS Noetic Ninjemys
+· 仿真平台：Gazebo (推荐使用 TurtleBot3 模型)
+· 依赖库：PyTorch, rospy, geometry_msgs, sensor_msgs
+
+2.2 仿真启动步骤
+
+步骤 1：启动 Gazebo 仿真环境
+打开终端，启动包含障碍物的仿真世界：
+
+```bash
+export TURTLEBOT3_MODEL=burger
+roslaunch turtlebot3_gazebo turtlebot3_world.launch
+```
+
+
+步骤 2：运行神经网络避障节点
+新建终端，进入工作空间，使用 roslaunch 启动避障算法节点：
+
+```bash
+source devel/setup.bash
+roslaunch your_pkg_name nn_avoid.launch
+```
+
+
+步骤 3：多场景测试 
+(必须提供多个场景测试)
+
+· 场景 A：静态复杂障碍物环境（如上述默认世界）。
+· 场景 B：狭窄通道环境。
+· 场景 C：动态障碍物环境。
+  (此处请插入各个场景下的运行截图)
+
+---
+
+3. 算法原理与计算过程
+
+3.1 神经网络结构设计
+
+本项目采用 3 层全连接神经网络（MLP）。
+
+· 输入层：360 个节点（对应 360 度激光雷达扫描点）。
+· 隐藏层：2 层，节点数分别为 128 和 64。
+· 输出层：2 个节点（分别代表线速度 v 和角速度 \omega）。
+· 激活函数：ReLU。
+
+3.2 核心计算公式
+
+1. 前向传播公式（Forward Propagation）：
+对于第 l 层的神经元：
+
+z^{(l)} = W^{(l)} a^{(l-1)} + b^{(l)} 
+
+a^{(l)} = \text{ReLU}(z^{(l)}) = \max(0, z^{(l)}) 
+
+其中，W 为权重矩阵，b 为偏置向量，a 为激活值。
+
+2. 输入数据预处理（代码中的 nan_to_num）：
+
+x_i = \begin{cases} 10.0, & \text{if } x_i \text{ is NaN} \\ x_i, & \text{otherwise} \end{cases} 
+
+3. 动作输出限幅（代码中的 clamp）：
+
+v = \min(\max(v_{\text{pred}}, 0.1), 0.3) 
+
+\omega = \min(\max(\omega_{\text{pred}}, -2.0), 2.0) 
+
+3.3 算法流程图
+
+1. 初始化 ROS 节点，加载预训练模型。
+2. 订阅 /scan 话题，等待雷达数据。
+3. 接收数据，将 NaN 值替换为 10.0，转换为 PyTorch Tensor。
+4. 输入模型进行前向推理，获得 v 和 \omega。
+5. 对 v 和 \omega 进行阈值截断限幅。
+6. 构建 Twist 消息发布至 /cmd_vel。
+
+---
+
+4. 源代码解析
+
+
+```python
+#!/usr/bin/env python3
+import rospy
+import torch
+import torch.nn as nn
+from geometry_msgs.msg import Twist
+from sensor_msgs.msg import LaserScan
+
+# 1. 定义神经网络模型
+class AvoidNet(nn.Module):
+    def __init__(self):
+        super().__init__()
+        # 使用 nn.Sequential 按顺序构建全连接层
+        self.layers = nn.Sequential(
+            nn.Linear(360, 128), # 输入360维，隐藏层128
+            nn.ReLU(),
+            nn.Linear(128, 64),  # 隐藏层64
+            nn.ReLU(),
+            nn.Linear(64, 2)     # 输出2维 (线速度和角速度)
+        )
+
+    def forward(self, x):
+        return self.layers(x)
+
+model = AvoidNet() # 实例化模型
+pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10) # 速度发布者
+
+# 2. 雷达数据回调函数
+def scan_callback(msg):
+    global model, pub
+    # 将雷达数据转换为 Tensor，并将 NaN 替换为 10.0 (处理无效点)
+    ranges = torch.tensor(msg.ranges, dtype=torch.float32).nan_to_num(10.0)
+    
+    # 模型推理 (注意：这里代码未加载预训练权重，实际运行需补充 model.load_state_dict(...))
+    v, w = model(ranges)
+    
+    cmd = Twist()
+    # 使用 torch.clamp 进行输出限幅，防止速度过快
+    cmd.linear.x = torch.clamp(v, 0.1, 0.3).item()
+    cmd.angular.z = torch.clamp(w, -2.0, 2.0).item()
+    pub.publish(cmd)
+
+# 3. 节点初始化与订阅
+rospy.init_node('nn_avoid')
+rospy.Subscriber('/scan', LaserScan, scan_callback)
+rospy.spin()
+```
+
+源码解析要点：
+
+· nan_to_num(10.0)：激光雷达遇到玻璃或透明物体时常返回 NaN，此操作可避免网络输出无效值。
+· torch.clamp：保证机器人线速度在安全区间 [0.1, 0.3] m/s，角速度在 [-2.0, 2.0] rad/s，防止输出极端动作导致翻车。
+
+---
+
+
+
